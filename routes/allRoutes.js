@@ -15,7 +15,7 @@ const { getFilteredData, updatTableData, insertTableData } = require("../control
 const { auth } = require("../controllers/auth");
 const paymentControllers = require("../controllers/paymentControllers");
 const poController = require("../controllers/poController");
-const { uploadExcelFile, uploadDrawingFile } = require("../lib/fileUpload");
+const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
 
@@ -85,7 +85,7 @@ router.post(paymentPrefix + "/addByXLS",
 
   const poPrefix = "/po";
 
-router.get(poPrefix + "/details/:poNo", [veifyAccessToken, authorizeRoute], (req, res) => {
+router.get(poPrefix + "/details/:poNo", [veifyAccessToken], (req, res) => {
   poController.details(req, res);
 });
 
@@ -96,6 +96,11 @@ router.post(poPrefix + "/add", [], uploadDrawingFile.single("file"), (req, res) 
 
 router.get(poPrefix + "/download", [], (req, res) => {
   poController.download(req, res);
+});
+
+
+router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) => {
+  poController.addSDBG(req, res);
 });
 
 

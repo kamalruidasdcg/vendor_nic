@@ -2,7 +2,7 @@ const { resSend } = require("../lib/resSend");
 const { query } = require("../db/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
-const { ADD_DRAWING } = require("../lib/tableName");
+const { ADD_DRAWING, NEW_SDBG } = require("../lib/tableName");
 const { CREATED } = require("../lib/status");
 const path = require('path');
 const details = async (req, res) => {
@@ -28,9 +28,6 @@ const details = async (req, res) => {
 
         const result2 = await query({ query: materialDetailsQ, values: [] });
 
-        console.log("result", result);
-        console.log("result2", result2);
-
         if (result?.length && result2?.length) {
 
             result.forEach((el, i) => {
@@ -45,20 +42,16 @@ const details = async (req, res) => {
             })
         }
 
-        console.log("result", result);
 
 
         return resSend(res, true, 200, "data fetch scussfully.", result, null);
     } catch (error) {
-        console.log("", error.toString());
         return resSend(res, false, 500, error.toString(), [], null);
     }
 };
 
 // add new post
 const add = async (req, res) => {
-
-    console.log("po addd apis")
 
     try {
 
@@ -74,7 +67,6 @@ const add = async (req, res) => {
             };
 
             const payload = req.body;
-            console.log("payload", payload);
 
             const insertObj = {
                 // "drawing_id": "12124", // auto incremant id
@@ -135,4 +127,68 @@ const download = async (req, res) => {
     });
 }
 
-module.exports = { add, details, download }
+
+
+
+const addSDBG = async (req, res) => {
+
+    console.log("po addSDBG apis")
+
+    try {
+
+
+        // Handle Image Upload
+        let fileData = {};
+        if (req.file) {
+            fileData = {
+                fileName: req.file.filename,
+                filePath: req.file.path,
+                fileType: req.file.mimetype,
+                fileSize: req.file.size,
+            };
+
+            const payload = req.body;
+
+            const insertObj = {
+                // "id": 1, // auto incremant id
+                "purchasing_doc_no": payload.purchasing_doc_no,
+                "file_name": req.file.filename,
+                "file_path": req.file.path,
+                "status": CREATED,
+                "status_updated_at": getEpochTime(),
+                "status_updated_by_name": payload.action_by_name,
+                "status_updated_by_id": payload.action_by_id,
+                "remarks": payload.remarks ? payload.remarks : null,
+                "created_at": getEpochTime(),
+                "created_by_name": payload.action_by_name,
+                "created_by_id": payload.action_by_id,
+                // "create_at_datetime": "",  // DATA BASE DEFAULT DATE TIME
+                // "updated_at_datetime": "" // DATA BASE DEFAULT DATE TIME
+            }
+
+
+            const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
+            const response = await query({ query: q, values: val });
+
+            if (response.affectedRows) {
+
+                resSend(res, true, 200, "file uploaded!", fileData, null);
+            } else {
+                resSend(res, true, 204, "No Record Found", response, null);
+            }
+
+        } else {
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        }
+
+    } catch (error) {
+        console.log("po add api", error)
+
+        return resSend(res, false, 500, "internal server error", [], null);
+    }
+}
+
+
+
+
+module.exports = { add, details, download, addSDBG }
