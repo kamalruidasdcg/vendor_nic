@@ -1,0 +1,22 @@
+{
+  "name": "vendor_nic",
+  "version": "1.0.0",
+  "description": "Vendor NIC Server",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamalruidasdcg/vendor_nic.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kamalruidasdcg/vendor_nic/issues"
+  },
+  "homepage": "https://github.com/kamalruidasdcg/vendor_nic#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
