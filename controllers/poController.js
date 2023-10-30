@@ -1,5 +1,5 @@
 const { resSend } = require("../lib/resSend");
-const { query } = require("../db/dbConfig");
+const { query } = require("../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
 const { ADD_DRAWING, NEW_SDBG } = require("../lib/tableName");
