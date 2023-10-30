@@ -1,5 +1,5 @@
-const {query} = require("../db/dbConfig");
-const connection = require("../db/dbConfig");
+const {query} = require("../config/dbConfig");
+const connection = require("../config/dbConfig");
 const { UPDATE, INSERT } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");

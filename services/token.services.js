@@ -1,4 +1,4 @@
-const { query } = require("../db/dbConfig");
+const { query } = require("../config/dbConfig");
 
 const storeRefreshToken = async (refreshToken, user_id) => {
 

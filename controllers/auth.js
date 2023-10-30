@@ -1,6 +1,6 @@
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const {query} = require("../db/dbConfig");
+const {query} = require("../config/dbConfig");
 const { resSend } = require("../lib/resSend");
 
 const generateToken = (id) => {

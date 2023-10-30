@@ -6,7 +6,7 @@
 // } = require("../services/crypto.services");
 
 
-const { query } = require("../db/dbConfig");
+const { query } = require("../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../services/jwt.services");
 const { resSend } = require("../lib/resSend");
 const { AUTH, USTER_TYPE } = require("../lib/tableName");
