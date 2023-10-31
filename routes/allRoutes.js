@@ -103,5 +103,23 @@ router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) =
   poController.addSDBG(req, res);
 });
 
+router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
+  poController.sdbgResubmission(req, res);
+});
+
+
+// router.post(poPrefix + "/sdbgAcknowledgement", [uploadSDBGFile.single("file")], (req, res) => {
+//   poController.sdbgAcknowledgement(req, res);
+// });
+
+
+router.get(poPrefix + "/downloadSDBG", [], (req, res) => {
+  poController.downloadSDBG(req, res);
+});
+
+router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
+  poController.getAllSDBG(req, res);
+});
+
 
 module.exports = router;
