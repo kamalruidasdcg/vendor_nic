@@ -4,8 +4,11 @@ const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
 const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
+const fileDetails = require("../lib/filePath");
 const path = require('path');
 const { sdbgPayload } = require("../services/po.services");
+
+/** APIS START ----->  */
 const details = async (req, res) => {
     try {
 
@@ -68,11 +71,7 @@ const add = async (req, res) => {
                 "purchasing_doc_no": payload.purchasing_doc_no,
                 "file_name": req.file.filename,
                 "file_path": req.file.path,
-                "material_no": payload.material_no,
                 "status": CREATED,
-                "status_updated_at": getEpochTime(),
-                "status_updated_by_name": payload.action_by_name,
-                "status_updated_by_id": payload.action_by_id,
                 "remarks": payload.remarks,
                 "created_at": getEpochTime(),
                 "created_by_name": payload.action_by_name,
@@ -106,18 +105,51 @@ const add = async (req, res) => {
 
 const download = async (req, res) => {
 
-    const queryParams = req.query;
+    console.log("filePath", fileDetails);
 
-    const q = `SELECT * FROM ${ADD_DRAWING} WHERE drawing_id = ${queryParams.id}`
+    // const queryParams = req.query;
 
-    const response = await query({ query: q, values: [] });
+    const typeArr = [ "drawing", "sdbg", "qap"]
 
-    const filepath = `/uploads/drawings/${response[0].file_name}`;
+    const { id, type } = req.query;
 
+    if(!typeArr.includes(type)) {
+        return resSend(res, false, 400, "Please send valid type ! i.e. drawing, sdbg", null, null)
+    }
+    let fileFoundQuery = "";
 
-    res.download(path.join(__dirname, "..", filepath), (err) => {
+    const tableName = fileDetails[type]["tableName"];
+    const downaoadPath = fileDetails[type]["filePath"];
+
+    switch (type) {
+        case "drawing":
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE drawing_id = ?`
+            break;
+        case "sdbg":
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
+            break;
+        case "qap":
+            
+            break;
+    
+        default:
+            break;
+    }
+
+    const response = await query({ query: fileFoundQuery, values: [id] });
+
+    console.log("response", response);
+    console.log("fileFoundQuery", fileFoundQuery);
+
+    if( !response?.length || !response[0]?.file_name) {
+        return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
+    }
+
+    const selectedPath = `${downaoadPath}${response[0].file_name}`;
+    console.log("selectedPath", selectedPath);
+    res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
-            resSend(res, false, 404, "file not foound", err, null)
+            resSend(res, false, 404, "file not found", err, null)
 
     });
 }
