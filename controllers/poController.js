@@ -157,21 +157,18 @@ const addSDBG = async (req, res) => {
                 "purchasing_doc_no": payload.purchasing_doc_no,
                 "file_name": req.file.filename,
                 "file_path": req.file.path,
-                "status": CREATED,
-                "status_updated_at": getEpochTime(),
-                "status_updated_by_name": payload.action_by_name,
-                "status_updated_by_id": payload.action_by_id,
                 "remarks": payload.remarks ? payload.remarks : null,
+                "status": CREATED,
+                "updated_by": payload.updated_by,
                 "bank_name": payload.bank_name ? payload.bank_name : null,
                 "transaction_id": payload.transaction_id ? payload.transaction_id : null,
                 "vendor_code": payload.vendor_code ? payload.vendor_code : null,
                 "created_at": getEpochTime(),
                 "created_by_name": payload.action_by_name,
                 "created_by_id": payload.action_by_id,
-                // "create_at_datetime": "",  // DATA BASE DEFAULT DATE TIME
-                // "updated_at_datetime": "" // DATA BASE DEFAULT DATE TIME
             }
 
+                console.log(insertObj)
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
             const response = await query({ query: q, values: val });
@@ -249,8 +246,6 @@ const getAllSDBG = async (req, res) => {
 
 const sdbgResubmission = async (req, res) => {
 
-    console.log("po addSDBG apis")
-
     try {
 
 
@@ -281,25 +276,20 @@ const sdbgResubmission = async (req, res) => {
             if(!result || !result.length) 
                 return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
             
-
             const insertObj = {
                 // "id": 1, // auto incremant id
                 "purchasing_doc_no": purchasing_doc_no,
                 "file_name": req?.file?.filename ? req?.file?.filename : null,
                 "file_path": req?.file?.path ? req?.file?.path : null,
-                "status": RE_SUBMIT,
-                "status_updated_at": getEpochTime(),
-                "status_updated_by_name": payload.action_by_name,
-                "status_updated_by_id": payload.action_by_id,
                 "remarks": payload.remarks ? payload.remarks : null,
-                "created_at": getEpochTime(),
+                "status": RE_SUBMIT,
+                "updated_by": payload.updated_by,
                 "bank_name": result[0].bank_name ? result[0].bank_name : null,
                 "transaction_id": result[0].transaction_id ? result[0].transaction_id : null,
                 "vendor_code": result[0].vendor_code ? result[0].vendor_code : null,
+                "created_at": getEpochTime(),
                 "created_by_name": payload.action_by_name,
                 "created_by_id": payload.action_by_id,
-                // "create_at_datetime": "",  // DATA BASE DEFAULT DATE TIME
-                // "updated_at_datetime": "" // DATA BASE DEFAULT DATE TIME
             }
 
 
