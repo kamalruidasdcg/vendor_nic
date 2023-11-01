@@ -2,7 +2,7 @@ const { resSend } = require("../lib/resSend");
 const { query } = require("../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO } = require("../lib/tableName");
+const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const path = require('path');
 const details = async (req, res) => {
@@ -24,12 +24,14 @@ const details = async (req, res) => {
         // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN ekbe as t2 ON t1.EBELN = t2.EBELN WHERE t1.EBELN = '${poNo}'`;
 
 
-        let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN pa0001 as t2 ON t1.ERNAM= t2.PERNR WHERE t1.EBELN = '${queryParams.id}'`;
+        // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN pa0001 as t2 ON t1.ERNAM= t2.PERNR WHERE t1.EBELN = '${queryParams.id}'`;
+        let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}';`
+
 
         const result = await query({ query: q, values: [] });
 
 
-        const materialDetailsQ = `SELECT * FROM ${EKBE} WHERE  EBELN = '${queryParams.id}'`;
+        const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE  EBELN = '${queryParams.id}'`;
 
         const result2 = await query({ query: materialDetailsQ, values: [] });
 
