@@ -2,29 +2,34 @@ const { resSend } = require("../lib/resSend");
 const { query } = require("../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT } = require("../lib/tableName");
+const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const path = require('path');
 const details = async (req, res) => {
     try {
 
-        const { poNo } = req.params;
+        const queryParams = req.query;
 
-        if (!poNo || poNo == 0) {
+        if (!queryParams.id || queryParams.id == 0) {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
         }
 
-        let qry = `SELECT *  FROM ekko WHERE EBELN = '${poNo}'`;
+        let qry = `SELECT *  FROM ${EKKO} WHERE EBELN = '${queryParams.id}'`;
 
         // let qry = `SELECT t1.*,t2.*,t3.* FROM ekko as t1
         //                 LEFT JOIN ekbe  as t2 ON t1.EBELN = t2.EBELN
         //                 LEFT JOIN essr  as t3 ON t1.EBELN = t3.EBELN 
         //             WHERE t1.EBELN = '${poNo}'`;
 
-        const result = await query({ query: qry, values: [] });
+        // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN ekbe as t2 ON t1.EBELN = t2.EBELN WHERE t1.EBELN = '${poNo}'`;
 
 
-        const materialDetailsQ = `SELECT * FROM ekbe WHERE  EBELN = '${poNo}'`;
+        let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN pa0001 as t2 ON t1.ERNAM= t2.PERNR WHERE t1.EBELN = '${queryParams.id}'`;
+
+        const result = await query({ query: q, values: [] });
+
+
+        const materialDetailsQ = `SELECT * FROM ${EKBE} WHERE  EBELN = '${queryParams.id}'`;
 
         const result2 = await query({ query: materialDetailsQ, values: [] });
 
@@ -111,9 +116,9 @@ const add = async (req, res) => {
 
 const download = async (req, res) => {
 
-    const queryParama = req.query;
+    const queryParams = req.query;
 
-    const q = `SELECT * FROM ${ADD_DRAWING} WHERE drawing_id = ${queryParama.id}`
+    const q = `SELECT * FROM ${ADD_DRAWING} WHERE drawing_id = ${queryParams.id}`
 
     const response = await query({ query: q, values: [] });
 
