@@ -10,12 +10,9 @@ const details = async (req, res) => {
 
         const queryParams = req.query;
 
-        if (!queryParams.id || queryParams.id == 0) {
+        if (!queryParams.id || queryParams.id === '0') {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
         }
-
-        let qry = `SELECT *  FROM ${EKKO} WHERE EBELN = '${queryParams.id}'`;
-
         // let qry = `SELECT t1.*,t2.*,t3.* FROM ekko as t1
         //                 LEFT JOIN ekbe  as t2 ON t1.EBELN = t2.EBELN
         //                 LEFT JOIN essr  as t3 ON t1.EBELN = t3.EBELN 
@@ -23,35 +20,28 @@ const details = async (req, res) => {
 
         // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN ekbe as t2 ON t1.EBELN = t2.EBELN WHERE t1.EBELN = '${poNo}'`;
 
-
-        // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN pa0001 as t2 ON t1.ERNAM= t2.PERNR WHERE t1.EBELN = '${queryParams.id}'`;
         let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}';`
 
 
         const result = await query({ query: q, values: [] });
 
-
+        if(!result?.length) 
+            return resSend(res, true, 200, "No PO number found !!", [], null);
+        
+        
         const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE  EBELN = '${queryParams.id}'`;
-
+        
         const result2 = await query({ query: materialDetailsQ, values: [] });
 
+
         if (result?.length && result2?.length) {
-
-            result.forEach((el, i) => {
-                const data = result2.filter((d) => d.EBELN == el.EBELN);
-
-                if (data.length) {
-                    el["MAN_DETAILS"] = data
-                } else {
-                    el["MAN_DETAILS"] = [];
-                }
-
-            })
+            result[0]["MAT_DETAILS"] = result2;
+            resSend(res, true, 200, "data fetch scussfully.", result, null);
+        } else {
+            result[0]["MAT_DETAILS"] = [];
+            resSend(res, true, 200, "data fetch scussfully.", result, null);
         }
 
-
-
-        return resSend(res, true, 200, "data fetch scussfully.", result, null);
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
     }
@@ -170,8 +160,6 @@ const addSDBG = async (req, res) => {
                 "created_by_id": payload.action_by_id,
             }
 
-                console.log(insertObj)
-
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
             const response = await query({ query: q, values: val });
 
@@ -188,7 +176,6 @@ const addSDBG = async (req, res) => {
 
     } catch (error) {
         console.log("po add api", error)
-
         return resSend(res, false, 500, "internal server error", [], null);
     }
 }
