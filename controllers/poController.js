@@ -5,6 +5,7 @@ const { INSERT } = require("../lib/constant");
 const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const path = require('path');
+const { sdbgPayload } = require("../services/po.services");
 const details = async (req, res) => {
     try {
 
@@ -20,27 +21,24 @@ const details = async (req, res) => {
 
         // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN ekbe as t2 ON t1.EBELN = t2.EBELN WHERE t1.EBELN = '${poNo}'`;
 
-        let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}';`
+        // let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}'`;
+        let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = ?`;
 
 
-        const result = await query({ query: q, values: [] });
+        const result = await query({ query: q, values: [queryParams.id] });
 
         if(!result?.length) 
-            return resSend(res, true, 200, "No PO number found !!", [], null);
+            return resSend(res, false, 404, "No PO number found !!", [], null);
         
         
-        const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE  EBELN = '${queryParams.id}'`;
+        const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE EBELN = ?`;
         
-        const result2 = await query({ query: materialDetailsQ, values: [] });
+        const result2 = await query({ query: materialDetailsQ, values: [queryParams.id] });
 
+        result[0]["MAT_DETAILS"] = result2 || [];
 
-        if (result?.length && result2?.length) {
-            result[0]["MAT_DETAILS"] = result2;
-            resSend(res, true, 200, "data fetch scussfully.", result, null);
-        } else {
-            result[0]["MAT_DETAILS"] = [];
-            resSend(res, true, 200, "data fetch scussfully.", result, null);
-        }
+        resSend(res, true, 200, "data fetch scussfully.", result, null);
+
 
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
@@ -131,7 +129,6 @@ const addSDBG = async (req, res) => {
 
     try {
 
-
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
@@ -142,23 +139,9 @@ const addSDBG = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            const payload = req.body;
+            const payload = { ...req.body, ...fileData };
 
-            const insertObj = {
-                // "id": 1, // auto incremant id
-                "purchasing_doc_no": payload.purchasing_doc_no,
-                "file_name": req.file.filename,
-                "file_path": req.file.path,
-                "remarks": payload.remarks ? payload.remarks : null,
-                "status": CREATED,
-                "updated_by": payload.updated_by,
-                "bank_name": payload.bank_name ? payload.bank_name : null,
-                "transaction_id": payload.transaction_id ? payload.transaction_id : null,
-                "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-                "created_at": getEpochTime(),
-                "created_by_name": payload.action_by_name,
-                "created_by_id": payload.action_by_id,
-            }
+            const insertObj = sdbgPayload(payload, CREATED)
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
             const response = await query({ query: q, values: val });
@@ -249,14 +232,11 @@ const sdbgResubmission = async (req, res) => {
             };
 
             const payload = req.body;
-            const {purchasing_doc_no} = payload;
+            const { purchasing_doc_no } = payload;
 
 
         if(!payload || !purchasing_doc_no)
             return resSend(res, false, 400, "Please send po number", null, null);
-
-
-
 
             const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC`;
         
@@ -264,24 +244,14 @@ const sdbgResubmission = async (req, res) => {
 
             if(!result || !result.length) 
                 return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-            
-            const insertObj = {
-                // "id": 1, // auto incremant id
-                "purchasing_doc_no": purchasing_doc_no,
-                "file_name": req?.file?.filename ? req?.file?.filename : null,
-                "file_path": req?.file?.path ? req?.file?.path : null,
-                "remarks": payload.remarks ? payload.remarks : null,
-                "status": RE_SUBMIT,
-                "updated_by": payload.updated_by,
+
+            const payloadObj = { ...payload, ...fileData, 
                 "bank_name": result[0].bank_name ? result[0].bank_name : null,
                 "transaction_id": result[0].transaction_id ? result[0].transaction_id : null,
                 "vendor_code": result[0].vendor_code ? result[0].vendor_code : null,
-                "created_at": getEpochTime(),
-                "created_by_name": payload.action_by_name,
-                "created_by_id": payload.action_by_id,
             }
 
-
+            const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
             const response = await query({ query: q, values: val });
 
@@ -296,8 +266,8 @@ const sdbgResubmission = async (req, res) => {
         }
 
     } catch (error) {
-        console.log("sdbgResubmission api error", error)
 
+        console.log("sdbgResubmission api error", error);
         resSend(res, false, 500, "internal server error", [], null);
     }
 }
