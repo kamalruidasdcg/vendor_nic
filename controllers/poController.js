@@ -217,123 +217,57 @@ const getAllSDBG = async (req, res) => {
 
 
 const sdbgResubmission = async (req, res) => {
+  try {
+    // Handle Image Upload
 
-    try {
+    if (!req.file)
+      return resSend( res, false, 400, "Please upload a valid File", fileData, null);
 
+    const fileData = {
+      fileName: req.file.filename,
+      filePath: req.file.path,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+    };
 
-        // Handle Image Upload
-        let fileData = {};
-        if (req.file) {
-            fileData = {
-                fileName: req.file.filename,
-                filePath: req.file.path,
-                fileType: req.file.mimetype,
-                fileSize: req.file.size,
-            };
+    const { purchasing_doc_no, ...payload } = req.body;
 
-            const payload = req.body;
-            const { purchasing_doc_no } = payload;
+    if (!purchasing_doc_no)
+      return resSend(res, false, 400, "Please send po number", null, null);
 
+    const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
 
-        if(!payload || !purchasing_doc_no)
-            return resSend(res, false, 400, "Please send po number", null, null);
+    const result = await query({ query: GET_LATEST_SDBG, values: [] });
 
-            const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC`;
-        
-            const result = await query({ query: GET_LATEST_SDBG, values: [] });
+    if (!result || !result.length)
+      return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
 
-            if(!result || !result.length) 
-                return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+    const payloadObj = {
+        purchasing_doc_no, 
+      ...payload,
+      ...fileData,
+      bank_name: result[0].bank_name ? result[0].bank_name : null,
+      transaction_id: result[0].transaction_id
+        ? result[0].transaction_id
+        : null,
+      vendor_code: result[0].vendor_code ? result[0].vendor_code : null,
+    };
+    
+    const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
 
-            const payloadObj = { ...payload, ...fileData, 
-                "bank_name": result[0].bank_name ? result[0].bank_name : null,
-                "transaction_id": result[0].transaction_id ? result[0].transaction_id : null,
-                "vendor_code": result[0].vendor_code ? result[0].vendor_code : null,
-            }
+    const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
+    const response = await query({ query: q, values: val });
 
-            const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
-            const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
-            const response = await query({ query: q, values: val });
-
-            if (response.affectedRows) {
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            } else {
-                resSend(res, true, 204, "No Record Found", response, null);
-            }
-
-        } else {
-            resSend(res, false, 400, "Please upload a valid File", fileData, null);
-        }
-
-    } catch (error) {
-
-        console.log("sdbgResubmission api error", error);
-        resSend(res, false, 500, "internal server error", [], null);
+    if (response.affectedRows) {
+      resSend(res, true, 200, "file uploaded!", fileData, null);
+    } else {
+      resSend(res, true, 200, "No Record Found", response, null);
     }
-}
+  } catch (error) {
+    console.log("sdbgResubmission api error", error);
+    resSend(res, false, 500, "internal server error", [], null);
+  }
+};
 
 
 module.exports = { add, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission}
-
-
-
-
-
-
-// const sdbgAcknowledgement = async (req, res) => {
-    
-    //     console.log("po addSDBG apis")
-    
-    //     try {
-        
-        
-        //         // Handle Image Upload
-//         let fileData = {};
-//         if (req.file) {
-//             fileData = {
-//                 fileName: req.file.filename,
-//                 filePath: req.file.path,
-//                 fileType: req.file.mimetype,
-//                 fileSize: req.file.size,
-//             };
-
-//             const payload = req.body;
-
-//             const insertObj = {
-//                 // "id": 1, // auto incremant id
-//                 "purchasing_doc_no": payload.purchasing_doc_no,
-//                 "file_name": req.file.filename,
-//                 "file_path": req.file.path,
-//                 "status": ACKNOWLEDGE,
-//                 "status_updated_at": getEpochTime(),
-//                 "status_updated_by_name": payload.action_by_name,
-//                 "status_updated_by_id": payload.action_by_id,
-//                 "remarks": payload.remarks ? payload.remarks : null,
-//                 "created_at": getEpochTime(),
-//                 "created_by_name": payload.action_by_name,
-//                 "created_by_id": payload.action_by_id,
-//                 // "create_at_datetime": "",  // DATA BASE DEFAULT DATE TIME
-//                 // "updated_at_datetime": "" // DATA BASE DEFAULT DATE TIME
-//             }
-
-
-//             const { q, val } = generateQuery(INSERT, SDBG_ACKNOWLEDGEMENT, insertObj);
-//             const response = await query({ query: q, values: val });
-
-//             if (response.affectedRows) {
-
-    //                 resSend(res, true, 200, "file uploaded!", fileData, null);
-//             } else {
-//                 resSend(res, true, 204, "No Record Found", response, null);
-//             }
-
-//         } else {
-//             resSend(res, false, 400, "Please upload a valid File", fileData, null);
-//         }
-
-//     } catch (error) {
-//         console.log("po add api", error)
-
-//         return resSend(res, false, 500, "internal server error", [], null);
-//     }
-// }
