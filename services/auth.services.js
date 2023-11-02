@@ -23,6 +23,9 @@ const authDataModify = (queryResult) => {
             }
         }
 
+        // deleting password 
+        delete authData.password;
+
         return { user: authData, user_type: userTypeData, user_role: userRoleData };
     });
 
