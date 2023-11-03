@@ -2,7 +2,7 @@ const { getEpochTime } = require("../lib/utils");
 
 
 /**
- * Modify payload object to insert data
+ * Modify SDBG Payload object to insert data
  * @param {Object} payload 
  * @param {string} status 
  * @returns Object
@@ -28,6 +28,13 @@ const sdbgPayload = (payload, status) => {
 
     return payloadObj;
 }
+
+/**
+ * Modify drawing payload object to insert data
+ * @param {Object} payload 
+ * @param {string} status 
+ * @returns Object
+ */
 const drawingPayload = (payload, status) => {
 
     const payloadObj = {
@@ -46,7 +53,6 @@ const drawingPayload = (payload, status) => {
 
     return payloadObj;
 }
-
 
 
 

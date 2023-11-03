@@ -74,7 +74,7 @@ const addDrawing = async (req, res) => {
             const response = await query({ query: q, values: val });
 
             if (res) {
-                console.log("response", response);
+                // console.log("response", response);
             }
 
 
@@ -89,7 +89,6 @@ const addDrawing = async (req, res) => {
         return resSend(res, false, 500, "internal server error", [], null);
     }
 }
-
 
 // DOWNLOAD DRAWING WITH DRAWING ID
 
