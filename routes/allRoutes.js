@@ -90,7 +90,7 @@ router.get(poPrefix + "/details", [], (req, res) => {
 });
 
 router.post(poPrefix + "/add", [], uploadDrawingFile.single("file"), (req, res) => {
-  poController.add(req, res);
+  poController.addDrawing(req, res);
 });
 
 
@@ -113,9 +113,9 @@ router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (re
 // });
 
 
-router.get(poPrefix + "/downloadSDBG", [], (req, res) => {
-  poController.downloadSDBG(req, res);
-});
+// router.get(poPrefix + "/downloadSDBG", [], (req, res) => {
+//   poController.downloadSDBG(req, res);
+// });
 
 router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
   poController.getAllSDBG(req, res);

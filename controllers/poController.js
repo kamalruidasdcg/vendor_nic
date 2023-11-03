@@ -6,7 +6,7 @@ const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = requir
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const fileDetails = require("../lib/filePath");
 const path = require('path');
-const { sdbgPayload } = require("../services/po.services");
+const { sdbgPayload, drawingPayload } = require("../services/po.services");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -49,7 +49,7 @@ const details = async (req, res) => {
 };
 
 // add new post
-const add = async (req, res) => {
+const addDrawing = async (req, res) => {
 
     try {
 
@@ -64,21 +64,11 @@ const add = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            const payload = req.body;
+            const payload = {...req.body, ...fileData };
 
-            const insertObj = {
-                // "drawing_id": "12124", // auto incremant id
-                "purchasing_doc_no": payload.purchasing_doc_no,
-                "file_name": req.file.filename,
-                "file_path": req.file.path,
-                "status": CREATED,
-                "remarks": payload.remarks,
-                "created_at": getEpochTime(),
-                "created_by_name": payload.action_by_name,
-                "created_by_id": payload.action_by_id,
-                // "create_at_datetime": "",  // DATA BASE DEFAULT DATTE TIME
-                // "updated_at_datetime": "" // DATA BASE DEFAULT DATE TIME
-            }
+
+            const insertObj = drawingPayload(payload, CREATED)
+            console.log("insertObj", insertObj);
 
             const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
             const response = await query({ query: q, values: val });
@@ -278,11 +268,9 @@ const sdbgResubmission = async (req, res) => {
         purchasing_doc_no, 
       ...payload,
       ...fileData,
-      bank_name: result[0].bank_name ? result[0].bank_name : null,
-      transaction_id: result[0].transaction_id
-        ? result[0].transaction_id
-        : null,
-      vendor_code: result[0].vendor_code ? result[0].vendor_code : null,
+      bank_name: result[0]?.bank_name ? result[0].bank_name : null,
+      transaction_id: result[0]?.transaction_id ? result[0].transaction_id : null,
+      vendor_code: result[0]?.vendor_code ? result[0].vendor_code : null,
     };
     
     const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
@@ -302,4 +290,4 @@ const sdbgResubmission = async (req, res) => {
 };
 
 
-module.exports = { add, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission}
+module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission}
