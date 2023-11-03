@@ -56,5 +56,4 @@ const drawingPayload = (payload, status) => {
 
 
 
-
 module.exports = { sdbgPayload, drawingPayload}
