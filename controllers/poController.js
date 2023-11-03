@@ -74,8 +74,51 @@ const addDrawing = async (req, res) => {
             const response = await query({ query: q, values: val });
 
             if (res) {
+                // console.log("response", response);
+            }
+
+
+            resSend(res, true, 200, "file uploaded!", fileData, null);
+        } else {
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        }
+
+    } catch (error) {
+        console.log("po add api", error)
+
+        return resSend(res, false, 500, "internal server error", [], null);
+    }
+}
+const addDrawinggggggg = async (req, res) => {
+
+    try {
+
+
+        // Handle Image Upload
+        let fileData = {};
+        if (req.file) {
+            fileData = {
+                fileName: req.file.filename,
+                filePath: req.file.path,
+                fileType: req.file.mimetype,
+                fileSize: req.file.size,
+            };
+
+            const payload = {...req.body, ...fileData };
+
+
+            const insertObj = drawingPayload(payload, CREATED)
+            console.log("insertObj", insertObj);
+
+            const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
+            const response = await query({ query: q, values: val });
+
+            if (res) {
                 console.log("response", response);
             }
+
+
+            
 
 
             resSend(res, true, 200, "file uploaded!", fileData, null);
@@ -290,4 +333,4 @@ const sdbgResubmission = async (req, res) => {
 };
 
 
-module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission}
+module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission, addDrawinggggggg}
