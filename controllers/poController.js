@@ -6,7 +6,7 @@ const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = requir
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const fileDetails = require("../lib/filePath");
 const path = require('path');
-const { sdbgPayload, drawingPayload } = require("../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData } = require("../services/po.services");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -256,6 +256,14 @@ const sdbgResubmission = async (req, res) => {
     if (!purchasing_doc_no)
       return resSend(res, false, 400, "Please send po number", null, null);
 
+    const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+    const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, ACKNOWLEDGE] });
+
+    if (acknowledgeResult && acknowledgeResult?.length)
+        return resSend(res, true, 200, `Aleready acknowledge this po -> ${purchasing_doc_no}`, null, null);
+
+
+
     const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
 
     const result = await query({ query: GET_LATEST_SDBG, values: [] });
@@ -289,4 +297,59 @@ const sdbgResubmission = async (req, res) => {
 };
 
 
-module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission}
+const poList = async (req, res) => {
+    try {
+
+        let q = `SELECT * FROM ekko`;
+
+        let fetchQuery = `SELECT
+        ekko.EBELN AS "ekko.EBELN",
+        ekko.BUKRS AS "ekko.BUKRS",
+        ekko.BSTYP AS "ekko.BSTYP",
+        ekko.BSART AS "ekko.BSART",
+        ekko.LOEKZ AS "ekko.LOEKZ",
+        ekko.AEDAT AS "ekko.AEDAT",
+        ekko.ERNAM AS "ekko.ERNAM",
+        ekko.LIFNR AS "ekko.LIFNR",
+        ekko.EKORG AS "ekko.EKORG",
+        ekko.EKGRP AS "ekko.EKGRP",
+        new_sdbg.purchasing_doc_no AS "new_sdbg.purchasing_doc_no",
+        new_sdbg.created_at AS "new_sdbg.created_at",
+        new_sdbg.status AS "new_sdbg.status",
+        new_sdbg.created_by_name AS "new_sdbg.created_by_name",
+        new_sdbg.created_by_id AS "new_sdbg.created_by_id",
+        add_drawing.purchasing_doc_no AS "add_drawing.purchasing_doc_no",
+        add_drawing.created_by_name AS "add_drawing.created_by_name",
+        add_drawing.status AS "add_drawing.status",
+        add_drawing.created_by_id AS "add_drawing.created_by_id",
+        add_drawing.created_at AS "add_drawing.created_at"
+    FROM ekko
+    LEFT JOIN new_sdbg 
+    ON (ekko.EBELN = new_sdbg.purchasing_doc_no)
+    LEFT JOIN add_drawing 
+    ON (ekko.EBELN = add_drawing.purchasing_doc_no)
+    WHERE (add_drawing.status = "1" OR add_drawing.status = "3")
+    AND (new_sdbg.status = "1" OR new_sdbg.status = "3")`;
+
+
+        const result1 = await query({ query: fetchQuery, values: [] });
+
+
+        // const result2 = await query({ query: fetchQuery, values: [] });
+        console.log("result", result1);
+        
+        // const newResult = poModifyData(result)
+        
+        // console.log("newResult", newResult);
+
+        resSend(res, true, 200, "data fetch scussfully.", result1, null);
+
+
+    } catch (error) {
+        return resSend(res, false, 500, error.toString(), [], null);
+    }
+}
+
+
+
+module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission, poList}

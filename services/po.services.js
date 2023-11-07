@@ -55,5 +55,41 @@ const drawingPayload = (payload, status) => {
 }
 
 
+const poModifyData = (queryResult) => {
 
-module.exports = { sdbgPayload, drawingPayload}
+    const resArr = []
+    if(!Array.isArray(queryResult) && !queryResult.result) return [];
+    const result = queryResult.map((row) => {
+        let po = {};
+        let sdbg = {};
+        let drawing = {};
+
+        for (const key in row) {
+            const [table, column] = key.split('.');
+
+            switch (table) {
+                case 'ekko':
+                    po[column] = row[key];
+                    break;
+                case 'new_sdbg':
+                    sdbg[column] = row[key];
+                    break;
+                case 'add_drawing':
+                    drawing[column] = row[key];
+                    break;
+            }
+
+            resArr.push({ po, sdbg, drawing});
+            // po = sdbg = drawing = {};
+        }
+
+
+        return {po, sdbg, drawing };
+    });
+
+    return result;
+}
+
+
+
+module.exports = { sdbgPayload, drawingPayload, poModifyData}

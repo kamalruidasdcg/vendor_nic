@@ -123,6 +123,9 @@ router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (re
 router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
   poController.getAllSDBG(req, res);
 });
+router.get(poPrefix + "/poList", [], (req, res) => {
+  poController.poList(req, res);
+});
 
 
 module.exports = router;
