@@ -4,6 +4,7 @@ const { UPDATE, INSERT } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
+const { validatePayload } = require("./validatePayload");
 
 
 
@@ -112,19 +113,29 @@ const { generateQuery } = require("../lib/utils");
   
     console.warn("General insert table data [API] . . . . . . . !");
     try {
-
-      const { $tableName } = req.query;
+      const tableList = ["ekko", "ekpo"]
+      const { tableName } = req.query;
+      console.log("tableName", tableName)
       
-      if (!$tableName ) {
-        throw new Error("Please send table name");
+      if (!tableName ) {
+        return resSend(res, false, 400, `Please sent table name`, null, null);
       }; 
+      if (!tableList.includes(tableName)) {
+        return resSend(res, false, 400, `Data insert not allow in this ${tableName} table`, null, null);
+      }; 
+
 
       const insertObj = req.body;
 
-  
+
+      const verifyPayload = validatePayload(tableName, insertObj);
+
+      if( !verifyPayload.status) {
+        return resSend(res, false, 400, `${verifyPayload.msg}`, insertObj, null);
+      }
 
       // START QUERIES
-      const { q, val } = generateQuery(INSERT, $tableName, insertObj);
+      const { q, val } = generateQuery(INSERT, tableName, insertObj);
 
   
       const result = await query({
@@ -133,13 +144,13 @@ const { generateQuery } = require("../lib/utils");
       });
 
       if (result?.affectedRows) {
-        resSend(res, true, 200, `insert data in ${ $tableName }`, result, null);
+        resSend(res, true, 200, `Insert data in ${ tableName }`, result, null);
       } else {
-        resSend(res, false, 200, "No Record Found", result, null);
+        resSend(res, false, 400, "No data inserted", result, null);
       }
     } catch (error) {
       console.log(error);
-      resSend(res, false, 400, "Error", error, null);
+      resSend(res, false, 500, "insertTableData api error", error, null);
     }
   };
 
