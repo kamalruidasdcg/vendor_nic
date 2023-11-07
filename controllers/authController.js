@@ -56,7 +56,7 @@ const login = async (req, res) => {
     // WHERE auth.vendor_code = "${req.body.vendor_code}"`;
 
 
-        const q1 = ` SELECT t1.vendor_code, t1.email, t1.username, t1.password, t2.* FROM auth as t1 LEFT JOIN lfa1 AS t2 ON t1.vendor_code = t2.LIFNR WHERE t1.vendor_code = ?`
+        const q1 = ` SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, t2.* FROM auth as t1 LEFT JOIN lfa1 AS t2 ON t1.vendor_code = t2.LIFNR WHERE t1.vendor_code = ?`
         const result = await query({ query: q1, values: [req.body.vendor_code] });
 
         console.log("result", result);
