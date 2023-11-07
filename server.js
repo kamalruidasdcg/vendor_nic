@@ -18,11 +18,13 @@ const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
+const dataInsert = require("./routes/dataInsert");
 
 // use routes
 app.use("/api/v1", allRoutes);
 app.use("/api/v1/auth2", authRoute);
 app.use("/api/v1/upload", uploadRoutes);
+app.use("/api/v1/insert", dataInsert);
 
 app.use(errorHandler);
 
