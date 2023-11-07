@@ -41,9 +41,9 @@ router.post("/login", auth);
 
 // GENERAL GET AND UPDATE ROUTE
 
-router.get("/getFilteredData", veifyAccessToken, getFilteredData);
-router.post("/updatTableData", veifyAccessToken, updatTableData);
-router.post("/insertTableData", veifyAccessToken, insertTableData);
+router.get("/getFilteredData", getFilteredData);
+router.post("/updatTableData", updatTableData);
+router.post("/insertTableData", insertTableData);
 
 
 // VENDOR BILL RECEIVE, CERTIFIED REJECT FORWARD 
