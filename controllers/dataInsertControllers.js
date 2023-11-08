@@ -73,7 +73,7 @@ const insertPOData = async (req, res) => {
             }
 
             if (ekpo?.length) {
-                const insert_ekpo_table = `INSERT INTO ekpo (, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
+                const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
                 const ekpo_table_val = ekpoTableData(ekpo);
                 insertPromiseFn.push(promiseConnection.query(insert_ekpo_table, [ekpo_table_val]))
 
