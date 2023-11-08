@@ -47,13 +47,6 @@ async function query({ query, values = [] }) {
 }
 
 
-const promiseConnection = async () => {
-
-  return  await mysql.createConnection(connObj);
-  
-
-}
 
 
-
-module.exports = { query, connection, promiseConnection };
+module.exports = { query, connection };
