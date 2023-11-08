@@ -1,4 +1,5 @@
-const { query, connection } = require("../config/dbConfig");
+const mysql2 = require("mysql2");
+const { query } = require("../config/dbConfig");
 const { UPDATE, INSERT, TRUE, FALSE } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
@@ -11,6 +12,8 @@ const {
     STATUS_ACTIVE,
 } = require("../lib/status");
 const xlsx = require("xlsx");
+
+require("dotenv").config();
 
 //  FOR ADD NEW PAYMENT
 const newPayment = async (req, res) => {
@@ -262,87 +265,103 @@ const updoadExcelFileController = async (req, res) => {
 
 
     try {
-        let fileData = {};
 
-        const { created_by_name, created_by_id } = req.body;
-
-        if (req.file) {
-            fileData = {
-                fileName: req.file.filename,
-                filePath: req.file.path,
-                fileType: req.file.mimetype,
-                fileSize: req.file.size,
-            };
-
-            if (req.file == undefined) {
-                resSend(res, false, 400, "Please upload an excel file!", fileData, null);
-            }
-
-            const workbook = xlsx.readFile(req.file.path);
-
-            const data = [];
-            const sheets = workbook.SheetNames;
-
-            for (let i = 0; i < sheets.length; i++) {
-                const temp = xlsx.utils.sheet_to_json(
-                    workbook.Sheets[workbook.SheetNames[i]]
-                );
-                temp.forEach((res) => {
-                    data.push({ ...res, created_by_name, created_by_id });
-                });
-            }
-
-            const query = `INSERT INTO ${NEW_PAYMENTS} ( venor_code, contactors_name, po_no, MAIN, FOJ, RBD, COL_61P, TU, TTC, G_HOUSE, BELUR, NSSY, IHQ_DELHI,  WAGES_PAID_UPTO,  PF_DEPOSIT_UPTO, ESI_DEPISIT_UPTO, REMARKS, created_by_name, created_by_id, status) VALUES ?`;
-
-
-            const values = data.map((obj) => [
-                obj.venor_code,
-                obj.contactors_name,
-                obj.po_no,
-                obj.MAIN,
-                obj.FOJ,
-                obj.RBD,
-                obj.COL_61P,
-                obj.TU,
-                obj.TTC,
-                obj.G_HOUSE,
-                obj.BELUR,
-                obj.NSSY,
-                obj.IHQ_DELHI,
-                obj.WAGES_PAID_UPTO,
-                obj.PF_DEPOSIT_UPTO,
-                obj.ESI_DEPISIT_UPTO,
-                obj.REMARKS,
-                obj.created_by_name,
-                obj.created_by_id,
-                "1",
-            ]);
-
-
-            // const value = [ [1, "name"], [2, "name2"]]
-
-            connection.query(query, [values], (err, results) => {
-                if (err) {
-                    console.error('Error inserting data: ' + err);
-                    resSend(res, false, 500, "'Failed to insert data'", data, null);
-                } else {
-                    resSend(res, true, 200, "Data insert succussfully", data, null);
-
-                }
-            });
-
-            // connection.end();
-
-        } else {
-            resSend(res, false, 400, "Please upload a valid Excel File", fileData, null);
+        const connObj = {
+            host: process.env.DB_HOST_ADDRESS,
+            port: process.env.DB_CONN_PORT,
+            user: process.env.DB_USER,
+            password: "",
+            database: process.env.DB_NAME,
+            multipleStatements: true,
         }
+        const connection = mysql2.createConnection(connObj);
 
+        try {
+            let fileData = {};
+            const { created_by_name, created_by_id } = req.body;
+
+            if (req.file) {
+                fileData = {
+                    fileName: req.file.filename,
+                    filePath: req.file.path,
+                    fileType: req.file.mimetype,
+                    fileSize: req.file.size,
+                };
+
+                if (req.file == undefined) {
+                    resSend(res, false, 400, "Please upload an excel file!", fileData, null);
+                }
+
+                const workbook = xlsx.readFile(req.file.path);
+
+                const data = [];
+                const sheets = workbook.SheetNames;
+
+                for (let i = 0; i < sheets.length; i++) {
+                    const temp = xlsx.utils.sheet_to_json(
+                        workbook.Sheets[workbook.SheetNames[i]]
+                    );
+                    temp.forEach((res) => {
+                        data.push({ ...res, created_by_name, created_by_id });
+                    });
+                }
+
+                const query = `INSERT INTO ${NEW_PAYMENTS} ( venor_code, contactors_name, po_no, MAIN, FOJ, RBD, COL_61P, TU, TTC, G_HOUSE, BELUR, NSSY, IHQ_DELHI,  WAGES_PAID_UPTO,  PF_DEPOSIT_UPTO, ESI_DEPISIT_UPTO, REMARKS, created_by_name, created_by_id, status) VALUES ?`;
+
+
+                const values = data.map((obj) => [
+                    obj.venor_code,
+                    obj.contactors_name,
+                    obj.po_no,
+                    obj.MAIN,
+                    obj.FOJ,
+                    obj.RBD,
+                    obj.COL_61P,
+                    obj.TU,
+                    obj.TTC,
+                    obj.G_HOUSE,
+                    obj.BELUR,
+                    obj.NSSY,
+                    obj.IHQ_DELHI,
+                    obj.WAGES_PAID_UPTO,
+                    obj.PF_DEPOSIT_UPTO,
+                    obj.ESI_DEPISIT_UPTO,
+                    obj.REMARKS,
+                    obj.created_by_name,
+                    obj.created_by_id,
+                    "1",
+                ]);
+
+
+                // const value = [ [1, "name"], [2, "name2"]]
+
+                connection.query(query, [values], (err, results) => {
+                    if (err) {
+                        console.error('Error inserting data: ' + err);
+                        resSend(res, false, 500, "'Failed to insert data'", data, null);
+                    } else {
+                        resSend(res, true, 200, "Data insert succussfully", data, null);
+
+                    }
+                });
+
+                // connection.end();
+
+            } else {
+                resSend(res, false, 400, "Please upload a valid Excel File", fileData, null);
+            }
+
+        } catch (error) {
+            console.error('Error inserting data: ' + error);
+            resSend(res, false, 500, "Failed to insert data", [], null);
+        } finally {
+            connection.end();
+        }
     } catch (error) {
-        console.error('Error inserting data: ' + error);
+        console.log("err", error);
         resSend(res, false, 500, "Failed to insert data", [], null);
-    } finally {
-         connection.end();
     }
+
 };
 
 
