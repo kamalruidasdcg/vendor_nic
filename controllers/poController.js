@@ -303,46 +303,105 @@ const poList = async (req, res) => {
         let q = `SELECT * FROM ekko`;
 
         let fetchQuery = `SELECT
-        ekko.EBELN AS "ekko.EBELN",
-        ekko.BUKRS AS "ekko.BUKRS",
-        ekko.BSTYP AS "ekko.BSTYP",
-        ekko.BSART AS "ekko.BSART",
-        ekko.LOEKZ AS "ekko.LOEKZ",
-        ekko.AEDAT AS "ekko.AEDAT",
-        ekko.ERNAM AS "ekko.ERNAM",
-        ekko.LIFNR AS "ekko.LIFNR",
-        ekko.EKORG AS "ekko.EKORG",
-        ekko.EKGRP AS "ekko.EKGRP",
-        new_sdbg.purchasing_doc_no AS "new_sdbg.purchasing_doc_no",
-        new_sdbg.created_at AS "new_sdbg.created_at",
-        new_sdbg.status AS "new_sdbg.status",
-        new_sdbg.created_by_name AS "new_sdbg.created_by_name",
-        new_sdbg.created_by_id AS "new_sdbg.created_by_id",
-        add_drawing.purchasing_doc_no AS "add_drawing.purchasing_doc_no",
-        add_drawing.created_by_name AS "add_drawing.created_by_name",
-        add_drawing.status AS "add_drawing.status",
-        add_drawing.created_by_id AS "add_drawing.created_by_id",
-        add_drawing.created_at AS "add_drawing.created_at"
-    FROM ekko
-    LEFT JOIN new_sdbg 
-    ON (ekko.EBELN = new_sdbg.purchasing_doc_no)
-    LEFT JOIN add_drawing 
-    ON (ekko.EBELN = add_drawing.purchasing_doc_no)
-    WHERE (add_drawing.status = "1" OR add_drawing.status = "3")
-    AND (new_sdbg.status = "1" OR new_sdbg.status = "3")`;
+        ekko.EBELN AS "ekko_EBELN",
+        ekko.BUKRS AS "ekko_BUKRS",
+        ekko.BSTYP AS "ekko_BSTYP",
+        ekko.BSART AS "ekko_BSART",
+        ekko.LOEKZ AS "ekko_LOEKZ",
+        ekko.AEDAT AS "ekko_AEDAT",
+        ekko.ERNAM AS "ekko_ERNAM",
+        ekko.LIFNR AS "ekko_LIFNR",
+        ekko.EKORG AS "ekko_EKORG",
+        ekko.EKGRP AS "ekko_EKGRP",
+
+        new_sdbg.purchasing_doc_no AS "new_sdbg_purchasing_doc_no",
+        new_sdbg.created_at AS "new_sdbg_created_at",
+        new_sdbg.status AS "new_sdbg_status",
+        new_sdbg.created_by_name AS "new_sdbg_created_by_name",
+        new_sdbg.created_by_id AS "new_sdbg_created_by_id",
+
+        add_drawing.purchasing_doc_no AS "add_drawing_purchasing_doc_no",
+        add_drawing.created_by_name AS "add_drawing_created_by_name",
+        add_drawing.status AS "add_drawing_status",
+        add_drawing.created_by_id AS "add_drawing_created_by_id",
+        add_drawing.created_at AS "add_drawing_created_at"
+
+        FROM ekko
+        LEFT JOIN new_sdbg 
+        ON (ekko.EBELN = new_sdbg.purchasing_doc_no)
+        LEFT JOIN add_drawing 
+        ON (ekko.EBELN = add_drawing.purchasing_doc_no)
+        WHERE (add_drawing.status = "1" OR add_drawing.status = "3")
+        AND (new_sdbg.status = "1" OR new_sdbg.status = "3")`;
 
 
         const result1 = await query({ query: fetchQuery, values: [] });
-
-
-        // const result2 = await query({ query: fetchQuery, values: [] });
         console.log("result", result1);
+        // return;
+        const data = result1;
         
-        // const newResult = poModifyData(result)
-        
-        // console.log("newResult", newResult);
+        const resultArr= [];
 
-        resSend(res, true, 200, "data fetch scussfully.", result1, null);
+        let checkElementArr = [];
+
+        await Promise.all(
+            result1.map( (item) => {
+
+                const poArr = data.filter(d => d.ekko_EBELN === item.ekko_EBELN);
+                if(checkElementArr.includes(item.ekko_EBELN)===false) {
+                  
+                   let new_sdbg = [];
+                   let add_drawing = [];
+                   poArr.map(  (item) => {
+                        let sdbgObj = {
+                                        purchasing_doc_no:item.new_sdbg_purchasing_doc_no,
+                                        created_at:item.new_sdbg_created_at,
+                                        status:item.new_sdbg_status,
+                                        created_by_name:item.new_sdbg_created_by_name,
+                                        created_by_id:item.new_sdbg_created_by_id
+                                    
+                                    };
+
+                        let drawingObj = {
+                                        created_by_name:item.add_drawing_created_by_name,
+                                        status:item.add_drawing_status,
+                                        created_by_id:item.add_drawing_created_by_id,
+                                        created_at:item.add_drawing_created_at
+                                    
+                                    };            
+
+
+                       new_sdbg.push(sdbgObj);
+                       add_drawing.push(drawingObj);
+                   });
+      
+                   let poInfo = {
+                            ekko_EBELN : item.ekko_EBELN,
+                            ekko_BUKRS : item.ekko_BUKRS,
+                            ekko_BSTYP : item.ekko_BSTYP,
+                            ekko_BSART : item.ekko_BSART,
+                            ekko_LOEKZ : item.ekko_LOEKZ,
+                            ekko_AEDAT : item.ekko_AEDAT,
+                            ekko_ERNAM : item.ekko_ERNAM,
+                            ekko_LIFNR : item.ekko_LIFNR,
+                            ekko_EKORG : item.ekko_EKORG,
+                            ekko_EKGRP : item.ekko_EKGRP
+                   }
+                   //console.log(g);
+                   let mainObj = {poInfo, sdbg: new_sdbg, drawing:add_drawing};
+                   resultArr.push(mainObj);
+                }
+                
+                checkElementArr.push(item.ekko_EBELN);
+
+
+            })
+        );
+
+         
+     console.log(resultArr);
+
+        resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
 
 
     } catch (error) {
