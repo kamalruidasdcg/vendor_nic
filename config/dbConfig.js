@@ -18,7 +18,12 @@ const connObj = {
 console.log("connObj", connObj);
 
 // create the connection to database
-const connection = mysql2.createConnection(connObj);
+const connection =   mysql2.createConnection(connObj);
+
+
+
+// const promiseConnection =  mysql.createConnection(connObj);
+
 
 // module.exports = connection;
 
@@ -41,4 +46,14 @@ async function query({ query, values = [] }) {
   }
 }
 
-module.exports = { query, connection };
+
+const promiseConnection = async () => {
+
+  return  await mysql.createConnection(connObj);
+  
+
+}
+
+
+
+module.exports = { query, connection, promiseConnection };
