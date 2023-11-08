@@ -340,6 +340,8 @@ const updoadExcelFileController = async (req, res) => {
     } catch (error) {
         console.error('Error inserting data: ' + error);
         resSend(res, false, 500, "Failed to insert data", [], null);
+    } finally {
+         connection.end();
     }
 };
 
