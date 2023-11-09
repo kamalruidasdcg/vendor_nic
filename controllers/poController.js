@@ -299,163 +299,54 @@ const sdbgResubmission = async (req, res) => {
 
 const poList = async (req, res) => {
     try {
-        const aa = [];
+        const resultArr = [];
 
-        let q = `SELECT DISTINCT EBELN AS poNb FROM ekko`;
+        let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
         const poArr = await query({ query: q, values: [] });
-        // console.log("result", result1);
+        //console.log(poArr);
+        let str ="";
+        await Promise.all(
+            poArr.map(async (item) => {
+                str += "'"+item.poNb+"',";
+            })
+        );
+        str = str.slice(0, -1);
+        let SDVGQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+        let SDVGArr = await query({ query: SDVGQuery, values: [] });
+        //console.log(SDVGArr);
+
+        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+        let drawingArr = await query({ query: drawingQuery, values: [] });
+        //console.log(drawingArr);
+
+        let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+        let qapArr = await query({ query: qapQuery, values: [] });
+        //console.log(qapArr);
 
         await Promise.all(
             poArr.map(async (item) => {
                 
                 let obj = {};
                 obj.poNumber = item.poNb;
-                let SDVGQuery = `SELECT created_at,created_by_name,remarks FROM new_sdbg WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
-                
-                let SDVGObj = await query({ query: SDVGQuery, values: [] });
-                if (Array.isArray(SDVGObj) && SDVGObj.length) {
-                    obj.SDVG = SDVGObj[0];
-                } else  {
-                    obj.SDVG = 'N/A';
-                }
-                console.log(obj);
+                obj.poType = (item.poType == 'ZDM')?'material':(item.poType == 'ZGSR')?'service': 'hybrid';
 
-                let DrawingQuery = `SELECT created_at,created_by_name,remarks FROM add_drawing WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
-                
-                let drawingObj = await query({ query: DrawingQuery, values: [] });
-                if (Array.isArray(drawingObj) && drawingObj.length) {
-                    obj.Drawing = drawingObj[0];
-                } else  {
-                    obj.Drawing = 'N/A';
-                }
-                //qap_submission
-                //console.log(obj);
+                const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+  
+                obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj ;
 
-                let qapQuery = `SELECT created_at,created_by_name,remarks FROM qap_submission WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
-                
-                let qapObj = await query({ query: qapQuery, values: [] });
-                if (Array.isArray(qapObj) && qapObj.length) {
-                    obj.qapSubmission = qapObj[0];
-                } else  {
-                    obj.qapSubmission = 'N/A';
-                }
+                const drawingObj = await drawingArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+  
+                obj.Drawing = (drawingObj === undefined) ? 'N/A' : drawingObj;
 
-
-
-// obj.SDVG = { lastSubminationDate : 1234, updateBy : 22, remarks : 33};
-
-                // obj.Drawing = { lastSubminationDate : 4544, updateBy : 54, remarks : 87};
-
-                aa.push(obj);
+                const qapObj = await qapArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+  
+                obj.qapSubmission = (qapObj === undefined) ? 'N/A' : qapObj;
+               
+                resultArr.push(obj);
             })
         );
-        console.log(aa);
-     //return;
-     resSend(res, true, 200, "data fetch scussfully.", aa, null);
-
-
-
-
-        // let fetchQuery = `SELECT
-        // ekko.EBELN AS "ekko_EBELN",
-        // ekko.BUKRS AS "ekko_BUKRS",
-        // ekko.BSTYP AS "ekko_BSTYP",
-        // ekko.BSART AS "ekko_BSART",
-        // ekko.LOEKZ AS "ekko_LOEKZ",
-        // ekko.AEDAT AS "ekko_AEDAT",
-        // ekko.ERNAM AS "ekko_ERNAM",
-        // ekko.LIFNR AS "ekko_LIFNR",
-        // ekko.EKORG AS "ekko_EKORG",
-        // ekko.EKGRP AS "ekko_EKGRP",
-
-        // new_sdbg.purchasing_doc_no AS "new_sdbg_purchasing_doc_no",
-        // new_sdbg.created_at AS "new_sdbg_created_at",
-        // new_sdbg.status AS "new_sdbg_status",
-        // new_sdbg.created_by_name AS "new_sdbg_created_by_name",
-        // new_sdbg.created_by_id AS "new_sdbg_created_by_id",
-
-        // add_drawing.purchasing_doc_no AS "add_drawing_purchasing_doc_no",
-        // add_drawing.created_by_name AS "add_drawing_created_by_name",
-        // add_drawing.status AS "add_drawing_status",
-        // add_drawing.created_by_id AS "add_drawing_created_by_id",
-        // add_drawing.created_at AS "add_drawing_created_at"
-
-        // FROM ekko
-        // LEFT JOIN new_sdbg 
-        // ON (ekko.EBELN = new_sdbg.purchasing_doc_no)
-        // LEFT JOIN add_drawing 
-        // ON (ekko.EBELN = add_drawing.purchasing_doc_no)
-        // WHERE (add_drawing.status = "1" OR add_drawing.status = "3")
-        // AND (new_sdbg.status = "1" OR new_sdbg.status = "3")`;
-
-
-        // const result1 = await query({ query: q, values: [] });
-        // console.log("result", result1);
-        //  return;
-        // const data = result1;
-        
-        // const resultArr= [];
-
-        // let checkElementArr = [];
-
-        // await Promise.all(
-        //     result1.map( (item) => {
-
-        //         const poArr = data.filter(d => d.ekko_EBELN === item.ekko_EBELN);
-        //         if(checkElementArr.includes(item.ekko_EBELN)===false) {
-                  
-        //            let new_sdbg = [];
-        //            let add_drawing = [];
-        //            poArr.map(  (item) => {
-        //                 let sdbgObj = {
-        //                                 purchasing_doc_no:item.new_sdbg_purchasing_doc_no,
-        //                                 created_at:item.new_sdbg_created_at,
-        //                                 status:item.new_sdbg_status,
-        //                                 created_by_name:item.new_sdbg_created_by_name,
-        //                                 created_by_id:item.new_sdbg_created_by_id
-                                    
-        //                             };
-
-        //                 let drawingObj = {
-        //                                 created_by_name:item.add_drawing_created_by_name,
-        //                                 status:item.add_drawing_status,
-        //                                 created_by_id:item.add_drawing_created_by_id,
-        //                                 created_at:item.add_drawing_created_at
-                                    
-        //                             };            
-
-
-        //                new_sdbg.push(sdbgObj);
-        //                add_drawing.push(drawingObj);
-        //            });
-      
-        //            let poInfo = {
-        //                     ekko_EBELN : item.ekko_EBELN,
-        //                     ekko_BUKRS : item.ekko_BUKRS,
-        //                     ekko_BSTYP : item.ekko_BSTYP,
-        //                     ekko_BSART : item.ekko_BSART,
-        //                     ekko_LOEKZ : item.ekko_LOEKZ,
-        //                     ekko_AEDAT : item.ekko_AEDAT,
-        //                     ekko_ERNAM : item.ekko_ERNAM,
-        //                     ekko_LIFNR : item.ekko_LIFNR,
-        //                     ekko_EKORG : item.ekko_EKORG,
-        //                     ekko_EKGRP : item.ekko_EKGRP
-        //            }
-        //            //console.log(g);
-        //            let mainObj = {poInfo, sdbg: new_sdbg, drawing:add_drawing};
-        //            resultArr.push(mainObj);
-        //         }
-                
-        //         checkElementArr.push(item.ekko_EBELN);
-
-
-        //     })
-       // );
-
-         
-     //console.log(resultArr);
-
-
+       
+        resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
 
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
