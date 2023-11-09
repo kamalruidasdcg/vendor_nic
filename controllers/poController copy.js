@@ -30,12 +30,12 @@ const details = async (req, res) => {
 
         const result = await query({ query: q, values: [queryParams.id] });
 
-        if (!result?.length)
+        if(!result?.length) 
             return resSend(res, false, 404, "No PO number found !!", [], null);
-
-
+        
+        
         const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE EBELN = ?`;
-
+        
         const result2 = await query({ query: materialDetailsQ, values: [queryParams.id] });
 
         result[0]["MAT_DETAILS"] = result2 || [];
@@ -64,7 +64,7 @@ const addDrawing = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            const payload = { ...req.body, ...fileData };
+            const payload = {...req.body, ...fileData };
 
 
             const insertObj = drawingPayload(payload, CREATED)
@@ -73,7 +73,7 @@ const addDrawing = async (req, res) => {
             const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
             const response = await query({ query: q, values: val });
 
-            if (response) {
+            if (res) {
                 // console.log("response", response);
             }
 
@@ -90,62 +90,6 @@ const addDrawing = async (req, res) => {
     }
 }
 
-const drawingResubmission = async (req, res) => {
-    try {
-        // Handle Image Upload
-
-        if (!req.file)
-            return resSend(res, false, 400, "Please upload a valid File", fileData, null);
-
-        const fileData = {
-            fileName: req.file.filename,
-            filePath: req.file.path,
-            fileType: req.file.mimetype,
-            fileSize: req.file.size,
-        };
-
-        const { purchasing_doc_no, ...payload } = req.body;
-
-        if (!purchasing_doc_no)
-            return resSend(res, false, 400, "Please send po number", null, null);
-
-        const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${ADD_DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
-        const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, ACKNOWLEDGE] });
-
-        if (acknowledgeResult && acknowledgeResult?.length)
-            return resSend(res, true, 200, `Aleready acknowledge this po -> ${purchasing_doc_no}`, null, null);
-
-
-
-        //   const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
-
-        //   const result = await query({ query: GET_LATEST_SDBG, values: [] });
-
-        //   if (!result || !result.length)
-        //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-
-        const payloadObj = {
-            purchasing_doc_no,
-            ...payload,
-            ...fileData,
-        };
-
-        const insertObj = drawingPayload(payloadObj, RE_SUBMIT);
-
-        const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
-        const response = await query({ query: q, values: val });
-
-        if (response.affectedRows) {
-            resSend(res, true, 200, "file uploaded!", fileData, null);
-        } else {
-            resSend(res, false, 400, "No data inserted", response, null);
-        }
-    } catch (error) {
-        console.log("drawing resubmission api error", error);
-        resSend(res, false, 500, "internal server error", [], null);
-    }
-};
-
 // DOWNLOAD DRAWING WITH DRAWING ID
 
 const download = async (req, res) => {
@@ -154,11 +98,11 @@ const download = async (req, res) => {
 
     // const queryParams = req.query;
 
-    const typeArr = ["drawing", "sdbg", "qap"]
+    const typeArr = [ "drawing", "sdbg", "qap"]
 
     const { id, type } = req.query;
 
-    if (!typeArr.includes(type)) {
+    if(!typeArr.includes(type)) {
         return resSend(res, false, 400, "Please send valid type ! i.e. drawing, sdbg", null, null)
     }
     let fileFoundQuery = "";
@@ -174,9 +118,9 @@ const download = async (req, res) => {
             fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
             break;
         case "qap":
-
+            
             break;
-
+    
         default:
             break;
     }
@@ -186,7 +130,7 @@ const download = async (req, res) => {
     console.log("response", response);
     console.log("fileFoundQuery", fileFoundQuery);
 
-    if (!response?.length || !response[0]?.file_name) {
+    if( !response?.length || !response[0]?.file_name) {
         return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
     }
 
@@ -241,166 +185,174 @@ const addSDBG = async (req, res) => {
 }
 
 const downloadSDBG = async (req, res) => {
-
+    
     const queryParams = req.query;
 
 
-    if (!queryParams || !queryParams.id) {
+    if(!queryParams || !queryParams.id) {
 
         return resSend(res, false, 400, "Please send po number", null, null);
     }
-
+    
     const q = `SELECT * FROM ${NEW_SDBG} WHERE id = ${queryParams.id}`
-
+    
     const response = await query({ query: q, values: [] });
-
+    
     const filepath = `/uploads/sdbg/${response[0].file_name}`;
 
     res.download(path.join(__dirname, "..", filepath), (err) => {
         if (err)
-            resSend(res, false, 404, "file not foound", err, null)
-
-    });
+        resSend(res, false, 404, "file not foound", err, null)
+    
+});
 }
 
 const getAllSDBG = async (req, res) => {
-
+    
     try {
 
         const queryParams = req.query;
 
-        if (!queryParams || !queryParams.po) {
+        if(!queryParams || !queryParams.po) {
             return resSend(res, false, 400, "Please send po number", null, null);
         }
 
         const q = `SELECT * FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${queryParams.po}`
-
+        
         const result = await query({ query: q, values: [] });
 
-        if (result?.length) {
+        if(result?.length) {
             resSend(res, true, 200, "DATA FETCH SUCCESSFULLY", result, null);
         } else {
             resSend(res, true, 200, "NO DATA FOUND", result, null);
         }
-
-
+        
+        
     } catch (error) {
 
-        resSend(res, false, 500, "INTERNAL SERVER ERROR", error, null);
-
+        resSend(res, false, 500, "INTERNAL SERVER ERROR", error , null);
+        
     }
 }
 
 
 
 const sdbgResubmission = async (req, res) => {
-    try {
-        // Handle Image Upload
+  try {
+    // Handle Image Upload
 
-        if (!req.file)
-            return resSend(res, false, 400, "Please upload a valid File", fileData, null);
+    if (!req.file)
+      return resSend( res, false, 400, "Please upload a valid File", fileData, null);
 
-        const fileData = {
-            fileName: req.file.filename,
-            filePath: req.file.path,
-            fileType: req.file.mimetype,
-            fileSize: req.file.size,
-        };
+    const fileData = {
+      fileName: req.file.filename,
+      filePath: req.file.path,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+    };
 
-        const { purchasing_doc_no, ...payload } = req.body;
+    const { purchasing_doc_no, ...payload } = req.body;
 
-        if (!purchasing_doc_no)
-            return resSend(res, false, 400, "Please send po number", null, null);
+    if (!purchasing_doc_no)
+      return resSend(res, false, 400, "Please send po number", null, null);
 
-        const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-        const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, ACKNOWLEDGE] });
+    const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+    const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, ACKNOWLEDGE] });
 
-        if (acknowledgeResult && acknowledgeResult?.length)
-            return resSend(res, true, 200, `Aleready acknowledge this po -> ${purchasing_doc_no}`, null, null);
+    if (acknowledgeResult && acknowledgeResult?.length)
+        return resSend(res, true, 200, `Aleready acknowledge this po -> ${purchasing_doc_no}`, null, null);
 
 
 
-        const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
+    const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
 
-        const result = await query({ query: GET_LATEST_SDBG, values: [] });
+    const result = await query({ query: GET_LATEST_SDBG, values: [] });
 
-        if (!result || !result.length)
-            return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+    if (!result || !result.length)
+      return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
 
-        const payloadObj = {
-            purchasing_doc_no,
-            ...payload,
-            ...fileData,
-            bank_name: result[0]?.bank_name ? result[0].bank_name : null,
-            transaction_id: result[0]?.transaction_id ? result[0].transaction_id : null,
-            vendor_code: result[0]?.vendor_code ? result[0].vendor_code : null,
-        };
+    const payloadObj = {
+        purchasing_doc_no, 
+      ...payload,
+      ...fileData,
+      bank_name: result[0]?.bank_name ? result[0].bank_name : null,
+      transaction_id: result[0]?.transaction_id ? result[0].transaction_id : null,
+      vendor_code: result[0]?.vendor_code ? result[0].vendor_code : null,
+    };
+    
+    const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
 
-        const insertObj = sdbgPayload(payloadObj, RE_SUBMIT);
+    const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
+    const response = await query({ query: q, values: val });
 
-        const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
-        const response = await query({ query: q, values: val });
-
-        if (response.affectedRows) {
-            resSend(res, true, 200, "file uploaded!", fileData, null);
-        } else {
-            resSend(res, true, 200, "No Record Found", response, null);
-        }
-    } catch (error) {
-        console.log("sdbgResubmission api error", error);
-        resSend(res, false, 500, "internal server error", [], null);
+    if (response.affectedRows) {
+      resSend(res, true, 200, "file uploaded!", fileData, null);
+    } else {
+      resSend(res, true, 200, "No Record Found", response, null);
     }
+  } catch (error) {
+    console.log("sdbgResubmission api error", error);
+    resSend(res, false, 500, "internal server error", [], null);
+  }
 };
+
 
 const poList = async (req, res) => {
     try {
         const resultArr = [];
 
-        let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
+        let q = `SELECT DISTINCT EBELN AS poNb FROM ekko`;
         const poArr = await query({ query: q, values: [] });
-        //console.log(poArr);
-        let str ="";
-        await Promise.all(
-            poArr.map(async (item) => {
-                str += "'" + item.poNb + "',";
-            })
-        );
-        str = str.slice(0, -1);
-        let SDVGQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let SDVGArr = await query({ query: SDVGQuery, values: [] });
-        //console.log(SDVGArr);
+        // console.log(poArr);
+        // let str
+        // await Promise.all(
+        //     poArr.map(async (item) => {
 
-        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let drawingArr = await query({ query: drawingQuery, values: [] });
-        //console.log(drawingArr);
-
-        let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let qapArr = await query({ query: qapQuery, values: [] });
-        //console.log(qapArr);
+        //     })
+        // )
+        // return;
+        // console.log("result", poArr.toString());
 
         await Promise.all(
             poArr.map(async (item) => {
                 
                 let obj = {};
                 obj.poNumber = item.poNb;
-                obj.poType = (item.poType == 'ZDM')?'material':(item.poType == 'ZGSR')?'service': 'hybrid';
 
-                const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj ;
+                let SDVGQuery = `SELECT created_at,created_by_name,remarks FROM new_sdbg WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let SDVGObj = await query({ query: SDVGQuery, values: [] });
+                if (Array.isArray(SDVGObj) && SDVGObj.length) {
+                    obj.SDVG = SDVGObj[0];
+                } else  {
+                    obj.SDVG = 'N/A';
+                }
+                console.log(obj);
 
-                const drawingObj = await drawingArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.Drawing = (drawingObj === undefined) ? 'N/A' : drawingObj;
+                let DrawingQuery = `SELECT created_at,created_by_name,remarks FROM add_drawing WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let drawingObj = await query({ query: DrawingQuery, values: [] });
+                if (Array.isArray(drawingObj) && drawingObj.length) {
+                    obj.Drawing = drawingObj[0];
+                } else  {
+                    obj.Drawing = 'N/A';
+                }
+                //qap_submission
+                //console.log(obj);
 
-                const qapObj = await qapArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.qapSubmission = (qapObj === undefined) ? 'N/A' : qapObj;
-               
+                let qapQuery = `SELECT created_at,created_by_name,remarks FROM qap_submission WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let qapObj = await query({ query: qapQuery, values: [] });
+                if (Array.isArray(qapObj) && qapObj.length) {
+                    obj.qapSubmission = qapObj[0];
+                } else  {
+                    obj.qapSubmission = 'N/A';
+                }
+
                 resultArr.push(obj);
             })
         );
-
+       
         resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
 
     } catch (error) {
@@ -410,4 +362,4 @@ const poList = async (req, res) => {
 
 
 
-module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG, sdbgResubmission, poList, drawingResubmission }
+module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG,  sdbgResubmission, poList}
