@@ -109,6 +109,9 @@ router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) =
 router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
   poController.sdbgResubmission(req, res);
 });
+router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.drawingResubmission(req, res);
+});
 
 
 // router.post(poPrefix + "/sdbgAcknowledgement", [uploadSDBGFile.single("file")], (req, res) => {
