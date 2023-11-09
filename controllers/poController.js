@@ -2,11 +2,11 @@ const { resSend } = require("../lib/resSend");
 const { query } = require("../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO } = require("../lib/tableName");
+const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, QAP_SUBMISSION } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const fileDetails = require("../lib/filePath");
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData } = require("../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData, qapPayload } = require("../services/po.services");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -239,6 +239,105 @@ const addSDBG = async (req, res) => {
         return resSend(res, false, 500, "internal server error", [], null);
     }
 }
+const addQAP = async (req, res) => {
+
+    console.log("po ADD QAP apis")
+
+    try {
+
+        // Handle Image Upload
+        let fileData = {};
+        if (req.file) {
+            fileData = {
+                fileName: req.file.filename,
+                filePath: req.file.path,
+                fileType: req.file.mimetype,
+                fileSize: req.file.size,
+            };
+
+            const payload = { ...req.body, ...fileData };
+
+            const insertObj = qapPayload(payload, CREATED);
+
+            const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
+            console.log(q, val);
+            const response = await query({ query: q, values: val });
+            console.log("res", response);
+
+            if (response.affectedRows) {
+
+                resSend(res, true, 200, "file uploaded!", fileData, null);
+            } else {
+                resSend(res, false, 400, "Data insert failed", response, null);
+            }
+
+        } else {
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        }
+
+    } catch (error) {
+        console.log("po add api", error)
+        return resSend(res, false, 500, "internal server error", [], null);
+    }
+}
+
+
+
+const qapResubmission = async (req, res) => {
+    try {
+        // Handle Image Upload
+
+        if (!req.file)
+            return resSend(res, false, 400, "Please upload a valid File", fileData, null);
+
+        const fileData = {
+            fileName: req.file.filename,
+            filePath: req.file.path,
+            fileType: req.file.mimetype,
+            fileSize: req.file.size,
+        };
+
+        const { purchasing_doc_no, ...payload } = req.body;
+
+        if (!purchasing_doc_no)
+            return resSend(res, false, 400, "Please send po number", null, null);
+
+        const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+        const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, ACKNOWLEDGE] });
+
+        if (acknowledgeResult && acknowledgeResult?.length)
+            return resSend(res, true, 200, `Aleready acknowledge this po -> ${purchasing_doc_no}`, null, null);
+
+
+
+        //   const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ${purchasing_doc_no} AND status = ${CREATED} ORDER BY id DESC LIMIT 1`;
+
+        //   const result = await query({ query: GET_LATEST_SDBG, values: [] });
+
+        //   if (!result || !result.length)
+        //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+
+        const payloadObj = {
+            purchasing_doc_no,
+            ...payload,
+            ...fileData,
+        };
+
+        const insertObj = qapPayload(payloadObj, RE_SUBMIT);
+
+        const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
+        const response = await query({ query: q, values: val });
+
+        if (response.affectedRows) {
+            resSend(res, true, 200, "file uploaded!", fileData, null);
+        } else {
+            resSend(res, false, 400, "No data inserted", response, null);
+        }
+    } catch (error) {
+        console.log("drawing resubmission api error", error);
+        resSend(res, false, 500, "internal server error", [], null);
+    }
+};
 
 const downloadSDBG = async (req, res) => {
 
@@ -410,4 +509,16 @@ const poList = async (req, res) => {
 
 
 
-module.exports = { addDrawing, details, download, addSDBG, downloadSDBG, getAllSDBG, sdbgResubmission, poList, drawingResubmission }
+module.exports = { 
+    addDrawing, 
+    details, 
+    download, 
+    addSDBG, 
+    downloadSDBG, 
+    getAllSDBG, 
+    sdbgResubmission, 
+    poList, 
+    drawingResubmission, 
+    addQAP,
+    qapResubmission
+}

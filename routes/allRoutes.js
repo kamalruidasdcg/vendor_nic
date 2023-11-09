@@ -131,4 +131,12 @@ router.get(poPrefix + "/poList", [], (req, res) => {
 });
 
 
+router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.addQAP(req, res);
+});
+router.post(poPrefix + "/qapResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.qapResubmission(req, res);
+});
+
+
 module.exports = router;

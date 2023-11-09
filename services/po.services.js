@@ -53,6 +53,30 @@ const drawingPayload = (payload, status) => {
 
     return payloadObj;
 }
+/**
+ * Modify qap payload object to insert data
+ * @param {Object} payload 
+ * @param {string} status 
+ * @returns Object
+ */
+const qapPayload = (payload, status) => {
+
+    const payloadObj = {
+    // "id": 1, // auto incremant id
+    "purchasing_doc_no": payload.purchasing_doc_no,
+    "file_name": payload.fileName,
+    "file_path": payload.filePath,
+    "remarks": payload.remarks ? payload.remarks : null,
+    "status": status,
+    "updated_by": payload.updated_by,
+    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+    "created_at": getEpochTime(),
+    "created_by_name": payload.action_by_name,
+    "created_by_id": payload.action_by_id,
+    }
+
+    return payloadObj;
+}
 
 
 const poModifyData = (queryResult) => {
@@ -92,4 +116,4 @@ const poModifyData = (queryResult) => {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, poModifyData}
+module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData}
