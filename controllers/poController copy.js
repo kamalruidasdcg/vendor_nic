@@ -301,53 +301,60 @@ const poList = async (req, res) => {
     try {
         const resultArr = [];
 
-        let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
+        let q = `SELECT DISTINCT EBELN AS poNb FROM ekko`;
         const poArr = await query({ query: q, values: [] });
-        //console.log(poArr);
-        let str ="";
-        await Promise.all(
-            poArr.map(async (item) => {
-                str += "'"+item.poNb+"',";
-            })
-        );
-        str = str.slice(0, -1);
-        let SDVGQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let SDVGArr = await query({ query: SDVGQuery, values: [] });
-        //console.log(SDVGArr);
+        // console.log(poArr);
+        // let str
+        // await Promise.all(
+        //     poArr.map(async (item) => {
 
-        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let drawingArr = await query({ query: drawingQuery, values: [] });
-        //console.log(drawingArr);
-
-        let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
-        let qapArr = await query({ query: qapQuery, values: [] });
-        //console.log(qapArr);
+        //     })
+        // )
+        // return;
+        // console.log("result", poArr.toString());
 
         await Promise.all(
             poArr.map(async (item) => {
                 
                 let obj = {};
                 obj.poNumber = item.poNb;
-                obj.poType = (item.poType == 'ZDM')?'material':(item.poType == 'ZGSR')?'service': 'hybrid';
 
-                const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj ;
+                let SDVGQuery = `SELECT created_at,created_by_name,remarks FROM new_sdbg WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let SDVGObj = await query({ query: SDVGQuery, values: [] });
+                if (Array.isArray(SDVGObj) && SDVGObj.length) {
+                    obj.SDVG = SDVGObj[0];
+                } else  {
+                    obj.SDVG = 'N/A';
+                }
+                console.log(obj);
 
-                const drawingObj = await drawingArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.Drawing = (drawingObj === undefined) ? 'N/A' : drawingObj;
+                let DrawingQuery = `SELECT created_at,created_by_name,remarks FROM add_drawing WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let drawingObj = await query({ query: DrawingQuery, values: [] });
+                if (Array.isArray(drawingObj) && drawingObj.length) {
+                    obj.Drawing = drawingObj[0];
+                } else  {
+                    obj.Drawing = 'N/A';
+                }
+                //qap_submission
+                //console.log(obj);
 
-                const qapObj = await qapArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.qapSubmission = (qapObj === undefined) ? 'N/A' : qapObj;
-               
+                let qapQuery = `SELECT created_at,created_by_name,remarks FROM qap_submission WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
+                
+                let qapObj = await query({ query: qapQuery, values: [] });
+                if (Array.isArray(qapObj) && qapObj.length) {
+                    obj.qapSubmission = qapObj[0];
+                } else  {
+                    obj.qapSubmission = 'N/A';
+                }
+
                 resultArr.push(obj);
             })
         );
        
         resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
- 
+
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
     }
