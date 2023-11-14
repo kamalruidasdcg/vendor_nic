@@ -7,6 +7,7 @@ const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const fileDetails = require("../lib/filePath");
 const path = require('path');
 const { sdbgPayload, drawingPayload, poModifyData, qapPayload } = require("../services/po.services");
+const { handleFileDeletion } = require("../lib/deleteFile");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -67,18 +68,25 @@ const addDrawing = async (req, res) => {
             const payload = { ...req.body, ...fileData };
 
 
-            const insertObj = drawingPayload(payload, CREATED)
-            console.log("insertObj", insertObj);
+            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
+                const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+                const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", res, null);
+
+            }
+
+            const insertObj = drawingPayload(payload, CREATED);
             const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
             const response = await query({ query: q, values: val });
 
-            if (response) {
-                // console.log("response", response);
+            if (response.affectedRows) {
+                resSend(res, true, 200, "file uploaded!", fileData, null);
+            } else {
+                resSend(res, false, 400, "No data inserted", response, null);
             }
 
 
-            resSend(res, true, 200, "file uploaded!", fileData, null);
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
@@ -218,6 +226,15 @@ const addSDBG = async (req, res) => {
 
             const payload = { ...req.body, ...fileData };
 
+
+            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+                
+                const directory = path.join(__dirname, '..', 'uploads', 'sdbg');
+                const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", res, null);
+
+            }
+
             const insertObj = sdbgPayload(payload, CREATED)
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
@@ -257,12 +274,19 @@ const addQAP = async (req, res) => {
 
             const payload = { ...req.body, ...fileData };
 
+
+            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+                
+                const directory = path.join(__dirname, '..', 'uploads', 'qap');
+                const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", res, null);
+
+            }
+
             const insertObj = qapPayload(payload, CREATED);
 
             const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
-            console.log(q, val);
             const response = await query({ query: q, values: val });
-            console.log("res", response);
 
             if (response.affectedRows) {
 
@@ -458,7 +482,7 @@ const poList = async (req, res) => {
         let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
         const poArr = await query({ query: q, values: [] });
         //console.log(poArr);
-        let str ="";
+        let str = "";
         await Promise.all(
             poArr.map(async (item) => {
                 str += "'" + item.poNb + "',";
@@ -479,23 +503,23 @@ const poList = async (req, res) => {
 
         await Promise.all(
             poArr.map(async (item) => {
-                
+
                 let obj = {};
                 obj.poNumber = item.poNb;
-                obj.poType = (item.poType == 'ZDM')?'material':(item.poType == 'ZGSR')?'service': 'hybrid';
+                obj.poType = (item.poType == 'ZDM') ? 'material' : (item.poType == 'ZGSR') ? 'service' : 'hybrid';
 
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
-                obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj ;
+
+                obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
 
                 const drawingObj = await drawingArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
+
                 obj.Drawing = (drawingObj === undefined) ? 'N/A' : drawingObj;
 
                 const qapObj = await qapArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-  
+
                 obj.qapSubmission = (qapObj === undefined) ? 'N/A' : qapObj;
-               
+
                 resultArr.push(obj);
             })
         );
@@ -509,16 +533,16 @@ const poList = async (req, res) => {
 
 
 
-module.exports = { 
-    addDrawing, 
-    details, 
-    download, 
-    addSDBG, 
-    downloadSDBG, 
-    getAllSDBG, 
-    sdbgResubmission, 
-    poList, 
-    drawingResubmission, 
+module.exports = {
+    addDrawing,
+    details,
+    download,
+    addSDBG,
+    downloadSDBG,
+    getAllSDBG,
+    sdbgResubmission,
+    poList,
+    drawingResubmission,
     addQAP,
     qapResubmission
 }
