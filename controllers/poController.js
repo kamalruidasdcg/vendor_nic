@@ -28,18 +28,26 @@ const details = async (req, res) => {
         // let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}'`;
         let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = ?`;
 
-
         const result = await query({ query: q, values: [queryParams.id] });
 
         if (!result?.length)
             return resSend(res, false, 404, "No PO number found !!", [], null);
+        
+        //console.log(result);
+        let tableName = (result[0].BSART === 'ZDM')?EKPO:(result[0].BSART === 'ZGSR')?EKBE: null;
 
+        let resDate;
 
-        const materialDetailsQ = `SELECT * FROM ${EKPO} WHERE EBELN = ?`;
+        if(tableName) {
+            let tableQuery = `SELECT * FROM ${tableName} WHERE EBELN = ?`
+            //console.log(tableQuery);
+           let arrDate = await query({ query: tableQuery, values: [queryParams.id] });
+          resDate = arrDate[0];
+        } else {
+            resDate = "This PO is not service nor Material";
+        }
 
-        const result2 = await query({ query: materialDetailsQ, values: [queryParams.id] });
-
-        result[0]["MAT_DETAILS"] = result2 || [];
+        result[0]["MORE_DETAILS"] = resDate || [];
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
 
