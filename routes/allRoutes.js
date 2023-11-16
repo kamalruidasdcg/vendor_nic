@@ -109,6 +109,9 @@ router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) =
 router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
   poController.sdbgResubmission(req, res);
 });
+router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.drawingResubmission(req, res);
+});
 
 
 // router.post(poPrefix + "/sdbgAcknowledgement", [uploadSDBGFile.single("file")], (req, res) => {
@@ -125,6 +128,14 @@ router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
 });
 router.get(poPrefix + "/poList", [], (req, res) => {
   poController.poList(req, res);
+});
+
+
+router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.addQAP(req, res);
+});
+router.post(poPrefix + "/qapResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.qapResubmission(req, res);
 });
 
 
