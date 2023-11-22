@@ -92,19 +92,17 @@ router.get(poPrefix + "/details", [], (req, res) => {
 });
 
 // PO DRAWING CONTROLLER
-// router.post(poPrefix + "/add", [], uploadDrawingFile.single("file"), (req, res) => {
-//   poController.addDrawing(req, res);
-// });
+
+router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.addDrawing(req, res);
+});
+
 router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
-  console.log("________>", req.path)
   drawingController.submitDrawing(req, res);
 });
 
 // END OF DRAWING CONTROLLER
 
-router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
-  poController.addDrawing(req, res);
-});
 
 router.post(poPrefix + "/inspectionCallLetter", [dynamicallyUpload.single("file")], (req, res) => {
   inspectionCallLetterController.inspectionCallLetter(req, res);
