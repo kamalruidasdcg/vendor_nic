@@ -95,7 +95,7 @@ router.get(poPrefix + "/details", [], (req, res) => {
 // router.post(poPrefix + "/add", [], uploadDrawingFile.single("file"), (req, res) => {
 //   poController.addDrawing(req, res);
 // });
-router.post(poPrefix + "/drawing",  (req, res) => {
+router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
   console.log("________>", req.path)
   drawingController.submitDrawing(req, res);
 });

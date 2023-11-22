@@ -20,19 +20,19 @@ const submitDrawing = async (req, res) => {
 
         // Handle Image Upload
         let fileData = {};
-        // if (req.file) {
-        //     fileData = {
-        //         fileName: req.file.filename,
-        //         filePath: req.file.path,
-        //         fileType: req.file.mimetype,
-        //         fileSize: req.file.size,
-        //     };
-        fileData = {
-            fileName: "abccc",
-            filePath: "ddidid",
-            fileType: "jpeg",
-            fileSize: 1313,
-        };
+        if (req.file) {
+            fileData = {
+                fileName: req.file.filename,
+                filePath: req.file.path,
+                fileType: req.file.mimetype,
+                fileSize: req.file.size,
+            };
+        // fileData = {
+        //     fileName: "abccc",
+        //     filePath: "ddidid",
+        //     fileType: "jpeg",
+        //     fileSize: 1313,
+        // };
 
         const payload = { ...req.body, ...fileData };
 
@@ -77,9 +77,9 @@ const submitDrawing = async (req, res) => {
         }
 
 
-        // } else {
-        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
-        // }
+        } else {
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        }
 
     } catch (error) {
         console.log("po add api", error)
