@@ -15,6 +15,7 @@ const { getFilteredData, updatTableData, insertTableData } = require("../control
 const { auth } = require("../controllers/auth");
 const paymentControllers = require("../controllers/paymentControllers");
 const poController = require("../controllers/poController");
+const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
@@ -89,11 +90,13 @@ router.get(poPrefix + "/details", [], (req, res) => {
   poController.details(req, res);
 });
 
-// router.post(poPrefix + "/add", [], uploadDrawingFile.single("file"), (req, res) => {
-//   poController.addDrawing(req, res);
-// });
+
 router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
   poController.addDrawing(req, res);
+});
+
+router.post(poPrefix + "/inspectionCallLetter", [dynamicallyUpload.single("file")], (req, res) => {
+  inspectionCallLetterController.inspectionCallLetter(req, res);
 });
 
 
