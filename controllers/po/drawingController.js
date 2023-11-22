@@ -27,54 +27,50 @@ const submitDrawing = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-        // fileData = {
-        //     fileName: "abccc",
-        //     filePath: "ddidid",
-        //     fileType: "jpeg",
-        //     fileSize: 1313,
-        // };
+            // fileData = {
+            //     fileName: "abccc",
+            //     filePath: "ddidid",
+            //     fileType: "jpeg",
+            //     fileSize: 1313,
+            // };
 
-        const payload = { ...req.body, ...fileData };
+            const payload = { ...req.body, ...fileData };
 
-        const verifyStatus = [SUBMITTED, RE_SUBMITTED, ACKNOWLEDGED, APPROVED]
+            const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED]
 
-        console.log("payloadpayloadpayload", payload)
+            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
-        if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
+                // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+                // const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", null, null);
 
-            // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
-            // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", null, null);
-
-        }
+            }
 
 
-        const result2 = await getDrawingData(payload.purchasing_doc_no, ACKNOWLEDGED);
+            const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
 
-        if (result2 && result2?.length) {
-            return resSend(res, true, 200, `This drawing aleready acknowledge [ PO - ${payload.purchasing_doc_no} ]`, null, null);
-        }
+            if (result2 && result2?.length) {
+                return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
+            }
 
-        let insertObj;
+            let insertObj;
 
-        if (payload.status === SUBMITTED) {
-            insertObj = drawingPayload(payload, SUBMITTED);
-        } else if (payload.status === RE_SUBMITTED) {
-            insertObj = drawingPayload(payload, RE_SUBMITTED);
-        } else if (payload.status === ACKNOWLEDGED) {
-            insertObj = drawingPayload(payload, ACKNOWLEDGED);
-        }
+            if (payload.status === SUBMITTED) {
+                insertObj = drawingPayload(payload, SUBMITTED);
+            } else if (payload.status === RE_SUBMITTED) {
+                insertObj = drawingPayload(payload, RE_SUBMITTED);
+            } else if (payload.status === APPROVED) {
+                insertObj = drawingPayload(payload, APPROVED);
+            }
 
-        console.log("insertObj", insertObj)
+            const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
+            const response = await query({ query: q, values: val });
 
-        const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
-        const response = await query({ query: q, values: val });
-
-        if (response.affectedRows) {
-            resSend(res, true, 200, "file uploaded!", fileData, null);
-        } else {
-            resSend(res, false, 400, "No data inserted", response, null);
-        }
+            if (response.affectedRows) {
+                resSend(res, true, 200, "file uploaded!", fileData, null);
+            } else {
+                resSend(res, false, 400, "No data inserted", response, null);
+            }
 
 
         } else {
