@@ -16,6 +16,7 @@ const { auth } = require("../controllers/auth");
 const paymentControllers = require("../controllers/paymentControllers");
 const poController = require("../controllers/poController");
 const drawingController = require("../controllers/po/drawingController")
+const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
@@ -100,6 +101,15 @@ router.post(poPrefix + "/drawing",  (req, res) => {
 });
 
 // END OF DRAWING CONTROLLER
+
+router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
+  poController.addDrawing(req, res);
+});
+
+router.post(poPrefix + "/inspectionCallLetter", [dynamicallyUpload.single("file")], (req, res) => {
+  inspectionCallLetterController.inspectionCallLetter(req, res);
+});
+
 
 router.get(poPrefix + "/download", [], (req, res) => {
   poController.download(req, res);
