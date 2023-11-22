@@ -15,7 +15,8 @@ const { getFilteredData, updatTableData, insertTableData } = require("../control
 const { auth } = require("../controllers/auth");
 const paymentControllers = require("../controllers/paymentControllers");
 const poController = require("../controllers/poController");
-const drawingController = require("../controllers/po/drawingController")
+const drawingController = require("../controllers/po/drawingController");
+const sdbgController = require("../controllers/po/sdbgController");
 const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
@@ -93,9 +94,9 @@ router.get(poPrefix + "/details", [], (req, res) => {
 
 // PO DRAWING CONTROLLER
 
-router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
-  poController.addDrawing(req, res);
-});
+// router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
+//   poController.addDrawing(req, res);
+// });
 
 router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
   drawingController.submitDrawing(req, res);
@@ -114,9 +115,16 @@ router.get(poPrefix + "/download", [], (req, res) => {
 });
 
 
-router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) => {
-  poController.addSDBG(req, res);
+// SDBG CONTROLLER
+
+router.post(poPrefix + "/sdbg", [uploadSDBGFile.single("file")], (req, res) => {
+  sdbgController.submitSDBG(req, res);
 });
+
+
+// router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) => {
+//   poController.addSDBG(req, res);
+// });
 
 router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
   poController.sdbgResubmission(req, res);
