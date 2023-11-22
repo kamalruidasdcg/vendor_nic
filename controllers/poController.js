@@ -2,7 +2,7 @@ const { resSend } = require("../lib/resSend");
 const { query } = require("../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, QAP_SUBMISSION } = require("../lib/tableName");
+const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, QAP_SUBMISSION, ZPO_MILESTONE } = require("../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../lib/status");
 const fileDetails = require("../lib/filePath");
 const path = require('path');
@@ -30,24 +30,34 @@ const details = async (req, res) => {
 
         const result = await query({ query: q, values: [queryParams.id] });
 
+        const timelingQ = `SELECT * FROM ${ZPO_MILESTONE} WHERE EBELN = ? `
+        const timeline = await query({ query: timelingQ, values: [queryParams.id] });
+
         if (!result?.length)
             return resSend(res, false, 404, "No PO number found !!", [], null);
-        
+
         //console.log(result);
-        let tableName = (result[0].BSART === 'ZDM')?EKPO:(result[0].BSART === 'ZGSR')?EKBE: null;
+        let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
         let resDate;
 
-        if(tableName) {
+        // TO DO
+        /**
+         * Contractual delivery date will come from eket table, field name EINDT
+         * we have to update this api accrodingly
+         */
+
+        if (tableName) {
             let tableQuery = `SELECT * FROM ${tableName} WHERE EBELN = ?`
             //console.log(tableQuery);
-           let arrDate = await query({ query: tableQuery, values: [queryParams.id] });
-          resDate = arrDate[0];
+            let arrDate = await query({ query: tableQuery, values: [queryParams.id] });
+            resDate = arrDate[0];
         } else {
             resDate = "This PO is not service nor Material";
         }
 
         result[0]["MORE_DETAILS"] = resDate || [];
+        result[0]["timeline"] = timeline || [];
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
 
@@ -76,7 +86,7 @@ const addDrawing = async (req, res) => {
             const payload = { ...req.body, ...fileData };
 
 
-            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
                 const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 const isDel = handleFileDeletion(directory, req.file.filename);
@@ -235,8 +245,8 @@ const addSDBG = async (req, res) => {
             const payload = { ...req.body, ...fileData };
 
 
-            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
-                
+            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+
                 const directory = path.join(__dirname, '..', 'uploads', 'sdbg');
                 const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend(res, false, 400, "Please send valid payload", res, null);
@@ -283,8 +293,8 @@ const addQAP = async (req, res) => {
             const payload = { ...req.body, ...fileData };
 
 
-            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
-                
+            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+
                 const directory = path.join(__dirname, '..', 'uploads', 'qap');
                 const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend(res, false, 400, "Please send valid payload", res, null);
