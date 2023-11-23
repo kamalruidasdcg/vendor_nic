@@ -78,6 +78,21 @@ const qapPayload = (payload, status) => {
     return payloadObj;
 }
 
+const wdcPayload = (payload, status) => {
+
+    const payloadObj = {
+    "purchasing_doc_no": payload.purchasing_doc_no,
+    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+    "remarks": payload.remarks ? payload.remarks : null,
+    "status": status,
+    "updated_by": payload.updated_by,
+    "created_at": getEpochTime(),
+    "created_by_name": payload.action_by_name,
+    "created_by_id": payload.action_by_id,
+    }
+
+    return payloadObj;
+}
 
 const poModifyData = (queryResult) => {
 
@@ -116,4 +131,4 @@ const poModifyData = (queryResult) => {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData}
+module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload}
