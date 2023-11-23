@@ -1,19 +1,18 @@
-
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData, qapPayload } = require("../../services/po.services");
+const { qapPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
-const { generateQuery, getEpochTime } = require("../../lib/utils");
+const { generateQuery } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
-const { ADD_DRAWING } = require("../../lib/tableName");
-const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
+const { QAP_SUBMISSION } = require("../../lib/tableName");
+const { SUBMITTED, APPROVED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 
 
 
 // add new post
-const submitDrawing = async (req, res) => {
+const submitQAP = async (req, res) => {
 
     try {
 
@@ -27,14 +26,8 @@ const submitDrawing = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-            // fileData = {
-            //     fileName: "abccc",
-            //     filePath: "ddidid",
-            //     fileType: "jpeg",
-            //     fileSize: 1313,
-            // };
 
-            const payload = { ...req.body, ...fileData };
+            let payload = { ...req.body, ...fileData };
 
             const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED]
 
@@ -46,24 +39,37 @@ const submitDrawing = async (req, res) => {
 
             }
 
-
-            const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
+            const GET_LATEST_QAP = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+            const result2 = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, APPROVED);
 
             if (result2 && result2?.length) {
-                return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
+                return resSend(res, true, 200, `This sdbg aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
             }
 
             let insertObj;
 
             if (payload.status === SUBMITTED) {
-                insertObj = drawingPayload(payload, SUBMITTED);
+                insertObj = qapPayload(payload, SUBMITTED);
             } else if (payload.status === RE_SUBMITTED) {
-                insertObj = drawingPayload(payload, RE_SUBMITTED);
+
+                const GET_LATEST_SDBG = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+
+                
+                const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, SUBMITTED] });
+                console.log("iiii", result)
+
+                if (!result || !result.length) {
+                    return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+                }
+
+                insertObj = qapPayload(payload, RE_SUBMITTED);
+
             } else if (payload.status === APPROVED) {
-                insertObj = drawingPayload(payload, APPROVED);
+
+                insertObj = qapPayload(payload, APPROVED);
             }
 
-            const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
+            const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
@@ -78,18 +84,19 @@ const submitDrawing = async (req, res) => {
         }
 
     } catch (error) {
-        console.log("Drawing submission api", error);
+        console.log("QAP Submissio api", error);
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
 }
 
 
-const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
-    const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${ADD_DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
-    const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, drawingStatus] });
-    return acknowledgeResult;
+const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
+    // const Q = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+    const result = await query({ query: getQuery, values: [purchasing_doc_no, drawingStatus] });
+    return result;
 }
 
 
-module.exports = { submitDrawing }
+
+module.exports = { submitQAP }

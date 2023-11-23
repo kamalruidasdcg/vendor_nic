@@ -107,7 +107,7 @@ const submitSDBG = async (req, res) => {
         }
 
     } catch (error) {
-        console.log("po add api", error)
+        console.log("SDGB Submission api", error);
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
