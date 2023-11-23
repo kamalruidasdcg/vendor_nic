@@ -17,6 +17,7 @@ const paymentControllers = require("../controllers/paymentControllers");
 const poController = require("../controllers/poController");
 const drawingController = require("../controllers/poController/drawingController");
 const sdbgController = require("../controllers/poController/sdbgController");
+const qapController = require("../controllers/poController/qapController");
 const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
@@ -151,12 +152,17 @@ router.get(poPrefix + "/poList", [], (req, res) => {
 });
 
 
-router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
-  poController.addQAP(req, res);
+router.post(poPrefix + "/qap", [dynamicallyUpload.single("file")], (req, res) => {
+  qapController.submitQAP(req, res);
 });
-router.post(poPrefix + "/qapResubmission", [dynamicallyUpload.single("file")], (req, res) => {
-  poController.qapResubmission(req, res);
-});
+
+
+// router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
+//   poController.addQAP(req, res);
+// });
+// router.post(poPrefix + "/qapResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+//   poController.qapResubmission(req, res);
+// });
 
 
 module.exports = router;
