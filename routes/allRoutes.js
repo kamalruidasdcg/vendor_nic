@@ -18,6 +18,7 @@ const poController = require("../controllers/poController");
 const drawingController = require("../controllers/poController/drawingController");
 const sdbgController = require("../controllers/poController/sdbgController");
 const qapController = require("../controllers/poController/qapController");
+const generalController = require("../controllers/poController/poGeneralController");
 const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const WdcController = require("../controllers/poController/WdcController");
 
@@ -92,7 +93,7 @@ router.post(paymentPrefix + "/addByXLS",
   const poPrefix = "/po";
 
 router.get(poPrefix + "/details", [], (req, res) => {
-  poController.details(req, res);
+  generalController.details(req, res);
 });
 
 // PO DRAWING CONTROLLER
