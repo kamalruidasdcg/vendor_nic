@@ -54,7 +54,7 @@ const { validatePayload } = require("./validatePayload");
         values: [],
       });
       if (result.length > 0) {
-        resSend(res, true, 200, "All Billing Registration Data", result, null);
+        resSend(res, true, 200, "Data fetched successfully", result, null);
       } else {
         resSend(res, false, 200, "No Record Found", result, null);
       }
