@@ -88,9 +88,14 @@ router.post(paymentPrefix + "/addByXLS",
   paymentControllers.updoadExcelFileController);
 
 
-  // PO details
+// PO details
 
-  const poPrefix = "/po";
+const poPrefix = "/po";
+
+
+router.get(poPrefix + "/poList", [], (req, res) => {
+  poController.poList(req, res);
+});
 
 router.get(poPrefix + "/details", [], (req, res) => {
   generalController.details(req, res);
@@ -104,6 +109,9 @@ router.get(poPrefix + "/details", [], (req, res) => {
 
 router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
   drawingController.submitDrawing(req, res);
+});
+router.get(poPrefix + "/drawingList", [], (req, res) => {
+  drawingController.list(req, res);
 });
 
 // END OF DRAWING CONTROLLER
@@ -129,19 +137,21 @@ router.get(poPrefix + "/download", [], (req, res) => {
 router.post(poPrefix + "/sdbg", [uploadSDBGFile.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
+router.get(poPrefix + "/sdbgList", [], (req, res) => {
+  sdbgController.list(req, res);
+});
 
 
 // router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) => {
 //   poController.addSDBG(req, res);
 // });
 
-router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
-  poController.sdbgResubmission(req, res);
-});
-router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")], (req, res) => {
-  poController.drawingResubmission(req, res);
-});
-
+// router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
+//   poController.sdbgResubmission(req, res);
+// });
+// router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")], (req, res) => {
+//   poController.drawingResubmission(req, res);
+// });
 
 // router.post(poPrefix + "/sdbgAcknowledgement", [uploadSDBGFile.single("file")], (req, res) => {
 //   poController.sdbgAcknowledgement(req, res);
@@ -152,17 +162,22 @@ router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")
 //   poController.downloadSDBG(req, res);
 // });
 
-router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
-  poController.getAllSDBG(req, res);
-});
-router.get(poPrefix + "/poList", [], (req, res) => {
-  poController.poList(req, res);
-});
+// router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
+//   poController.getAllSDBG(req, res);
+// });
 
 
+
+
+// QAP CONTROLLERS
 router.post(poPrefix + "/qap", [dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
 });
+router.get(poPrefix + "/qapList", [], (req, res) => {
+  qapController.list(req, res);
+});
+
+// QAP CONTROLLER END
 
 
 // router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
