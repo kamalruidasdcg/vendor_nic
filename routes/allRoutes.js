@@ -22,7 +22,8 @@ const generalController = require("../controllers/poController/poGeneralControll
 const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const WdcController = require("../controllers/poController/WdcController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
-
+const icgrnController = require("../controllers/poController/icgrnController");
+const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
@@ -128,9 +129,17 @@ router.get(poPrefix + '/ListOfInspectionCallLetter', inspectionCallLetterControl
 router.post(poPrefix + "/wdc", WdcController.wdc);
 router.get(poPrefix + '/ListOfWdc', WdcController.List);
 
-// shippingDocuments
-router.post(poPrefix + "/shippingDocuments", [dynamicallyUpload.single("file")], shippingDocumentsController.shippingDocuments);
+// ListOfShippingDocuments
+router.post(poPrefix + "/shippingDocuments", shippingDocumentsController.shippingDocuments);
 router.get(poPrefix + '/ListOfShippingDocuments', shippingDocumentsController.List);
+
+// ICGRN
+router.get(poPrefix + '/ListOfIcgrn', icgrnController.List);
+
+// paymentAdviseController
+router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
+
+
 
 router.get(poPrefix + "/download", [], (req, res) => {
   poController.download(req, res);
