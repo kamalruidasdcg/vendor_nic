@@ -3,7 +3,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { WDC } = require("../../lib/tableName");
-const { SUBMITTED, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
+const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { wdcPayload } = require("../../services/po.services");
@@ -39,7 +39,7 @@ exports.wdc = async (req, res) => {
 
             }
 
-            const insertObj = wdcPayload(payload, SUBMITTED);
+            const insertObj = wdcPayload(payload, PENDING);
             const { q, val } = generateQuery(INSERT, WDC, insertObj);
             const response = await query({ query: q, values: val });
 

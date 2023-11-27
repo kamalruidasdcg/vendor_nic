@@ -3,7 +3,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { INSPECTIONCALLLETTER } = require("../../lib/tableName");
-const { SUBMITTED, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
+const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { drawingPayload } = require("../../services/po.services");
@@ -29,7 +29,7 @@ exports.inspectionCallLetter = async (req, res) => {
 
             const payload = { ...req.body, ...fileData };
 
-            const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED];
+            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED];
 
             if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
@@ -47,14 +47,14 @@ exports.inspectionCallLetter = async (req, res) => {
 
              let insertObj;
 
-            if (payload.status === SUBMITTED) {
-                insertObj = drawingPayload(payload, SUBMITTED);
+            if (payload.status === PENDING) {
+                insertObj = drawingPayload(payload, PENDING);
             } else if (payload.status === RE_SUBMITTED) {
-                insertObj = drawingPayload(payload, RE_SUBMITTED);
+                // insertObj = drawingPayload(payload, RE_SUBMITTED);
             } else if (payload.status === APPROVED) {
                 insertObj = drawingPayload(payload, APPROVED);
             }
-            // insertObj = drawingPayload(payload, SUBMITTED);
+            // insertObj = drawingPayload(payload, PENDING);
             const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
             const response = await query({ query: q, values: val });
 
