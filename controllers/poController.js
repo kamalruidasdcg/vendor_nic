@@ -201,6 +201,7 @@ const download = async (req, res) => {
             break;
         case "qap":
 
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE drawing_id = ?`
             break;
 
         default:
