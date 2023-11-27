@@ -6,7 +6,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
-const { SUBMITTED, APPROVED, RE_SUBMITTED } = require("../../lib/status");
+const { PENDING, APPROVED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 
@@ -30,7 +30,7 @@ const submitQAP = async (req, res) => {
 
             let payload = { ...req.body, ...fileData };
 
-            const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED]
+            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
@@ -49,21 +49,21 @@ const submitQAP = async (req, res) => {
 
             let insertObj;
 
-            if (payload.status === SUBMITTED) {
-                insertObj = qapPayload(payload, SUBMITTED);
+            if (payload.status === PENDING) {
+                insertObj = qapPayload(payload, PENDING);
             } else if (payload.status === RE_SUBMITTED) {
 
-                const GET_LATEST_SDBG = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+                // const GET_LATEST_SDBG = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
 
                 
-                const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, SUBMITTED] });
-                console.log("iiii", result)
+                // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
+                // console.log("iiii", result)
 
-                if (!result || !result.length) {
-                    return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-                }
+                // if (!result || !result.length) {
+                //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+                // }
 
-                insertObj = qapPayload(payload, RE_SUBMITTED);
+                // insertObj = qapPayload(payload, RE_SUBMITTED);
 
             } else if (payload.status === APPROVED) {
 

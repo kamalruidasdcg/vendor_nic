@@ -6,7 +6,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const {  NEW_SDBG } = require("../../lib/tableName");
-const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
+const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 
@@ -30,7 +30,7 @@ const submitSDBG = async (req, res) => {
 
             let payload = { ...req.body, ...fileData };
 
-            const verifyStatus = [SUBMITTED, RE_SUBMITTED, ACKNOWLEDGED]
+            const verifyStatus = [PENDING, RE_SUBMITTED, ACKNOWLEDGED]
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
@@ -49,35 +49,35 @@ const submitSDBG = async (req, res) => {
 
             let insertObj;
 
-            if (payload.status === SUBMITTED) {
-                insertObj = sdbgPayload(payload, SUBMITTED);
+            if (payload.status === PENDING) {
+                insertObj = sdbgPayload(payload, PENDING);
             } else if (payload.status === RE_SUBMITTED) {
 
-                const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+                // const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
 
                 
-                const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, SUBMITTED] });
-                console.log("iiii", result)
+                // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
+                // console.log("iiii", result)
 
-                if (!result || !result.length) {
-                    return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-                }
+                // if (!result || !result.length) {
+                //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
+                // }
 
-                payload = {
-                    ...payload,
-                    bank_name: result[0].bank_name,
-                    transaction_id: result[0].transaction_id,
-                    vendor_code: result[0].vendor_code,
-                }
+                // payload = {
+                //     ...payload,
+                //     bank_name: result[0].bank_name,
+                //     transaction_id: result[0].transaction_id,
+                //     vendor_code: result[0].vendor_code,
+                // }
 
-                insertObj = sdbgPayload(payload, RE_SUBMITTED);
+                // insertObj = sdbgPayload(payload, RE_SUBMITTED);
 
             } else if (payload.status === ACKNOWLEDGED) {
 
 
                 const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
 
-                const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, SUBMITTED] });
+                const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
 
                 if (!result || !result.length) {
                     return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
