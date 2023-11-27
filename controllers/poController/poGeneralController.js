@@ -49,7 +49,15 @@ const details = async (req, res) => {
          * we have to update this api accrodingly
          */
 
-        let materialQuery = `SELECT mat.*, materialMaster.* FROM ${EKPO} as mat LEFT JOIN MARA as materialMaster ON mat.MATNR= materialMaster.MATNR  WHERE EBELN = ?`
+        let materialQuery = `SELECT mat.*, materialLineItems.* , materialMaster.*
+            FROM ${EKPO} as mat 
+        LEFT JOIN eket as materialLineItems
+            ON (mat.EBELN = materialLineItems.EBELN  AND mat.EBELP = materialLineItems.EBELP)
+        LEFT JOIN MARA as materialMaster 
+            ON mat.MATNR= materialMaster.MATNR 
+        WHERE mat.EBELN = ?`;
+
+
         let materialResult = await query({ query: materialQuery, values: [queryParams.id] });
 
         const isMaterialTypePO = poTypeCheck(materialResult);
@@ -77,7 +85,7 @@ const details = async (req, res) => {
 
 function poTypeCheck(materialData) {
 
-    const regex = /DIN/;
+    const regex = /DIEN/;
     // regex.test(materialType);
     let isMatched = true;
 
@@ -170,6 +178,16 @@ const poList = async (req, res) => {
         let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
         let qapArr = await query({ query: qapQuery, values: [] });
         //console.log(qapArr);
+
+
+
+        let materialQuery = `SELECT mat.*, materialMaster.* FROM ${EKPO} as mat LEFT JOIN MARA as materialMaster ON mat.MATNR= materialMaster.MATNR  WHERE EBELN = ?`
+        let materialResult = await query({ query: materialQuery, values: [queryParams.id] });
+
+        const isMaterialTypePO = poTypeCheck(materialResult);
+
+        const poType = isMaterialTypePO === true ? "service" : "material";
+
 
         await Promise.all(
             poArr.map(async (item) => {
