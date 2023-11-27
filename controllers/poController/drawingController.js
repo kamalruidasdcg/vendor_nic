@@ -9,7 +9,7 @@ const { INSERT } = require("../../lib/constant");
 const { ADD_DRAWING } = require("../../lib/tableName");
 const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
-
+const { getFilteredData } = require("../../controllers/genralControlles");
 
 
 // add new post
@@ -92,4 +92,26 @@ const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
 }
 
 
-module.exports = { submitDrawing }
+
+const list = async (req, res) => {
+    
+    req.query.$tableName = ADD_DRAWING;
+
+    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    try {
+
+        if(!req.query.poNo) {
+            return resSend(res, false, 400, "Please send po number", null, null);
+        }
+
+        getFilteredData(req, res);
+    } catch(err) {
+      console.log("data not fetched", err);
+      resSend(res, false, 500, "Internal server error", null, null);
+    }
+   
+}
+
+
+
+module.exports = { submitDrawing, list }

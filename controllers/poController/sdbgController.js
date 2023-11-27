@@ -5,9 +5,10 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
-const { ADD_DRAWING, NEW_SDBG } = require("../../lib/tableName");
+const {  NEW_SDBG } = require("../../lib/tableName");
 const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
+const { getFilteredData } = require("../../controllers/genralControlles");
 
 
 
@@ -120,6 +121,23 @@ const getSDBGData = async (getQuery, purchasing_doc_no, drawingStatus) => {
     return result;
 }
 
+const list = async (req, res) => {
+    
+    req.query.$tableName = NEW_SDBG;
 
+    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    try {
 
-module.exports = { submitSDBG }
+        if(!req.query.poNo) {
+            return resSend(res, false, 400, "Please send po number", null, null);
+        }
+
+        getFilteredData(req, res);
+    } catch(err) {
+      console.log("data not fetched", err);
+      resSend(res, false, 500, "Internal server error", null, null);
+    }
+   
+}
+
+module.exports = { submitSDBG, list }
