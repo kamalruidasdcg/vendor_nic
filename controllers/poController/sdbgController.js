@@ -125,6 +125,14 @@ const submitSDBG = async (req, res) => {
                             html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
                         };
                     }
+                    SENDMAIL(mailDetails, function (err, data) {
+                        if (!err) {
+                            console.log("Error Occurs", err);
+                        } else {
+                            // console.log("Email sent successfully", data);
+                            console.log("Email sent successfully");
+                        }
+                    });
 
                 }
                 if (payload.status === ACKNOWLEDGED && payload.mailSendTo) {
@@ -135,20 +143,16 @@ const submitSDBG = async (req, res) => {
                         subject: "GRSE Team",
                         html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG of [ ${payload.purchasing_doc_no} ] ACKNOWLEDGED`, "GRSR updated"),
                     };
-
+                    SENDMAIL(mailDetails, function (err, data) {
+                        if (!err) {
+                            console.log("Error Occurs", err);
+                        } else {
+                            // console.log("Email sent successfully", data);
+                            console.log("Email sent successfully");
+                        }
+                    });
 
                 }
-
-                console.log("mailDetails", mailDetails);
-
-                SENDMAIL(mailDetails, function (err, data) {
-                    if (!err) {
-                        console.log("Error Occurs", err);
-                    } else {
-                        // console.log("Email sent successfully", data);
-                        console.log("Email sent successfully");
-                    }
-                });
 
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);

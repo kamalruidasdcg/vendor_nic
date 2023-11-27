@@ -10,6 +10,8 @@ const { ADD_DRAWING } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
+const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
+const SENDMAIL = require('../../lib/mailSend');
 
 
 // add new post
@@ -67,6 +69,58 @@ const submitDrawing = async (req, res) => {
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
+
+
+                let mailDetails = {};
+                if (payload.status === PENDING && payload.mailSendTo) {
+
+
+                    if (payload.updated_by == "VENDOR") {
+                        mailDetails = {
+                            // from: "kamal.sspur@gmail.com",
+                            to: payload.mailSendTo,
+                            // to: "mainak.dutta16@gmail.com",
+                            subject: "Vendor drawing submited",
+                            html: DRAWING_SUBMIT_MAIL_TEMPLATE(`Vendor [ ${payload.vendor_code} ] submittes the drawing`, "Vendor drawing submitted"),
+                        };
+                    } else {
+                        mailDetails = {
+                            // from: "kamal.sspur@gmail.com",
+                            to: payload.mailSendTo,
+                            // to: "mainak.dutta16@gmail.com",
+                            subject: "GRSE Team",
+                            html: DRAWING_SUBMIT_MAIL_TEMPLATE(`Drawing status update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
+                        };
+                    }
+                    SENDMAIL(mailDetails, function (err, data) {
+                        if (!err) {
+                            console.log("Error Occurs", err);
+                        } else {
+                            // console.log("Email sent successfully", data);
+                            console.log("Email sent successfully");
+                        }
+                    });
+
+                }
+                if (payload.status === APPROVED && payload.mailSendTo) {
+                    mailDetails = {
+                        // from: "kamal.sspur@gmail.com",
+                        to: payload.mailSendTo,
+                        // to: "mainak.dutta16@gmail.com",
+                        subject: "GRSE Team",
+                        html: DRAWING_SUBMIT_MAIL_TEMPLATE(`Drawing of [ ${payload.purchasing_doc_no} ] APPROVED`, "GRSR updated"),
+                    };
+                    SENDMAIL(mailDetails, function (err, data) {
+                        if (!err) {
+                            console.log("Error Occurs", err);
+                        } else {
+                            // console.log("Email sent successfully", data);
+                            console.log("Email sent successfully");
+                        }
+                    });
+
+                }
+
                 resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);
