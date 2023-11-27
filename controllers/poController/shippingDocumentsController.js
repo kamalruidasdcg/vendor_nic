@@ -3,7 +3,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { SHIPPINGDOCUMENTS } = require("../../lib/tableName");
-const { SUBMITTED, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
+const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { shippingDocumentsPayload } = require("../../services/po.services");
@@ -38,7 +38,7 @@ exports.shippingDocuments = async (req, res) => {
 
             }
 
-            const insertObj = shippingDocumentsPayload(payload, SUBMITTED);
+            const insertObj = shippingDocumentsPayload(payload, PENDING);
             const { q, val } = generateQuery(INSERT, SHIPPINGDOCUMENTS, insertObj);
             const response = await query({ query: q, values: val });
 

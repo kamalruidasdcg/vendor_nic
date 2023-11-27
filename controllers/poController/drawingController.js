@@ -7,7 +7,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { ADD_DRAWING } = require("../../lib/tableName");
-const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
+const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 
@@ -36,7 +36,7 @@ const submitDrawing = async (req, res) => {
 
             const payload = { ...req.body, ...fileData };
 
-            const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED]
+            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
@@ -55,10 +55,10 @@ const submitDrawing = async (req, res) => {
 
             let insertObj;
 
-            if (payload.status === SUBMITTED) {
-                insertObj = drawingPayload(payload, SUBMITTED);
+            if (payload.status === PENDING) {
+                insertObj = drawingPayload(payload, PENDING);
             } else if (payload.status === RE_SUBMITTED) {
-                insertObj = drawingPayload(payload, RE_SUBMITTED);
+                // insertObj = drawingPayload(payload, RE_SUBMITTED);
             } else if (payload.status === APPROVED) {
                 insertObj = drawingPayload(payload, APPROVED);
             }
