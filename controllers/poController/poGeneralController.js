@@ -85,8 +85,8 @@ const details = async (req, res) => {
 
 function poTypeCheck(materialData) {
 
-    const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO
-    // const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO
+    const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
+    // const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO 
     // regex.test(materialType);
     let isMatched = true;
 
