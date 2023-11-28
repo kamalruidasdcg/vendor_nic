@@ -11,19 +11,19 @@ const { getEpochTime } = require("../lib/utils");
 const sdbgPayload = (payload, status) => {
 
     const payloadObj = {
-    // "id": 1, // auto incremant id
-    "purchasing_doc_no": payload.purchasing_doc_no,
-    "file_name": payload.fileName,
-    "file_path": payload.filePath,
-    "remarks": payload.remarks ? payload.remarks : null,
-    "status": status,
-    "updated_by": payload.updated_by,
-    "bank_name": payload.bank_name ? payload.bank_name : null,
-    "transaction_id": payload.transaction_id ? payload.transaction_id : null,
-    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-    "created_at": getEpochTime(),
-    "created_by_name": payload.action_by_name,
-    "created_by_id": payload.action_by_id,
+        // "id": 1, // auto incremant id
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "file_name": payload.fileName,
+        "file_path": payload.filePath,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "status": status,
+        "updated_by": payload.updated_by,
+        "bank_name": payload.bank_name ? payload.bank_name : null,
+        "transaction_id": payload.transaction_id ? payload.transaction_id : null,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "created_at": getEpochTime(),
+        "created_by_name": payload.action_by_name,
+        "created_by_id": payload.action_by_id,
     }
 
     return payloadObj;
@@ -38,17 +38,17 @@ const sdbgPayload = (payload, status) => {
 const drawingPayload = (payload, status) => {
 
     const payloadObj = {
-    // "id": 1, // auto incremant id
-    "purchasing_doc_no": payload.purchasing_doc_no,
-    "file_name": payload.fileName,
-    "file_path": payload.filePath,
-    "remarks": payload.remarks ? payload.remarks : null,
-    "status": status,
-    "updated_by": payload.updated_by,
-    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-    "created_at": getEpochTime(),
-    "created_by_name": payload.action_by_name,
-    "created_by_id": payload.action_by_id,
+        // "id": 1, // auto incremant id
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "file_name": payload.fileName,
+        "file_path": payload.filePath,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "status": status,
+        "updated_by": payload.updated_by,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "created_at": getEpochTime(),
+        "created_by_name": payload.action_by_name,
+        "created_by_id": payload.action_by_id,
     }
 
     return payloadObj;
@@ -62,17 +62,17 @@ const drawingPayload = (payload, status) => {
 const qapPayload = (payload, status) => {
 
     const payloadObj = {
-    // "id": 1, // auto incremant id
-    "purchasing_doc_no": payload.purchasing_doc_no,
-    "file_name": payload.fileName,
-    "file_path": payload.filePath,
-    "remarks": payload.remarks ? payload.remarks : null,
-    "status": status,
-    "updated_by": payload.updated_by,
-    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-    "created_at": getEpochTime(),
-    "created_by_name": payload.action_by_name,
-    "created_by_id": payload.action_by_id,
+        // "id": 1, // auto incremant id
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "file_name": payload.fileName,
+        "file_path": payload.filePath,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "status": status,
+        "updated_by": payload.updated_by,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "created_at": getEpochTime(),
+        "created_by_name": payload.action_by_name,
+        "created_by_id": payload.action_by_id,
     }
 
     return payloadObj;
@@ -81,14 +81,14 @@ const qapPayload = (payload, status) => {
 const wdcPayload = (payload, status) => {
 
     const payloadObj = {
-    "purchasing_doc_no": payload.purchasing_doc_no,
-    "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-    "remarks": payload.remarks ? payload.remarks : null,
-    "status": status,
-    "updated_by": payload.updated_by,
-    "created_at": getEpochTime(),
-    "created_by_name": payload.action_by_name,
-    "created_by_id": payload.action_by_id,
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "status": status,
+        "updated_by": payload.updated_by,
+        "created_at": getEpochTime(),
+        "created_by_name": payload.action_by_name,
+        "created_by_id": payload.action_by_id,
     }
 
     return payloadObj;
@@ -115,7 +115,7 @@ const shippingDocumentsPayload = (payload, status) => {
 const poModifyData = (queryResult) => {
 
     const resArr = []
-    if(!Array.isArray(queryResult) && !queryResult.result) return [];
+    if (!Array.isArray(queryResult) && !queryResult.result) return [];
     const result = queryResult.map((row) => {
         let po = {};
         let sdbg = {};
@@ -136,12 +136,12 @@ const poModifyData = (queryResult) => {
                     break;
             }
 
-            resArr.push({ po, sdbg, drawing});
+            resArr.push({ po, sdbg, drawing });
             // po = sdbg = drawing = {};
         }
 
 
-        return {po, sdbg, drawing };
+        return { po, sdbg, drawing };
     });
 
     return result;
@@ -149,4 +149,35 @@ const poModifyData = (queryResult) => {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload }
+async function poDataModify(data) {
+    if (!data || !Array.isArray(data) || !data.length) return [];
+    let obj = {};
+ data.forEach(element => {
+        let key = element.poNb;
+
+        if (key in obj) {
+            let val = obj[key];
+            let newVal = {
+                "poType": element.poType,
+                "m_number": element.m_number,
+                "MTART": element.MTART
+            }
+
+            obj[key] = [...val, newVal]
+
+        } else {
+            obj[key] = [{
+                "poType": element.poType,
+                "m_number": element.m_number,
+                "MTART": element.MTART
+            }]
+        }
+
+    });
+
+    return obj;
+}
+
+
+
+module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify }
