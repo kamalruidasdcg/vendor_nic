@@ -6,7 +6,7 @@ const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, ZPO_MILES
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData } = require("../../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../../services/po.services");
 
 
 
@@ -85,7 +85,8 @@ const details = async (req, res) => {
 
 function poTypeCheck(materialData) {
 
-    const regex = /DIEN/;
+    const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
+    // const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO 
     // regex.test(materialType);
     let isMatched = true;
 
@@ -157,7 +158,7 @@ const poList = async (req, res) => {
     try {
         const resultArr = [];
 
-        let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
+        let q = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR;`
         const poArr = await query({ query: q, values: [] });
         //console.log(poArr);
         let str = "";
@@ -180,22 +181,23 @@ const poList = async (req, res) => {
         //console.log(qapArr);
 
 
+        const modifiedPOData = await poDataModify(poArr);
 
-        let materialQuery = `SELECT mat.*, materialMaster.* FROM ${EKPO} as mat LEFT JOIN MARA as materialMaster ON mat.MATNR= materialMaster.MATNR  WHERE EBELN = ?`
-        let materialResult = await query({ query: materialQuery, values: [queryParams.id] });
+        const result = [];
+        Object.keys(modifiedPOData).forEach((key) => {
+            const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
+            const poType = isMaterialTypePO === true ? "service" : "material";
+            result.push({ poNb: key, poType })
+        })
 
-        const isMaterialTypePO = poTypeCheck(materialResult);
-
-        const poType = isMaterialTypePO === true ? "service" : "material";
 
 
         await Promise.all(
-            poArr.map(async (item) => {
+            result.map(async (item) => {
 
                 let obj = {};
                 obj.poNumber = item.poNb;
-                obj.poType = (item.poType == 'ZDM') ? 'material' : (item.poType == 'ZGSR') ? 'service' : 'hybrid';
-
+                obj.poType = item.poType;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;

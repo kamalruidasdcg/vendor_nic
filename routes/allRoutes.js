@@ -96,7 +96,7 @@ const poPrefix = "/po";
 
 
 router.get(poPrefix + "/poList", [], (req, res) => {
-  poController.poList(req, res);
+  generalController.poList(req, res);
 });
 
 router.get(poPrefix + "/details", [], (req, res) => {
