@@ -26,6 +26,7 @@ const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
+const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 
 
@@ -151,6 +152,11 @@ router.get(poPrefix + "/download", [], (req, res) => {
 router.post(poPrefix + "/sdbg", [uploadSDBGFile.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
+
+router.post(poPrefix + "/sdbgUnlock", [unlockPrivilege], (req, res) => {
+  sdbgController.unlock(req, res);
+});
+
 router.get(poPrefix + "/sdbgList", [], (req, res) => {
   sdbgController.list(req, res);
 });
