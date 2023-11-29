@@ -130,7 +130,7 @@ router.post(poPrefix + "/wdc", WdcController.wdc);
 router.get(poPrefix + '/ListOfWdc', WdcController.List);
 
 // ListOfShippingDocuments
-router.post(poPrefix + "/shippingDocuments", shippingDocumentsController.shippingDocuments);
+router.post(poPrefix + "/shippingDocuments", [dynamicallyUpload.single("file")], shippingDocumentsController.shippingDocuments);
 router.get(poPrefix + '/ListOfShippingDocuments', shippingDocumentsController.List);
 
 // ICGRN
