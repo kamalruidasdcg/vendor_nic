@@ -12,6 +12,7 @@ const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
 const SENDMAIL = require('../../lib/mailSend');
+const { mailInsert } = require('../../services/mai.services');
 
 
 // add new post
@@ -52,7 +53,16 @@ const submitDrawing = async (req, res) => {
             const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
 
             if (result2 && result2?.length) {
-                return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
+
+                const data = [{
+                    purchasing_doc_no: result2[0]?.purchasing_doc_no,
+                    status: result2[0]?.status,
+                    approvedName: result2[0]?.created_by_name,
+                    approvedById: result2[0]?.created_by_id,
+                    message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
+                }];
+                
+                return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
             }
 
             let insertObj;
@@ -92,6 +102,8 @@ const submitDrawing = async (req, res) => {
                             html: DRAWING_SUBMIT_MAIL_TEMPLATE(`Drawing status update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
                         };
                     }
+                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+
                     SENDMAIL(mailDetails, function (err, data) {
                         if (!err) {
                             console.log("Error Occurs", err);
@@ -110,6 +122,8 @@ const submitDrawing = async (req, res) => {
                         subject: "GRSE Team",
                         html: DRAWING_SUBMIT_MAIL_TEMPLATE(`Drawing of [ ${payload.purchasing_doc_no} ] APPROVED`, "GRSR updated"),
                     };
+                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+
                     SENDMAIL(mailDetails, function (err, data) {
                         if (!err) {
                             console.log("Error Occurs", err);
@@ -140,7 +154,7 @@ const submitDrawing = async (req, res) => {
 
 
 const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
-    const isSDBGAcknowledge = `SELECT purchasing_doc_no FROM ${ADD_DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
+    const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${ADD_DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
     const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, drawingStatus] });
     return acknowledgeResult;
 }

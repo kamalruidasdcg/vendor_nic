@@ -4,13 +4,14 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
+const { INSERT, UPDATE } = require("../../lib/constant");
 const { NEW_SDBG } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
 const { SDBG_SUBMIT_MAIL_TEMPLATE } = require("../../templates/mail-template");
+const { mailInsert } = require('../../services/mai.services');
 
 
 // add new post
@@ -41,12 +42,21 @@ const submitSDBG = async (req, res) => {
 
             }
 
-            const GET_LATEST_SDBG = `SELECT purchasing_doc_no FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+            const GET_LATEST_SDBG = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
             const result2 = await getSDBGData(GET_LATEST_SDBG, payload.purchasing_doc_no, ACKNOWLEDGED);
 
             if (result2 && result2?.length) {
-                return resSend(res, true, 200, `This sdbg aleready ${ACKNOWLEDGED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
+                const data = [{
+                    purchasing_doc_no: result2[0]?.purchasing_doc_no,
+                    status: result2[0]?.status,
+                    acknowledgedByName: result2[0]?.created_by_name,
+                    acknowledgedById: result2[0]?.created_by_id,
+                    message: "The SDBG is already acknowledge. If you want to reopen, please contact with senior management."
+                }];
+
+                return resSend(res, true, 200, `This sdbg aleready ${ACKNOWLEDGED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
             }
+
 
             let insertObj;
 
@@ -75,7 +85,6 @@ const submitSDBG = async (req, res) => {
 
             } else if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
 
-
                 const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
 
                 const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
@@ -84,13 +93,6 @@ const submitSDBG = async (req, res) => {
                     return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
                 }
 
-                // payload = {
-                //     ...payload,
-                //     bank_name: result[0].bank_name,
-                //     transaction_id: result[0].transaction_id,
-                //     vendor_code: result[0].vendor_code,
-                // }
-
                 insertObj = sdbgPayload(payload, ACKNOWLEDGED);
             }
 
@@ -98,16 +100,10 @@ const submitSDBG = async (req, res) => {
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
-
-                // 
-
                 // mail setup
                 let mailDetails = {};
 
                 if (payload.status === PENDING && payload.mailSendTo) {
-
-                    console.log("PENDING", payload.mailSendTo);
-
                     if (payload.updated_by == "VENDOR") {
                         mailDetails = {
                             // from: "kamal.sspur@gmail.com",
@@ -125,6 +121,9 @@ const submitSDBG = async (req, res) => {
                             html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
                         };
                     }
+
+                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+
                     SENDMAIL(mailDetails, function (err, data) {
                         if (!err) {
                             console.log("Error Occurs", err);
@@ -143,6 +142,7 @@ const submitSDBG = async (req, res) => {
                         subject: "GRSE Team",
                         html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG of [ ${payload.purchasing_doc_no} ] ACKNOWLEDGED`, "GRSR updated"),
                     };
+                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
                     SENDMAIL(mailDetails, function (err, data) {
                         if (!err) {
                             console.log("Error Occurs", err);
@@ -159,7 +159,6 @@ const submitSDBG = async (req, res) => {
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);
             }
-
 
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
@@ -198,4 +197,51 @@ const list = async (req, res) => {
 
 }
 
-module.exports = { submitSDBG, list }
+
+const unlock = async (req, res) => {
+
+    try {
+
+        let payload = { ...req.body };
+        console.log("TYUIoiuytyuiuytyuiuyuiuyuiuyuy")
+
+        if (!payload.purchasing_doc_no || !payload.action_by_name || !payload.action_by_id) {
+
+            // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+            // const isDel = handleFileDeletion(directory, req.file.filename);
+            return resSend(res, false, 400, "Please send valid payload", null, null);
+
+        }
+
+
+        const insertObj = {
+            purchasing_doc_no: payload.purchasing_doc_no,
+            action_by_name: payload.action_by_name,
+            action_by_id: payload.action_by_id,
+            updated_at: getEpochTime(),
+            isLocked: "NO"
+        }
+
+        const q = `UPDATE ${NEW_SDBG} SET isLocked = "NO", 
+                updated_by_name = "${payload.action_by_name}",
+                updated_by_id = "${payload.action_by_id}",
+                updated_at = ${getEpochTime()},
+                isLocked =  "Y" WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}")`;
+
+        console.log("qqqq"+q);
+        const response = await query({ query: q, values: [] });
+
+        if (response.affectedRows) {
+            resSend(res, true, 200, "Ulocked successfully", null, null);
+        } else {
+            resSend(res, false, 400, "No data inserted", response, null);
+        }
+
+    } catch (error) {
+        console.log("sdbg unlock api");
+    }
+}
+
+
+
+module.exports = { submitSDBG, list, unlock }

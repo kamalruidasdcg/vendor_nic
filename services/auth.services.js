@@ -1,3 +1,4 @@
+const { resSend } = require("../lib/resSend");
 
 const authDataModify = (queryResult) => {
 
@@ -33,5 +34,22 @@ const authDataModify = (queryResult) => {
 }
 
 
+const unlockPrivilege = async (req, res, next) => {
+    try {
 
-module.exports = { authDataModify }
+        const id = req.body.action_by_id;
+
+        if( id != "00000105") return resSend(res, false, 400, "YOU DON'T HAVE ACCESS");
+
+        next();
+
+    } catch (error) {
+
+        console.log("Unlock Privilege api", error);
+
+        return resSend(res, false, 500, "INTERNAL_SERVER_ERROR_VERIFY_TOKEN");
+
+    }
+}
+
+module.exports = { authDataModify, unlockPrivilege }
