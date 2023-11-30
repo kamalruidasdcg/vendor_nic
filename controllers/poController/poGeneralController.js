@@ -168,18 +168,77 @@ const poList = async (req, res) => {
             })
         );
         str = str.slice(0, -1);
-        let SDVGQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+
+
+        // SDVG
+        let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
         let SDVGArr = await query({ query: SDVGQuery, values: [] });
-        //console.log(SDVGArr);
 
-        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+        let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from new_sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+        let SDVGAsdArr = await query({ query: SDVGAsdQuery, values: [] });
+
+        let SDVGCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1`;
+        let SDVGCsdArr = await query({ query: SDVGCsdQuery, values: [] });
+
+        await Promise.all(
+            SDVGArr.map(async (item) => {
+                let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                item.contractual_submission_date = csdArr.contractual_submission_date;
+                if(SDVGAsdArr.length) {
+                    let asdArr = await SDVGAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                } else {
+                    item.actual_submission_date = "N/A";
+                }
+            })
+        );
+
+        // DRAWING
+        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
         let drawingArr = await query({ query: drawingQuery, values: [] });
-        //console.log(drawingArr);
 
-        let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
+        let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from add_drawing WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+        let drawingAsdArr = await query({ query: drawingAsdQuery, values: [] });
+
+        let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
+        let drawingCsdArr = await query({ query: drawingCsdQuery, values: [] });
+
+        await Promise.all(
+            drawingArr.map(async (item) => {
+                let csdArr = await drawingCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                item.contractual_submission_date = csdArr.contractual_submission_date;
+                if(drawingAsdArr.length) {
+                    let asdArr = await drawingAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                } else {
+                    item.actual_submission_date = "N/A";
+                }
+            })
+        );
+
+        // QAP
+        let qapQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
         let qapArr = await query({ query: qapQuery, values: [] });
-        //console.log(qapArr);
 
+
+        let qapAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from qap_submission WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+        let qapAsdArr = await query({ query: qapAsdQuery, values: [] });
+
+        let qapCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3`;
+        let qapCsdArr = await query({ query: qapCsdQuery, values: [] });
+
+        await Promise.all(
+            qapArr.map(async (item) => {
+                let csdArr = await qapCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                item.contractual_submission_date = csdArr.contractual_submission_date;
+                if(qapAsdArr.length) {
+                    let asdArr = await qapAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                } else {
+                    item.actual_submission_date = "N/A";
+                }
+            })
+        );
 
         const modifiedPOData = await poDataModify(poArr);
 
