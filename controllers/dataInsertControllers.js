@@ -1,4 +1,5 @@
 // const { query,  } = require("../config/dbConfig");
+const { query } = require("../config/dbConfig");
 const { INSERT } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
 const { EKKO, EKPO, ZPO_MILESTONE } = require("../lib/tableName");
@@ -91,6 +92,9 @@ const insertPOData = async (req, res) => {
             await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
+            // const vendorNumber = insertPayload.LIFNR;
+            // const poCreator = insertPayload.ERNAM;
+
             responseSend(res, "1", 200, "data insert succeed", [], null);
         } catch (error) {
             responseSend(res, "0", 502, "Data insert failed !!", error, null);
@@ -140,6 +144,21 @@ function zpo_milestoneTableData(data) {
     ]);
 
 }
+
+// async function updateInfoSendTo(vendorNumber, poCreatorId) {
+
+    
+//     const poCreator_mail_Q = `SELECT USRID_LONG FROM pa0105 WHERE SUBTY = "0030" PERNR = ?;`;
+//     const vendor_mail_Q = `SELECT SMTP_ADDR FROM PERSNUMBER WHERE SUBTY = "0030" PERNR = ?;`;
+
+//     const Q = poCreator_mail_Q+vendor_mail_Q;
+//     console.log("Q", Q);
+
+//     const result = await query({ query: Q, values: [poCreatorId , vendorNumber] });
+
+//     console.log("resul ->", result);
+
+// }
 
 
 

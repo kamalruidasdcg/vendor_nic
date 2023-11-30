@@ -27,7 +27,24 @@ const details = async (req, res) => {
         // let q = `SELECT t1.*,t2.* FROM ekko as t1 LEFT JOIN ekbe as t2 ON t1.EBELN = t2.EBELN WHERE t1.EBELN = '${poNo}'`;
 
         // let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = '${queryParams.id}'`;
-        let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = ?`;
+        let q = `
+        SELECT t1.*,t2.*, t3.USRID_LONG, t4.NAME1, t4.ORT01
+        FROM 
+            ekko AS t1 
+        LEFT JOIN 
+            pa0001 AS t2 
+        ON 
+            (t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030') 
+        LEFT JOIN 
+            pa0105 AS t3 
+        ON 
+            (t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY) 
+        LEFT JOIN 
+            lfa1 AS t4 
+        ON 
+            t1.LIFNR = t4.LIFNR 
+        WHERE 
+            t1.EBELN = ?`;
 
         const result = await query({ query: q, values: [queryParams.id] });
 
