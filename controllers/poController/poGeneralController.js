@@ -204,14 +204,14 @@ const poList = async (req, res) => {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
-                    item.contractual_submission_date = "N/A";
+                    item.contractual_submission_date = undefined;
                 }
 
                 if(SDVGAsdArr.length) {
                     let asdArr = await SDVGAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
-                    item.actual_submission_date = "N/A";
+                    item.actual_submission_date = undefined;
                 }
             })
         );
@@ -232,14 +232,14 @@ const poList = async (req, res) => {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
-                    item.contractual_submission_date = "N/A";
+                    item.contractual_submission_date = undefined;
                 }
 
                 if(drawingAsdArr.length) {
                     let asdArr = await drawingAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
-                    item.actual_submission_date = "N/A";
+                    item.actual_submission_date = undefined;
                 }
             })
         );
@@ -261,14 +261,14 @@ const poList = async (req, res) => {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
-                    item.contractual_submission_date = "N/A";
+                    item.contractual_submission_date = undefined;
                 }
                 
                 if(qapAsdArr.length) {
                     let asdArr = await qapAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = "N/A";
+                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
-                    item.actual_submission_date = "N/A";
+                    item.actual_submission_date = undefined;
                 }
             })
         );
