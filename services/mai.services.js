@@ -10,7 +10,7 @@ const { generateQuery, getEpochTime } = require("../lib/utils");
  * @param {Object} data 
  * @param {String} eventName
  */
-const mailInsert = async (data, eventName = "mailSend") => {
+const mailInsert = async (data) => {
 
     try {
 
@@ -18,19 +18,30 @@ const mailInsert = async (data, eventName = "mailSend") => {
             sender: data.to,
             subject: data.subject,
             body: data.html,
-            status: NEW,
+            status: data.status,
             created_at: getEpochTime(),
             creatd_by_name: data.action_by_name ? data.action_by_name : "No Name",
             created_by_id: data.action_by_id ? data.action_by_id : "No Id",
+            message: "New mail inserted"
         }
 
         const { q, val } = generateQuery(INSERT, EMAILS, mailObj)
-        await query({ query: q, values: val });
-
+        const res = await query({ query: q, values: val });
+        return res;
 
     } catch (error) {
         console.log(error);
     }
 }
 
-module.exports = { mailInsert };
+const updateMailStatus = async (data) => {
+    try {
+
+        const updatedQuery = `UPDATE emails SET status = ? , message = ? WHERE id = ?`
+        await query({ query: updatedQuery, values: [data.status, data.message, data.id] });
+    } catch (error) {
+        console.log("updateMailStatus", error);
+    }
+}
+
+module.exports = { mailInsert, updateMailStatus };
