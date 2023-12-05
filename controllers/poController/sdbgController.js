@@ -30,7 +30,7 @@ const submitSDBG = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            let payload = { ...req.body, ...fileData };
+            let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
 
             const verifyStatus = [PENDING, RE_SUBMITTED, ACKNOWLEDGED]
 
@@ -104,21 +104,45 @@ const submitSDBG = async (req, res) => {
                 let mailDetails = {};
 
                 if (payload.status === PENDING && payload.mailSendTo) {
+
+                    const mailBodyForGRSE = `
+                    Dear XXXXXX (GRSE User name/Employee ID), <br>
+                    Below are the details pertinent to submission of SDGBG for the PO - ${payload.purchasing_doc_no}.
+                    <br>
+                    <br>
+                    Vendor : ${payload.vendor_name ? payload.vendor_name : ""} [${payload.vendor_code}]<br>
+                    Remarks: ${payload.remarks}<br>
+                    Date : ${new Date(payload.created_at)} <br>
+                    `;
+
+                    const mailBodyForVendor = `
+                    Dear XXXXXXXX (Vendor code/ Vendor name), <br>
+                    Below are the details pertinent to submission of SDGBG for the PO - ${payload.purchasing_doc_no}.
+                    <br>
+                    <br>
+                    Vendor : ${payload.vendor_name ? payload.vendor_name : ""} [${payload.vendor_code}]<br>
+                    Remarks: ${payload.remarks}<br>
+                    Date : ${new Date(payload.created_at)} <br>
+                    `;
+
+
+                    console.log("mailBodyGRSE", mailBodyForGRSE);
+
                     if (payload.updated_by == "VENDOR") {
                         mailDetails = {
                             // from: "kamal.sspur@gmail.com",
                             to: payload.mailSendTo,
                             // to: "mainak.dutta16@gmail.com",
-                            subject: "Vendor SDBG submited",
-                            html: SDBG_SUBMIT_MAIL_TEMPLATE(`Vendor [ ${payload.vendor_code} ] submittes the SDBG`, "Vendor SDBG submitted"),
+                            subject: "Submission of SDBG",
+                            html: SDBG_SUBMIT_MAIL_TEMPLATE(mailBodyForGRSE, "Vendor SDBG submitted"),
                         };
                     } else {
                         mailDetails = {
                             // from: "kamal.sspur@gmail.com",
                             to: payload.mailSendTo,
                             // to: "mainak.dutta16@gmail.com",
-                            subject: "GRSE Team",
-                            html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
+                            subject: "Submission of SDBG",
+                            html: SDBG_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
                         };
                     }
 
@@ -135,12 +159,23 @@ const submitSDBG = async (req, res) => {
 
                 }
                 if (payload.status === ACKNOWLEDGED && payload.mailSendTo) {
+
+                    const mailBodyForVendor = `
+                    Dear XXXXXXXX (Vendor code/ Vendor name), <br>
+                    Below are the details pertinent to acknowledge of SDGBG for the PO - ${payload.purchasing_doc_no}.
+                    <br>
+                    <br>
+                    Vendor : ${payload.vendor_name} [ ${payload.vendor_code} ]<br>
+                    Remarks: ${payload.remarks}<br>
+                    Date : ${new Date(payload.created_at)} <br>
+                    `;
+
                     mailDetails = {
                         // from: "kamal.sspur@gmail.com",
                         to: payload.mailSendTo,
                         // to: "mainak.dutta16@gmail.com",
-                        subject: "GRSE Team",
-                        html: SDBG_SUBMIT_MAIL_TEMPLATE(`SDBG of [ ${payload.purchasing_doc_no} ] ACKNOWLEDGED`, "GRSR updated"),
+                        subject: "SDBG ACKNOWLEDGED",
+                        html: SDBG_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR Acknowledge"),
                     };
                     const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
                     SENDMAIL(mailDetails, function (err, data) {
@@ -228,7 +263,7 @@ const unlock = async (req, res) => {
                 updated_at = ${getEpochTime()},
                 isLocked =  "Y" WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}")`;
 
-        console.log("qqqq"+q);
+        console.log("qqqq" + q);
         const response = await query({ query: q, values: [] });
 
         if (response.affectedRows) {

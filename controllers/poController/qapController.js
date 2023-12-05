@@ -3,7 +3,7 @@ const { qapPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
-const { generateQuery } = require("../../lib/utils");
+const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
 const { PENDING, APPROVED, RE_SUBMITTED } = require("../../lib/status");
@@ -31,7 +31,7 @@ const submitQAP = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            let payload = { ...req.body, ...fileData };
+            let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
 
             const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
 
@@ -67,7 +67,7 @@ const submitQAP = async (req, res) => {
 
                 // const GET_LATEST_SDBG = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
 
-                
+
                 // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
                 // console.log("iiii", result)
 
@@ -87,6 +87,27 @@ const submitQAP = async (req, res) => {
 
             if (response.affectedRows) {
 
+
+                const mailBodyForGRSE = `
+                Dear XXXXXX (GRSE User name/Employee ID), <br>
+                Below are the details pertinent to submission of QAP for the PO - ${payload.purchasing_doc_no}.
+                <br>
+                <br>
+                Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [${payload.vendor_code}]<br>
+                Remarks: ${payload.remarks}<br>
+                Date : ${new Date(payload.created_at)} <br>
+                `;
+                const mailBodyForVendor = `
+                Dear XXXXXXXX (Vendor code/ Vendor name), <br>
+                Below are the details pertinent to submission of QAP for the PO - ${payload.purchasing_doc_no}.
+                <br>
+                <br>
+                Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [${payload.vendor_code}]<br>
+                Remarks: ${payload.remarks}<br>
+                Date : ${new Date(payload.created_at)} <br>
+                `;
+
+
                 let mailDetails = {};
                 if (payload.status === PENDING && payload.mailSendTo) {
 
@@ -96,16 +117,16 @@ const submitQAP = async (req, res) => {
                             // from: "kamal.sspur@gmail.com",
                             to: payload.mailSendTo,
                             // to: "mainak.dutta16@gmail.com",
-                            subject: "Vendor QAP submited",
-                            html: QAP_SUBMIT_MAIL_TEMPLATE(`Vendor [ ${payload.vendor_code} ] submittes the QAP`, "Vendor SDBG submitted"),
+                            subject: "Submission of QAP",
+                            html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForGRSE, "Vendor QAP submitted"),
                         };
                     } else {
                         mailDetails = {
                             // from: "kamal.sspur@gmail.com",
                             to: payload.mailSendTo,
                             // to: "mainak.dutta16@gmail.com",
-                            subject: "GRSE Team",
-                            html: QAP_SUBMIT_MAIL_TEMPLATE(`QAP status update, PO [ ${payload.purchasing_doc_no} ]`, "GRSR updated"),
+                            subject: "Submission of QAP",
+                            html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
                         };
                     }
                     const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
@@ -121,16 +142,26 @@ const submitQAP = async (req, res) => {
 
                 }
                 if (payload.status === APPROVED && payload.mailSendTo) {
+
+                    const mailBodyForVendor = `
+                    Dear XXXXXXXX (Vendor code/ Vendor name), <br>
+                    Below are the details pertinent to approved of QAP for the PO - ${payload.purchasing_doc_no}.
+                    <br>
+                    <br>
+                    Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [${payload.vendor_code}]<br>
+                    Remarks: ${payload.remarks}<br>
+                    Date : ${new Date(payload.created_at)} <br>
+                    `;
                     mailDetails = {
                         // from: "kamal.sspur@gmail.com",
                         to: payload.mailSendTo,
                         // to: "mainak.dutta16@gmail.com",
-                        subject: "GRSE Team",
-                        html: QAP_SUBMIT_MAIL_TEMPLATE(`QAP of [ ${payload.purchasing_doc_no} ] APPROVED`, "GRSR updated"),
+                        subject: "QAP Approved",
+                        html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
                     };
 
                     const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
-                    
+
                     SENDMAIL(mailDetails, function (err, data) {
                         if (!err) {
                             console.log("Error Occurs", err);
@@ -168,22 +199,22 @@ const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
 
 
 const list = async (req, res) => {
-    
+
     req.query.$tableName = QAP_SUBMISSION;
 
     req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
     try {
 
-        if(!req.query.poNo) {
+        if (!req.query.poNo) {
             return resSend(res, false, 400, "Please send po number", null, null);
         }
 
         getFilteredData(req, res);
-    } catch(err) {
-      console.log("data not fetched", err);
-      resSend(res, false, 500, "Internal server error", null, null);
+    } catch (err) {
+        console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, null);
     }
-   
+
 }
 
 

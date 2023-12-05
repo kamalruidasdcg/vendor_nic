@@ -21,7 +21,7 @@ const sdbgPayload = (payload, status) => {
         "bank_name": payload.bank_name ? payload.bank_name : null,
         "transaction_id": payload.transaction_id ? payload.transaction_id : null,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at": getEpochTime(),
+        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
     }
@@ -46,7 +46,7 @@ const drawingPayload = (payload, status) => {
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at": getEpochTime(),
+        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
     }
@@ -70,7 +70,7 @@ const qapPayload = (payload, status) => {
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at": getEpochTime(),
+        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
     }
@@ -86,7 +86,7 @@ const wdcPayload = (payload, status) => {
         "remarks": payload.remarks ? payload.remarks : null,
         "status": status,
         "updated_by": payload.updated_by,
-        "created_at": getEpochTime(),
+        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
     }
@@ -104,7 +104,7 @@ const shippingDocumentsPayload = (payload, status) => {
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at": getEpochTime(),
+        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
     }
