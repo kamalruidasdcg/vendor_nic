@@ -196,7 +196,7 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
 
 
     } catch (error) {
-
+        console.log("mail trigger api error", error);
     }
 
 }
