@@ -217,6 +217,17 @@ const list = async (req, res) => {
 
 }
 
+const internalDepartmentList = async (req, res) => {
+    
+    req.query.$tableName = `sub_dept`;
+    req.query.$select = "id,name";
+    try {
+      getFilteredData(req, res);
+    } catch(err) {
+      console.log("data not fetched", err);
+    }
+  // resSend(res, true, 200, "oded!", req.query, null);
+   
+}
 
-
-module.exports = { submitQAP, list }
+module.exports = { submitQAP, list, internalDepartmentList }
