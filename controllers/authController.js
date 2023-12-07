@@ -10,6 +10,7 @@ const { query } = require("../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../services/jwt.services");
 const { resSend } = require("../lib/resSend");
 const { AUTH, USTER_TYPE } = require("../lib/tableName");
+const { USER_TYPE_VENDOR } = require("../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
 
@@ -23,9 +24,7 @@ const login = async (req, res) => {
 
     try {
 
-        const validloginType = ["VENDOR", "GRSE"];
-
-        if (!req.body.vendor_code || !req.body.password || !validloginType.includes(req.body.userType)) {
+        if (!req.body.vendor_code || !req.body.password) {
             return resSend(res, false, 400, "MANDATORY_INPUTS_REQUIRED");
         }
 
@@ -57,51 +56,79 @@ const login = async (req, res) => {
         // JOIN user_type ON auth.user_type = user_type.id
         // JOIN user_role ON user_role.user_type_id = user_type.id
         // WHERE auth.vendor_code = "${req.body.vendor_code}"`;
-        let login_Q;
+        let login_Q =
+            `SELECT 
+                t1.vendor_code, t1.user_type, t1.username, t1.password
+            FROM auth 
+                AS t1 
+            WHERE 
+                t1.vendor_code = ?`;
 
-        // LEFT JOIN pa0001 AS t2 ON t1.vendor_code = t2.PERNR AND t2.SUBTY= '0030'
-
-        if (req.body.userType === "VENDOR") {
-            login_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
-            t3.SMTP_ADDR 
-                FROM auth 
-                    AS t1
-                LEFT JOIN adr6 
-                AS t3 
-                    ON 
-                t1.vendor_code = t3.PERSNUMBER
-                    WHERE 
-                (t1.user_type = 1 AND t1.vendor_code = ?)`;
-        }
-        else if (req.body.userType === "GRSE") {
-            login_Q = `SELECT 
-                t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
-                t2.CNAME, t3.USRID_LONG 
-                FROM auth 
-                    AS t1 
-                LEFT JOIN pa0002 
-                    AS t2 
-                ON 
-                    t1.vendor_code = t2.PERNR
-                LEFT JOIN pa0105 
-                AS t3 
-                ON
-                    (t2.PERNR = t3.PERNR AND t3.SUBTY = "0030") 
-                WHERE 
-                    (t1.user_type != 1 AND t1.vendor_code = ?)`;
-        }
+        // if (req.body.userType === "VENDOR") {
+        //     login_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
+        //     t3.SMTP_ADDR 
+        //         FROM auth 
+        //             AS t1
+        //         LEFT JOIN adr6 
+        //         AS t3 
+        //             ON 
+        //         t1.vendor_code = t3.PERSNUMBER
+        //             WHERE 
+        //         (t1.user_type = 1 AND t1.vendor_code = ?)`;
+        // }
+        // else if (req.body.userType === "GRSE") {
+        //     login_Q = `SELECT 
+        //         t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
+        //         t2.CNAME, t3.USRID_LONG 
+        //         FROM auth 
+        //             AS t1 
+        //         WHERE 
+        //              AND t1.vendor_code = ?`;
+        // }
         // const  vendorLogin_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, t2.*, t3.SMTP_ADDR FROM auth as t1 LEFT JOIN lfa1 AS t2 ON t1.vendor_code = t2.LIFNR LEFT JOIN adr6 as t3 ON t1.vendor_code = t3.PERSNUMBER  WHERE t1.vendor_code = ?`;
         
-        console.log("loginq",login_Q);
-        const result = await query({ query: login_Q, values: [req.body.vendor_code] });
+        let result = await query({ query: login_Q, values: [req.body.vendor_code] });
 
         if (!result.length) {
             return resSend(res, false, 404, "USER_NOT_FOUND");
         }
 
         if (req.body.password !== result[0]["password"]) {
-            console.log("!compareHash(req.body.password,  result[0].password))", result[0]["password"]);
+            console.log("U R given Password -->", req.body.password, "Please check !!");
             return resSend(res, false, 401, "INCORRECT_PASSWORD");
+        } else {
+            if (result[0]["user_type"] === USER_TYPE_VENDOR) {
+                const vendorDetailsQ =
+                    `SELECT t1.NAME1 AS name , t2.SMTP_ADDR AS email
+                        FROM
+                            lfa1
+                        AS t1
+                        LEFT JOIN
+                            adr6 
+                        AS t2
+                            ON 
+                        t1.LIFNR = t2.PERSNUMBER
+                            WHERE 
+                        t1.LIFNR = ?`;
+
+                const vendorRes = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
+                result[0] = {...result[0], ...vendorRes[0]};
+            } else if (result[0]["user_type"] && result[0]["user_type"] !== USER_TYPE_VENDOR) {
+
+                const grseDetaisQ =
+                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email
+                        FROM pa0002 
+                        AS t1 
+                    LEFT JOIN pa0105 
+                        AS t2
+                    ON
+                        (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030") 
+                    WHERE 
+                         t1.PERNR = ?`;
+                const grseRes = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+                result[0] = {...result[0], ...grseRes[0]};
+            }
+
         }
 
         // commented because of previously use role base access. now no need 
@@ -114,12 +141,8 @@ const login = async (req, res) => {
         const user = {
             user: {
                 ...result[0],
-                name: result[0].NAME1 || result[0].CNAME,
-                email: result[0].SMTP_ADDR || result[0].USRID_LONG,
             }
         }
-
-        console.log("user", user);
 
         const payload = {
             username: user.user.username,
