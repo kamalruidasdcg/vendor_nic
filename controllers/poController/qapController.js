@@ -223,6 +223,53 @@ const list = async (req, res) => {
 
 }
 
+const internalDepartmentList = async (req, res) => {
+    
+    req.query.$tableName = `sub_dept`;
+    req.query.$select = "id,name";
+    try {
+      getFilteredData(req, res);
+    } catch(err) {
+      console.log("data not fetched", err);
+    }
+  // resSend(res, true, 200, "oded!", req.query, null);
+   
+}
 
+const internalDepartmentEmpList = async (req, res) => {
+    
+const sub_dept_id = req.query.sub_dept_id;
+try{
+    const q = `SELECT t1.emp_id, t1. sub_dept_name, t1.dept_name, t2.CNAME as empName, t3.USRID_LONG as empEmail
+	FROM emp_department_list 
+    	AS t1 
+      LEFT JOIN 
+      	pa0002 
+       AS t2 
+       ON 
+       	t1.emp_id = t2.PERNR 
+       LEFT JOIN pa0105 
+       	AS t3 
+       ON 
+       (t3.PERNR = t2.PERNR AND t3.SUBTY = '0030')
+        WHERE 
+        t1.sub_dept_id = ?`;
 
-module.exports = { submitQAP, list }
+    const response = await query({ query: q, values: [sub_dept_id] });
+    resSend(res, true, 200, "oded!", response, null);
+}  catch(err) {
+      console.log("data not fetched", err);
+}
+
+    // req.query.$tableName = `sub_dept`;
+    // req.query.$select = "id,name";
+    // try {
+    //   getFilteredData(req, res);
+    // } catch(err) {
+    //   console.log("data not fetched", err);
+    // }
+ // resSend(res, true, 200, "oded!", req.query, null);
+   
+}
+
+module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList }
