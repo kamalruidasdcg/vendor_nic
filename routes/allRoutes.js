@@ -197,6 +197,12 @@ router.get(poPrefix + "/qapList", [], (req, res) => {
   qapController.list(req, res);
 });
 
+//internalDepartmentList
+const dept = "internalDepartment";
+router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
+  qapController.internalDepartmentList(req, res);
+});
+
 // QAP CONTROLLER END
 
 
