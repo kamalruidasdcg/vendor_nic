@@ -61,8 +61,6 @@ const getRefreshToken = (payload, refreshTokenValidity) => {
 
         //  storeRefreshToken(refreshToken, payload.username);
 
-        console.log("refresh", refreshToken);
-
         return refreshToken;
 
     } catch (error) {
