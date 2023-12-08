@@ -13,6 +13,8 @@ const { AUTH, USTER_TYPE } = require("../lib/tableName");
 const { USER_TYPE_VENDOR } = require("../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
+const rolePermission = require("../lib/role/rolePermission");
+
 
 
 
@@ -58,11 +60,22 @@ const login = async (req, res) => {
         // WHERE auth.vendor_code = "${req.body.vendor_code}"`;
         let login_Q =
             `SELECT 
-                t1.vendor_code, t1.user_type, t1.username, t1.password
-            FROM auth 
-                AS t1 
-            WHERE 
-                t1.vendor_code = ?`;
+                t1.vendor_code, t1.user_type, t1.username, t1.password, t1.department_id, t1.internal_role_id,
+                    t2.name AS deptName, t3.name AS role
+                FROM auth 
+                    AS t1 
+			    LEFT JOIN 
+                	depertment_master AS t2
+                ON
+                	t1.department_id = t2.id
+                LEFT JOIN
+                	internal_role_master AS t3
+                ON	
+                
+                t1.internal_role_id = t3.id
+        
+                WHERE 
+                    t1.vendor_code = ?`;
 
         // if (req.body.userType === "VENDOR") {
         //     login_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
@@ -86,8 +99,9 @@ const login = async (req, res) => {
         //              AND t1.vendor_code = ?`;
         // }
         // const  vendorLogin_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, t2.*, t3.SMTP_ADDR FROM auth as t1 LEFT JOIN lfa1 AS t2 ON t1.vendor_code = t2.LIFNR LEFT JOIN adr6 as t3 ON t1.vendor_code = t3.PERSNUMBER  WHERE t1.vendor_code = ?`;
-        
+
         let result = await query({ query: login_Q, values: [req.body.vendor_code] });
+        let user = {};
 
         if (!result.length) {
             return resSend(res, false, 404, "USER_NOT_FOUND");
@@ -111,22 +125,52 @@ const login = async (req, res) => {
                             WHERE 
                         t1.LIFNR = ?`;
 
-                const vendorRes = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
-                result[0] = {...result[0], ...vendorRes[0]};
+                let vendorRes = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
+
+                let name, email;
+
+                if (vendorRes.length) {
+                    name = vendorRes[0].name;
+                    email = vendorRes[0].email;
+                    vendorRes = vendorRes?.map((el) => {
+                        delete el.name,
+                            delete el.email
+                        return el;
+                    })
+                }
+
+                user = { user: { ...result[0], name, email }, permission: { ...vendorRes } };
             } else if (result[0]["user_type"] && result[0]["user_type"] !== USER_TYPE_VENDOR) {
 
                 const grseDetaisQ =
-                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email
+                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email, t3.*
                         FROM pa0002 
                         AS t1 
                     LEFT JOIN pa0105 
                         AS t2
                     ON
-                        (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030") 
+                        (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030")
+                    LEFT JOIN 
+                        permission AS t3
+                    ON 
+                        t3.user_id = t1.PERNR
                     WHERE 
                          t1.PERNR = ?`;
-                const grseRes = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
-                result[0] = {...result[0], ...grseRes[0]};
+                let grseRes = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+
+                let name, email;
+                if (grseRes?.length) {
+                    name = grseRes[0].name;
+                    email = grseRes[0].email;
+
+                    grseRes = grseRes?.map((el) => {
+                        delete el.name,
+                            delete el.email
+                        return el;
+                    })
+                }
+
+                user = { user: { ...result[0], name, email }, permission: grseRes };
             }
 
         }
@@ -137,12 +181,6 @@ const login = async (req, res) => {
 
         // deleting password from response
         delete result[0]["password"];
-
-        const user = {
-            user: {
-                ...result[0],
-            }
-        }
 
         const payload = {
             username: user.user.username,
