@@ -188,6 +188,7 @@ const login = async (req, res) => {
             user_type: user.user.user_type,
             // user_type_name: user.user_type.user_type
         };
+       // const payload = user.user;
 
         const ACCESS_TOKEN_VALIDITY = "1d";
         const REFRESH_TOKEN_VALIDITY = "7d";
