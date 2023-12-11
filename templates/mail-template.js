@@ -188,7 +188,7 @@ const SDBG_SUBMIT_MAIL_TEMPLATE = (text, heading) => {
               .email-header {
                 background-color: #333;
                 color: #fff;
-                padding: 20px;
+                padding: 5px;
                 text-align: center;
               }
               .email-body {
@@ -197,7 +197,7 @@ const SDBG_SUBMIT_MAIL_TEMPLATE = (text, heading) => {
               .email-footer {
                 background-color: #333;
                 color: #fff;
-                padding: 20px;
+                padding: 5px;
                 text-align: center;
               }
             </style>

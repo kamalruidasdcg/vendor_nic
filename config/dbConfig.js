@@ -15,8 +15,6 @@ const connObj = {
   multipleStatements: true,
 }
 
-console.log("connObj", connObj);
-
 // create the connection to database
 
 // const promiseConnection =  mysql.createConnection(connObj);

@@ -13,6 +13,8 @@ const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
 const SENDMAIL = require('../../lib/mailSend');
 const { mailInsert } = require('../../services/mai.services');
+const { mailTrigger } = require('../sendMailController');
+const { DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE } = require('../../lib/event');
 
 
 // add new post
@@ -80,94 +82,46 @@ const submitDrawing = async (req, res) => {
 
             if (response.affectedRows) {
 
-
-
-                const mailBodyForGRSE = `
-                Dear XXXXXX (GRSE User name/Employee ID), <br>
-                Below are the details pertinent to submission of Drawing for the PO - ${payload.purchasing_doc_no}.
-                <br>
-                <br>
-                Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [ ${payload.vendor_code} ]<br>
-                Remarks: ${payload.remarks}<br>
-                Date : ${new Date(payload.created_at)} <br>
-                `;
-                const mailBodyForVendor = `
-                Dear XXXXXXXX (Vendor code/ Vendor name), <br>
-                Below are the details pertinent to submission of Drawing for the PO - ${payload.purchasing_doc_no}.
-                <br>
-                <br>
-                Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [ ${payload.vendor_code} ]<br>
-                Remarks: ${payload.remarks}<br>
-                Date : ${new Date(payload.created_at)} <br>
-                `;
-                let mailDetails = {};
-
-                if (payload.status === PENDING && payload.mailSendTo) {
-
-
+                
+                if (payload.status === PENDING) {
 
                     if (payload.updated_by == "VENDOR") {
 
-                        mailDetails = {
-                            // from: "kamal.sspur@gmail.com",
-                            to: payload.mailSendTo,
-                            // to: "mainak.dutta16@gmail.com",
-                            subject: "Vendor drawing submited",
-                            html: DRAWING_SUBMIT_MAIL_TEMPLATE(mailBodyForGRSE, "Vendor drawing submitted"),
-                        };
-                    } else {
-                        mailDetails = {
-                            // from: "kamal.sspur@gmail.com",
-                            to: payload.mailSendTo,
-                            // to: "mainak.dutta16@gmail.com",
-                            subject: "GRSE Team",
-                            html: DRAWING_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
-                        };
+                        const result = await poContactDetails(payload.purchasing_doc_no);
+                        payload.delingOfficerName = result[0]?.dealingOfficerName;
+                        payload.mailSendTo = result[0]?.dealingOfficerMail;
+                        payload.vendor_name = result[0]?.vendor_name;
+                        payload.vendor_code = result[0]?.vendor_code;
+                        payload.sendAt = new Date(payload.created_at);
+                        console.log("payload", payload);
+                        mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_VENDOR);
+
+                    } else if (payload.updated_by == "GRSE") {
+
+                        const result = await poContactDetails(payload.purchasing_doc_no);
+                        payload.vendor_name = result[0]?.vendor_name;
+                        payload.vendor_code = result[0]?.vendor_code;
+                        payload.mailSendTo = result[0]?.vendor_mail_id;
+                        payload.delingOfficerName = result[0]?.dealingOfficerName;
+                        payload.sendAt = new Date(payload.created_at);
+                        
+                        mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
+
                     }
-                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+                }
+                if (payload.status === APPROVED && payload.updated_by == "GRSE") {
 
-                    SENDMAIL(mailDetails, function (err, data) {
-                        if (!err) {
-                            console.log("Error Occurs", err);
-                        } else {
-                            // console.log("Email sent successfully", data);
-                            console.log("Email sent successfully");
-                        }
-                    });
+                    const result = await poContactDetails(payload.purchasing_doc_no);
+                    payload.vendor_name = result[0]?.vendor_name;
+                    payload.vendor_code = result[0]?.vendor_code;
+                    payload.mailSendTo = result[0]?.vendor_mail_id;
+                    payload.delingOfficerName = result[0]?.dealingOfficerName;
+                    payload.sendAt = new Date(payload.created_at);
+                    mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
 
                 }
-                if (payload.status === APPROVED && payload.mailSendTo) {
 
 
-                    const mailBodyForVendor = `
-                    Dear XXXXXXXX (Vendor code/ Vendor name), <br>
-                    Below are the details pertinent to approved of Drawing for the PO - ${payload.purchasing_doc_no}.
-                    <br>
-                    <br>
-                    Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [ ${payload.vendor_code} ]<br>
-                    Remarks: ${payload.remarks}<br>
-                    Date : ${new Date(payload.created_at)} <br>
-                    `;
-
-                    mailDetails = {
-                        // from: "kamal.sspur@gmail.com",
-                        to: payload.mailSendTo,
-                        // to: "mainak.dutta16@gmail.com",
-                        subject: "Drawing Approved",
-                        html: DRAWING_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR approved drawing"),
-                    };
-                    const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
-
-                    SENDMAIL(mailDetails, function (err, data) {
-                        if (!err) {
-                            console.log("Error Occurs", err);
-                        } else {
-                            // console.log("Email sent successfully", data);
-                            console.log("Email sent successfully");
-                        }
-                    });
-
-                }
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
@@ -212,6 +166,42 @@ const list = async (req, res) => {
         resSend(res, false, 500, "Internal server error", null, null);
     }
 
+}
+
+async function poContactDetails(purchasing_doc_no) {
+    const po_contact_details_query = `SELECT 
+        t1.EBELN, 
+        t1.ERNAM AS dealingOfficerId, 
+        t1.LIFNR AS vendor_code, 
+        t2.CNAME AS dealingOfficerName, 
+        t3.USRID_LONG AS dealingOfficerMail, 
+        t4.NAME1 as vendor_name, 
+        t4.ORT01 as vendor_address, 
+        t5.SMTP_ADDR as vendor_mail_id
+    FROM 
+        ekko AS t1 
+    LEFT JOIN 
+        pa0002 AS t2 
+    ON 
+        t1.ERNAM= t2.PERNR 
+    LEFT JOIN 
+        pa0105 AS t3 
+    ON 
+        (t2.PERNR = t3.PERNR AND t3.SUBTY = '0030') 
+    LEFT JOIN 
+        lfa1 AS t4 
+    ON 
+        t1.LIFNR = t4.LIFNR 
+    LEFT JOIN 
+        adr6 AS t5
+       ON
+      t1.LIFNR = t5.PERSNUMBER
+    WHERE 
+        t1.EBELN = ?`;
+
+    const result = await query({ query: po_contact_details_query, values: [purchasing_doc_no] });
+
+    return result;
 }
 
 
