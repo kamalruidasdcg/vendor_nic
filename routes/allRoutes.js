@@ -190,7 +190,7 @@ router.get(poPrefix + "/sdbgList", [], (req, res) => {
 
 
 // QAP CONTROLLERS
-router.post(poPrefix + "/qap", [dynamicallyUpload.single("file")], (req, res) => {
+router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
 });
 router.get(poPrefix + "/qapList", [], (req, res) => {

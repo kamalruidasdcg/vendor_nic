@@ -21,7 +21,16 @@ const submitQAP = async (req, res) => {
     try {
 
 
-        // Handle Image Upload
+const user_id = req.tokenData.vendor_code;
+const screen_name = 'qap';
+const activity_type = req.body.status;
+
+const CHECK_AUTH = `SELECT activity_status FROM permission where user_id = ? and screen_name = ? and activity_type = ?`;
+const resAuthQry = await query({ query: CHECK_AUTH, values: [user_id, screen_name, activity_type] });
+if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
+    return resSend(res, false, 400, "You dont have permission for this activity.", null, null);
+} 
+// Handle Image Upload
         let fileData = {};
         if (req.file) {
             fileData = {
