@@ -61,8 +61,6 @@ const getRefreshToken = (payload, refreshTokenValidity) => {
 
         //  storeRefreshToken(refreshToken, payload.username);
 
-        console.log("refresh", refreshToken);
-
         return refreshToken;
 
     } catch (error) {
@@ -146,8 +144,8 @@ const veifyAccessToken = async (req, res, next) => {
 
         if (!tokenData) return resSend(res, false, 401, "INVALID_EXPIRED_TOKEN");
 
-        const validRole = await veifyAccessTokenRole(tokenData);
-        if (!validRole) return resSend(res, false, 401, "Access Denied: YOU DONT HAVE ACCESS");
+       // const validRole = await veifyAccessTokenRole(tokenData);
+       // if (!validRole) return resSend(res, false, 401, "Access Denied: YOU DONT HAVE ACCESS");
 
         req["tokenData"] = tokenData;
 

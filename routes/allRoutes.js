@@ -190,12 +190,22 @@ router.get(poPrefix + "/sdbgList", [], (req, res) => {
 
 
 // QAP CONTROLLERS
-router.post(poPrefix + "/qap", [dynamicallyUpload.single("file")], (req, res) => {
+router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
 });
 router.get(poPrefix + "/qapList", [], (req, res) => {
   qapController.list(req, res);
 });
+
+//internalDepartmentList
+router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
+  qapController.internalDepartmentList(req, res);
+});
+
+router.get(poPrefix + "/internalDepartmentEmpList", [], (req, res) => {
+  qapController.internalDepartmentEmpList(req, res);
+});
+
 
 // QAP CONTROLLER END
 
