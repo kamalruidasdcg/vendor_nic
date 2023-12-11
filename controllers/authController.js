@@ -191,7 +191,7 @@ const login = async (req, res) => {
         // added permission as per define in permission table
         // if permission is on the table permission has granted 
         // otherwise no permission
-        if (permission?.length) {
+        if (permission?.length && result[0]["user_type"] !== USER_TYPE_VENDOR) {
             permission.forEach((el) => {
                 if (sidebar_menu[el.screen_name]["activities"]) {
                     sidebar_menu[el.screen_name]["activities"][el.activity_type] = el["activity_status"] === 1 ? true : false;

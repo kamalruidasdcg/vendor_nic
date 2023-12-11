@@ -66,13 +66,30 @@ const details = async (req, res) => {
          * we have to update this api accrodingly
          */
 
-        let materialQuery = `SELECT mat.*, materialLineItems.* , materialMaster.*
-            FROM ${EKPO} as mat 
-        LEFT JOIN eket as materialLineItems
-            ON (mat.EBELN = materialLineItems.EBELN  AND mat.EBELP = materialLineItems.EBELP)
-        LEFT JOIN MARA as materialMaster 
-            ON mat.MATNR= materialMaster.MATNR 
-        WHERE mat.EBELN = ?`;
+        let materialQuery = 
+            `SELECT
+            mat.EBELP AS material_item_number,
+            mat.KTMNG AS material_quantity, 
+            mat.MATNR AS material_code,
+            mat.MEINS AS material_unit,
+
+            materialLineItems.EINDT as contractual_delivery_date, 
+            materialMaster.*, 
+            mat_desc.MAKTX as mat_description
+            FROM ${EKPO} 
+                AS  mat 
+            LEFT JOIN eket 
+                AS materialLineItems
+            ON 
+                (materialLineItems.EBELN = mat.EBELN AND materialLineItems.EBELP = mat.EBELP )
+            LEFT JOIN mara 
+                AS materialMaster 
+            ON 
+                materialMaster.MATNR = mat.MATNR
+            LEFT JOIN makt 
+                AS mat_desc
+            ON mat_desc.MATNR = mat.MATNR
+            WHERE mat.EBELN = ?`;
 
 
         let materialResult = await query({ query: materialQuery, values: [queryParams.id] });
