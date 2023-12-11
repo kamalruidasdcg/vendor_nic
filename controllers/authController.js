@@ -102,7 +102,7 @@ const login = async (req, res) => {
 
         let result = await query({ query: login_Q, values: [req.body.vendor_code] });
         let user = {};
-
+        let permission = [];
         if (!result.length) {
             return resSend(res, false, 404, "USER_NOT_FOUND");
         }
@@ -125,21 +125,21 @@ const login = async (req, res) => {
                             WHERE 
                         t1.LIFNR = ?`;
 
-                let vendorRes = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
+                permission = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
 
                 let name, email;
 
-                if (vendorRes.length) {
-                    name = vendorRes[0].name;
-                    email = vendorRes[0].email;
-                    vendorRes = vendorRes?.map((el) => {
+                if (permission.length) {
+                    name = permission[0].name;
+                    email = permission[0].email;
+                    permission = permission?.map((el) => {
                         delete el.name,
-                            delete el.email
+                        delete el.email
                         return el;
                     })
                 }
 
-                user = { user: { ...result[0], name, email }, permission: { ...vendorRes } };
+                user = { user: { ...result[0], name, email } };
             } else if (result[0]["user_type"] && result[0]["user_type"] !== USER_TYPE_VENDOR) {
 
                 const grseDetaisQ =
@@ -156,21 +156,21 @@ const login = async (req, res) => {
                         t3.user_id = t1.PERNR
                     WHERE 
                          t1.PERNR = ?`;
-                let grseRes = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+                    permission = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
 
                 let name, email;
-                if (grseRes?.length) {
-                    name = grseRes[0].name;
-                    email = grseRes[0].email;
+                if (permission?.length) {
+                    name = permission[0].name;
+                    email = permission[0].email;
 
-                    grseRes = grseRes?.map((el) => {
+                    permission = permission?.map((el) => {
                         delete el.name,
-                            delete el.email
+                        delete el.email
                         return el;
                     })
                 }
 
-                user = { user: { ...result[0], name, email }, permission: grseRes };
+                user = { user: { ...result[0], name, email } };
             }
 
         }
