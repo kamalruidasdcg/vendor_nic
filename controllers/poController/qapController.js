@@ -6,7 +6,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
-const { PENDING, APPROVED, RE_SUBMITTED } = require("../../lib/status");
+const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
@@ -21,7 +21,16 @@ const submitQAP = async (req, res) => {
     try {
 
 
-        // Handle Image Upload
+const user_id = req.tokenData.vendor_code;
+const screen_name = 'qap';
+const activity_type = req.body.status;
+
+const CHECK_AUTH = `SELECT activity_status FROM permission where user_id = ? and screen_name = ? and activity_type = ?`;
+const resAuthQry = await query({ query: CHECK_AUTH, values: [user_id, screen_name, activity_type] });
+if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
+    return resSend(res, false, 400, "You dont have permission for this activity.", null, null);
+} 
+// Handle Image Upload
         let fileData = {};
         if (req.file) {
             fileData = {
@@ -33,7 +42,7 @@ const submitQAP = async (req, res) => {
 
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
 
-            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
+            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED, ACCEPTED, REJECTED, SAVED]
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
@@ -80,6 +89,12 @@ const submitQAP = async (req, res) => {
             } else if (payload.status === APPROVED) {
 
                 insertObj = qapPayload(payload, APPROVED);
+            } else if (payload.status === ACCEPTED) {
+                insertObj = qapPayload(payload, ACCEPTED);
+            } else if (payload.status === REJECTED) {
+                insertObj = qapPayload(payload, REJECTED);
+            } else if (payload.status === SAVED) {
+                insertObj = qapPayload(payload, SAVED);
             }
 
             const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
