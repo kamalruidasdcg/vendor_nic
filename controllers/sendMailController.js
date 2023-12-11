@@ -85,7 +85,7 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
 
                 mailDetails = {
                     to: payload.mailSendTo,
-                    subject: "Submission of SDBG",
+                    subject: "Submission of Drawing",
                     html: DRAWING_SUBMIT_MAIL_TEMPLATE(mail_body, "GRSR updated"),
                     // attachments: [{
                     //     filename: payload.fileName,
@@ -96,11 +96,11 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                 break;
             case DRAWING_SUBMIT_BY_GRSE:
 
-                mail_body = mailBody["SDBG_VENDOR_MAIL_BODY"].replace(/{{(.*?)}}/g, (match, p1) => payload[p1.trim()] || match);
+                mail_body = mailBody["DRAWING_GRSE_MAIL_BODY"].replace(/{{(.*?)}}/g, (match, p1) => payload[p1.trim()] || match);
 
                 mailDetails = {
                     to: payload.mailSendTo,
-                    subject: "Submission of SDBG",
+                    subject: "Submission of Drawing",
                     html: DRAWING_SUBMIT_MAIL_TEMPLATE(mail_body, "Vendor update"),
                     // attachments: [{
                     //     filename: payload.fileName,
