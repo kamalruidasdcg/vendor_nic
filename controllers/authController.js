@@ -129,12 +129,14 @@ const login = async (req, res) => {
 
                 let name, email;
 
+                console.log("permission", permission);
+
                 if (permission.length) {
                     name = permission[0].name;
                     email = permission[0].email;
                     permission = permission?.map((el) => {
                         delete el.name,
-                        delete el.email
+                            delete el.email
                         return el;
                     })
                 }
@@ -156,16 +158,18 @@ const login = async (req, res) => {
                         t3.user_id = t1.PERNR
                     WHERE 
                          t1.PERNR = ?`;
-                    permission = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+                permission = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
 
                 let name, email;
+
+                console.log("permission", permission);
                 if (permission?.length) {
                     name = permission[0].name;
                     email = permission[0].email;
 
                     permission = permission?.map((el) => {
                         delete el.name,
-                        delete el.email
+                            delete el.email
                         return el;
                     })
                 }
@@ -182,13 +186,31 @@ const login = async (req, res) => {
         // deleting password from response
         delete result[0]["password"];
 
+
+        const sidebar_menu = { ...rolePermission };
+        // added permission as per define in permission table
+        // if permission is on the table permission has granted 
+        // otherwise no permission
+        if (permission?.length) {
+            permission.forEach((el) => {
+                if (sidebar_menu[el.screen_name]["activities"]) {
+                    sidebar_menu[el.screen_name]["activities"][el.activity_type] = el["activity_status"] === 1 ? true : false;
+                    if (el.activity_status === 1) {
+                        sidebar_menu[el.screen_name]["hasAccess"] = true;
+                    }
+                }
+            })
+        }
+
+        user["permission"] = sidebar_menu;
+
         const payload = {
             username: user.user.username,
             vendor_code: user.user.vendor_code,
             user_type: user.user.user_type,
             // user_type_name: user.user_type.user_type
         };
-       // const payload = user.user;
+        // const payload = user.user;
 
         const ACCESS_TOKEN_VALIDITY = "1d";
         const REFRESH_TOKEN_VALIDITY = "7d";
