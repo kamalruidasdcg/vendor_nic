@@ -22,7 +22,11 @@ router.get("/", (req, res) => {
 const paymentPrefix = "/payment";
 
 router.post(paymentPrefix + "/voucher", [dynamicallyUpload.single("file")], (req, res) => {
-    paymentController.addPaymentAdvice(req, res);
+    paymentController.addPaymentVoucher(req, res);
+});
+
+router.post(paymentPrefix + "/advise", [dynamicallyUpload.single("file")], (req, res) => {
+    paymentController.addPaymentAdvise(req, res);
 });
 
 // PAYMENT ROUTE END
