@@ -24,14 +24,41 @@ const submitQAP = async (req, res) => {
 
 
 const user_id = req.tokenData.vendor_code;
+console.log("&&&&&&&&&&&&&&&&&&&");
+console.log(user_id);
 const screen_name = 'qap';
 const activity_type = req.body.status;
+console.log("**********************");
+console.log(activity_type);
 
 const CHECK_AUTH = `SELECT activity_status FROM permission where user_id = ? and screen_name = ? and activity_type = ?`;
 const resAuthQry = await query({ query: CHECK_AUTH, values: [user_id, screen_name, activity_type] });
 if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
     return resSend(res, false, 400, "You dont have permission for this activity.", null, null);
-} 
+} // assigned
+
+const CHECK_ASSIGNE = `SELECT COUNT(status) AS count FROM qap_submission where purchasing_doc_no = ? and vendor_code = ? and status = ?`;
+
+let resAssignQry = await query({ query: CHECK_ASSIGNE, values: [req.body.purchasing_doc_no, user_id, activity_type] });
+
+resAssignQry = resAssignQry[0].count;
+console.log(resAssignQry);
+
+
+if(activity_type == 'ASSIGNED' && resAssignQry > 0) {
+   
+   
+        let message = "The QAP is already ASSIGNED.";
+        return resSend(res, true, 200, message, null, null);
+   
+}
+// [PENDING, RE_SUBMITTED, APPROVED, ACCEPTED, REJECTED, SAVED
+if((activity_type == ACCEPTED || activity_type == REJECTED || activity_type == SAVED || activity_type == PENDING || activity_type == APPROVED) && resAssignQry === 0) {
+    let message = "The QAP is not ASSIGNED.";
+    return resSend(res, true, 200, message, null, null);
+}
+
+//return;
 // Handle Image Upload
         let fileData = {};
         if (req.file) {
@@ -46,13 +73,13 @@ if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
 
             const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED, ACCEPTED, REJECTED, SAVED]
 
-            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
+            // if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
-                // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
-                // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null, null);
+            //     // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+            //     // const isDel = handleFileDeletion(directory, req.file.filename);
+            //     return resSend(res, false, 400, "Please send valid payload", null, null);
 
-            }
+            // }
 
             const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
             const result2 = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, APPROVED);
@@ -97,6 +124,8 @@ if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
                 insertObj = qapPayload(payload, REJECTED);
             } else if (payload.status === SAVED) {
                 insertObj = qapPayload(payload, SAVED);
+            } else if (payload.status === "ASSIGNED") {
+                insertObj = qapPayload(payload, "ASSIGNED");
             }
 
             const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
@@ -217,7 +246,7 @@ if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
 
 
         } else {
-            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+            resSend(res, false, 201, "Please upload a valid File", fileData, null);
         }
 
     } catch (error) {
@@ -236,21 +265,56 @@ const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
 
 
 const list = async (req, res) => {
+    console.log(req.tokenData.vendor_code);
 
-    req.query.$tableName = QAP_SUBMISSION;
+    // let q = `SELECT t1.*,t2.*,t3.* FROM ekko AS t1 LEFT JOIN pa0001 AS t2 ON t1.ERNAM= t2.PERNR AND t2.SUBTY= '0030' LEFT JOIN pa0105 AS t3 ON t2.PERNR = t3.PERNR AND t2.SUBTY = t3.SUBTY WHERE t1.EBELN = ?`;
 
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    try {
 
-        if (!req.query.poNo) {
-            return resSend(res, false, 400, "Please send po number", null, null);
-        }
+    // const result = await query({ query: q, values: [queryParams.id] });
+let department_id = req.tokenData.department_id;
+let internal_role_id = req.tokenData.internal_role_id;
 
-        getFilteredData(req, res);
-    } catch (err) {
-        console.log("data not fetched", err);
-        resSend(res, false, 500, "Internal server error", null, null);
+if(department_id == 3) {
+
+    let q;
+    let v;
+
+    let result = "";
+    
+
+    if(internal_role_id === 1) {
+        q = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND vendor_code = ?`;
+        v = [req.query.poNo, department_id];
+
+    } 
+    if(internal_role_id === 2) {
+        q = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND vendor_code = ?`;
+        v = [req.query.poNo, department_id];
     }
+    
+    result = await query({ query: q, values: v });
+
+
+
+} else {
+    return resSend(res, false, 400, "you dont have permission.", null, null);
+}
+console.log(req.tokenData.department_id);
+
+    // req.query.$tableName = QAP_SUBMISSION;
+
+    // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    // try {
+
+    //     if (!req.query.poNo) {
+    //         return resSend(res, false, 400, "Please send po number", null, null);
+    //     }
+
+    //     getFilteredData(req, res);
+    // } catch (err) {
+    //     console.log("data not fetched", err);
+    //     resSend(res, false, 500, "Internal server error", null, null);
+    // }
 
 }
 
