@@ -1,7 +1,7 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
-const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
+const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF } = require("../../lib/constant");
 const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -66,7 +66,7 @@ const details = async (req, res) => {
          * we have to update this api accrodingly
          */
 
-        let materialQuery = 
+        let materialQuery =
             `SELECT
             mat.EBELP AS material_item_number,
             mat.KTMNG AS material_quantity, 
@@ -189,12 +189,62 @@ const download = async (req, res) => {
 
 
 const poList = async (req, res) => {
+    const tokenData = req.tokenData;
+    // return;
     try {
+        let poQuery = "";
+        let Query = "";
+
+        if (tokenData.user_type === USER_TYPE_VENDOR) {
+            // console.log("vendor");
+        } else {
+            console.log("grse");
+
+            switch (tokenData.department_id) {
+                case USER_TYPE_GRSE_QAP:
+                    console.log("qap");
+                    if (tokenData.internal_role_id === QAP_ASSIGNER) {
+                        console.log("QAP_ASSIGNER");
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+
+                    } else if (tokenData.internal_role_id === QAP_STAFF) {
+                        console.log("QAP_STAFF");
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
+
+                    }
+                    break;
+
+                default:
+                    console.log("other1");
+                    break;
+
+            }
+
+        }
+
+        // console.log(Query);
+        if (Query == "") {
+            return resSend(res, false, 400, "you dont have permission.", null, null);
+        }
+        const strVal = await queryArrayTOString(Query);
+        console.log(strVal);
+        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+
+        if (poQuery == "") {
+            return resSend(res, false, 400, "you dont have permission.", null, null);
+        }
+        const poArr = await query({ query: poQuery, values: [] });
+
+        // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
+
+
+
+        // return;
+
+        //////////////////////////////////////////
         const resultArr = [];
 
-        let q = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR;`
-        const poArr = await query({ query: q, values: [] });
-        //console.log(poArr);
+
         let str = "";
         await Promise.all(
             poArr.map(async (item) => {
@@ -216,15 +266,15 @@ const poList = async (req, res) => {
 
         await Promise.all(
             SDVGArr.map(async (item) => {
-               
-                if(SDVGCsdArr.length) {
+
+                if (SDVGCsdArr.length) {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
                     item.contractual_submission_date = undefined;
                 }
 
-                if(SDVGAsdArr.length) {
+                if (SDVGAsdArr.length) {
                     let asdArr = await SDVGAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
@@ -245,14 +295,14 @@ const poList = async (req, res) => {
 
         await Promise.all(
             drawingArr.map(async (item) => {
-                if(SDVGCsdArr.length) {
+                if (SDVGCsdArr.length) {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
                     item.contractual_submission_date = undefined;
                 }
 
-                if(drawingAsdArr.length) {
+                if (drawingAsdArr.length) {
                     let asdArr = await drawingAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
@@ -274,14 +324,14 @@ const poList = async (req, res) => {
 
         await Promise.all(
             qapArr.map(async (item) => {
-                if(SDVGCsdArr.length) {
+                if (SDVGCsdArr.length) {
                     let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                 } else {
                     item.contractual_submission_date = undefined;
                 }
-                
-                if(qapAsdArr.length) {
+
+                if (qapAsdArr.length) {
                     let asdArr = await qapAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                     (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
                 } else {
