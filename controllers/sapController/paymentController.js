@@ -57,6 +57,14 @@ const addPaymentAdvice = async (req, res) => {
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
+        // payment payload
+
+        // "purchasing_doc_no": "4700013229",
+        // "file": "sample.pdf",
+        // "vendor_code": "50000437",
+        // "action_by_name": "S Roy",
+        // "action_by_id": "600224",
+
 }
 
 
