@@ -24,6 +24,7 @@ const sdbgPayload = (payload, status) => {
         "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
+        "isLocked": payload.isLocked,
     }
 
     return payloadObj;

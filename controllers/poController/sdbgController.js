@@ -44,7 +44,7 @@ const submitSDBG = async (req, res) => {
 
             }
 
-            const GET_LATEST_SDBG = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+            const GET_LATEST_SDBG = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ? AND isLocked = 1`;
             const result2 = await getSDBGData(GET_LATEST_SDBG, payload.purchasing_doc_no, ACKNOWLEDGED);
             if (result2 && result2?.length) {
                 const data = [{
@@ -62,6 +62,7 @@ const submitSDBG = async (req, res) => {
             let insertObj;
 
             if (payload.status === PENDING) {
+                payload = { ...payload, isLocked: 0 };
                 insertObj = sdbgPayload(payload, PENDING);
             } else if (payload.status === RE_SUBMITTED) {
 
@@ -93,8 +94,9 @@ const submitSDBG = async (req, res) => {
                 if (!result || !result.length) {
                     return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
                 }
-
+                payload = { ...payload, isLocked: 1 };
                 insertObj = sdbgPayload(payload, ACKNOWLEDGED);
+                console.log(insertObj)
             }
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
@@ -102,44 +104,44 @@ const submitSDBG = async (req, res) => {
 
             if (response.affectedRows) {
                 // mail setup
-    
 
-                if (payload.status === PENDING) {
 
-                    if (payload.updated_by == "VENDOR") {
+                // if (payload.status === PENDING) {
 
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.mailSendTo = result[0]?.dealingOfficerMail;
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.sendAt = new Date(payload.created_at);
-                        mailTrigger({ ...payload }, SDBG_SUBMIT_BY_VENDOR);
+                //     if (payload.updated_by == "VENDOR") {
 
-                    } else if (payload.updated_by == "GRSE") {
+                //         const result = await poContactDetails(payload.purchasing_doc_no);
+                //         payload.delingOfficerName = result[0]?.dealingOfficerName;
+                //         payload.mailSendTo = result[0]?.dealingOfficerMail;
+                //         payload.vendor_name = result[0]?.vendor_name;
+                //         payload.vendor_code = result[0]?.vendor_code;
+                //         payload.sendAt = new Date(payload.created_at);
+                //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_VENDOR);
 
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.mailSendTo = result[0]?.vendor_mail_id;
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.sendAt = new Date(payload.created_at);
-                        
-                        mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
+                //     } else if (payload.updated_by == "GRSE") {
 
-                    }
-                }
-                if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
+                //         const result = await poContactDetails(payload.purchasing_doc_no);
+                //         payload.vendor_name = result[0]?.vendor_name;
+                //         payload.vendor_code = result[0]?.vendor_code;
+                //         payload.mailSendTo = result[0]?.vendor_mail_id;
+                //         payload.delingOfficerName = result[0]?.dealingOfficerName;
+                //         payload.sendAt = new Date(payload.created_at);
 
-                    const result = await poContactDetails(payload.purchasing_doc_no);
-                    payload.vendor_name = result[0]?.vendor_name;
-                    payload.vendor_code = result[0]?.vendor_code;
-                    payload.mailSendTo = result[0]?.vendor_mail_id;
-                    payload.delingOfficerName = result[0]?.dealingOfficerName;
-                    payload.sendAt = new Date(payload.created_at);
-                    mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
+                //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
 
-                }
+                //     }
+                // }
+                // if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
+
+                //     const result = await poContactDetails(payload.purchasing_doc_no);
+                //     payload.vendor_name = result[0]?.vendor_name;
+                //     payload.vendor_code = result[0]?.vendor_code;
+                //     payload.mailSendTo = result[0]?.vendor_mail_id;
+                //     payload.delingOfficerName = result[0]?.dealingOfficerName;
+                //     payload.sendAt = new Date(payload.created_at);
+                //     mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
+
+                // }
 
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);
@@ -190,32 +192,28 @@ const unlock = async (req, res) => {
     try {
 
         let payload = { ...req.body };
-        console.log("TYUIoiuytyuiuytyuiuyuiuyuiuyuy")
 
         if (!payload.purchasing_doc_no || !payload.action_by_name || !payload.action_by_id) {
-
-            // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
-            // const isDel = handleFileDeletion(directory, req.file.filename);
             return resSend(res, false, 400, "Please send valid payload", null, null);
-
         }
 
 
-        const insertObj = {
-            purchasing_doc_no: payload.purchasing_doc_no,
-            action_by_name: payload.action_by_name,
-            action_by_id: payload.action_by_id,
-            updated_at: getEpochTime(),
-            isLocked: "NO"
+        const isLocked_check_q = `SELECT * FROM ${NEW_SDBG} WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}") ORDER BY id DESC LIMIT 1`;
+        const lockeCheck = await query({ query: isLocked_check_q, values: [] });
+
+        console.log("lockeCheck", lockeCheck);
+
+        if( lockeCheck && lockeCheck?.length && lockeCheck[0]["isLocked"] === 0 ) {
+            return resSend(res, true, 200, "Already unlocked or not Acknowledge yet", null, null);
         }
 
-        const q = `UPDATE ${NEW_SDBG} SET isLocked = "NO", 
+
+
+        const q = `UPDATE ${NEW_SDBG} SET 
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  "Y" WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}")`;
-
-        console.log("qqqq" + q);
+                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
         const response = await query({ query: q, values: [] });
 
         if (response.affectedRows) {

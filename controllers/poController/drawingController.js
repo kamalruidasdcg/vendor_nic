@@ -121,8 +121,6 @@ const submitDrawing = async (req, res) => {
 
                 }
 
-
-
                 resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);

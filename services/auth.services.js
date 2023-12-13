@@ -1,8 +1,9 @@
+const { USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 
 const authDataModify = (queryResult) => {
 
-    if(!Array.isArray(queryResult) && !queryResult.result) return [];
+    if (!Array.isArray(queryResult) && !queryResult.result) return [];
     const result = queryResult.map((row) => {
         const authData = {};
         const userTypeData = {};
@@ -37,9 +38,10 @@ const authDataModify = (queryResult) => {
 const unlockPrivilege = async (req, res, next) => {
     try {
 
-        const id = req.body.action_by_id;
+        const id = req.tokenData.user_type;
+        console.log("id", id);
 
-        if( id != "00000105") return resSend(res, false, 400, "YOU DON'T HAVE ACCESS");
+        if (!id || id !== USER_TYPE_SUPER_ADMIN) return resSend(res, false, 400, "YOU DON'T HAVE ACCESS");
 
         next();
 
