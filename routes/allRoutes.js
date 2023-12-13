@@ -96,7 +96,7 @@ router.post(paymentPrefix + "/addByXLS",
 const poPrefix = "/po";
 
 
-router.get(poPrefix + "/poList", [], (req, res) => {
+router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
   generalController.poList(req, res);
 });
 
