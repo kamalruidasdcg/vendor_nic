@@ -153,7 +153,7 @@ router.post(poPrefix + "/sdbg", [uploadSDBGFile.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
 
-router.post(poPrefix + "/sdbgUnlock", [unlockPrivilege], (req, res) => {
+router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
   sdbgController.unlock(req, res);
 });
 

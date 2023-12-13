@@ -10,10 +10,10 @@ const { query } = require("../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../services/jwt.services");
 const { resSend } = require("../lib/resSend");
 const { AUTH, USTER_TYPE } = require("../lib/tableName");
-const { USER_TYPE_VENDOR } = require("../lib/constant");
+const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
-const rolePermission = require("../lib/role/rolePermission");
+const rolePermission = require("../lib/role/deptWiseRolePermission");
 
 
 
@@ -61,19 +61,23 @@ const login = async (req, res) => {
         let login_Q =
             `SELECT 
                 t1.vendor_code, t1.user_type, t1.username, t1.password, t1.department_id, t1.internal_role_id,
-                    t2.name AS deptName, t3.name AS role
-                FROM auth 
-                    AS t1 
-			    LEFT JOIN 
-                	depertment_master AS t2
+                    t2.name AS department_name, t3.name AS role
+                FROM 
+                    auth
+                AS 
+                    t1 
+			    LEFT JOIN
+                	depertment_master
+                AS 
+                    t2
                 ON
                 	t1.department_id = t2.id
                 LEFT JOIN
-                	internal_role_master AS t3
+                	internal_role_master
+                AS 
+                    t3
                 ON	
-                
-                t1.internal_role_id = t3.id
-        
+                    t1.internal_role_id = t3.id
                 WHERE 
                     t1.vendor_code = ?`;
 
@@ -102,7 +106,8 @@ const login = async (req, res) => {
 
         let result = await query({ query: login_Q, values: [req.body.vendor_code] });
         let user = {};
-        let permission = [];
+        let permission = {};
+        let userDetails = [];
         if (!result.length) {
             return resSend(res, false, 404, "USER_NOT_FOUND");
         }
@@ -110,7 +115,7 @@ const login = async (req, res) => {
         if (req.body.password !== result[0]["password"]) {
             console.log("U R given Password -->", req.body.password, "Please check !!");
             return resSend(res, false, 401, "INCORRECT_PASSWORD");
-        } else {
+        } else if(req.body.password === result[0]["password"]) {
             if (result[0]["user_type"] === USER_TYPE_VENDOR) {
                 const vendorDetailsQ =
                     `SELECT t1.NAME1 AS name , t2.SMTP_ADDR AS email
@@ -125,44 +130,53 @@ const login = async (req, res) => {
                             WHERE 
                         t1.LIFNR = ?`;
 
-                permission = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
+                userDetails = await query({ query: vendorDetailsQ, values: [req.body.vendor_code] });
 
-                let name, email;
+                if (userDetails.length) {
+                    result[0] = { ...result[0], ...userDetails[0] };
+                    const { department_name, role } = result[0];
+                    const deptPermission = rolePermission["VENDOR"];
+                    permission = deptPermission;
 
-                console.log("permission", permission);
-
-                if (permission.length) {
-                    name = permission[0].name;
-                    email = permission[0].email;
-                    permission = permission?.map((el) => {
-                        delete el.name,
-                            delete el.email
-                        return el;
-                    })
                 }
+                // if (permission.length) {
+                //     name = permission[0].name;
+                //     email = permission[0].email;
+                //     permission = permission?.map((el) => {
+                //         delete el.name,
+                //             delete el.email
+                //         return el;
+                //     })
+                // }
 
-                user = { user: { ...result[0], name, email } };
-            } else if (result[0]["user_type"] && result[0]["user_type"] !== USER_TYPE_VENDOR) {
+                // user = { user: { ...result[0] } };
+            } else if (result[0]["user_type"] !== USER_TYPE_VENDOR) {
 
                 const grseDetaisQ =
-                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email, t3.*
+                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email
                         FROM pa0002 
                         AS t1 
                     LEFT JOIN pa0105 
                         AS t2
                     ON
                         (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030")
-                    LEFT JOIN 
-                        permission AS t3
-                    ON 
-                        t3.user_id = t1.PERNR
                     WHERE 
                          t1.PERNR = ?`;
-                permission = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+                userDetails = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
 
-                let name, email;
+                if (userDetails.length) {
+                    result[0] = { ...result[0], ...userDetails[0] };
+                    const { department_name, role } = result[0];
+                    const deptPermission = rolePermission[department_name];
+                    deptPermission[role] = true;
+                    permission = deptPermission;
+                }
 
-                console.log("permission", permission);
+                /**
+                 *   LEFT JOIN 
+                permission AS t3
+            ON 
+                t3.user_id = t1.PERNR
                 if (permission?.length) {
                     name = permission[0].name;
                     email = permission[0].email;
@@ -173,8 +187,7 @@ const login = async (req, res) => {
                         return el;
                     })
                 }
-
-                user = { user: { ...result[0], name, email } };
+                 */
             }
 
         }
@@ -186,31 +199,48 @@ const login = async (req, res) => {
         // deleting password from response
         delete result[0]["password"];
 
-
-        const sidebar_menu = { ...rolePermission };
+        // let sidebar_menu = { ...rolePermission };
         // added permission as per define in permission table
         // if permission is on the table permission has granted 
         // otherwise no permission
-        if (permission?.length && result[0]["user_type"] !== USER_TYPE_VENDOR) {
-            permission.forEach((el) => {
-                if (sidebar_menu[el.screen_name]["activities"]) {
-                    sidebar_menu[el.screen_name]["activities"][el.activity_type] = el["activity_status"] === 1 ? true : false;
-                    if (el.activity_status === 1) {
-                        sidebar_menu[el.screen_name]["hasAccess"] = true;
-                    }
-                }
-            })
-        }
+        // if (permission?.length && result[0]["user_type"] !== USER_TYPE_VENDOR) {
 
-        user["permission"] = sidebar_menu;
+        //     if (result[0]["user_type"] == USER_TYPE_SUPER_ADMIN) {
+        //         const newObj = JSON.parse(
+        //             JSON.stringify(rolePermission, (key, value) =>
+        //                 typeof value === "boolean" ? true : value
+        //             )
+        //         );
+
+        //         sidebar_menu = newObj;
+
+        //     } else {
+
+        //         permission.forEach((el) => {
+        //             if (sidebar_menu[el.screen_name]["activities"]) {
+        //                 sidebar_menu[el.screen_name]["activities"][el.activity_type] = el["activity_status"] === 1 ? true : false;
+        //                 if (el.activity_status === 1) {
+        //                     sidebar_menu[el.screen_name]["hasAccess"] = true;
+        //                 }
+        //             }
+        //         });
+        //     }
+
+        // }
+
+        // user["permission"] = sidebar_menu;
+
+        user = { user: { ...result[0] }, permission };
 
         const payload = {
-            username: user.user.username,
-            vendor_code: user.user.vendor_code,
-            user_type: user.user.user_type,
+            username: user.user?.username,
+            vendor_code: user.user?.vendor_code,
+            user_type: user.user?.user_type,
+            department_id: user.user.department_id,
+            internal_role_id: user.user.internal_role_id
+
             // user_type_name: user.user_type.user_type
         };
-        // const payload = user.user;
 
         const ACCESS_TOKEN_VALIDITY = "1d";
         const REFRESH_TOKEN_VALIDITY = "7d";
