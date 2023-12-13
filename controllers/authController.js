@@ -115,7 +115,7 @@ const login = async (req, res) => {
         if (req.body.password !== result[0]["password"]) {
             console.log("U R given Password -->", req.body.password, "Please check !!");
             return resSend(res, false, 401, "INCORRECT_PASSWORD");
-        } else if(req.body.password === result[0]["password"]) {
+        } else if (req.body.password === result[0]["password"]) {
             if (result[0]["user_type"] === USER_TYPE_VENDOR) {
                 const vendorDetailsQ =
                     `SELECT t1.NAME1 AS name , t2.SMTP_ADDR AS email
@@ -235,6 +235,7 @@ const login = async (req, res) => {
         const payload = {
             username: user.user?.username,
             vendor_code: user.user?.vendor_code,
+            name: user.user?.name,
             user_type: user.user?.user_type,
             department_id: user.user.department_id,
             internal_role_id: user.user.internal_role_id
