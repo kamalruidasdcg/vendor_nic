@@ -197,7 +197,7 @@ router.get(poPrefix + "/sdbgList", [], (req, res) => {
 router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
 });
-router.get(poPrefix + "/qapList", [], (req, res) => {
+router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
   qapController.list(req, res);
 });
 
