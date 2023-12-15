@@ -104,6 +104,10 @@ router.get(poPrefix + "/details", [], (req, res) => {
   generalController.details(req, res);
 });
 
+router.get(poPrefix + "/deptwiselog", [], (req, res) => {
+  generalController.getLogList(req, res);
+});
+
 // PO DRAWING CONTROLLER
 
 // router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
