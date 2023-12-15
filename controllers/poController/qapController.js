@@ -4,9 +4,9 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
-const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED } = require("../../lib/status");
+const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED, UPDATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
@@ -14,6 +14,7 @@ const SENDMAIL = require('../../lib/mailSend');
 const { mailInsert } = require('../../services/mai.services');
 const { QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE } = require('../../lib/event');
 const { mailTrigger } = require('../sendMailController');
+const { deptLogEntry } = require('../../log/deptActivities');
 
 
 
@@ -23,16 +24,16 @@ const submitQAP = async (req, res) => {
     try {
 
 
-const user_id = req.tokenData.vendor_code;
-const screen_name = 'qap';
-const activity_type = req.body.status;
+        const user_id = req.tokenData.vendor_code;
+        const screen_name = 'qap';
+        const activity_type = req.body.status;
 
-const CHECK_AUTH = `SELECT activity_status FROM permission where user_id = ? and screen_name = ? and activity_type = ?`;
-const resAuthQry = await query({ query: CHECK_AUTH, values: [user_id, screen_name, activity_type] });
-if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
-    return resSend(res, false, 400, "You dont have permission for this activity.", null, null);
-} 
-// Handle Image Upload
+        const CHECK_AUTH = `SELECT activity_status FROM permission where user_id = ? and screen_name = ? and activity_type = ?`;
+        const resAuthQry = await query({ query: CHECK_AUTH, values: [user_id, screen_name, activity_type] });
+        if (!resAuthQry.length || resAuthQry[0].activity_status == 0) {
+            return resSend(res, false, 400, "You dont have permission for this activity.", null, null);
+        }
+        // Handle Image Upload
         let fileData = {};
         if (req.file) {
             fileData = {
@@ -43,17 +44,19 @@ if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
             };
 
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+            const userInfo = { ...req.tokenData };
 
             const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED, ACCEPTED, REJECTED, SAVED]
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
-                // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+                // const directory = path.join(__dirname, '..', 'uploads', 'qap');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend(res, false, 400, "Please send valid payload", null, null);
 
             }
 
+            // IF QAP ALREADY APPROVED
             const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
             const result2 = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, APPROVED);
 
@@ -104,111 +107,80 @@ if(!resAuthQry.length || resAuthQry[0].activity_status == 0) {
 
             if (response.affectedRows) {
 
+                console.log("insertId", response.insertId);
 
-                // let mailDetails = {};
-                // if (payload.status === PENDING && payload.mailSendTo) {
+                payload.insertId = response.insertId;
 
+                if (userInfo.user_type === USER_TYPE_VENDOR) {
 
-                //     if (payload.updated_by == "VENDOR") {
-                //         mailDetails = {
-                //             // from: "kamal.sspur@gmail.com",
-                //             to: payload.mailSendTo,
-                //             // to: "mainak.dutta16@gmail.com",
-                //             subject: "Submission of QAP",
-                //             html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForGRSE, "Vendor QAP submitted"),
-                //         };
-                //     } else {
-                //         mailDetails = {
-                //             // from: "kamal.sspur@gmail.com",
-                //             to: payload.mailSendTo,
-                //             // to: "mainak.dutta16@gmail.com",
-                //             subject: "Submission of QAP",
-                //             html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
-                //         };
-                //     }
-                //     const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+                    if (payload.status === PENDING) {
+                        await mailSendToAssignee(payload);
+                        await logEntry(payload, userInfo.vendor_code, null, null);
+                    }
+                    if (payload.status === RE_SUBMITTED) {
+                        await logEntry(payload, userInfo.vendor_code, null, null);
+                        // await mailSendToAssigner(payload);
+                    }
 
-                //     SENDMAIL(mailDetails, function (err, data) {
-                //         if (!err) {
-                //             console.log("Error Occurs", err);
-                //         } else {
-                //             // console.log("Email sent successfully", data);
-                //             console.log("Email sent successfully");
-                //         }
-                //     });
+                } else if (userInfo.user_type !== USER_TYPE_VENDOR) {
 
-                // }
-                // if (payload.status === APPROVED && payload.mailSendTo) {
+                    if (payload.status === UPDATED) {
 
-                //     const mailBodyForVendor = `
-                //     Dear XXXXXXXX (Vendor code/ Vendor name), <br>
-                //     Below are the details pertinent to approved of QAP for the PO - ${payload.purchasing_doc_no}.
-                //     <br>
-                //     <br>
-                //     Vendor : ${payload.vendor_name ? payload.vendor_name : "" } [${payload.vendor_code}]<br>
-                //     Remarks: ${payload.remarks}<br>
-                //     Date : ${new Date(payload.created_at)} <br>
-                //     `;
-                //     mailDetails = {
-                //         // from: "kamal.sspur@gmail.com",
-                //         to: payload.mailSendTo,
-                //         // to: "mainak.dutta16@gmail.com",
-                //         subject: "QAP Approved",
-                //         html: QAP_SUBMIT_MAIL_TEMPLATE(mailBodyForVendor, "GRSR updated"),
-                //     };
+                        // MAIL SEND TO ASSIGNEE AND VENDOR
 
-                //     const mailIns = await mailInsert({ ...mailDetails, action_by_id: payload.action_by_id, action_by_name: payload.action_by_name });
+                        // await mailSendToAssignee(payload);
+                        // await mailSendToVendor(payload);
+                    }
+                    if (payload.status === ACCEPTED) {
 
-                //     SENDMAIL(mailDetails, function (err, data) {
-                //         if (!err) {
-                //             console.log("Error Occurs", err);
-                //         } else {
-                //             // console.log("Email sent successfully", data);
-                //             console.log("Email sent successfully");
-                //         }
-                //     });
+                        // MAIL SEND TO ASSIGNEE AND VENDOR
+                        // await mailSendToAssignee(payload);
+                        // await mailSendToVendor(payload);
 
-                // }
+                        await logEntry(payload, userInfo.vendor_code, payload.vendor_code, null);
+                    }
+                    if (payload.status === REJECTED) {
+
+                        // await mailSendToAssignee(payload);
+                        // await mailSendToVendor(payload);
 
 
-                if (payload.status === PENDING) {
-
-                    if (payload.updated_by == "VENDOR") {
-
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.mailSendTo = result[0]?.dealingOfficerMail;
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.sendAt = new Date(payload.created_at);
-                        mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
-
-                        console.log("payload",payload);
-
-                    } else if (payload.updated_by == "GRSE") {
-
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.mailSendTo = result[0]?.vendor_mail_id;
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.sendAt = new Date(payload.created_at);
-                        
-                        mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
+                        await logEntry(payload, userInfo.vendor_code, payload.vendor_code, null);
 
                     }
-                }
-                if (payload.status === APPROVED && payload.updated_by == "GRSE") {
+                    if (payload.status === APPROVED) {
 
-                    const result = await poContactDetails(payload.purchasing_doc_no);
-                    payload.vendor_name = result[0]?.vendor_name;
-                    payload.vendor_code = result[0]?.vendor_code;
-                    payload.mailSendTo = result[0]?.vendor_mail_id;
-                    payload.delingOfficerName = result[0]?.dealingOfficerName;
-                    payload.sendAt = new Date(payload.created_at);
-                    mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
+                        // await mailSendToAssignee(payload);
+                        // await mailSendToVendor(payload);
+
+                        await logEntry(payload, userInfo.vendor_code, payload.vendor_code, null);
+
+                    }
+
+                    // const result = await poContactDetails(payload.purchasing_doc_no);
+                    // payload.vendor_name = result[0]?.vendor_name;
+                    // payload.vendor_code = result[0]?.vendor_code;
+                    // payload.mailSendTo = result[0]?.vendor_mail_id;
+                    // payload.delingOfficerName = result[0]?.dealingOfficerName;
+                    // payload.sendAt = new Date(payload.created_at);
+
+                    // mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
 
                 }
+
+
+
+                // if (payload.status === APPROVED && payload.updated_by == "GRSE") {
+
+                //     const result = await poContactDetails(payload.purchasing_doc_no);
+                //     payload.vendor_name = result[0]?.vendor_name;
+                //     payload.vendor_code = result[0]?.vendor_code;
+                //     payload.mailSendTo = result[0]?.vendor_mail_id;
+                //     payload.delingOfficerName = result[0]?.dealingOfficerName;
+                //     payload.sendAt = new Date(payload.created_at);
+                //     mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
+
+                // }
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
@@ -291,23 +263,23 @@ async function poContactDetails(purchasing_doc_no) {
 }
 
 const internalDepartmentList = async (req, res) => {
-    
+
     req.query.$tableName = `sub_dept`;
     req.query.$select = "id,name";
     try {
-      getFilteredData(req, res);
-    } catch(err) {
-      console.log("data not fetched", err);
+        getFilteredData(req, res);
+    } catch (err) {
+        console.log("data not fetched", err);
     }
-  // resSend(res, true, 200, "oded!", req.query, null);
-   
+    // resSend(res, true, 200, "oded!", req.query, null);
+
 }
 
 const internalDepartmentEmpList = async (req, res) => {
-    
-const sub_dept_id = req.query.sub_dept_id;
-try{
-    const q = `SELECT t1.emp_id, t1. sub_dept_name, t1.dept_name, t2.CNAME as empName, t3.USRID_LONG as empEmail
+
+    const sub_dept_id = req.query.sub_dept_id;
+    try {
+        const q = `SELECT t1.emp_id, t1. sub_dept_name, t1.dept_name, t2.CNAME as empName, t3.USRID_LONG as empEmail
 	FROM emp_department_list 
     	AS t1 
       LEFT JOIN 
@@ -322,11 +294,11 @@ try{
         WHERE 
         t1.sub_dept_id = ?`;
 
-    const response = await query({ query: q, values: [sub_dept_id] });
-    resSend(res, true, 200, "oded!", response, null);
-}  catch(err) {
-      console.log("data not fetched", err);
-}
+        const response = await query({ query: q, values: [sub_dept_id] });
+        resSend(res, true, 200, "oded!", response, null);
+    } catch (err) {
+        console.log("data not fetched", err);
+    }
 
     // req.query.$tableName = `sub_dept`;
     // req.query.$select = "id,name";
@@ -335,8 +307,129 @@ try{
     // } catch(err) {
     //   console.log("data not fetched", err);
     // }
- // resSend(res, true, 200, "oded!", req.query, null);
-   
+    // resSend(res, true, 200, "oded!", req.query, null);
+
 }
+
+
+
+const mailSendToAssignee = async (payload) => {
+
+
+
+
+    // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
+    const result = await poContactDetails(payload.purchasing_doc_no);
+    // PO CREATOR IS DEFAULT ASSIGNEE && MAIL IS DEFAULT ASSIGNEE EMAIL
+    payload.delingOfficerName = result[0]?.dealingOfficerName;
+    payload.mailSendTo = result[0]?.dealingOfficerMail;
+    payload.vendor_name = result[0]?.vendor_name;
+    payload.vendor_code = result[0]?.vendor_code;
+    payload.sendAt = new Date(payload.created_at);
+
+
+    const logPayload = [
+        {
+            user_id: 600230,
+            depertment: 3,
+            action: payload.status,
+            item_info_id: payload.insertId,
+            remarks: payload.remarks,
+            purchasing_doc_no: payload.purchasing_doc_no,
+            created_at: payload.created_at,
+            created_by_id: payload.created_by_id,
+        }]
+    const log = await deptLogEntry(logPayload)
+
+    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+}
+const mailSendToAssigner = async (payload) => {
+
+
+
+
+    // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
+    const result = await poContactDetails(payload.purchasing_doc_no);
+    // PO CREATOR IS DEFAULT ASSIGNEE && MAIL IS DEFAULT ASSIGNEE EMAIL
+    payload.delingOfficerName = result[0]?.dealingOfficerName;
+    payload.mailSendTo = result[0]?.dealingOfficerMail;
+    payload.vendor_name = result[0]?.vendor_name;
+    payload.vendor_code = result[0]?.vendor_code;
+    payload.sendAt = new Date(payload.created_at);
+
+
+    const logPayload = [
+        {
+            user_id: 600230,
+            depertment: 3,
+            action: payload.status,
+            item_info_id: payload.insertId,
+            remarks: payload.remarks,
+            purchasing_doc_no: payload.purchasing_doc_no,
+            created_at: payload.created_at,
+            created_by_id: payload.created_by_id,
+        }]
+    const log = await deptLogEntry(logPayload)
+
+    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+}
+const mailSendToVendor = async (payload) => {
+
+
+
+
+    const result = await poContactDetails(payload.purchasing_doc_no);
+    payload.vendor_name = result[0]?.vendor_name;
+    payload.vendor_code = result[0]?.vendor_code;
+    payload.mailSendTo = result[0]?.vendor_mail_id;
+    payload.delingOfficerName = result[0]?.dealingOfficerName;
+    payload.sendAt = new Date(payload.created_at);
+
+
+    const logPayload = [
+        {
+            user_id: 600230,
+            depertment: 3,
+            action: payload.status,
+            item_info_id: payload.insertId,
+            remarks: payload.remarks,
+            purchasing_doc_no: payload.purchasing_doc_no,
+            created_at: payload.created_at,
+            created_by_id: payload.created_by_id,
+        }]
+    const log = await deptLogEntry(logPayload)
+
+    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+}
+
+
+async function logEntry(payload, vendor_code, assigned_from, assigner_person_id) {
+
+    const data = [];
+    if (assigned_from) {
+        data.push(assigned_from)
+    } if (assigner_person_id) {
+        data.push(assigner_person_id)
+    }
+    if (vendor_code) {
+        data.push(vendor_code)
+    }
+
+    const logPayload = []
+    for (let i = 0; i < data.length; i++) {
+        logPayload.push({
+            user_id: data[i],
+            depertment: 3,
+            action: payload.status,
+            item_info_id: payload.insertId,
+            remarks: payload.remarks,
+            purchasing_doc_no: payload.purchasing_doc_no,
+            created_at: payload.created_at,
+            created_by_id: payload.created_by_id,
+        })
+    }
+    const log = await deptLogEntry(logPayload)
+}
+
 
 module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList }
