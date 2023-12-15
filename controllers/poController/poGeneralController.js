@@ -381,4 +381,88 @@ const poList = async (req, res) => {
 }
 
 
-module.exports = { details, download, poList };
+const getLogList = async (req, res) => {
+
+    try {
+        const filterBy = req.query;
+
+        console.log("fite", filterBy);
+
+        if (filterBy.purchasing_doc_no || filterBy.user_id || filterBy.depertment || filterBy.action) {
+
+
+
+            const values = [];
+            let filterQuery = `
+                SELECT
+                    log.user_id as id,
+                    p1.CNAME as name,
+                    action AS status,
+                    COUNT(*) AS status_count,
+                    log.depertment as depertment
+                FROM
+                    department_wise_log
+                AS 
+                    log 
+                LEFT JOIN 
+                    pa0002 
+                AS 
+                    p1
+                ON
+                    p1.PERNR = log.user_id`;
+
+            // USE FOR DATE QUERIES
+            const { startDate, endDate } = filterBy;
+            delete filterBy.startDate;
+            delete filterBy.endDate;
+
+            // USE FOR OTHER THAN DATE QUERIES
+
+            if (Object.keys(filterBy).length > 0) {
+                filterQuery += " WHERE ";
+                const conditions = Object.keys(filterBy).map((key, index) => {
+                    values.push(filterBy[key]);
+
+                    if (index > 0) {
+                        return `AND ${key} = ?`;
+                    } else {
+                        return `${key} = ?`;
+                    }
+                });
+
+                filterQuery += conditions.join(" ");
+            }
+
+            if (startDate && !endDate) {
+                filterQuery = filterQuery.concat(` AND log.created_at >= ?`)
+                values.push(parseInt(startDate));
+            }
+            if (!startDate && endDate) {
+                filterQuery = filterQuery.concat(` AND log.created_at <= ?`)
+                values.push(parseInt(endDate));
+            }
+            if (startDate && endDate) {
+                filterQuery = filterQuery.concat(` AND ( log.created_at BETWEEN ? AND ? )`)
+                values.push(parseInt(startDate), parseInt(endDate));
+            }
+
+
+
+            filterQuery = filterQuery.concat(
+                ` GROUP BY
+                log.user_id, log.action;`);
+
+            const result = await query({ query: filterQuery, values: values })
+            resSend(res, true, 200, "data fetch scussfully.", result, null);
+        } else {
+            return resSend(res, false, 400, "Please send -> purchasing_doc_no | user_id | depertment | action for get result", null, null);
+        }
+
+    } catch (error) {
+        return resSend(res, false, 500, error.toString(), [], null);
+    }
+
+};
+
+
+module.exports = { details, download, poList, getLogList };
