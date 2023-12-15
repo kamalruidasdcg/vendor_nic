@@ -384,22 +384,19 @@ const poList = async (req, res) => {
 const getLogList = async (req, res) => {
 
     try {
-        const filterBy = req.query;
-
-        console.log("fite", filterBy);
+        const filterBy = req.body;
 
         if (filterBy.purchasing_doc_no || filterBy.user_id || filterBy.depertment || filterBy.action) {
-
-
 
             const values = [];
             let filterQuery = `
                 SELECT
-                    log.user_id as id,
-                    p1.CNAME as name,
+                    log.user_id AS id,
+                    p1.CNAME AS name,
                     action AS status,
                     COUNT(*) AS status_count,
-                    log.depertment as depertment
+                    log.depertment AS depertment,
+                    dept.name AS departmentName
                 FROM
                     department_wise_log
                 AS 
@@ -409,7 +406,13 @@ const getLogList = async (req, res) => {
                 AS 
                     p1
                 ON
-                    p1.PERNR = log.user_id`;
+                    p1.PERNR = log.user_id
+                LEFT JOIN
+                    depertment_master
+                AS 
+                    dept
+                ON 
+                    dept.id = log.depertment`;
 
             // USE FOR DATE QUERIES
             const { startDate, endDate } = filterBy;
@@ -424,9 +427,9 @@ const getLogList = async (req, res) => {
                     values.push(filterBy[key]);
 
                     if (index > 0) {
-                        return `AND ${key} = ?`;
+                        return `AND log.${key} = ?`;
                     } else {
-                        return `${key} = ?`;
+                        return `log.${key} = ?`;
                     }
                 });
 
