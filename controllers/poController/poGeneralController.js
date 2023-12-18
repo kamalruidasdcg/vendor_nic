@@ -227,7 +227,10 @@ const poList = async (req, res) => {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
         const strVal = await queryArrayTOString(Query);
-        console.log(strVal);
+        if (!strVal || strVal == "") {
+            return resSend(res, false, 400, "No PO found.", null, null);
+        }
+        
         poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
 
         if (poQuery == "") {
@@ -237,7 +240,7 @@ const poList = async (req, res) => {
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
 
-
+       // if() {}
 
         // return;
 
