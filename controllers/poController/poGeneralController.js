@@ -226,7 +226,10 @@ const poList = async (req, res) => {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
         const strVal = await queryArrayTOString(Query);
-        console.log(strVal);
+        if (!strVal || strVal == "") {
+            return resSend(res, false, 400, "No PO found.", null, null);
+        }
+        
         poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
 
         if (poQuery == "") {
@@ -236,7 +239,7 @@ const poList = async (req, res) => {
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
 
-
+       // if() {}
 
         // return;
 
@@ -383,26 +386,38 @@ const poList = async (req, res) => {
 const getLogList = async (req, res) => {
 
     try {
-        const filterBy = req.query;
+        const filterBy = { ...req.body };
 
-        console.log("fite", filterBy);
+        console.log("filterBy", filterBy);
 
         if (filterBy.purchasing_doc_no || filterBy.user_id || filterBy.depertment || filterBy.action) {
-
 
 
             const values = [];
             let filterQuery = `
                 SELECT
-                    log.user_id as id,
-                    p1.CNAME as name,
-                    action AS status,
-                    COUNT(*) AS status_count,
-                    log.depertment as depertment
+                    log.user_id AS id,
+                    log.id AS log_id,
+                    log.action AS status,
+                    log.remarks AS remarks,
+                    log.purchasing_doc_no AS purchasing_doc_no,
+                    log.depertment AS depertment,
+                    dept.name AS departmentName
                 FROM
                     department_wise_log
                 AS 
-                    log 
+                    log
+    
+                LEFT JOIN
+                    depertment_master
+                AS 
+                    dept
+                ON 
+                    dept.id = log.depertment`;
+
+            // USE FOR OTHER THAN DATE QUERIES
+
+            const getGrseUserEmpNameQ = `
                 LEFT JOIN 
                     pa0002 
                 AS 
@@ -410,12 +425,18 @@ const getLogList = async (req, res) => {
                 ON
                     p1.PERNR = log.user_id`;
 
+
+
             // USE FOR DATE QUERIES
-            const { startDate, endDate } = filterBy;
+            let { startDate, endDate, page, limit, groupBy } = filterBy;
             delete filterBy.startDate;
             delete filterBy.endDate;
+            delete filterBy.page;
+            delete filterBy.limit;
+            delete filterBy.groupBy;
 
-            // USE FOR OTHER THAN DATE QUERIES
+
+            let condQuery = " "
 
             if (Object.keys(filterBy).length > 0) {
                 filterQuery += " WHERE ";
@@ -423,51 +444,126 @@ const getLogList = async (req, res) => {
                     values.push(filterBy[key]);
 
                     if (index > 0) {
-                        return `AND ${key} = ?`;
+                        return `AND log.${key} = ?`;
                     } else {
-                        return `${key} = ?`;
+                        return `log.${key} = ?`;
                     }
                 });
 
-                filterQuery += conditions.join(" ");
+                condQuery += conditions.join(" ");
             }
-
             if (startDate && !endDate) {
-                filterQuery = filterQuery.concat(` AND log.created_at >= ?`)
+                condQuery = condQuery.concat(` AND log.created_at >= ?`)
                 values.push(parseInt(startDate));
             }
             if (!startDate && endDate) {
-                filterQuery = filterQuery.concat(` AND log.created_at <= ?`)
+                condQuery = condQuery.concat(` AND log.created_at <= ?`)
                 values.push(parseInt(endDate));
             }
             if (startDate && endDate) {
-                filterQuery = filterQuery.concat(` AND ( log.created_at BETWEEN ? AND ? )`)
+                condQuery = condQuery.concat(` AND ( log.created_at BETWEEN ? AND ? )`)
                 values.push(parseInt(startDate), parseInt(endDate));
             }
 
+            filterQuery = filterQuery.concat(condQuery);
 
+            // filterQuery = filterQuery.concat(` ORDER BY log.id DESC`);
+            page = page ? parseInt(page) : 1;
+            limit = limit ? parseInt(limit) : 10;
+            const offSet = (page - 1) * limit;
 
-            filterQuery = filterQuery.concat(
-                ` GROUP BY
-                log.user_id, log.action;`);
+            const pageinatonQ = ` LIMIT ${offSet}, ${limit}`;
+            const orderByQ = ` ORDER BY log.created_at DESC`;
 
-            const result = await query({ query: filterQuery, values: values })
-            resSend(res, true, 200, "data fetch scussfully.", result, null);
+            filterQuery = filterQuery.concat(orderByQ);
+            filterQuery = filterQuery.concat(pageinatonQ);
+
+            const result = await query({ query: filterQuery, values: values });
+            // const result = await log(req, res, filterQuery, values);
+            const logCount = await poReportCount(req, res, condQuery, values);
+            const report = await poReport(req, res, condQuery, values, groupBy);
+            // const response = await Promise.all(
+            //     log(req, res, filterQuery, values),
+            //     poReportCount(req, res, condQuery, values),
+            //     poReport(req, res, condQuery, values)
+            // )
+            // console.log(response)
+
+            resSend(res, true, 200, "data fetch scussfully.", { result, logCount, report }, null);
         } else {
             return resSend(res, false, 400, "Please send -> purchasing_doc_no | user_id | depertment | action for get result", null, null);
         }
 
     } catch (error) {
-        return resSend(res, false, 500, error.toString(), [], null);
+        return resSend(res, false, 500, error, [], null);
     }
 
 };
 
-// const res = getLogList(
-//   { query: {  depertment: 1, action: "UPDATE" , startDate: 27287} },
-//   {}
-// );
+async function poReportCount(req, res, condQuery, values) {
+    try {
+        let filterQuery = `
+            SELECT
+                COUNT(*) AS log_count
+            FROM
+                department_wise_log
+            AS 
+                log
+            WHERE`;
 
+        filterQuery = filterQuery.concat(condQuery);
+        const result = await query({ query: filterQuery, values: values });
+        if (result?.length) {
+            return result[0]["log_count"]
+        }
+
+        return 0;
+
+    } catch (error) {
+        console.log("po report count error", error)
+    }
+
+}
+async function poReport(req, res, condQuery, values, groupBy) {
+    try {
+
+        let reportQuery = `
+        SELECT
+        log.user_id AS id,
+        log.purchasing_doc_no AS purchasing_doc_no,
+        action AS status,
+        COUNT(*) AS status_count,
+        log.depertment AS depertment,
+        dept.name AS department_name
+            FROM
+                department_wise_log
+            AS 
+                log
+            LEFT JOIN
+                depertment_master
+            AS 
+                dept
+            ON 
+                dept.id = log.depertment
+            WHERE`;
+
+        reportQuery = reportQuery.concat(condQuery);
+        const by = groupBy == "PO" ? "log.purchasing_doc_no" : "log.user_id";
+        reportQuery = reportQuery.concat(
+            ` 
+            GROUP BY
+                ${by}, log.action;`);
+
+        console.log("reportQuery", reportQuery);
+        const result = await query({ query: reportQuery, values });
+        return result;
+
+    } catch (error) {
+        console.log("po report error", error)
+
+    }
+
+}
 
 
 module.exports = { details, download, poList, getLogList };

@@ -107,6 +107,10 @@ router.get(poPrefix + "/deptwiselog", [], (req, res) => {
   generalController.getLogList(req, res);
 });
 
+router.post(poPrefix + "/deptwiselog", [], (req, res) => {
+  generalController.getLogList(req, res);
+});
+
 // PO DRAWING CONTROLLER
 
 // router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
@@ -196,7 +200,7 @@ router.get(poPrefix + "/sdbgList", [], (req, res) => {
 router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
 });
-router.get(poPrefix + "/qapList", [], (req, res) => {
+router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
   qapController.list(req, res);
 });
 
