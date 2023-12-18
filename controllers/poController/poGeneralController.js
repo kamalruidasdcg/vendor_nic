@@ -197,6 +197,7 @@ const poList = async (req, res) => {
 
         if (tokenData.user_type === USER_TYPE_VENDOR) {
             // console.log("vendor");
+            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE vendor_code = ${tokenData.vendor_code}`;
         } else {
             console.log("grse");
 
