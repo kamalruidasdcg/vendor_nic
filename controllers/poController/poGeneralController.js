@@ -3,7 +3,6 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
 const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF } = require("../../lib/constant");
 const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
-const { CREATED, ACKNOWLEDGE, RE_SUBMIT } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../../services/po.services");
