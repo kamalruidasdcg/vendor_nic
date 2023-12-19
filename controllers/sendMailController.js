@@ -1,7 +1,7 @@
 const SENDMAIL = require("../lib/mailSend");
 const mailBody = require("../lib/mailBody");
 const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE } = require("../templates/mail-template");
-const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE } = require("../lib/event");
+const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE, QAP_ASSIGN_BY_GRSE } = require("../lib/event");
 const { mailInsert, updateMailStatus } = require("../services/mai.services");
 const path = require('path');
 
@@ -175,6 +175,21 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                 };
 
                 break;
+            case QAP_ASSIGN_BY_GRSE:
+
+                mail_body = mailBody["QAP_ASSIGN_BY_GRSE"].replace(/{{(.*?)}}/g, (match, p1) => payload[p1.trim()] || match);
+
+                mailDetails = {
+                    to: payload.mailSendTo,
+                    subject: "Approval of QAP",
+                    html: QAP_SUBMIT_MAIL_TEMPLATE(mail_body, "Vendor update"),
+                    // attachments: [{
+                    //     filename: payload.fileName,
+                    //     path: payload.filePath,
+                    // }]
+                };
+
+                break;
 
             default:
                 break;
@@ -190,7 +205,7 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
             } else {
                 // await updateMailStatus({ id: mail_response.insertId, staus: "sent", message: data });
                 await mailInsert({ ...payload, status: "SENT", ...mailDetails });
-                console.log("Email sent successfully ('_') !!");
+                console.log(`Email sent successfully ('_') !!${payload.mailSendTo}`);
             }
         });
 
