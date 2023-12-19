@@ -103,6 +103,9 @@ router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
 router.get(poPrefix + "/details", [], (req, res) => {
   generalController.details(req, res);
 });
+router.get(poPrefix + "/deptwiselog", [], (req, res) => {
+  generalController.getLogList(req, res);
+});
 
 router.post(poPrefix + "/deptwiselog", [], (req, res) => {
   generalController.getLogList(req, res);
