@@ -9,16 +9,30 @@ const { getEpochTime } = require("../lib/utils");
  */
 
 exports.zfi_bgm_1_Payload = async (payload) => {
-    const payloadObj = {}
-   // Object.keys(payload).forEach
-    Object.keys(payload).forEach((key) => {
-        payloadObj[key] = payload[key] ? payload[key] : null
-    });
-  
-    // console.log("payloadObj");
-    // console.log(payloadObj);
-   
+    console.log("456yujk5tyj");
+    console.log(payload);
 
-    return payloadObj;
+    // "FILE_NO": "payload.FILE_NO2",
+    // "BANKERS_NAME": "payload.BANKERS_NAME",
+    // "BANKERS_ADD1": "payload.BANKERS_ADD1",
+    // "BANKERS_ADD2": "payload.BANKERS_ADD2"
+    return payload.map((obj) => (
+        {
+            "FILE_NO": (obj.FILE_NO) ? obj.FILE_NO : null,
+            "BANKERS_NAME": (obj.BANKERS_NAME) ? obj.BANKERS_NAME : null
+        }
+    ));
+
+    // const payloadObj = {}
+    // Object.keys(payload).forEach
+    // Object.keys(payload).forEach((key) => {
+    //     payloadObj[key] = payload[key] ? payload[key] : null
+    // });
+
+    // // console.log("payloadObj");
+    // // console.log(payloadObj);
+
+
+    // return payloadObj;
 }
 
