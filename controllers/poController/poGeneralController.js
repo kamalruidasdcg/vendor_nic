@@ -395,26 +395,41 @@ const getLogList = async (req, res) => {
 
 
             const values = [];
-            let filterQuery = `
-                SELECT
+            let filterQuery = 
+            `SELECT
                     log.user_id AS id,
+                    grse_user_details.CNAME AS grse_user_name,
+                    vendor_details.NAME1 AS vendor_name,
                     log.id AS log_id,
                     log.action AS status,
                     log.remarks AS remarks,
+                    log.created_at AS datetime,
                     log.purchasing_doc_no AS purchasing_doc_no,
                     log.depertment AS depertment,
                     dept.name AS departmentName
                 FROM
                     department_wise_log
-                AS 
+                AS
                     log
-    
+
                 LEFT JOIN
                     depertment_master
-                AS 
+                AS
                     dept
-                ON 
-                    dept.id = log.depertment`;
+                ON
+                    dept.id = log.depertment
+                LEFT JOIN 
+                    pa0002 
+                AS 
+                       grse_user_details
+                ON
+                    grse_user_details.PERNR = log.user_id
+                LEFT JOIN
+                    lfa1 
+                 AS
+                     vendor_details
+                 ON 
+                    vendor_details.LIFNR = log.user_id`;
 
             // USE FOR OTHER THAN DATE QUERIES
 
@@ -488,9 +503,16 @@ const getLogList = async (req, res) => {
             //     poReportCount(req, res, condQuery, values),
             //     poReport(req, res, condQuery, values)
             // )
-            // console.log(response)
+            console.log(filterQuery)
 
-            resSend(res, true, 200, "data fetch scussfully.", { result, logCount, report }, null);
+            const modfResult = result.map((el) => {
+                el["name"] = el.grse_user_name ? el.grse_user_name : el.vendor_name ? el.vendor_name : null;
+                delete el["grse_user_name"];
+                delete el["vendor_name"];
+                return el;
+            })
+
+            resSend(res, true, 200, "data fetch scussfully.", { result: modfResult, logCount, report }, null);
         } else {
             return resSend(res, false, 400, "Please send -> purchasing_doc_no | user_id | depertment | action for get result", null, null);
         }
