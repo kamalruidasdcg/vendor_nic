@@ -330,29 +330,34 @@ async function handelMail(tokenData, payload) {
 
         if (payload.status === PENDING) {
             await mailSendToAssignee(payload);
-            await logEntry(payload, tokenData.vendor_code, payload.assigned_from, null);
+            // await logEntry(payload, tokenData.vendor_code, payload.assigned_from, null);
+            await logEntry(payload, tokenData.vendor_code, null, null);
         }
         if (payload.status === RE_SUBMITTED) {
             await mailSendToAssigneeAndStaff(payload);
-            await logEntry(payload, tokenData.vendor_code, payload.assigned_from, payload.assigned_to);
+            // await logEntry(payload, tokenData.vendor_code, payload.assigned_from, payload.assigned_to);
+            await logEntry(payload, tokenData.vendor_code, null, null);
         }
 
     } else if (tokenData.user_type !== USER_TYPE_VENDOR) {
 
         if (payload.status === ACCEPTED) {
-            await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
+            // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
+            await logEntry(payload, tokenData.vendor_code, null, null);
             await mailSendToStaffAndVendor(payload);
         }
         if (payload.status === REJECTED) {
-            await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
+            // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
+            await logEntry(payload, tokenData.vendor_code, null, null);
             await mailSendToAssigneeAndVendor(payload);
         }
         if (payload.status === APPROVED) {
-            await logEntry(payload, tokenData.vendor_code, payload.vendor_code, payload.assigned_to);
+            // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, payload.assigned_to);
+            await logEntry(payload, tokenData.vendor_code, null, null);
             await mailSendToAssigneeAndVendor(payload);
         }
         if (payload.status === ASSIGNED) {
-            await logEntry(payload, tokenData.vendor_code, payload.vendor_code, payload.assigned_to);
+            await logEntry(payload, tokenData.vendor_code, null, null);
             await mailSendToStaffAndVendor(payload);
 
         }
