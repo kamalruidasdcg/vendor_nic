@@ -66,24 +66,24 @@ const logPayload = [
 const deptLogEntry = async (data) => {
   //   const que = `INSERT INTO department_wise_log
   //     (id, user_id, depertment, action, item_info_id, remarks, purchasing_doc_no, created_at, created_by_id ) VALUES
-  //     (NULL, 600230, 3, 'ACCEPT', 50, 'QP ACCEPTED', '4700013227', 1702535829, 600231),
-  //     (NULL, 600231, 3, 'ACCEPT', 50, 'QP ACCEPTED', '4700013227', 1702535829, 600231);`;
+  //     (NULL, 600230, 	vendor_code, 3, 'ACCEPT', 50, 'QP ACCEPTED', '4700013227', 1702535829, 600231),
+  //     (NULL, 600231, 	vendor_code, 3, 'ACCEPT', 50, 'QP ACCEPTED', '4700013227', 1702535829, 600231);`;
   try {
     // CONSTRACT INSERT QUERY
-    let que = `INSERT INTO ${DEPERTMENT_LOG} (user_id, depertment, action, dept_table_id, remarks, purchasing_doc_no, created_at, created_by_id ) VALUES`;
+    let que = `INSERT INTO ${DEPERTMENT_LOG} (user_id, vendor_code, depertment, action, dept_table_id, remarks, purchasing_doc_no, created_at, created_by_id ) VALUES`;
     const dString = constractDataString(data);
     que = que.concat(dString);
     const res = await query({ query: que, values: [] });
 
   } catch (error) {
-    console.log("log entry ", error);
+    console.log("deptLogEntry log entry ", error);
   }
 };
 
 function constractDataString(logPayload) {
   let dataString = "";
   logPayload.forEach((el, idx) => {
-    let stringWithData = `( ${el.user_id}, ${el.depertment}, "${el.action}", ${el.item_info_id}, "${el.remarks}", "${el.purchasing_doc_no}",${el.created_at}, ${el.created_by_id})`;
+    let stringWithData = `( ${el.user_id},${el.vendor_code}, ${el.depertment}, "${el.action}", ${el.item_info_id}, "${el.remarks}", "${el.purchasing_doc_no}",${el.created_at}, ${el.created_by_id})`;
     if (idx + 1 === logPayload.length) {
         stringWithData = stringWithData.concat(";");
     } else {
