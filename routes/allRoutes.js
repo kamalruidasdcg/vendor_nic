@@ -25,6 +25,7 @@ const WdcController = require("../controllers/poController/WdcController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
+const downloadController = require("../controllers/poController/poDownloadController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const { unlockPrivilege } = require("../services/auth.services");
@@ -144,7 +145,7 @@ router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 
 // file download for sdbg, drawing, qap
 router.get(poPrefix + "/download", [], (req, res) => {
-  poController.download(req, res);
+  downloadController.download(req, res);
 });
 
 
