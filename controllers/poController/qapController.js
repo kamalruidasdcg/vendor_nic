@@ -183,7 +183,7 @@ const submitQAP = async (req, res) => {
         const response = await query({ query: q, values: val });
         if (response.affectedRows) {
             payload.insertId = response.insertId;
-            await handelMail(tokenData, payload);
+            handelMail(tokenData, payload);
             resSend(res, true, 200, "!", fileData, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
