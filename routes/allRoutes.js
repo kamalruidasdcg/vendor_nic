@@ -19,11 +19,13 @@ const drawingController = require("../controllers/poController/drawingController
 const sdbgController = require("../controllers/poController/sdbgController");
 const qapController = require("../controllers/poController/qapController");
 const generalController = require("../controllers/poController/poGeneralController");
+const logController = require("../controllers/poController/logController");
 const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const WdcController = require("../controllers/poController/WdcController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
+const downloadController = require("../controllers/poController/poDownloadController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const { unlockPrivilege } = require("../services/auth.services");
@@ -103,19 +105,12 @@ router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
 router.get(poPrefix + "/details", [], (req, res) => {
   generalController.details(req, res);
 });
-router.get(poPrefix + "/deptwiselog", [], (req, res) => {
-  generalController.getLogList(req, res);
-});
 
 router.post(poPrefix + "/deptwiselog", [], (req, res) => {
-  generalController.getLogList(req, res);
+  logController.getLogList(req, res);
 });
 
 // PO DRAWING CONTROLLER
-
-// router.post(poPrefix + "/add", [dynamicallyUpload.single("file")], (req, res) => {
-//   poController.addDrawing(req, res);
-// });
 
 router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
   drawingController.submitDrawing(req, res);
@@ -148,9 +143,9 @@ router.get(poPrefix + '/ListOfIcgrn', icgrnController.List);
 router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 
 
-
+// file download for sdbg, drawing, qap
 router.get(poPrefix + "/download", [], (req, res) => {
-  poController.download(req, res);
+  downloadController.download(req, res);
 });
 
 
@@ -169,33 +164,6 @@ router.get(poPrefix + "/sdbgList", [], (req, res) => {
 });
 
 
-// router.post(poPrefix + "/addSDBG", [uploadSDBGFile.single("file")], (req, res) => {
-//   poController.addSDBG(req, res);
-// });
-
-// router.post(poPrefix + "/sdbgResubmission", [uploadSDBGFile.single("file")], (req, res) => {
-//   poController.sdbgResubmission(req, res);
-// });
-// router.post(poPrefix + "/drawingResubmission", [dynamicallyUpload.single("file")], (req, res) => {
-//   poController.drawingResubmission(req, res);
-// });
-
-// router.post(poPrefix + "/sdbgAcknowledgement", [uploadSDBGFile.single("file")], (req, res) => {
-//   poController.sdbgAcknowledgement(req, res);
-// });
-
-
-// router.get(poPrefix + "/downloadSDBG", [], (req, res) => {
-//   poController.downloadSDBG(req, res);
-// });
-
-// router.get(poPrefix + "/getAllSDBG", [], (req, res) => {
-//   poController.getAllSDBG(req, res);
-// });
-
-
-
-
 // QAP CONTROLLERS
 router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   qapController.submitQAP(req, res);
@@ -212,17 +180,6 @@ router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
 router.get(poPrefix + "/internalDepartmentEmpList", [], (req, res) => {
   qapController.internalDepartmentEmpList(req, res);
 });
-
-
-// QAP CONTROLLER END
-
-
-// router.post(poPrefix + "/addQAP", [dynamicallyUpload.single("file")], (req, res) => {
-//   poController.addQAP(req, res);
-// });
-// router.post(poPrefix + "/qapResubmission", [dynamicallyUpload.single("file")], (req, res) => {
-//   poController.qapResubmission(req, res);
-// });
 
 
 module.exports = router;

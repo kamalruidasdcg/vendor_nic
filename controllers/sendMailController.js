@@ -4,6 +4,8 @@ const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE, QAP_ASSIGN_BY_GRSE } = require("../lib/event");
 const { mailInsert, updateMailStatus } = require("../services/mai.services");
 const path = require('path');
+const { YES } = require("../lib/constant");
+require("dotenv").config();
 
 function check() {
     throw new Error("Params required");
@@ -196,18 +198,21 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
         }
 
 
-
-        await SENDMAIL(mailDetails, async function (err, data) {
-            if (!err) {
-                console.log("Error Occurs ('_') !", err);
-                // await updateMailStatus({ id: mail_response.insertId, staus: "error", message: err });
-                await mailInsert({ ...payload, status: "FAILED", ...mailDetails });
-            } else {
-                // await updateMailStatus({ id: mail_response.insertId, staus: "sent", message: data });
-                await mailInsert({ ...payload, status: "SENT", ...mailDetails });
-                console.log(`Email sent successfully ('_') !!${payload.mailSendTo}`);
-            }
-        });
+        if(process.env.MAIL_TURN_ON === YES) {
+            await SENDMAIL(mailDetails, async function (err, data) {
+                if (!err) {
+                    console.log("Error Occurs ('_') !", err);
+                    // await updateMailStatus({ id: mail_response.insertId, staus: "error", message: err });
+                    await mailInsert({ ...payload, status: "FAILED", ...mailDetails });
+                } else {
+                    // await updateMailStatus({ id: mail_response.insertId, staus: "sent", message: data });
+                    await mailInsert({ ...payload, status: "SENT", ...mailDetails });
+                    console.log(`Email sent successfully ('_') !!${payload.mailSendTo}`);
+                }
+            });
+        } else{
+            console.log(`Email send ${process.env.MAIL_TURN_ON}`);
+        }
 
 
     } catch (error) {

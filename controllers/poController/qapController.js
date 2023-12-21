@@ -41,11 +41,11 @@ const submitQAP = async (req, res) => {
             // const isDel = handleFileDeletion(directory, req.file.filename);
             return resSend(res, false, 400, "Please send valid payload", null, null);
         }
-        if ((tokenData.user_type === USER_TYPE_VENDOR && activity_type === RE_SUBMITTED) || tokenData.department_id === USER_TYPE_GRSE_QAP) {
-            if (!payload.assigned_from || !payload.assigned_to) {
-                return resSend(res, false, 400, `Please send assign from and assign to.`, null, null);
-            }
-        }
+        // if ((tokenData.user_type === USER_TYPE_VENDOR && activity_type === RE_SUBMITTED) || tokenData.department_id === USER_TYPE_GRSE_QAP) {
+        //     if (!payload.assigned_from || !payload.assigned_to) {
+        //         return resSend(res, false, 400, `Please send assign from and assign to.`, null, null);
+        //     }
+        // }
 
         let message = ``;
 
@@ -89,7 +89,7 @@ const submitQAP = async (req, res) => {
 
 
             ///////// CHECK IS ALLREADY APPROVED /////////////////
-            const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
+            const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
             const result2 = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, APPROVED);
 
             if (result2 && result2?.length) {
@@ -108,13 +108,42 @@ const submitQAP = async (req, res) => {
 
         }
 
-        if (tokenData.user_type === USER_TYPE_VENDOR && activity_type === PENDING) {
-            payload.assigned_from = null;
-            payload.assigned_to = null;
+        // if (tokenData.user_type === USER_TYPE_VENDOR && activity_type === PENDING) {
+        //     payload.assigned_from = null;
+        //     payload.assigned_to = null;
+        // }
+        if (activity_type !== PENDING) {
+            const GET_LATEST_QAP = `
+            SELECT 
+                vendor_code,
+                assigned_from,
+                assigned_to
+            FROM 
+                ${QAP_SUBMISSION} 
+            WHERE
+                (purchasing_doc_no = ? AND status = ?) LIMIT 1`;
+            const status = activity_type == ASSIGNED ? PENDING : ASSIGNED;
+            const qapDetails = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, status);
+            console.log(qapDetails);
+            console.log("GET_LATEST_QAP", GET_LATEST_QAP, payload.purchasing_doc_no, status);
+
+            if (!qapDetails.length) return resSend(res, false, 400, "Please check payloaddd", null, null);
+            if (activity_type == ASSIGNED) {
+                payload.vendor_code = qapDetails[0].vendor_code;
+            } else {
+                payload.vendor_code = qapDetails[0].vendor_code;
+                payload.assigned_to = qapDetails[0].assigned_to;
+                payload.assigned_from = qapDetails[0].assigned_from;
+
+            }
         }
+
+
+
         //////// SET STATUS AND CREATE QAP PAYLOAD /////////
         let insertObj;
         // REJECTED, ACCEPTED, SAVED, APPROVED, UPDATED
+
         switch (activity_type) {
             case PENDING:
                 insertObj = qapPayload(payload, PENDING);
@@ -152,11 +181,10 @@ const submitQAP = async (req, res) => {
 
         const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
         const response = await query({ query: q, values: val });
-
         if (response.affectedRows) {
             payload.insertId = response.insertId;
-            await handelMail(tokenData, payload);
-            resSend(res, true, 200, "file uploaded!", fileData, null);
+            handelMail(tokenData, payload);
+            resSend(res, true, 200, "!", fileData, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
@@ -310,19 +338,7 @@ const internalDepartmentEmpList = async (req, res) => {
     } catch (err) {
         console.log("data not fetched", err);
     }
-
-    // req.query.$tableName = `sub_dept`;
-    // req.query.$select = "id,name";
-    // try {
-    //   getFilteredData(req, res);
-    // } catch(err) {
-    //   console.log("data not fetched", err);
-    // }
-    // resSend(res, true, 200, "oded!", req.query, null);
-
 }
-
-
 
 async function handelMail(tokenData, payload) {
 
@@ -367,8 +383,6 @@ async function handelMail(tokenData, payload) {
 
 }
 
-
-
 const mailSendToAssignee = async (payload) => {
 
     const result = await getMailIds(payload.insertId);
@@ -381,6 +395,7 @@ const mailSendToAssignee = async (payload) => {
 
     mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 }
+
 const mailSendToAssigneeAndStaff = async (payload) => {
 
     // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
@@ -415,6 +430,7 @@ const mailSendToAssigneeAndStaff = async (payload) => {
     mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 
 }
+
 const mailSendToStaffAndVendor = async (payload) => {
 
     // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
@@ -442,6 +458,7 @@ const mailSendToStaffAndVendor = async (payload) => {
     mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
 
 }
+
 const mailSendToAssigneeAndVendor = async (payload) => {
 
     // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
@@ -568,7 +585,7 @@ async function getMailIds(id) {
 
 async function logEntry(payload, vendor_code, assigned_from, assigner_person_id) {
     try {
-        
+
         const data = [];
         if (assigned_from) {
             data.push(assigned_from)
@@ -578,11 +595,12 @@ async function logEntry(payload, vendor_code, assigned_from, assigner_person_id)
         if (vendor_code) {
             data.push(vendor_code)
         }
-    
+
         const logPayload = []
         for (let i = 0; i < data.length; i++) {
             logPayload.push({
                 user_id: data[i],
+                vendor_code: payload.vendor_code,
                 depertment: 3,
                 action: payload.status,
                 item_info_id: payload.insertId,
@@ -593,13 +611,13 @@ async function logEntry(payload, vendor_code, assigned_from, assigner_person_id)
             })
         }
         const log = await deptLogEntry(logPayload)
+        console.log("log",log,logPayload);
     } catch (error) {
 
         console.log("log entry api", error);
-        
+
     }
 }
-
 
 async function getAssigneeMailId() {
     try {
@@ -632,10 +650,10 @@ async function getAssigneeMailId() {
         WHERE
             dept_master.id = ? ;`;
 
-        const result = await query({ query: mailIdQuery, values: [1, "0030", 3 ] });
+        const result = await query({ query: mailIdQuery, values: [1, "0030", 3] });
         return result;
     } catch (error) {
-        
+
     }
 }
 
