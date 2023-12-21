@@ -113,27 +113,24 @@ const submitQAP = async (req, res) => {
         //     payload.assigned_to = null;
         // }
         if (activity_type !== PENDING) {
-            const GET_LATEST_QAP = `
-            SELECT 
-                vendor_code,
-                assigned_from,
-                assigned_to
-            FROM 
-                ${QAP_SUBMISSION} 
-            WHERE
-                (purchasing_doc_no = ? AND status = ?) LIMIT 1`;
-            const status = activity_type == ASSIGNED ? PENDING : ASSIGNED;
-            const qapDetails = await getQAPData(GET_LATEST_QAP, payload.purchasing_doc_no, status);
-            console.log(qapDetails);
-            console.log("GET_LATEST_QAP", GET_LATEST_QAP, payload.purchasing_doc_no, status);
 
-            if (!qapDetails.length) return resSend(res, false, 400, "Please check payloaddd", null, null);
+            const status = activity_type == ASSIGNED ? PENDING : ASSIGNED;
+            const qapDetails = await getMailIds(payload.purchasing_doc_no, status);
+            console.log("qapDetails", qapDetails);
+
+            if (!qapDetails.success) return resSend(res, false, 400, "Please check payloaddd", null, null);
             if (activity_type == ASSIGNED) {
-                payload.vendor_code = qapDetails[0].vendor_code;
+                payload.vendor_code = qapDetails.data.vendor_code;
+                const details = await getNameAndEmail(qapDetails.data.vendor_code, payload.assigned_from, payload.assigned_to);
+                if (details.success === true) {
+                    payload = { ...payload, ...details.data };
+                }
             } else {
-                payload.vendor_code = qapDetails[0].vendor_code;
-                payload.assigned_to = qapDetails[0].assigned_to;
-                payload.assigned_from = qapDetails[0].assigned_from;
+                payload.vendor_code = qapDetails.data.vendor_code;
+                payload.assigned_to = qapDetails.data.assigned_to;
+                payload.assigned_from = qapDetails.data.assigned_from;
+
+                payload = { ...payload, ...qapDetails.data };
 
             }
         }
@@ -183,6 +180,7 @@ const submitQAP = async (req, res) => {
         const response = await query({ query: q, values: val });
         if (response.affectedRows) {
             payload.insertId = response.insertId;
+            payload.sendAt = new Date(payload.created_at);
             handelMail(tokenData, payload);
             resSend(res, true, 200, "!", fileData, null);
         } else {
@@ -345,142 +343,132 @@ async function handelMail(tokenData, payload) {
     if (tokenData.user_type === USER_TYPE_VENDOR) {
 
         if (payload.status === PENDING) {
-            await mailSendToAssignee(payload);
             // await logEntry(payload, tokenData.vendor_code, payload.assigned_from, null);
-            await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToAssignee(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            await Promise.all([mailSendToAssignee(payload), logEntry(payload, tokenData.vendor_code, null, null)])
         }
         if (payload.status === RE_SUBMITTED) {
-            await mailSendToAssigneeAndStaff(payload);
             // await logEntry(payload, tokenData.vendor_code, payload.assigned_from, payload.assigned_to);
-            await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToAssigneeAndStaff(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            await Promise.all([mailSendToAssigneeAndStaff(payload), logEntry(payload, tokenData.vendor_code, null, null)])
         }
 
     } else if (tokenData.user_type !== USER_TYPE_VENDOR) {
 
         if (payload.status === ACCEPTED) {
             // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
-            await logEntry(payload, tokenData.vendor_code, null, null);
-            await mailSendToStaffAndVendor(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToStaffAndVendor(payload);
+            await Promise.all([logEntry(payload, tokenData.vendor_code, null, null), mailSendToStaffAndVendor(payload)])
         }
         if (payload.status === REJECTED) {
             // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, null);
-            await logEntry(payload, tokenData.vendor_code, null, null);
-            await mailSendToAssigneeAndVendor(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToAssigneeAndVendor(payload);
+            await Promise.all([logEntry(payload, tokenData.vendor_code, null, null), mailSendToAssigneeAndVendor(payload)])
         }
         if (payload.status === APPROVED) {
             // await logEntry(payload, tokenData.vendor_code, payload.vendor_code, payload.assigned_to);
-            await logEntry(payload, tokenData.vendor_code, null, null);
-            await mailSendToAssigneeAndVendor(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToAssigneeAndVendor(payload);
+
+            await Promise.all([logEntry(payload, tokenData.vendor_code, null, null), mailSendToAssigneeAndVendor(payload)])
         }
         if (payload.status === ASSIGNED) {
-            await logEntry(payload, tokenData.vendor_code, null, null);
-            await mailSendToStaffAndVendor(payload);
+            // await logEntry(payload, tokenData.vendor_code, null, null);
+            // await mailSendToStaffAndVendor(payload);
+
+            await Promise.all([logEntry(payload, tokenData.vendor_code, null, null), mailSendToStaffAndVendor(payload)])
 
         }
 
     }
 
-
 }
 
 const mailSendToAssignee = async (payload) => {
 
-    const result = await getMailIds(payload.insertId);
-    const assignee_from_Details = await getAssigneeMailId();
-    payload.delingOfficerName = assignee_from_Details[0]?.assigned_from_name;
-    payload.mailSendTo = assignee_from_Details[0]?.assigned_from_email;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
+    // const result = await getMailIds(payload.insertId);
+    // const assignee_from_Details = await getAssigneeMailId();
+    // const result = await Promise.all([getMailIds(payload.insertId), getAssigneeMailId()]);
+    const result = await getAssigneeMailId();
 
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+    payload.delingOfficerName = payload.assigned_from_name;
+    payload.mailSendTo = payload.assigned_from_email;
+
+    console.log(payload);
+
+    await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 }
 
 const mailSendToAssigneeAndStaff = async (payload) => {
-
-    // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
-    const result = await getMailIds(payload.insertId);
-
-    // {
-    //     vendor_email: 'mrinmoy.ghosh102@gmail.com',
-    //     assigned_from_email: 'BANERJEE.RAJENDRA@GRSE.CO.IN',
-    //     assigned_to_email: 'arajabanerjee@gmail.com',
-    //     vendor_name: 'DCG DATA -CORE SYSTEMS (INDIA) PRIV',
-    //     vendor_code: '50007545',
-    //     assigned_from_name: 'RAJENDRA BANERJEE',
-    //     assigned_to_name: 'A RAJA BANERJEE'
-    //   }
-
     // PO CREATOR IS DEFAULT ASSIGNEE && MAIL IS DEFAULT ASSIGNEE EMAIL
-    payload.delingOfficerName = result[0]?.assigned_from_name;
-    payload.mailSendTo = result[0]?.assigned_from_email;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
-
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+    payload.delingOfficerName = payload.assigned_from_name;
+    payload.mailSendTo = payload.assigned_from_email;
+    const pl_1 = { ...payload };
+    payload.delingOfficerName = payload.assigned_to_name;
+    payload.mailSendTo = payload.assigned_to_email;
 
 
-    payload.delingOfficerName = result[0]?.assigned_to_name;
-    payload.mailSendTo = result[0]?.assigned_to_email;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
+    const pl_2 = { ...payload }
 
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
-
+    // await mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR);
+    await Promise.all([mailTrigger(pl_1, QAP_SUBMIT_BY_VENDOR), mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR)])
 }
 
 const mailSendToStaffAndVendor = async (payload) => {
 
     // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
-    const result = await getMailIds(payload.insertId);
+    // const result = await getMailIds(payload.insertId);
     // mail to vendor
+    payload.delingOfficerName = payload.assigned_from_name;
+    payload.mailSendTo = payload.vendor_email;
 
 
-
-    payload.delingOfficerName = result[0]?.assigned_from_name;
-    payload.mailSendTo = result[0]?.vendor_email;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
-
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
+    const pl_1 = { ...payload }
+    // await mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE);
 
     // mail send to grse staff
 
-    payload.delingOfficerName = result[0]?.assigned_to_name;
-    payload.mailSendTo = result[0]?.assigned_to_email;
-    payload.grseOfficer = result[0]?.assigned_from_name;
+    payload.delingOfficerName = payload.assigned_to_name;
+    payload.mailSendTo = payload.assigned_to_email;
+    payload.grseOfficer = payload.assigned_from_name;
     payload.grseOfficerId = payload.assigned_from;
-    payload.sendAt = new Date(payload.created_at);
 
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
+
+    const pl_2 = { ...payload }
+
+    // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
+
+    await Promise.all([mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE), mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE)])
 
 }
 
 const mailSendToAssigneeAndVendor = async (payload) => {
 
     // MAIL SEND TO ASSIGEE , A NEW QAP IS INSERTED IN DB
-    const result = await getMailIds(payload.insertId);
+    // const result = await getMailIds(payload.insertId);
     // APPROVE ACCEPTED REJECTED STATUS
     // mail to vendor
-    payload.delingOfficerName = result[0]?.assigned_from_name;
-    payload.mailSendTo = result[0]?.vendor_email;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
+    payload.delingOfficerName = payload.assigned_from_name;
+    payload.mailSendTo = payload.vendor_email;
 
-    mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE);
+    const pl_1 = { ...payload }
+    // await mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE);
 
     // mail send to grse staff
 
-    payload.delingOfficerName = result[0]?.assigned_from_name;
-    payload.mailSendTo = result[0]?.assigned_from_email;
-    payload.grseOfficer = result[0]?.assigned_to_name;
+    payload.delingOfficerName = payload.assigned_from_name;
+    payload.mailSendTo = payload.assigned_from_email;
+    payload.grseOfficer = payload.assigned_to_name;
     payload.grseOfficerId = payload.assigned_to;
-    payload.sendAt = new Date(payload.created_at);
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
+
+    const pl_2 = { ...payload }
+    // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
+
+    await Promise.all([mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE), mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE)])
 
 }
 
@@ -490,10 +478,9 @@ const mailSendToVendor = async (payload) => {
 
 
     const result = await poContactDetails(payload.purchasing_doc_no);
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.mailSendTo = result[0]?.vendor_mail_id;
-    payload.delingOfficerName = result[0]?.dealingOfficerName;
+
+    payload.mailSendTo = payload.vendor_mail_id;
+    payload.delingOfficerName = payload.dealingOfficerName;
     payload.sendAt = new Date(payload.created_at);
 
 
@@ -514,9 +501,8 @@ const mailSendToVendor = async (payload) => {
 }
 
 
-async function getMailIds(id) {
+async function getMailIds(purchasing_doc_no, status) {
     try {
-
         const mailFetchQuery = `
         SELECT 
         vendor.SMTP_ADDR AS vendor_email, 
@@ -524,6 +510,8 @@ async function getMailIds(id) {
         grse_officers_assignTo.USRID_LONG AS assigned_to_email,
         vendor_master.NAME1 as vendor_name,
         qap.vendor_code AS vendor_code,
+        qap.assigned_from AS assigned_from,
+        qap.assigned_to AS assigned_to,
         assignFrom_detail.CNAME AS assigned_from_name,
         assignTo_detail.CNAME AS assigned_to_name
         FROM qap_submission
@@ -568,20 +556,90 @@ async function getMailIds(id) {
             assignTo_detail.PERNR = qap.assigned_to
         
         WHERE 
-            id = ?;`;
+            qap.purchasing_doc_no = ? AND status = ? LIMIT 1;`;
 
-        const result = await query({ query: mailFetchQuery, values: [id] })
-
+        const result = await query({ query: mailFetchQuery, values: [purchasing_doc_no, status] })
+        console.log("result", result);
         if (result && result.length) {
-            return result;
+            return { success: true, data: result[0] };
         } else {
-            // return { vendor_email: null, assigned_from_email: null, assigned_to_email: null }
+            return { success: false, data: {} }
         }
 
     } catch (error) {
 
+        console.log("get details error", error);
+
     }
 }
+
+async function getNameAndEmail(vendor_code, assigned_from, assigned_to) {
+    try {
+        const mailFetchQuery =
+            `
+                (SELECT v_add.SMTP_ADDR AS email, v.NAME1 AS name, 'vendor_email' as flag
+                FROM 
+                    adr6
+                 AS
+                 	v_add
+                 LEFT JOIN
+                 	lfa1
+                 AS 
+                 	v
+                 ON
+                 	v.LIFNR = v_add.PERSNUMBER
+                 WHERE v_add.PERSNUMBER = ?)
+                UNION
+                (SELECT officers.USRID_LONG AS email, grse_off.CNAME AS name,'assigned_from_email' as flag
+                	FROM pa0105
+                 AS 
+                 	officers
+                 LEFT JOIN
+                 	pa0002
+                AS
+                 	grse_off
+                 ON
+                 	grse_off.PERNR =  officers.PERNR
+                 WHERE 
+                 	officers.PERNR = ?)
+                UNION
+                (SELECT officers2.USRID_LONG AS email, grse_off2.CNAME AS name,'assigned_to_email' as flag
+                 FROM 
+                 	pa0105
+                 AS 
+                 	officers2
+
+                LEFT JOIN
+                 	pa0002
+                AS
+                 	grse_off2
+                 ON
+                 	grse_off2.PERNR =  officers2.PERNR
+                 WHERE 
+                 	officers2.PERNR = ?);`;
+
+        const result = await query({ query: mailFetchQuery, values: [vendor_code, assigned_from, assigned_to] })
+        if (result && result.length) {
+            const obj = {
+                vendor_name: result[0].name,
+                vendor_email: result[0].email,
+                assigned_from_name: result[1].name,
+                assigned_from_email: result[1].email,
+                assigned_to_name: result[2].name,
+                assigned_to_email: result[2].email
+            }
+            return { success: true, data: obj };
+        } else {
+            return { success: false, data: {} }
+        }
+
+    } catch (error) {
+
+        console.log("get details error", error);
+
+    }
+}
+
 
 async function logEntry(payload, vendor_code, assigned_from, assigner_person_id) {
     try {
@@ -611,7 +669,6 @@ async function logEntry(payload, vendor_code, assigned_from, assigner_person_id)
             })
         }
         const log = await deptLogEntry(logPayload)
-        console.log("log",log,logPayload);
     } catch (error) {
 
         console.log("log entry api", error);
