@@ -10,6 +10,9 @@ const { veifyAccessToken,  } = require("../services/jwt.services");
 router.get("/poList", (req, res) => {
     billController.fetchpo(req, res);
 })
+router.get("/officers", (req, res) => {
+    billController.fetchOfficers(req, res);
+})
 
 router.post("/registration", [veifyAccessToken, uploadInvoice.single("file")], (req, res) => {
     billController.addBill(req, res);
