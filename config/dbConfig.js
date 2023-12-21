@@ -41,7 +41,24 @@ async function query({ query, values = [] }) {
   }
 }
 
+/**
+ * DB CONNECTION 
+ * **** MUST HAVE TO END CONNECTION *****
+ * connection.end();
+ * @returns 
+ */
+
+async function connection() {
+  let dbConn;
+  try {
+    dbConn = await mysql.createConnection(connObj);
+    return dbConn;
+  } catch (error) {
+    return { error };
+  }
+}
 
 
 
-module.exports = { query };
+
+module.exports = { query, connection };
