@@ -83,8 +83,39 @@ const fetchpo = async (req, res) => {
 
 const fetchOfficers = async (req, res) => {
     try {
+
+        const officersQuery =
+            `
+                SELECT 
+            	    t1.PERNR as user_id,
+            	    t2.CNAME as name,
+                    t3.USRID_LONG as email,
+                    t4.USRID as phone_number
+                FROM 
+                pa0001 
+            	AS 
+                    t1
+             	LEFT JOIN
+                	pa0002
+                AS 
+                	t2
+                ON
+                	t2.PERNR = t1.PERNR
+                LEFT JOIN
+                	pa0105
+                AS 
+                	t3
+                ON
+                	(t3.PERNR = t1.PERNR  AND t3.SUBTY = "0030")
+                 LEFT JOIN
+                	pa0105
+                AS 
+                	t4
+                ON
+                	(t4.PERNR = t1.PERNR AND t4.SUBTY = "0030");
+                    `
         const result = await query({
-            query: `SELECT * FROM billing_officers`,
+            query: officersQuery,
             values: [],
         });
         if (result.length > 0) {
@@ -122,13 +153,13 @@ const addBill = async (req, res) => {
 
         }
         const zbtn_number = await generateId();
-        payload = { ...payload, ...fileData , zbtn_number};
+        payload = { ...payload, ...fileData, zbtn_number };
         const insertObj = addBillPayload(payload);
-        const billQ = generateQuery( INSERT, new_bill_registration,  insertObj);
+        const billQ = generateQuery(INSERT, new_bill_registration, insertObj);
 
         console.log(billQ);
         const zbtsInsertObj = addToZBTSPayload(payload);
-        const zbtsQ = generateQuery( INSERT, ZBTS,  zbtsInsertObj);
+        const zbtsQ = generateQuery(INSERT, ZBTS, zbtsInsertObj);
         const result = await Promise.all([
             query({ query: billQ["q"], values: billQ["val"] }),
             query({ query: zbtsQ["q"], values: zbtsQ["val"] }),
@@ -204,7 +235,7 @@ const fetchVendorBills = async (req, res) => {
 const fetchBill = async (req, res) => {
     try {
         const { zbtno } = req.params;
-        const q = 
+        const q =
             `SELECT bill.*, sap_bill_table.*  
             FROM
                 new_bill_registration 
