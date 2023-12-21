@@ -118,6 +118,8 @@ const addBill = async (req, res) => {
         payload = { ...payload, ...fileData , zbtn_number};
         const insertObj = addBillPayload(payload);
         const billQ = generateQuery( INSERT, new_bill_registration,  insertObj);
+
+        console.log(billQ);
         const zbtsInsertObj = addToZBTSPayload(payload);
         const zbtsQ = generateQuery( INSERT, ZBTS,  zbtsInsertObj);
         const result = await Promise.all([
@@ -195,7 +197,21 @@ const fetchVendorBills = async (req, res) => {
 const fetchBill = async (req, res) => {
     try {
         const { zbtno } = req.params;
-        const q = `SELECT * FROM zbts WHERE ZBTNO = "${zbtno}"`;
+        const q = 
+            `SELECT bill.*, sap_bill_table.*  
+            FROM
+                new_bill_registration 
+            AS 
+                bill
+            LEFT JOIN 
+                zbts 
+            AS 
+                sap_bill_table
+            ON
+            sap_bill_table.ZBTNO = bill.zbtno
+            
+            WHERE
+                bill.ZBTNO = "${zbtno}"`;
 
         const result = await query({
             query: q,

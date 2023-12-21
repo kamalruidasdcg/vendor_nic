@@ -6,8 +6,8 @@ const addBillPayload = (payload) => {
     return {
 
         zbtno: payload.zbtn_number,
-        created_by_name: payload.action_by_id ? payload.action_by_id : null,
-        created_by_id: payload.action_by_name ? payload.action_by_name : null,
+        created_by_id: payload.action_by_id ? payload.action_by_id : null,
+        created_by_name: payload.action_by_name ? payload.action_by_name : null,
         bill_submit_date: payload.bill_submit_date ? payload.bill_submit_date : null,
         bill_submit_to_email: payload.bill_submit_to_email ? payload.bill_submit_to_email : null,
         bill_submit_to_name: payload.bill_submit_to_name ? payload.bill_submit_to_name : null,
