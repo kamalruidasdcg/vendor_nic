@@ -137,7 +137,7 @@ const addBill = async (req, res) => {
       bill_submit_time,
       remarks,
       file_name,
-      vendor_ac_no,
+      vendor_code,
       vendor_name,
       vendor_email,
       action_by_id,
@@ -164,7 +164,7 @@ const addBill = async (req, res) => {
     invoice_no = "${invoice_no}",
     purchasing_doc_no = "${purchasing_doc_no}",
     remarks = "${remarks}",
-    vendor_ac_no = "${vendor_ac_no}",
+    vendor_code = "${vendor_code}",
     vendor_email = "${vendor_email}",
     vendor_name = "${vendor_name}"`
 
@@ -172,7 +172,7 @@ const addBill = async (req, res) => {
       `INSERT INTO zbts SET 
       ZBTNO = "${zbtn_number}",
       EBELN = "${purchasing_doc_no}",
-      LIFNR = "${vendor_ac_no}",
+      LIFNR = "${vendor_code}",
       ZVBNO = "${invoice_no}",
       VEN_BILL_DATE = "${bill_submit_date}",
       DPERNR1 = "${vendor_name}",
