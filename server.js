@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const app = express();
-const cron = require('node-cron');
+// const cron = require('node-cron');
 const sapRoutes = require("./routes/sap/sapRoutes");
 
 const PORT = process.env.PORT || 4001;
@@ -18,11 +18,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // console.log(path.join(__dirname, "uploads/img"));
 
 
-const task = cron.schedule('*/1 * * * *', () => {
-  console.log('running a task every two minutes');
-}, {
-  scheduled: process.env.MAIL_TURN_ON === YES ? true : false
-});
+// const task = cron.schedule('*/1 * * * *', () => {
+//   console.log('running a task every two minutes');
+// }, {
+//   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
+// });
 
 
 
