@@ -544,7 +544,7 @@ CREATE TABLE `new_bill_registration` (
   `invoice_no` varchar(40) NOT NULL,
   `purchasing_doc_no` varchar(10) NOT NULL,
   `remarks` varchar(140) NOT NULL,
-  `vendor_ac_no` varchar(10) NOT NULL,
+  `vendor_code` varchar(10) NOT NULL,
   `vendor_email` varchar(50) NOT NULL,
   `vendor_name` varchar(12) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -553,7 +553,7 @@ CREATE TABLE `new_bill_registration` (
 -- Dumping data for table `new_bill_registration`
 --
 
-INSERT INTO `new_bill_registration` (`zbtno`, `action_by_id`, `action_by_name`, `bill_submit_date`, `bill_submit_to_email`, `bill_submit_to_name`, `bill_submit_time`, `created_date`, `created_epoch_time`, `created_time`, `file_name`, `invoice_no`, `purchasing_doc_no`, `remarks`, `vendor_ac_no`, `vendor_email`, `vendor_name`) VALUES
+INSERT INTO `new_bill_registration` (`zbtno`, `action_by_id`, `action_by_name`, `bill_submit_date`, `bill_submit_to_email`, `bill_submit_to_name`, `bill_submit_time`, `created_date`, `created_epoch_time`, `created_time`, `file_name`, `invoice_no`, `purchasing_doc_no`, `remarks`, `vendor_code`, `vendor_email`, `vendor_name`) VALUES
 ('20230927001', 'LOGGED IN USER ID', 'LOGGED IN USER NAME', '2023-09-27', 'kamal.ruidas@gmail.com', 'kmal ruidas', '00:00:00', '2023-09-27', 2147483647, '00:00:00', 'newFile.jpg', '123232344', '8765678987', 'new gengrated bill', '50007523', 'mrinmoygh081@gmail.com', 'Mrinmoy Ghos'),
 ('20230927001', 'LOGGED IN USER ID', 'LOGGED IN USER NAME', '0000-00-00', 'kamal.ruidas@gmail.com', 'kmal ruidas', '00:00:00', '2023-09-27', 2147483647, '00:00:00', 'newFile.jpg', '123232344', '8765678987', 'new gengrated bill', '50007523', 'mrinmoygh081@gmail.com', 'Mrinmoy Ghos'),
 ('20230927001', 'LOGGED IN USER ID', 'LOGGED IN USER NAME', '0000-00-00', 'kamal.ruidas@gmail.com', 'kmal ruidas', '00:00:00', '2023-09-27', 2147483647, '00:00:00', 'newFile.jpg', '123232344', '8765678987', 'new gengrated bill', '50007523', 'mrinmoygh081@gmail.com', 'Mrinmoy Ghos'),

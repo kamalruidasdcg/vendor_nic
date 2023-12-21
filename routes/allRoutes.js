@@ -30,6 +30,7 @@ const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } 
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
+const billRoutes = require("./billRoutes")
 
 
 // FOR CHECHING SERVER IS RUNNING ...
@@ -60,37 +61,47 @@ router.post("/insertTableData", insertTableData);
 
 // VENDOR BILL RECEIVE, CERTIFIED REJECT FORWARD 
 
-router.get("/fetchBill/:zbtno", [veifyAccessToken, authorizeRoute], fetchBill);
-router.post("/updateBill/:zbtno", [veifyAccessToken, authorizeRoute], updateBill);
-router.post("/certifyBill/:zbtno", [veifyAccessToken, authorizeRoute], certifyBill);
-router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
+// router.get("/fetchBill/:zbtno", [veifyAccessToken, authorizeRoute], fetchBill);
+// router.post("/updateBill/:zbtno", [veifyAccessToken, authorizeRoute], updateBill);
+// router.post("/certifyBill/:zbtno", [veifyAccessToken, authorizeRoute], certifyBill);
+// router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
 
 
+
+// PO BILL APIS
+router.use("/bill", billRoutes);
+
+// router.get("/fetchBill/:zbtno", [veifyAccessToken, authorizeRoute], fetchBill);
+// router.post("/updateBill/:zbtno", [veifyAccessToken, authorizeRoute], updateBill);
+// router.post("/certifyBill/:zbtno", [veifyAccessToken, authorizeRoute], certifyBill);
+// router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
 
 // PAYMENT APIS
 const paymentPrefix = "/payment";
 
-router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
-  paymentControllers.newPayment(req, res);
-});
+router.use("/payment", billRoutes);
 
-router.post(paymentPrefix + "/update/:pId", [], [veifyAccessToken, authorizeRoute], (req, res) => {
-  paymentControllers.updatePayment(req, res);
-});
+// router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
+//   paymentControllers.newPayment(req, res);
+// });
 
-router.post(paymentPrefix + "/delete/:pId", [], [veifyAccessToken, authorizeRoute], (req, res) => {
-  paymentControllers.deletePayment(req, res);
-});
+// router.post(paymentPrefix + "/update/:pId", [], [veifyAccessToken, authorizeRoute], (req, res) => {
+//   paymentControllers.updatePayment(req, res);
+// });
 
-router.get(paymentPrefix + "/allPayments", [], [veifyAccessToken, authorizeRoute], (req, res) => {
-  paymentControllers.allPaymentList(req, res);
-});
+// router.post(paymentPrefix + "/delete/:pId", [], [veifyAccessToken, authorizeRoute], (req, res) => {
+//   paymentControllers.deletePayment(req, res);
+// });
+
+// router.get(paymentPrefix + "/allPayments", [], [veifyAccessToken, authorizeRoute], (req, res) => {
+//   paymentControllers.allPaymentList(req, res);
+// });
 
 
-router.post(paymentPrefix + "/addByXLS",
-  [veifyAccessToken, authorizeRoute],
-  uploadExcelFile.single("file"),
-  paymentControllers.updoadExcelFileController);
+// router.post(paymentPrefix + "/addByXLS",
+//   [veifyAccessToken, authorizeRoute],
+//   uploadExcelFile.single("file"),
+//   paymentControllers.updoadExcelFileController);
 
 
 // PO details
