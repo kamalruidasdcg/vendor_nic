@@ -105,9 +105,9 @@ const addBill = async (req, res) => {
 
         const { user_type } = req.tokenData;
 
-        if(user_type !== USER_TYPE_VENDOR) {
-            return resSend(res, false, 401, "You dont have permission ! login as a Vendor", null, null);
-        }
+        // if(user_type !== USER_TYPE_VENDOR) {
+        //     return resSend(res, false, 401, "You dont have permission ! login as a Vendor", null, null);
+        // }
 
         let payload = { ...req.body };
 
