@@ -1,5 +1,5 @@
 const { query } = require("../../config/dbConfig");
-const { UPDATE, INSERT, TRUE, FALSE } = require("../../lib/constant");
+const { UPDATE, INSERT, TRUE, FALSE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const {
     HTML_TEMPLATE,
     VENDOR_MAIL_TEMPLATE,
@@ -102,6 +102,13 @@ const fetchOfficers = async (req, res) => {
 
 const addBill = async (req, res) => {
     try {
+
+        const { user_type } = req.tokenData;
+
+        if(user_type !== USER_TYPE_VENDOR) {
+            return resSend(res, false, 401, "You dont have permission ! login as a Vendor", null, null);
+        }
+
         let payload = { ...req.body };
 
         let fileData = {};
