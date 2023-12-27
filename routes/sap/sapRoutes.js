@@ -4,6 +4,7 @@ const paymentController = require("../../controllers/sapController/paymentContro
 const poDocsController = require("../../controllers/sapController/poDocsController");
 const sdbgController = require("../../controllers/sapController/sdbgController");
 const { dynamicallyUpload } = require("../../lib/fileUpload");
+const sdbgRoutes =  require("./sdbgRoutes");
 
 
 
@@ -11,6 +12,11 @@ const { dynamicallyUpload } = require("../../lib/fileUpload");
  * SAP API START 
  * 
  */
+
+// SDBG ROUTES
+
+router.use("/sdbg", sdbgRoutes);
+
 // MATERIRLA ROUTE START -> 
 const mPrefix = "/material";
 router.get("/", (req, res) => {
@@ -49,9 +55,10 @@ router.post(prefix+"/gateentry", [dynamicallyUpload.single("file")], (req, res) 
 // GATE GRN ICGRN API END --->
 
 ////////////// STRAT SDBG PAYMENT ADVICE //////////////
-let suffix = "ZFI_BGM_1";
-router.post("/sdbgPaymentAdvice/"+suffix, [], (req, res) => {
-    sdbgController.sdbgPaymentAdvice(req, res);
-});
+// let suffix = "ZFI_BGM_1";
+// router.post("/sdbgPaymentAdvice/"+suffix, [], (req, res) => {
+//     sdbgController.sdbgPaymentAdvice(req, res);
+// });
+
 ////////////// STRAT SDBG PAYMENT ADVICE //////////////
 module.exports = router;
