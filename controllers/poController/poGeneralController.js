@@ -75,19 +75,13 @@ const details = async (req, res) => {
             materialLineItems.EINDT as contractual_delivery_date, 
             materialMaster.*, 
             mat_desc.MAKTX as mat_description
-            FROM ${EKPO} 
-                AS  mat 
-            LEFT JOIN eket 
-                AS materialLineItems
-            ON 
-                (materialLineItems.EBELN = mat.EBELN AND materialLineItems.EBELP = mat.EBELP )
-            LEFT JOIN mara 
-                AS materialMaster 
-            ON 
-                materialMaster.MATNR = mat.MATNR
-            LEFT JOIN makt 
-                AS mat_desc
-            ON mat_desc.MATNR = mat.MATNR
+            FROM ${EKPO} AS  mat 
+                LEFT JOIN eket AS materialLineItems
+                    ON (materialLineItems.EBELN = mat.EBELN AND materialLineItems.EBELP = mat.EBELP )
+                LEFT JOIN mara AS materialMaster 
+                    ON (materialMaster.MATNR = mat.MATNR)
+                LEFT JOIN makt AS mat_desc
+                    ON mat_desc.MATNR = mat.MATNR
             WHERE mat.EBELN = ?`;
 
 
