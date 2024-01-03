@@ -33,9 +33,9 @@ exports.inspectionCallLetter = async (req, res) => {
 
             if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
-                const directory = path.join(__dirname, '..', 'uploads', lastParam);
-                const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", res, null);
+                // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+                // const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", null   , null);
 
             }
 
@@ -55,6 +55,10 @@ exports.inspectionCallLetter = async (req, res) => {
                 insertObj = drawingPayload(payload, APPROVED);
             }
             // insertObj = drawingPayload(payload, PENDING);
+
+
+            console.log("ddddddddd", insertObj);
+
             const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
             const response = await query({ query: q, values: val });
 

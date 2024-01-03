@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, UPDATE } = require("../../lib/constant");
+const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { NEW_SDBG } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -31,10 +31,14 @@ const submitSDBG = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-
+            const tokenData = { ...req.tokenData };
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+            payload.action_by_id = tokenData.vendor_code;
 
             const verifyStatus = [PENDING, RE_SUBMITTED, ACKNOWLEDGED]
+
+            console.log(payload)
 
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 

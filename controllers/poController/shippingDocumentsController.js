@@ -32,9 +32,9 @@ exports.shippingDocuments = async (req, res) => {
 
             if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
-                const directory = path.join(__dirname, '..', 'uploads', lastParam);
-                const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", res, null);
+                // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+                // const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", null, null);
 
             }
 
@@ -42,8 +42,9 @@ exports.shippingDocuments = async (req, res) => {
             const { q, val } = generateQuery(INSERT, SHIPPINGDOCUMENTS, insertObj);
             const response = await query({ query: q, values: val });
 
+            console.log(response)
             if (response.affectedRows) {
-                resSend(res, true, 200, "SHIPPING DOCUMENTS Updated!", 'fileData', null);
+                resSend(res, true, 200, "SHIPPING DOCUMENTS Updated!", null, null);
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);
             }
