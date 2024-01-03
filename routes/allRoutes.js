@@ -30,7 +30,8 @@ const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } 
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
-const billRoutes = require("./billRoutes")
+const billRoutes = require("./billRoutes");
+const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
 
 
 // FOR CHECHING SERVER IS RUNNING ...
@@ -58,6 +59,7 @@ router.get("/getFilteredData", getFilteredData);
 router.post("/updatTableData", updatTableData);
 router.post("/insertTableData", insertTableData);
 
+router.get("/reminder", sendReminderMail);
 
 // VENDOR BILL RECEIVE, CERTIFIED REJECT FORWARD 
 

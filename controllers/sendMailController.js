@@ -1,7 +1,7 @@
 const SENDMAIL = require("../lib/mailSend");
 const mailBody = require("../lib/mailBody");
-const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE } = require("../templates/mail-template");
-const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE, QAP_ASSIGN_BY_GRSE } = require("../lib/event");
+const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE, VENDOR_REMINDER_EMAIL_TEMPLATE } = require("../templates/mail-template");
+const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE, QAP_ASSIGN_BY_GRSE, VENDOR_REMINDER_EMAIL } = require("../lib/event");
 const { mailInsert, updateMailStatus } = require("../services/mai.services");
 const path = require('path');
 const { YES } = require("../lib/constant");
@@ -184,12 +184,18 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                 mailDetails = {
                     to: payload.mailSendTo,
                     subject: "Approval of QAP",
-                    html: QAP_SUBMIT_MAIL_TEMPLATE(mail_body, "Vendor update"),
-                    // attachments: [{
-                    //     filename: payload.fileName,
-                    //     path: payload.filePath,
-                    // }]
+                    html: QAP_SUBMIT_MAIL_TEMPLATE(mail_body, "Vendor update")
                 };
+            case VENDOR_REMINDER_EMAIL:
+
+                mail_body = mailBody["VENDOR_REMINDER_EMAIL"].replace(/{{(.*?)}}/g, (match, p1) => payload[p1.trim()] || match);
+
+                mailDetails = {
+                    to: payload.vendor_email,
+                    subject: "Reminder Email",
+                    html: VENDOR_REMINDER_EMAIL_TEMPLATE(mail_body, "Reminder Email")
+                };
+
 
                 break;
 
@@ -198,7 +204,7 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
         }
 
 
-        if(process.env.MAIL_TURN_ON === YES) {
+        if (process.env.MAIL_TURN_ON === YES) {
             await SENDMAIL(mailDetails, async function (err, data) {
                 if (!err) {
                     console.log("Error Occurs ('_') !", err);
@@ -210,7 +216,7 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                     console.log(`Email sent successfully ('_') !!${payload.mailSendTo}`);
                 }
             });
-        } else{
+        } else {
             console.log(`Email send ${process.env.MAIL_TURN_ON}`);
         }
 
