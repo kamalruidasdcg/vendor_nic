@@ -13,15 +13,9 @@ const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
 
 const insertPOData = async (req, res) => {
     let insertPayload = {};
+    
     try {
-        // const connObj = {
-        //     host: process.env.DB_HOST_ADDRESS,
-        //     port: process.env.DB_CONN_PORT,
-        //     user: process.env.DB_USER,
-        //     password: "",
-        //     database: process.env.DB_NAME,
-        // }
-
+     
         const promiseConnection = await connection();
         let transactionSuccessful = false;
 
@@ -50,8 +44,6 @@ const insertPOData = async (req, res) => {
 
             const ekkoTableInsert = generateQuery(INSERT, EKKO, insertPayload);
 
-            // const [insertResult] = await promiseConnection.execute(ekkoTableInsert["q"], ekkoTableInsert["val"]);
-
             try {
                 const [results] = await promiseConnection.execute(ekkoTableInsert["q"], ekkoTableInsert["val"]);
             } catch (error) {
@@ -66,14 +58,6 @@ const insertPOData = async (req, res) => {
                 const zpo_milestone_table_val = zpo_milestoneTableData(zpo_milestone)
                 insertPromiseFn.push(promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]))
 
-                //  const f = await promiseConnection.execute(insert_zpo_milestone_table, [zpo_milestone_table_val]);
-                // const [results] = await promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]);
-                // try {
-                //     const [results] = await promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]);
-                //     console.log("results", results);
-                // } catch (error) {
-                //     throw new Error('Failed to insert data into zpo_milestone table.');
-                // }
             }
 
             if (ekpo?.length) {
@@ -81,14 +65,6 @@ const insertPOData = async (req, res) => {
                 const ekpo_table_val = ekpoTableData(ekpo);
                 insertPromiseFn.push(promiseConnection.query(insert_ekpo_table, [ekpo_table_val]))
 
-                // const [results] = await promiseConnection.query(insert_ekpo_table, [ekpo_table_val]);
-                //  const f = await promiseConnection.execute(insert_ekpo_table, [insert_ekpo_table]);
-                // try {
-                //     const [results] = await promiseConnection.query(insert_ekpo_table, [ekpo_table_val]);
-                //     console.log("results", results);
-                // } catch (error) {
-                //     throw new Error('Failed to insert data into ekpo table.');
-                // }
             }
 
             const insert = await Promise.all(insertPromiseFn);
@@ -98,10 +74,19 @@ const insertPOData = async (req, res) => {
             // const vendorNumber = insertPayload.LIFNR;
             // const poCreator = insertPayload.ERNAM;
 
-            // if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
-            //     const d = await sendMail(insertPayload)
-            // }
-            responseSend(res, "1", 200, "data insert succeed", [], null);
+            if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
+                //console.log("Connectio");
+                
+                try {
+                    await sendMail(insertPayload);
+                    responseSend(res, "1", 200, "data insert succeed with mail trigere", [], null);
+                } catch (error) {
+                    responseSend(res, "1", 201, "Data insert but mail not send !!", error, null);
+                }
+            } else {
+                responseSend(res, "1", 200, "data insert succeed without mail.", [], null);
+            }
+            
         } catch (error) {
             responseSend(res, "0", 502, "Data insert failed !!", error, null);
         }
@@ -153,7 +138,6 @@ function zpo_milestoneTableData(data) {
 
 
 async function sendMail(data) {
-
     const q =
         `SELECT v_add.smtp_addr AS vendor_email,
                 v.name1         AS vendor_name
@@ -161,17 +145,27 @@ async function sendMail(data) {
                 LEFT JOIN lfa1 AS v
                   ON v.lifnr = v_add.persnumber
         WHERE  v_add.persnumber = ? ;`;
-
-    const result = await query({ query: q, values: [data.LIFNR] });
+        const result = await query({ query: q, values: [data.LIFNR] });
+    // const result = [
+    //     {
+    //       vendor_email: 'mainak.dutta@datacoresystems.co.in',
+    //       vendor_name: 'PriceWaterhouseCoopers Pvt Ltd'
+    //     }
+    //   ];
+      console.log(result);
+      console.log(data);
+      //console.log(res);
     if (result.length) {
-
+        console.log(result.length);
         const payload = {
             purchasing_doc_no: data.EBELN,
             vendor_name: result[0].vendor_name,
-            upload_date: res.AEDAT,
-            vendor_email: result[0].vendor_name
+            upload_date: data.AEDAT,
+            vendor_email: result[0].vendor_email
         }
-        await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC)
+        console.log(payload);
+        
+        await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC);
     }
 
 }
