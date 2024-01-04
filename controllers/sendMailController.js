@@ -1,6 +1,6 @@
 const SENDMAIL = require("../lib/mailSend");
 const mailBody = require("../lib/mailBody");
-const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE, VENDOR_REMINDER_EMAIL_TEMPLATE } = require("../templates/mail-template");
+const { SDBG_SUBMIT_MAIL_TEMPLATE, DRAWING_SUBMIT_MAIL_TEMPLATE, QAP_SUBMIT_MAIL_TEMPLATE, VENDOR_REMINDER_EMAIL_TEMPLATE, VENDOR_PO_UPLOAD_IN_LAN_NIC } = require("../templates/mail-template");
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, SDBG_ACKNOWLEDGE_BY_GRSE, DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE, DRAWING_APPROVED_BY_GRSE, QAP_SUBMIT_BY_VENDOR, QAP_SUBMIT_BY_GRSE, QAP_APPROVED_BY_GRSE, QAP_ASSIGN_BY_GRSE, VENDOR_REMINDER_EMAIL } = require("../lib/event");
 const { mailInsert, updateMailStatus } = require("../services/mai.services");
 const path = require('path');
@@ -194,6 +194,19 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                     to: payload.vendor_email,
                     subject: "Reminder Email",
                     html: VENDOR_REMINDER_EMAIL_TEMPLATE(mail_body, "Reminder Email")
+                };
+
+
+                break;
+
+            case PO_UPLOAD_IN_LAN_NIC:
+
+                mail_body = mailBody["VENDOR_PO_UPLOAD_IN_LAN_NIC"].replace(/{{(.*?)}}/g, (match, p1) => payload[p1.trim()] || match);
+
+                mailDetails = {
+                    to: payload.vendor_email,
+                    subject: "Reminder Email",
+                    html: VENDOR_PO_UPLOAD_IN_LAN_NIC(mail_body, "PO Update Email")
                 };
 
 

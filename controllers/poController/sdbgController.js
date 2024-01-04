@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, UPDATE } = require("../../lib/constant");
+const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { NEW_SDBG } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -31,8 +31,10 @@ const submitSDBG = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-
+            const tokenData = { ...req.tokenData };
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+            payload.action_by_id = tokenData.vendor_code;
 
             const verifyStatus = [PENDING, RE_SUBMITTED, ACKNOWLEDGED]
 
@@ -96,7 +98,6 @@ const submitSDBG = async (req, res) => {
                 }
                 payload = { ...payload, isLocked: 1 };
                 insertObj = sdbgPayload(payload, ACKNOWLEDGED);
-                console.log(insertObj)
             }
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
@@ -201,7 +202,6 @@ const unlock = async (req, res) => {
         const isLocked_check_q = `SELECT * FROM ${NEW_SDBG} WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}") ORDER BY id DESC LIMIT 1`;
         const lockeCheck = await query({ query: isLocked_check_q, values: [] });
 
-        console.log("lockeCheck", lockeCheck);
 
         if( lockeCheck && lockeCheck?.length && lockeCheck[0]["isLocked"] === 0 ) {
             return resSend(res, true, 200, "Already unlocked or not Acknowledge yet", null, null);

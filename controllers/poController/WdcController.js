@@ -17,24 +17,13 @@ exports.wdc = async (req, res) => {
     try {
 
         const lastParam = req.path.split("/").pop();
-        // Handle Image Upload
-       // let fileData = {};
-        // if (req.file) {
-        //     fileData = {
-        //         fileName: req.file.filename,
-        //         filePath: req.file.path,
-        //         fileType: req.file.mimetype,
-        //         fileSize: req.file.size,
-        //     };
-
-        //     const payload = { ...req.body, ...fileData };
 
         const payload = { ...req.body };
 
             if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
 
-                const directory = path.join(__dirname, '..', 'uploads', lastParam);
-                const isDel = handleFileDeletion(directory, req.file.filename);
+                // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+                // const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend(res, false, 400, "Please send valid payload", res, null);
 
             }

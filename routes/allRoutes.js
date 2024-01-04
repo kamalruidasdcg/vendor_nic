@@ -164,7 +164,7 @@ router.get(poPrefix + "/download", [], (req, res) => {
 
 // SDBG CONTROLLER
 
-router.post(poPrefix + "/sdbg", [uploadSDBGFile.single("file")], (req, res) => {
+router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
 

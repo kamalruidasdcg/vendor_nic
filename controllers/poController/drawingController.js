@@ -93,7 +93,6 @@ const submitDrawing = async (req, res) => {
                         payload.vendor_name = result[0]?.vendor_name;
                         payload.vendor_code = result[0]?.vendor_code;
                         payload.sendAt = new Date(payload.created_at);
-                        console.log("payload", payload);
                         mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_VENDOR);
 
                     } else if (payload.updated_by == "GRSE") {

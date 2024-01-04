@@ -16,8 +16,7 @@ exports.List = async (req, res) => {
     
     req.query.$tableName = PAYMENTADVICE;
     req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    //console.log(req.query);
-    //return;
+
     try {
       getFilteredData(req, res);
     } catch(err) {

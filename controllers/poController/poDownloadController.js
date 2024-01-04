@@ -8,8 +8,6 @@ const path = require('path');
 
 const download = async (req, res) => {
 
-    console.log("filePath", fileDetails);
-
     // const queryParams = req.query;
 
     const typeArr = ["drawing", "sdbg", "qap"]
@@ -45,17 +43,12 @@ const download = async (req, res) => {
 
     const response = await query({ query: fileFoundQuery, values: [id] });
 
-    console.log("response", response);
-    console.log("fileFoundQuery", fileFoundQuery);
-
     if (!response?.length || !response[0]?.file_name) {
         return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
-    console.log("selectedPath", selectedPath);
     const downloadPath = path.join(__dirname, "..", "..", selectedPath);
-    console.log("downloadPath", downloadPath)
     res.download((downloadPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)

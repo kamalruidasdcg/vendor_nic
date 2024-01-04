@@ -115,7 +115,6 @@ const { validatePayload } = require("./validatePayload");
     try {
       const tableList = ["ekko", "ekpo"]
       const { tableName } = req.query;
-      console.log("tableName", tableName)
       
       if (!tableName ) {
         return resSend(res, false, 400, `Please sent table name`, null, null);

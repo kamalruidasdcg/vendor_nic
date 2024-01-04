@@ -55,9 +55,7 @@ const submitQAP = async (req, res) => {
 
             ///////// CHECK ROLE IS ASSIGNER /////////////////
             if (activity_type === ASSIGNED) {
-                console.log(ASSIGNED);
                 if (tokenData.internal_role_id === QAP_ASSIGNER) {
-                    console.log(true);
                     const checkAssigneQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?`;
                     const resAssigneQry = await query({ query: checkAssigneQuery, values: [purchasing_doc_no, ASSIGNED] });
                     if (resAssigneQry[0].countval > 0) {
@@ -74,11 +72,9 @@ const submitQAP = async (req, res) => {
 
             ///////// CHECK ROLE IS STAFF /////////////////
             if (verifyStatusForStaff.has(activity_type)) {
-                console.log(activity_type);
                 if (tokenData.internal_role_id === QAP_STAFF) {
                     const checkAssigneStaffQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?  AND assigned_to = ?`;
                     const resAssigneStaffQry = await query({ query: checkAssigneStaffQuery, values: [purchasing_doc_no, ASSIGNED, tokenData.vendor_code] });
-                    console.log(`${resAssigneStaffQry[0].countval}`);
                     if (resAssigneStaffQry[0].countval === 0) {
                         message = `you dont have permission.`;
                         return resSend(res, true, 200, message, null, null);
@@ -116,7 +112,6 @@ const submitQAP = async (req, res) => {
 
             const status = activity_type == ASSIGNED ? PENDING : ASSIGNED;
             const qapDetails = await getMailIds(payload.purchasing_doc_no, status);
-            console.log("qapDetails", qapDetails);
 
             if (!qapDetails.success) return resSend(res, false, 400, "Please check payloaddd", null, null);
             if (activity_type == ASSIGNED) {
@@ -204,7 +199,6 @@ const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
 const list = async (req, res) => {
     try {
         const tokenData = req.tokenData;
-        console.log("----", tokenData);
         // const pre = `SELECT qap.* FROM ${QAP_SUBMISSION} AS qap WHERE `;
         const pre = `
                 SELECT
@@ -398,8 +392,6 @@ const mailSendToAssignee = async (payload) => {
     payload.delingOfficerName = payload.assigned_from_name;
     payload.mailSendTo = payload.assigned_from_email;
 
-    console.log(payload);
-
     await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 }
 
@@ -559,7 +551,6 @@ async function getMailIds(purchasing_doc_no, status) {
             qap.purchasing_doc_no = ? AND status = ? LIMIT 1;`;
 
         const result = await query({ query: mailFetchQuery, values: [purchasing_doc_no, status] })
-        console.log("result", result);
         if (result && result.length) {
             return { success: true, data: result[0] };
         } else {

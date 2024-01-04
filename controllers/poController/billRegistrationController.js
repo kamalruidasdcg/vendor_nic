@@ -156,8 +156,6 @@ const addBill = async (req, res) => {
         payload = { ...payload, ...fileData, zbtn_number };
         const insertObj = addBillPayload(payload);
         const billQ = generateQuery(INSERT, new_bill_registration, insertObj);
-
-        console.log(billQ);
         const zbtsInsertObj = addToZBTSPayload(payload);
         const zbtsQ = generateQuery(INSERT, ZBTS, zbtsInsertObj);
         const result = await Promise.all([
@@ -288,8 +286,6 @@ const updateBill = async (req, res) => {
         delete updateObject.vendor_email_id;
         delete updateObject.send_mail;
 
-        console.log("updated obj", updateObject, send_mail, updateObject["DSTAUS"]);
-
         // GENERATE QUERIES WITH generateQuery function
         //  which is return query as q and value as val
         // by sending valid object
@@ -316,11 +312,6 @@ const updateBill = async (req, res) => {
                         "Vendor Bill Received"
                     ),
                 };
-
-                console.log(
-                    "receivedMailDetailsreceivedMailDetails",
-                    receivedMailDetails
-                );
 
                 SENDMAIL(receivedMailDetails, function (err, data) {
                     if (!err) {
@@ -455,9 +446,6 @@ const forwardBillToDepartment = async (req, res) => {
         //  which is return query as q and value as val
         // by sending valid object
         const { q, val } = generateQuery(INSERT, ZBTSM, insertObj);
-
-        console.log("q", q);
-        console.log("val", val);
 
         const result = await query({ query: q, values: val });
 
