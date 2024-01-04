@@ -38,8 +38,6 @@ const submitSDBG = async (req, res) => {
 
             const verifyStatus = [PENDING, RE_SUBMITTED, ACKNOWLEDGED]
 
-            console.log(payload)
-
             if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
 
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
@@ -100,7 +98,6 @@ const submitSDBG = async (req, res) => {
                 }
                 payload = { ...payload, isLocked: 1 };
                 insertObj = sdbgPayload(payload, ACKNOWLEDGED);
-                console.log(insertObj)
             }
 
             const { q, val } = generateQuery(INSERT, NEW_SDBG, insertObj);
@@ -205,7 +202,6 @@ const unlock = async (req, res) => {
         const isLocked_check_q = `SELECT * FROM ${NEW_SDBG} WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no}" AND status = "${ACKNOWLEDGED}") ORDER BY id DESC LIMIT 1`;
         const lockeCheck = await query({ query: isLocked_check_q, values: [] });
 
-        console.log("lockeCheck", lockeCheck);
 
         if( lockeCheck && lockeCheck?.length && lockeCheck[0]["isLocked"] === 0 ) {
             return resSend(res, true, 200, "Already unlocked or not Acknowledge yet", null, null);

@@ -114,7 +114,6 @@ const veifyAccessTokenRole = async (data) => {
  */
 const hasapiAccessList = (data, reqUrl) => {
 
-    console.log("data", data, "reqUrl", reqUrl)
     const roleAccess = apiAccessList[data.user_type];
 
     // FOR ALL ACCESS ROLE ADMIN

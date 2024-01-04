@@ -80,8 +80,8 @@ const newPayment = async (req, res) => {
             resSend(res, true, 200, "No Record Found", result, null);
         }
     } catch (error) {
-        console.log("new payment added", error.toString());
-        return resSend(res, false, 500, error.toString(), [], null);
+   
+        return resSend(res, false, 500, "Internal server error", [], null);
     }
 };
 
@@ -256,8 +256,8 @@ const newPaymentEXCEL = async (req, res) => {
             resSend(res, true, 200, "No Record Found", result, null);
         }
     } catch (error) {
-        console.log("new payment added", error.toString());
-        return resSend(res, false, 500, error.toString(), [], null);
+        console.log("new payment added", error);
+        return resSend(res, false, 500, "Internal server error", [], null);
     }
 };
 

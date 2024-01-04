@@ -249,14 +249,7 @@ const fetchBill = async (req, res) => {
 
     const { zbtno } = req.params;
 
-    console.log("req.params", req.params);
-    console.log("req.body", req.body);
-
-
-
-    const q = `SELECT * FROM zbts WHERE ZBTNO = "${zbtno}"`
-
-    console.log("qqqqqqq", q);
+    const q = `SELECT * FROM zbts WHERE ZBTNO = "${zbtno}"`;
 
     const result = await query({
       query: q,
@@ -264,7 +257,6 @@ const fetchBill = async (req, res) => {
     });
 
 
-    console.log("resultresultresult", result);
 
     if (result.length) {
       resSend(res, true, 200, "All Billing Registration Data", result, null);
@@ -326,8 +318,6 @@ const updateBill = async (req, res) => {
           subject: "Bill Received",
           html: VENDOR_MAIL_TEMPLATE(`Your bill has received. ID : ${zbtno}`, "Vendor Bill Received"),
         };
-
-        console.log("receivedMailDetailsreceivedMailDetails", receivedMailDetails);
 
         SENDMAIL(receivedMailDetails, function (err, data) {
           if (!err) {
@@ -486,7 +476,6 @@ const certifyBill = async (req, res) => {
 
 const forwardBillToDepartment = async (req, res) => {
 
-  console.log("forwardBillToDepartment");
 
   // const { bill_submit_to_email } = req.body;
   try {
@@ -507,9 +496,6 @@ const forwardBillToDepartment = async (req, res) => {
     // by sending valid object
     const { q, val } = generateQuery(INSERT, ZBTSM, insertObj);
 
-    console.log("q", q)
-    console.log("val", val)
-
     const result = await query({ query: q, values: val });
 
     if (result.affectedRows > 0) {
@@ -521,9 +507,6 @@ const forwardBillToDepartment = async (req, res) => {
         subject: "Forward bill to another department",
         html: VENDOR_BILL_CERTIFIED("Forward bill is forward to"),
       };
-
-
-      console.log("mailDetails", mailDetails);
 
 
       // SENDMAIL(mailDetails, function (err, data) {
@@ -540,7 +523,6 @@ const forwardBillToDepartment = async (req, res) => {
       resSend(res, false, 200, "No Record Found", result, null);
     }
   } catch (error) {
-    console.log(error);
     resSend(res, false, 400, "Error", error, null);
   }
 };

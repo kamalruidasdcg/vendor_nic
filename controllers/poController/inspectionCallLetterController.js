@@ -56,9 +56,6 @@ exports.inspectionCallLetter = async (req, res) => {
             }
             // insertObj = drawingPayload(payload, PENDING);
 
-
-            console.log("ddddddddd", insertObj);
-
             const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
             const response = await query({ query: q, values: val });
 

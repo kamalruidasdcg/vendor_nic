@@ -39,7 +39,6 @@ const unlockPrivilege = async (req, res, next) => {
     try {
 
         const id = req.tokenData.user_type;
-        console.log("id", id);
 
         if (!id || id !== USER_TYPE_SUPER_ADMIN) return resSend(res, false, 400, "YOU DON'T HAVE ACCESS");
 

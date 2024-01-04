@@ -163,11 +163,7 @@ async function sendMail(data) {
         WHERE  v_add.persnumber = ? ;`;
 
     const result = await query({ query: q, values: [data.LIFNR] });
-
-    console.log(result, 989999)
-
     if (result.length) {
-        console.log(result)
 
         const payload = {
             purchasing_doc_no: data.EBELN,
@@ -175,7 +171,6 @@ async function sendMail(data) {
             upload_date: res.AEDAT,
             vendor_email: result[0].vendor_name
         }
-        console.log("0000", payload);
         await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC)
     }
 

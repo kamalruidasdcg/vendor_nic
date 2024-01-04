@@ -41,8 +41,6 @@ exports.shippingDocuments = async (req, res) => {
             const insertObj = shippingDocumentsPayload(payload, PENDING);
             const { q, val } = generateQuery(INSERT, SHIPPINGDOCUMENTS, insertObj);
             const response = await query({ query: q, values: val });
-
-            console.log(response)
             if (response.affectedRows) {
                 resSend(res, true, 200, "SHIPPING DOCUMENTS Updated!", null, null);
             } else {

@@ -68,15 +68,9 @@ const addDrawing = async (req, res) => {
 
 
             const insertObj = drawingPayload(payload, CREATED)
-            console.log("insertObj", insertObj);
 
             const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
             const response = await query({ query: q, values: val });
-
-            if (res) {
-                // console.log("response", response);
-            }
-
 
             resSend(res, true, 200, "file uploaded!", fileData, null);
         } else {
@@ -93,8 +87,6 @@ const addDrawing = async (req, res) => {
 // DOWNLOAD DRAWING WITH DRAWING ID
 
 const download = async (req, res) => {
-
-    console.log("filePath", fileDetails);
 
     // const queryParams = req.query;
 
@@ -127,15 +119,11 @@ const download = async (req, res) => {
 
     const response = await query({ query: fileFoundQuery, values: [id] });
 
-    console.log("response", response);
-    console.log("fileFoundQuery", fileFoundQuery);
-
     if( !response?.length || !response[0]?.file_name) {
         return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
-    console.log("selectedPath", selectedPath);
     res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)
@@ -145,8 +133,6 @@ const download = async (req, res) => {
 
 
 const addSDBG = async (req, res) => {
-
-    console.log("po addSDBG apis")
 
     try {
 
@@ -327,7 +313,6 @@ const poList = async (req, res) => {
                 } else  {
                     obj.SDVG = 'N/A';
                 }
-                console.log(obj);
 
                 let DrawingQuery = `SELECT created_at,created_by_name,remarks FROM add_drawing WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
                 
@@ -338,7 +323,6 @@ const poList = async (req, res) => {
                     obj.Drawing = 'N/A';
                 }
                 //qap_submission
-                //console.log(obj);
 
                 let qapQuery = `SELECT created_at,created_by_name,remarks FROM qap_submission WHERE purchasing_doc_no = '${item.poNb}' ORDER BY created_at DESC LIMIT 1`;
                 

@@ -54,7 +54,6 @@ const details = async (req, res) => {
         const timeline = await query({ query: timelingQ, values: [queryParams.id] });
 
 
-        //console.log(result);
         // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
         // let resDate;
@@ -131,8 +130,6 @@ function poTypeCheck(materialData) {
 
 const download = async (req, res) => {
 
-    console.log("filePath", fileDetails);
-
     // const queryParams = req.query;
 
     const typeArr = ["drawing", "sdbg", "qap"]
@@ -164,15 +161,12 @@ const download = async (req, res) => {
 
     const response = await query({ query: fileFoundQuery, values: [id] });
 
-    console.log("response", response);
-    console.log("fileFoundQuery", fileFoundQuery);
-
     if (!response?.length || !response[0]?.file_name) {
         return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
-    console.log("selectedPath", selectedPath);
+ 
     res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)
@@ -189,20 +183,16 @@ const poList = async (req, res) => {
         let Query = "";
 
         if (tokenData.user_type === USER_TYPE_VENDOR) {
-            // console.log("vendor");
             Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE vendor_code = ${tokenData.vendor_code}`;
         } else {
-            console.log("grse");
+
 
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
-                    console.log("qap");
                     if (tokenData.internal_role_id === QAP_ASSIGNER) {
-                        console.log("QAP_ASSIGNER");
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
 
                     } else if (tokenData.internal_role_id === QAP_STAFF) {
-                        console.log("QAP_STAFF");
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
                     }
@@ -216,7 +206,6 @@ const poList = async (req, res) => {
 
         }
 
-        // console.log(Query);
         if (Query == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }

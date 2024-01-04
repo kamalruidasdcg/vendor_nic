@@ -215,7 +215,6 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
             default:
                 break;
         }
-        console.log(mail_body);
 
 
         if (process.env.MAIL_TURN_ON === YES) {

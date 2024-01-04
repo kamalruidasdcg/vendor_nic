@@ -36,7 +36,6 @@ const details = async (req, res) => {
         if (!result?.length)
             return resSend(res, false, 404, "No PO number found !!", [], null);
 
-        //console.log(result);
         let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
         let resDate;
@@ -49,7 +48,6 @@ const details = async (req, res) => {
 
         if (tableName) {
             let tableQuery = `SELECT * FROM ${tableName} WHERE EBELN = ?`
-            //console.log(tableQuery);
             let arrDate = await query({ query: tableQuery, values: [queryParams.id] });
             resDate = arrDate[0];
         } else {
@@ -176,8 +174,6 @@ const drawingResubmission = async (req, res) => {
 
 const download = async (req, res) => {
 
-    console.log("filePath", fileDetails);
-
     // const queryParams = req.query;
 
     const typeArr = ["drawing", "sdbg", "qap"]
@@ -210,15 +206,11 @@ const download = async (req, res) => {
 
     const response = await query({ query: fileFoundQuery, values: [id] });
 
-    console.log("response", response);
-    console.log("fileFoundQuery", fileFoundQuery);
-
     if (!response?.length || !response[0]?.file_name) {
         return resSend(res, true, 200, `file not uploaded with this id ${id}`, null, null)
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
-    console.log("selectedPath", selectedPath);
     res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)
@@ -228,8 +220,6 @@ const download = async (req, res) => {
 
 
 const addSDBG = async (req, res) => {
-
-    console.log("po addSDBG apis")
 
     try {
 
@@ -277,7 +267,6 @@ const addSDBG = async (req, res) => {
 }
 const addQAP = async (req, res) => {
 
-    console.log("po ADD QAP apis")
 
     try {
 
@@ -500,7 +489,6 @@ const poList = async (req, res) => {
 
         let q = `SELECT EBELN AS poNb,BSART AS poType FROM ekko`;
         const poArr = await query({ query: q, values: [] });
-        //console.log(poArr);
         let str = "";
         await Promise.all(
             poArr.map(async (item) => {
@@ -510,15 +498,14 @@ const poList = async (req, res) => {
         str = str.slice(0, -1);
         let SDVGQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
         let SDVGArr = await query({ query: SDVGQuery, values: [] });
-        //console.log(SDVGArr);
+
 
         let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
         let drawingArr = await query({ query: drawingQuery, values: [] });
-        //console.log(drawingArr);
+
 
         let qapQuery = `select purchasing_doc_no,created_by_name,remarks,max(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,remarks`;
         let qapArr = await query({ query: qapQuery, values: [] });
-        //console.log(qapArr);
 
         await Promise.all(
             poArr.map(async (item) => {
