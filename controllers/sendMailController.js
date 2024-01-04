@@ -222,10 +222,10 @@ const mailTrigger = async (payload = check(), eventName = check()) => {
                 if (!err) {
                     console.log("Error Occurs ('_') !", err);
                     // await updateMailStatus({ id: mail_response.insertId, staus: "error", message: err });
-                    await mailInsert({ ...payload, status: "FAILED", ...mailDetails });
+                    // await mailInsert({ ...payload, status: "FAILED", ...mailDetails });
                 } else {
                     // await updateMailStatus({ id: mail_response.insertId, staus: "sent", message: data });
-                    await mailInsert({ ...payload, status: "SENT", ...mailDetails });
+                    // await mailInsert({ ...payload, status: "SENT", ...mailDetails });
                     console.log(`Email sent successfully ('_') !!${payload.mailSendTo}`);
                 }
             });
