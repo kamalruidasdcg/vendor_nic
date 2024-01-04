@@ -1,25 +1,28 @@
 // const { query,  } = require("../config/dbConfig");
-const { query } = require("../config/dbConfig");
-const { INSERT } = require("../lib/constant");
+const { query, connection } = require("../config/dbConfig");
+const { INSERT, TRUE } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
 const { EKKO, EKPO, ZPO_MILESTONE } = require("../lib/tableName");
 const { generateQuery } = require("../lib/utils");
-const mysql = require("mysql2/promise");
-require("dotenv").config();
+// const mysql = require("mysql2/promise");
+const { mailTrigger } = require("./sendMailController");
+const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
+
+// require("dotenv").config();
 
 
 const insertPOData = async (req, res) => {
-
+    let insertPayload = {};
     try {
-        const connObj = {
-            host: process.env.DB_HOST_ADDRESS,
-            port: process.env.DB_CONN_PORT,
-            user: process.env.DB_USER,
-            password: "",
-            database: process.env.DB_NAME,
-        }
+        // const connObj = {
+        //     host: process.env.DB_HOST_ADDRESS,
+        //     port: process.env.DB_CONN_PORT,
+        //     user: process.env.DB_USER,
+        //     password: "",
+        //     database: process.env.DB_NAME,
+        // }
 
-        const promiseConnection = await mysql.createConnection(connObj);
+        const promiseConnection = await connection();
         let transactionSuccessful = false;
 
         try {
@@ -32,7 +35,7 @@ const insertPOData = async (req, res) => {
 
             await promiseConnection.beginTransaction();
 
-            const insertPayload = {
+            insertPayload = {
                 EBELN: obj.EBELN,
                 BUKRS: obj.BUKRS ? obj.BUKRS : null,
                 BSTYP: obj.BSTYP ? obj.BSTYP : null,
@@ -88,13 +91,16 @@ const insertPOData = async (req, res) => {
                 // }
             }
 
-            await Promise.all(insertPromiseFn);
+            const insert = await Promise.all(insertPromiseFn);
             await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
             // const vendorNumber = insertPayload.LIFNR;
             // const poCreator = insertPayload.ERNAM;
 
+            // if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
+            //     const d = await sendMail(insertPayload)
+            // }
             responseSend(res, "1", 200, "data insert succeed", [], null);
         } catch (error) {
             responseSend(res, "0", 502, "Data insert failed !!", error, null);
@@ -145,9 +151,40 @@ function zpo_milestoneTableData(data) {
 
 }
 
+
+async function sendMail(data) {
+
+    const q =
+        `SELECT v_add.smtp_addr AS vendor_email,
+                v.name1         AS vendor_name
+        FROM   adr6 AS v_add
+                LEFT JOIN lfa1 AS v
+                  ON v.lifnr = v_add.persnumber
+        WHERE  v_add.persnumber = ? ;`;
+
+    const result = await query({ query: q, values: [data.LIFNR] });
+
+    console.log(result, 989999)
+
+    if (result.length) {
+        console.log(result)
+
+        const payload = {
+            purchasing_doc_no: data.EBELN,
+            vendor_name: result[0].vendor_name,
+            upload_date: res.AEDAT,
+            vendor_email: result[0].vendor_name
+        }
+        console.log("0000", payload);
+        await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC)
+    }
+
+}
+
+
 // async function updateInfoSendTo(vendorNumber, poCreatorId) {
 
-    
+
 //     const poCreator_mail_Q = `SELECT USRID_LONG FROM pa0105 WHERE SUBTY = "0030" PERNR = ?;`;
 //     const vendor_mail_Q = `SELECT SMTP_ADDR FROM PERSNUMBER WHERE SUBTY = "0030" PERNR = ?;`;
 
