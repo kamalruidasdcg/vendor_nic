@@ -144,6 +144,8 @@ const submitSDBG = async (req, res) => {
 
                 // }
 
+                await handelEmail(payload);
+
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
@@ -203,7 +205,7 @@ const unlock = async (req, res) => {
         const lockeCheck = await query({ query: isLocked_check_q, values: [] });
 
 
-        if( lockeCheck && lockeCheck?.length && lockeCheck[0]["isLocked"] === 0 ) {
+        if (lockeCheck && lockeCheck?.length && lockeCheck[0]["isLocked"] === 0) {
             return resSend(res, true, 200, "Already unlocked or not Acknowledge yet", null, null);
         }
 
@@ -262,6 +264,20 @@ async function poContactDetails(purchasing_doc_no) {
     const result = await query({ query: po_contact_details_query, values: [purchasing_doc_no] });
 
     return result;
+}
+
+
+
+async function handelEmail(payload) {
+    if (payload.status === PENDING) {
+        const result = await poContactDetails(payload.purchasing_doc_no);
+        payload.delingOfficerName = result[0]?.dealingOfficerName;
+        payload.mailSendTo = result[0]?.dealingOfficerMail;
+        payload.vendor_name = result[0]?.vendor_name;
+        payload.vendor_code = result[0]?.vendor_code;
+        payload.sendAt = new Date(payload.created_at);
+        await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
+    }
 }
 
 
