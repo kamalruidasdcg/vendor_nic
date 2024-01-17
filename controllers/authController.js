@@ -168,8 +168,10 @@ const login = async (req, res) => {
                     result[0] = { ...result[0], ...userDetails[0] };
                     const { department_name, role } = result[0];
                     const deptPermission = rolePermission[department_name];
-                    deptPermission[role] = true;
-                    permission = deptPermission;
+                    if (deptPermission) {
+                        deptPermission[role] = true;
+                    }
+                    permission = deptPermission ? deptPermission : {};
                 }
 
                 /**

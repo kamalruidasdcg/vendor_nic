@@ -124,6 +124,7 @@ const submitQAP = async (req, res) => {
                 payload.vendor_code = qapDetails.data.vendor_code;
                 payload.assigned_to = qapDetails.data.assigned_to;
                 payload.assigned_from = qapDetails.data.assigned_from;
+                payload.created_by_name = qapDetails.data.created_by_name;
 
                 payload = { ...payload, ...qapDetails.data };
 
@@ -177,7 +178,7 @@ const submitQAP = async (req, res) => {
             payload.insertId = response.insertId;
             payload.sendAt = new Date(payload.created_at);
             handelMail(tokenData, payload);
-            resSend(res, true, 200, "!", fileData, null);
+            resSend(res, true, 200, "Inserted successfully", fileData, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
@@ -501,6 +502,7 @@ async function getMailIds(purchasing_doc_no, status) {
         grse_officers_assignFrom.USRID_LONG AS assigned_from_email,
         grse_officers_assignTo.USRID_LONG AS assigned_to_email,
         vendor_master.NAME1 as vendor_name,
+        qap.created_by_name as created_by_name,
         qap.vendor_code AS vendor_code,
         qap.assigned_from AS assigned_from,
         qap.assigned_to AS assigned_to,
