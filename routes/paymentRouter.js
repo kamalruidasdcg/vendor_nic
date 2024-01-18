@@ -2,6 +2,7 @@ const express = require("express");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
 const paymentControllers = require("../controllers/paymentControllers");
+const { uploadExcelFile } = require("../lib/fileUpload");
 
 
 router.post("/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
@@ -20,7 +21,7 @@ router.post("/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
     paymentControllers.allPaymentList(req, res);
   });
 
-  router.post(paymentPrefix + "/addByXLS",
+  router.post("/addByXLS",
   [veifyAccessToken, authorizeRoute],
   uploadExcelFile.single("file"),
   paymentControllers.updoadExcelFileController);

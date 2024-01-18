@@ -66,9 +66,10 @@ const insertPOData = async (req, res) => {
                 insertPromiseFn.push(promiseConnection.query(insert_ekpo_table, [ekpo_table_val]))
 
             }
-
-            const insert = await Promise.all(insertPromiseFn);
-            await promiseConnection.commit(); // Commit the transaction if everything was successful
+            if(insertPromiseFn.length) {
+                const insert = await Promise.all(insertPromiseFn);
+            }
+            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
             // const vendorNumber = insertPayload.LIFNR;
