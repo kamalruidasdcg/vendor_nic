@@ -19,5 +19,12 @@ router.get("/list", [], (req, res) => {
 router.get("/assigneeList", [], (req, res) => {
   sdbgController.assigneeList(req, res);
 });
+router.post("/dashboard", [], (req, res) => {
+  sdbgController.dashboard(req, res);
+});
+
+
+
+
 
 module.exports = router;
