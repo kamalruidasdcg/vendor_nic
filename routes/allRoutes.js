@@ -31,6 +31,8 @@ const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services")
 const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 const billRoutes = require("./billRoutes");
+const paymentRoutes = require("./paymentRouter");
+const sdbgRoutes = require("./sdbgRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
 
 
@@ -80,8 +82,9 @@ router.use("/bill", billRoutes);
 
 // PAYMENT APIS
 const paymentPrefix = "/payment";
-
 router.use("/payment", billRoutes);
+const poPrefix = "/po";
+router.use(poPrefix + "/sdbg", sdbgRoutes);
 
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);
@@ -107,9 +110,6 @@ router.use("/payment", billRoutes);
 
 
 // PO details
-
-const poPrefix = "/po";
-
 
 router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
   generalController.poList(req, res);
@@ -164,17 +164,18 @@ router.get(poPrefix + "/download", [], (req, res) => {
 
 // SDBG CONTROLLER
 
-router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
-  sdbgController.submitSDBG(req, res);
-});
+// router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
+//   sdbgController.submitSDBG(req, res);
+// });
+router.use(poPrefix + "/sdbg", paymentRoutes);
 
-router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
-  sdbgController.unlock(req, res);
-});
+// router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
+//   sdbgController.unlock(req, res);
+// });
 
-router.get(poPrefix + "/sdbgList", [], (req, res) => {
-  sdbgController.list(req, res);
-});
+// router.get(poPrefix + "/sdbgList", [], (req, res) => {
+//   sdbgController.list(req, res);
+// });
 
 
 // QAP CONTROLLERS

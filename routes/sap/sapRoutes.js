@@ -7,6 +7,7 @@ const { dynamicallyUpload } = require("../../lib/fileUpload");
 const sdbgRoutes =  require("./sdbgRoutes");
 const paymentRoutes =  require("./paymentRoutes");
 const poGeneralRoutes =  require("./poGeneralRoutes");
+const sapTestRoutes =  require("./testRoutes");
 const dataInsert = require("../../controllers/dataInsertControllers");
 
 /**
@@ -19,13 +20,14 @@ const dataInsert = require("../../controllers/dataInsertControllers");
 router.use("/sdbg", sdbgRoutes);
 router.use("/payment", paymentRoutes);
 router.use("/po", poGeneralRoutes);
+router.use("/test", sapTestRoutes);
 
 // router.post("/po", [], (req, res) => {
 //     dataInsert.insertPOData(req, res);
 //   });
 
 // MATERIRLA ROUTE START -> 
-const mPrefix = "/material";
+// const mPrefix = "/material";
 router.get("/", (req, res) => {
     materialController.list(req, res);
 });
@@ -34,7 +36,7 @@ router.get("/", (req, res) => {
 // MATERIAL ROUTE END 
 
 // <--- PAYMENT ROUTE START
-const paymentPrefix = "/payment";
+// const paymentPrefix = "/payment";
 
 // router.post(paymentPrefix + "/voucher", [dynamicallyUpload.single("file")], (req, res) => {
 //     paymentController.addPaymentVoucher(req, res);

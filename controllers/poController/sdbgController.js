@@ -188,6 +188,24 @@ const list = async (req, res) => {
     }
 
 }
+const assigneeList = async (req, res) => {
+
+    req.query.$tableName = NEW_SDBG;
+
+    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    try {
+
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send po number", null, null);
+        }
+
+        getFilteredData(req, res);
+    } catch (err) {
+        console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, null);
+    }
+
+}
 
 
 const unlock = async (req, res) => {
@@ -282,4 +300,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, list, unlock }
+module.exports = { submitSDBG, list, unlock, assigneeList }
