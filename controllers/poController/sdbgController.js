@@ -6,7 +6,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { NEW_SDBG } = require("../../lib/tableName");
-const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
+const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, SAVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
@@ -298,6 +298,133 @@ async function handelEmail(payload) {
     }
 }
 
+const dashboard = async (req, res) => {
+
+    try {
+        const filterBy = { ...req.body };
+
+        const values = [];
+        let filterQuery =
+            `SELECT created_at,
+                purchasing_doc_no,
+                status,
+                file_name,
+                file_path,
+                created_by_id,
+                created_by_name
+            FROM   sdbg AS sdbg `;
+
+        // USE FOR OTHER THAN DATE QUERIES
+
+        const getGrseUserEmpNameQ = `
+                LEFT JOIN 
+                    pa0002 
+                AS 
+                    p1
+                ON
+                    p1.PERNR = log.user_id`;
 
 
-module.exports = { submitSDBG, list, unlock, assigneeList }
+
+        // USE FOR DATE QUERIES
+        let { startDate, endDate, page, limit } = filterBy;
+
+        if (filterBy.status == "ALL") {
+            delete filterBy.status;
+        }
+
+        // deleting from filter object
+        delete filterBy.startDate;
+        delete filterBy.endDate;
+        delete filterBy.page;
+        delete filterBy.limit;
+
+        let condQuery = " WHERE 1 = 1"
+
+        if (Object.keys(filterBy).length > 0) {
+            const conditions = Object.keys(filterBy).map((key, index) => {
+                if (filterBy[key]) {
+                    values.push(filterBy[key]);
+                    return ` AND sdbg.${key} = ?`;
+                }
+            });
+
+            condQuery += conditions.join(" ");
+        }
+
+
+        if (startDate && !endDate) {
+            condQuery = condQuery.concat(` AND sdbg.created_at >= ?`)
+            values.push(parseInt(startDate));
+        }
+        if (!startDate && endDate) {
+            condQuery = condQuery.concat(` AND sdbg.created_at <= ?`)
+            values.push(parseInt(endDate));
+        }
+        if (startDate && endDate) {
+            condQuery = condQuery.concat(` AND ( sdbg.created_at BETWEEN ? AND ? )`)
+            values.push(parseInt(startDate), parseInt(endDate));
+        }
+
+        filterQuery = filterQuery.concat(condQuery);
+
+        // filterQuery = filterQuery.concat(` ORDER BY log.id DESC`);
+        page = page ? parseInt(page) : 1;
+        limit = limit ? parseInt(limit) : 10;
+        const offSet = (page - 1) * limit;
+
+        const pageinatonQ = ` LIMIT ${offSet}, ${limit}`;
+        const orderByQ = ` ORDER BY sdbg.created_at DESC`;
+
+        filterQuery = filterQuery.concat(orderByQ);
+        filterQuery = filterQuery.concat(pageinatonQ);
+
+        console.log("filterQuery", filterQuery);
+        console.log("values", values);
+
+        const result = await query({ query: filterQuery, values: values });
+        // const result = await log(req, res, filterQuery, values);
+        const logCount = await sdbgCount(req, res, condQuery, values);
+        // const report = await poReport(req, res, condQuery, values, groupBy);
+        // const response = await Promise.all(
+        //     log(req, res, filterQuery, values),
+        //     poReportCount(req, res, condQuery, values),
+        //     poReport(req, res, condQuery, values)
+        // )
+        
+
+
+
+        resSend(res, true, 200, "data fetch scussfully.", {result, count: logCount}, null);
+
+
+    } catch (error) {
+        return resSend(res, false, 500, error, [], null);
+    }
+}
+
+async function sdbgCount(req, res, condQuery, values) {
+    try {
+        let filterQuery = 
+        `SELECT
+            COUNT(*) AS count
+        FROM sdbg AS sdbg`;
+
+        filterQuery = filterQuery.concat(condQuery);
+        const result = await query({ query: filterQuery, values: values });
+        if (result?.length) {
+            return result[0]["count"]
+        }
+
+        return 0;
+
+    } catch (error) {
+        console.log("po report count error", error)
+    }
+
+}
+
+
+
+
+module.exports = { submitSDBG, list, unlock, assigneeList, dashboard }
