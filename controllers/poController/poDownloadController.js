@@ -56,6 +56,18 @@ const download = async (req, res) => {
     });
 }
 
+const tncdownload = async (req, res) => {
+    const { purchesing_doc_no } = req.query;
+    const fileName = `${purchesing_doc_no}.pdf`
+    const downloadPath = path.join(__dirname, "..", "..","uploads", "tncminutes",fileName);
+    console.log(downloadPath);
+    res.download((downloadPath), (err) => {
+        if (err)
+            resSend(res, false, 404, "file not found", err, null)
+
+    });
+}
 
 
-module.exports = { download }
+
+module.exports = { download, tncdownload }
