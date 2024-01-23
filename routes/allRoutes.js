@@ -33,6 +33,7 @@ const router = express.Router();
 const billRoutes = require("./billRoutes");
 const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
+const dashboardRoutes = require("./dashboardRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
 
 
@@ -85,6 +86,7 @@ const paymentPrefix = "/payment";
 router.use("/payment", billRoutes);
 const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
+router.use(poPrefix + "/dashboard", dashboardRoutes);
 
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);
@@ -122,6 +124,7 @@ router.get(poPrefix + "/details", [], (req, res) => {
 router.post(poPrefix + "/deptwiselog", [], (req, res) => {
   logController.getLogList(req, res);
 });
+
 
 // PO DRAWING CONTROLLER
 
