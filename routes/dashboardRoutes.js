@@ -8,11 +8,11 @@ router.post("/", [veifyAccessToken], (req, res) => {
   dashboardController.dashboard(req, res);
 });
 
-router.get("/subdeptList", [veifyAccessToken], (req, res) => {
-  dashboardController.list(req, res);
+router.get("/subdeptlist", [], (req, res) => {
+  dashboardController.subDeptList(req, res);
 });
-router.get("/empList", [veifyAccessToken], (req, res) => {
-  dashboardController.assigneeList(req, res);
+router.post("/empList", [], (req, res) => {
+  dashboardController.subDeptEmp(req, res);
 });
 
 

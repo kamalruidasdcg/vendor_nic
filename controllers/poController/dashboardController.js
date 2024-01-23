@@ -1,6 +1,7 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { SDBG, ADD_DRAWING, QAP_SUBMISSION } = require("../../lib/tableName");
+const { QAP_ASSIGNER } = require("../../lib/constant");
 
 
 const dashboard = async (req, res) => {
@@ -21,7 +22,7 @@ const dashboard = async (req, res) => {
             3: QAP_SUBMISSION
         }
 
-        if(!tables[filterBy.depertment]) {
+        if (!tables[filterBy.depertment]) {
             return resSend(res, false, 400, "Please check -> depertment or Invalid department", null, null);
         }
 
@@ -167,6 +168,55 @@ async function poReportCount(req, res, condQuery, values) {
 }
 
 
+const subDeptEmp = async (req, res) => {
+
+    const filterBy = { ...req.body };
+
+    if (!filterBy.sub_dept_id && !filterBy.department_id) {
+        return resSend(res, false, 400, "send valid department_id && sub dept id", null, null);
+    }
+
+    const tokenData = { ...req.tokenData };
+    let subDeptListQuery = "";
+    // if (filterBy.department_id == 3 && filterBy.internal_role_id == 1) {
+        subDeptListQuery =
+            `SELECT sub_dept.name                 AS sub_dept_name,
+                        sub_dept.id                   AS sub_dept_id,
+                        emp_department_list.dept_name AS dept_name,
+                        emp_department_list.dept_id   AS dept_id,
+                        emp_department_list.emp_id    AS emp_id,
+                        emp_name.cname                AS emp_name
+                 FROM   sub_dept AS sub_dept
+                        LEFT JOIN emp_department_list AS emp_department_list
+                               ON (sub_dept.id = emp_department_list.sub_dept_id)
+                        LEFT JOIN pa0002 AS emp_name
+                               ON emp_name.pernr = emp_department_list.emp_id
+                        LEFT JOIN auth AS auth
+                               ON ( auth.internal_role_id = 2
+                                    AND auth.department_id = emp_department_list.dept_id
+                                    AND auth.vendor_code = emp_department_list.emp_id )
+                 WHERE  ( sub_dept.id = ?
+                          AND emp_department_list.dept_id = ? );`;
+    // }
+
+    // if(filterBy.department_id == 3 && filterBy.internal_role_id == 1) {
+
+    // }
+ 
+    const result = await query({ query: subDeptListQuery, values: [filterBy.sub_dept_id, filterBy.department_id] });
+
+    resSend(res, true, 200, "subdept emp list", result, null);
+
+}
+
+const subDeptList = async (req, res) => {
+    const q = `SELECT * FROM sub_dept`;
+    const result = await query({ query: q, values: [] });
+    resSend(res, true, 200, "subdeptList", result, null);
+}
+
+
+
 // const dashboard = async (req, res) => {
 
 //     try {
@@ -293,4 +343,4 @@ async function poReportCount(req, res, condQuery, values) {
 // }
 
 
-module.exports = { dashboard }
+module.exports = { dashboard, subDeptEmp, subDeptList }
