@@ -162,9 +162,9 @@ router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 
 
 // file download for sdbg, drawing, qap
-router.get(poPrefix + "/download", [], (req, res) => {
-  downloadController.download(req, res);
-});
+// router.get(poPrefix + "/download", [], (req, res) => {
+//   downloadController.download(req, res);
+// });
 
 
 // SDBG CONTROLLER
