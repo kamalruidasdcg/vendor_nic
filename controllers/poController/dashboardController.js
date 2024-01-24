@@ -115,17 +115,8 @@ const dashboard = async (req, res) => {
         console.log("values", values);
 
         const result = await query({ query: filterQuery, values: values });
-        console.log("result", result);
-        // const result = await log(req, res, filterQuery, values);
-        const logCount = await poReportCount(req, res, condQuery, values);
 
-        console.log("logCount", logCount);
-        // const report = await poReport(req, res, condQuery, values, groupBy);
-        // const response = await Promise.all(
-        //     log(req, res, filterQuery, values),
-        //     poReportCount(req, res, condQuery, values),
-        //     poReport(req, res, condQuery, values)
-        // )
+        const logCount = await poReportCount(req, res, condQuery, values);
 
         const modfResult = result.map((el) => {
             el["name"] = el.grse_user_name ? el.grse_user_name : el.vendor_name ? el.vendor_name : null;
@@ -172,7 +163,7 @@ const subDeptEmp = async (req, res) => {
 
     const filterBy = { ...req.body };
 
-    if (!filterBy.sub_dept_id && !filterBy.department_id) {
+    if (!filterBy.department_id && filterBy.department_id == 3 && filterBy.sub_dept_id ) {
         return resSend(res, false, 400, "send valid department_id && sub dept id", null, null);
     }
 
