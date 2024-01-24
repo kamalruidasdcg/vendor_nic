@@ -24,7 +24,7 @@ const download = async (req, res) => {
 
     switch (type) {
         case "drawing":
-            fileFoundQuery = `SELECT * FROM ${tableName} WHERE drawing_id = ?`
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
             break;
         case "sdbg":
             fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
