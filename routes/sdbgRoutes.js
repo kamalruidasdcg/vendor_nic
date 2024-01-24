@@ -2,10 +2,10 @@ const express = require("express");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
 const sdbgController = require("../controllers/poController/sdbgController");
-const { uploadSDBGFile } = require("../lib/fileUpload");
+const { uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { unlockPrivilege } = require("../services/auth.services");
 
-router.post("/submitSDBG", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
+router.post("/submitSDBG", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
 
