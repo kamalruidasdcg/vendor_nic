@@ -5,7 +5,7 @@ const sdbgController = require("../controllers/poController/sdbgController");
 const { uploadSDBGFile } = require("../lib/fileUpload");
 const { unlockPrivilege } = require("../services/auth.services");
 
-router.post("/", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
+router.post("/submitSDBG", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
   sdbgController.submitSDBG(req, res);
 });
 
