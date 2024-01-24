@@ -5,8 +5,9 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
-const { NEW_SDBG } = require("../../lib/tableName");
-const { PENDING, ACKNOWLEDGED, RE_SUBMITTED } = require("../../lib/status");
+const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
+const { FINANCE } = require("../../lib/depertmentMaster");
+const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, FORWARD_TO_FINANCE } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
@@ -188,6 +189,153 @@ const list = async (req, res) => {
     }
 
 }
+
+const sdbgSubmitByDealingOfficer = async (req, res) => {
+    const tokenData = { ...req.tokenData };
+    // console.log("tokenData7ujky6j");
+    // console.log(tokenData);
+    // return resSend(res, false, 400, "Please send po number", req.body, null);
+    try {
+        //const tokenData = { ...req.tokenData };
+
+        const { ...obj } = req.body;
+        if (!obj || typeof obj !== 'object' || !Object.keys(obj).length) {
+            return responseSend(res, false, 400, "INVALID PAYLOAD", null, null);
+        }
+        if (!obj.purchasing_doc_no || obj.purchasing_doc_no == "") {
+            return resSend(res, false, 200, "Please send PO number.", null, null);
+        }
+
+        const getQuery = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = ? AND ERNAM = ?`;
+        const result = await query({ query: getQuery, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
+        if (result[0].man_no === 0) {
+            return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
+        }
+        // console.log(result);
+        const insertPayload = {
+            purchasing_doc_no: obj.purchasing_doc_no,
+            bank_name: obj.bank_name ? obj.bank_name : null,
+            branch_name: obj.branch_name ? obj.branch_name : null,
+            ifsc_code: obj.ifsc_code ? obj.ifsc_code : null,
+            bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
+            bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
+            bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
+            bank_city: obj.bank_city ? obj.bank_city : null,
+            pincode: obj.pincode ? obj.pincode : null,
+            bg_no: obj.bg_no ? obj.bg_no : null,
+            bg_date: obj.bg_date ? obj.bg_date : null,
+            bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
+            department: obj.department ? obj.department : null,
+            po_date: obj.po_date ? obj.po_date : null,
+            yard_no: obj.yard_no ? obj.yard_no : null,
+            vendor_pincode: obj.vendor_pincode ? obj.vendor_pincode : null,
+            extension_date1: obj.extension_date1 ? obj.extension_date1 : null,
+            extension_date2: obj.extension_date2 ? obj.extension_date2 : null,
+            extension_date3: obj.extension_date3 ? obj.extension_date3 : null,
+            extension_date4: obj.extension_date4 ? obj.extension_date4 : null,
+            extension_date5: obj.extension_date5 ? obj.extension_date5 : null,
+            extension_date6: obj.extension_date6 ? obj.extension_date6 : null,
+            release_date: obj.release_date ? obj.release_date : null,
+            demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : null,
+            extension_date: obj.extension_date ? obj.extension_date : null,
+            status: obj.status ? obj.status : null,
+            created_at: getEpochTime(),
+            created_by: tokenData.vendor_code,
+        };
+        //console.log(insertPayload);
+        let { q, val } = generateQuery(INSERT, SDBG_ENTRY, insertPayload);
+
+        let sdbgEntryQuery = await query({ query: q, values: val });
+
+        if (sdbgEntryQuery.error) {
+            console.log(sdbgEntryQuery.error);
+            resSend(res, false, 201, "Data not 1insert!!", sdbgEntryQuery.error, null);
+        }
+
+        const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ?`;
+        let sdbgResult = await query({ query: Q, values: [obj.purchasing_doc_no] });
+        let sdbgDataResult = sdbgResult[0];
+        // console.log("sdbgDataResult");
+        // console.log(sdbgDataResult);
+        const insertPayloadForSdbg = {
+            purchasing_doc_no: obj.purchasing_doc_no,
+            ...sdbgDataResult,
+            remarks: obj.remarks,
+            status: "FORWARD_TO_FINANCE",
+            assigned_from: tokenData.vendor_code,
+            assigned_to: "FINANCE",
+            created_at: getEpochTime(),
+            created_by_name: "Dealing officer",
+            created_by_id: tokenData.vendor_code,
+            updated_by: "GRSE"
+        }
+        // console.log("sdbg--");
+        // console.log(insertPayloadForSdbg);
+
+        let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+        let sdbgQuery = await query({ query: insertsdbg_q["q"], values: insertsdbg_q["val"] });
+        // console.log("rt67898uygy");
+        // console.log(sdbgQuery);
+        return resSend(res, true, 200, "Forworded to finance successfully!", sdbgQuery, null);
+
+    } catch (error) {
+        console.log(error);
+        return resSend(res, false, 201, "Data not insert!!", error, null);
+    }
+
+
+
+
+}
+
+const sdbgUpdateByFinance = async (req, res) => {
+    // payload
+        // purchasing_doc_no, remarks, status, assigned_to, 
+    const tokenData = { ...req.tokenData };
+    const { ...obj } = req.body;
+   // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
+    try {
+        if (tokenData.department_id != FINANCE) {
+            resSend(res, true, 200, "please login as finance!", null, null);
+        }
+         const getQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+        const result = await query({ query: getQuery, values: [obj.purchasing_doc_no, FORWARD_TO_FINANCE] });
+        if (result[0].po_count === 0) {
+            return resSend(res, true, 200, "This po is not forward to finance.Please contact with dealing officer.", null, null);
+        }
+        if((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "") || (!obj.assigned_to || obj.assigned_to == "")) {
+           return resSend(res, true, 200, "please send a valid payload!", null, null);
+        }
+
+        const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ? LIMIT 1`;
+        let sdbgResult = await query({ query: Q, values: [obj.purchasing_doc_no] });
+
+        let sdbgDataResult = sdbgResult[0];
+        // console.log("sdbgDataResult");
+        // console.log(sdbgDataResult);
+        const insertPayloadForSdbg = {
+            purchasing_doc_no: obj.purchasing_doc_no,
+            ...sdbgDataResult,
+            remarks: obj.remarks,
+            status: obj.status,
+            assigned_from: tokenData.vendor_code,
+            assigned_to: obj.assigned_to,
+            created_at: getEpochTime(),
+            created_by_name: "finance dept",
+            created_by_id: tokenData.vendor_code,
+            updated_by: "GRSE"
+        }
+        let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+        let sdbgQuery = await query({ query: insertsdbg_q["q"], values: insertsdbg_q["val"] });
+        
+        resSend(res, false, 200, "done!", sdbgQuery, null);
+
+    } catch (error) {
+        resSend(res, false, 400, "somthing went wrong!", error, null);
+    }
+
+}
+
 const assigneeList = async (req, res) => {
 
     req.query.$tableName = NEW_SDBG;
@@ -300,4 +448,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, list, unlock, assigneeList }
+module.exports = { submitSDBG, list, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }

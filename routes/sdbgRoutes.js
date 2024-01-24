@@ -9,6 +9,15 @@ router.post("/", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) =
   sdbgController.submitSDBG(req, res);
 });
 
+router.post("/sdbgSubmitByDealingOfficer", [veifyAccessToken], (req, res) => {
+  sdbgController.sdbgSubmitByDealingOfficer(req, res);
+});
+
+
+router.post("/sdbgUpdateByFinance", [veifyAccessToken], (req, res) => {
+  sdbgController.sdbgUpdateByFinance(req, res);
+});
+
 router.post("/unlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
   sdbgController.unlock(req, res);
 });
