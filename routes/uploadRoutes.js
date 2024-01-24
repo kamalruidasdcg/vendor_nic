@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const { upload, uploadTNCMinuts } = require("../lib/fileUpload");
 const uploadController = require("../controllers/uploadController");
+const { veifyAccessToken } = require("../services/jwt.services");
 
 router.post("/", upload.single("file"), uploadController.uploadImage);
-router.post("/tncminutes", [uploadTNCMinuts.single("file")], (req, res) => {
+
+router.post("/tncminutes", [veifyAccessToken, uploadTNCMinuts.single("file")], (req, res) => {
     uploadController.uploadTNCMinuts(req, res);
 });
 
