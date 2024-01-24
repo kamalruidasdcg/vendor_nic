@@ -57,15 +57,32 @@ const download = async (req, res) => {
 }
 
 const tncdownload = async (req, res) => {
-    const { purchesing_doc_no } = req.query;
-    const fileName = `${purchesing_doc_no}.pdf`
-    const downloadPath = path.join(__dirname, "..", "..","uploads", "tncminutes",fileName);
-    console.log(downloadPath);
-    res.download((downloadPath), (err) => {
-        if (err)
-            resSend(res, false, 404, "file not found", err, null)
 
-    });
+    try {
+
+        const tokenData = { ...req.tokenData };
+
+        if (tokenData.department_id == 3 || tokenData.department_id == 3) {
+
+            const { purchesing_doc_no } = req.query;
+            const fileName = `${purchesing_doc_no}.pdf`
+            const downloadPath = path.join(__dirname, "..", "..", "uploads", "tncminutes", fileName);
+            res.download((downloadPath), (err) => {
+                if (err)
+                    resSend(res, false, 404, "file not found", err, null)
+
+            });
+        } else {
+
+            resSend(res, false, 401, "You dont have access", null, null);
+        }
+    } catch (error) {
+
+        console.log("tncdownload api error", error);
+
+    }
+
+
 }
 
 
