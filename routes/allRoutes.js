@@ -172,7 +172,7 @@ router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 // router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
 //   sdbgController.submitSDBG(req, res);
 // });
-router.use(poPrefix + "/sdbg", paymentRoutes);
+// router.use(poPrefix + "/sdbg", paymentRoutes);
 
 // router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
 //   sdbgController.unlock(req, res);
