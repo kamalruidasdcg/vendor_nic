@@ -38,8 +38,6 @@ async function generateId() {
         // GENERATE NEXT SEQ ID
         const nextSeq = padNumberWithZeros(result[0]["zbtn_count"]);
 
-        console.log("nextSeq", nextSeq)
-
         id = `${formattedDate}${nextSeq}`;
         return id;
     } catch (error) {
