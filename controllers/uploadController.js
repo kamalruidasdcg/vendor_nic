@@ -60,17 +60,24 @@ const uploadTNCMinuts = async (req, res) => {
       created_at: getEpochTime(),
       purchasing_doc_no: req.body.purchasing_doc_no
     }
+    
 
-    console.log("payload", payload);
+    const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = ?`
 
+    const isExist= await query({ query: checkQuery, values: [req.body.purchasing_doc_no] });
+
+    console.log("isExist", isExist);
+    if(isExist && isExist[0].count > 0 ) {
+      return resSend(res, true, 200, "Already upload a file !!.", null, null);
+    }
+    
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
-
     const result = await query({ query: q, values: val });
-    console.log(result);
-
+    
+    
     if (result.affectedRows > 0)
       return resSend(res, true, 200, "file uploaded!", fileData, null);
-
+    
     resSend(res, false, 400, "Please upload a valid input", fileData, null);
 
   } else {
