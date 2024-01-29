@@ -6,17 +6,17 @@ const { INSPECTIONCALLLETTER } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
-const { drawingPayload } = require("../../services/po.services");
+const { inspectionCallLetterPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../../controllers/genralControlles");
 
 
-exports.inspectionCallLetter = async (req, res) => {
+const inspectionCallLetter = async (req, res) => {
 
-   // resSend(res, true, 200, "file upleeoaded!", req.body, null);
+    // resSend(res, true, 200, "file upleeoaded!", req.body, null);
     try {
 
-        const lastParam = req.path.split("/").pop();
+        // const lastParam = req.path.split("/").pop();
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
@@ -27,40 +27,46 @@ exports.inspectionCallLetter = async (req, res) => {
                 fileSize: req.file.size,
             };
 
-            const payload = { ...req.body, ...fileData };
+            const tokenData = { ...req.tokenData };
 
-            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED];
+            const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
 
-            if(!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id) {
+            const payload = {
+                ...req.body,
+                vendor_code: tokenData.vendor_code,
+                created_at: getEpochTime(),
+                created_by_id: tokenData.vendor_code,
+                updated_by: by,
+                ...fileData,
+            };
+            console.log("payload", payload);
+            if (!payload.purchasing_doc_no) {
 
                 // const directory = path.join(__dirname, '..', 'uploads', lastParam);
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null   , null);
+                return resSend(res, false, 400, "Please send valid payload", null, null);
 
             }
 
-            const result2 = await getIclData(payload.purchasing_doc_no, APPROVED);
 
-            if (result2 && result2?.length) {
-                return resSend(res, true, 200, `This inspection call letter aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, null, null);
-            }
+            // if (payload.status === PENDING) {
+            //     insertObj = inspectionCallLetterPayload(payload, PENDING);
+            // } else if (payload.status === RE_SUBMITTED) {
+            //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
+            // } else if (payload.status === APPROVED) {
+            //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
+            // }
+            // insertObj = inspectionCallLetterPayload(payload, PENDING);
 
-             let insertObj;
 
-            if (payload.status === PENDING) {
-                insertObj = drawingPayload(payload, PENDING);
-            } else if (payload.status === RE_SUBMITTED) {
-                // insertObj = drawingPayload(payload, RE_SUBMITTED);
-            } else if (payload.status === APPROVED) {
-                insertObj = drawingPayload(payload, APPROVED);
-            }
-            // insertObj = drawingPayload(payload, PENDING);
-
+            let insertObj = inspectionCallLetterPayload(payload);
+            
+            console.log("insertObj", insertObj);
             const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
-                resSend(res, true, 200, "file uploaded!", fileData, null);
+                resSend(res, true, 200, "Ispection call letter inserted successfully !", null, null);
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);
             }
@@ -77,21 +83,23 @@ exports.inspectionCallLetter = async (req, res) => {
     }
 }
 
-exports.List = async (req, res) => {
-    
-      req.query.$tableName = `inspection_call_letter`;
-      req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-      try {
-        getFilteredData(req, res);
-      } catch(err) {
-        console.log("data not fetched", err);
-      }
-    // resSend(res, true, 200, "oded!", req.query.dd, null);
-     
- }
+const List = async (req, res) => {
 
- const getIclData = async (purchasing_doc_no, drawingStatus) => {
+    req.query.$tableName = `inspection_call_letter`;
+    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    try {
+        getFilteredData(req, res);
+    } catch (err) {
+        console.log("data not fetched", err);
+    }
+    // resSend(res, true, 200, "oded!", req.query.dd, null);
+
+}
+
+const getIclData = async (purchasing_doc_no, drawingStatus) => {
     const isIclcknowledge = `SELECT purchasing_doc_no FROM ${INSPECTIONCALLLETTER} WHERE purchasing_doc_no = ? AND status = ?`;
     const acknowledgeResult = await query({ query: isIclcknowledge, values: [purchasing_doc_no, drawingStatus] });
     return acknowledgeResult;
 }
+
+module.exports = { inspectionCallLetter, List }
