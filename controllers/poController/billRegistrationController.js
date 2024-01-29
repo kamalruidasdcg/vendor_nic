@@ -52,7 +52,8 @@ async function generateId() {
  */
 
 function padNumberWithZeros(num) {
-    num += 1;
+    const startsWithNumber = 500;
+    num += 1 + startsWithNumber;
     return String(num).padStart(3, "0");
 }
 

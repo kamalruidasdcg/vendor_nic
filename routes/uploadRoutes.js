@@ -6,7 +6,7 @@ const { veifyAccessToken } = require("../services/jwt.services");
 
 router.post("/", upload.single("file"), uploadController.uploadImage);
 
-router.post("/tncminutes", [veifyAccessToken, uploadTNCMinuts.single("file")], (req, res) => {
+router.post("/tncminutes", [veifyAccessToken, uploadTNCMinuts.single("file")], (req, res, next) => {
     uploadController.uploadTNCMinuts(req, res);
 });
 
