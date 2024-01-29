@@ -114,6 +114,22 @@ const shippingDocumentsPayload = (payload, status) => {
 
     return payloadObj;
 }
+const inspectionCallLetterPayload = (payload) => {
+
+    const payloadObj = {
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "file_name": payload.fileName,
+        "file_path": payload.filePath,
+        "call_letter_file_type": payload.call_letter_file_type,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "updated_by": payload.updated_by,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "created_at":  payload.created_at,
+        "created_by_id": payload.created_by_id,
+    }
+
+    return payloadObj;
+}
 
 const poModifyData = (queryResult) => {
 
@@ -183,4 +199,4 @@ async function poDataModify(data) {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify }
+module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }

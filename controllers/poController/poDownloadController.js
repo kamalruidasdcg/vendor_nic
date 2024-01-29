@@ -61,17 +61,31 @@ const tncdownload = async (req, res) => {
     try {
 
         const tokenData = { ...req.tokenData };
+        const { purchesing_doc_no } = req.query;
+
+        if(!purchesing_doc_no) {
+            return resSend(res, false, 200, "You dont have access", null, null);
+        }
 
         if (tokenData.department_id == 3 || tokenData.department_id == 3) {
 
-            const { purchesing_doc_no } = req.query;
             const fileName = `${purchesing_doc_no}.pdf`
             const downloadPath = path.join(__dirname, "..", "..", "uploads", "tncminutes", fileName);
-            res.download((downloadPath), (err) => {
-                if (err)
-                    resSend(res, false, 404, "file not found", err, null)
+            const q = `SELECT file_name, file_path, file_type, purchasing_doc_no FROM tnc_minutes WHERE purchasing_doc_no = ? LIMIT 1`;
+            const result = await query({ query: q, values: [purchesing_doc_no] });
+            if (result.length) {
+                const response = [{ ...result[0], full_file_path: downloadPath }];
+                resSend(res, true, 200, "File fetched successfully", response, null);
+            } else {
+                resSend(res, true, 200, "No file found", [], null);
 
-            });
+            }
+
+            // res.download((downloadPath), (err) => {
+            //     if (err)
+            //         resSend(res, false, 404, "file not found", err, null)
+            // });
+
         } else {
 
             resSend(res, false, 401, "You dont have access", null, null);

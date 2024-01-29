@@ -7,7 +7,7 @@ const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
 const { FINANCE } = require("../../lib/depertmentMaster");
-const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
+const { PENDING, ACCEPTED, ASSIGNED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
@@ -193,7 +193,7 @@ const getSdbgEntry = async (req, res) => {
     }
     return resSend(res, true, 200, "Iok", req.query, null);
     const {poNo} = req.query;
-    
+
     // SELECT t1.* FROM sdbg_entry AS t1
     // LEFT JOIN 
     //          sdbg AS t2 
