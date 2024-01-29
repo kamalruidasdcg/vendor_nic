@@ -1,8 +1,9 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF } = require("../../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE } = require("../../lib/constant");
+const { ADD_DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
+const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../../services/po.services");
@@ -166,7 +167,7 @@ const download = async (req, res) => {
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
- 
+
     res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)
@@ -177,6 +178,7 @@ const download = async (req, res) => {
 
 const poList = async (req, res) => {
     const tokenData = req.tokenData;
+    console.log(tokenData);
     // return;
     try {
         let poQuery = "";
@@ -189,11 +191,20 @@ const poList = async (req, res) => {
 
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
-                    if (tokenData.internal_role_id === QAP_ASSIGNER) {
+                    if (tokenData.internal_role_id === ASSIGNER) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
 
-                    } else if (tokenData.internal_role_id === QAP_STAFF) {
+                    } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
+
+                    }
+                    break;
+                case USER_TYPE_GRSE_FINANCE:
+                    if (tokenData.internal_role_id === ASSIGNER) {
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
+
+                    } else if (tokenData.internal_role_id === STAFF) {
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${ACCEPTED}' AND assigned_to = ${tokenData.vendor_code}`;
 
                     }
                     break;
@@ -209,11 +220,19 @@ const poList = async (req, res) => {
         if (Query == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
-        const strVal = await queryArrayTOString(Query);
+        
+        let strVal;
+        try {
+            strVal = await queryArrayTOString(Query);
+            //console.log(strVal);
+        } catch(error) {
+            return resSend(res, false, 400, "Error in db query.", error, null);
+        }
+       
         if (!strVal || strVal == "") {
             return resSend(res, false, 400, "No PO found.", null, null);
         }
-        
+
         poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
 
         if (poQuery == "") {
@@ -223,10 +242,11 @@ const poList = async (req, res) => {
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
 
-       // if() {}
+        // if() {}
 
         // return;
-
+        // console.log("(((((((((((((((())))))))))))))))");
+        // console.log(poArr);
         //////////////////////////////////////////
         const resultArr = [];
 

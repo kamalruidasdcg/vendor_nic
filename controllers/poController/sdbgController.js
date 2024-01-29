@@ -183,22 +183,39 @@ const getSDBGData = async (getQuery, purchasing_doc_no, drawingStatus) => {
     return result;
 }
 
-const list = async (req, res) => {
+const getSdbgEntry = async (req, res) => {
 
-    req.query.$tableName = NEW_SDBG;
-
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    try {
-
-        if (!req.query.poNo) {
-            return resSend(res, false, 400, "Please send po number", null, null);
-        }
-
-        getFilteredData(req, res);
-    } catch (err) {
-        console.log("data not fetched", err);
-        resSend(res, false, 500, "Internal server error", null, null);
+    
+    const tokenData = { ...req.tokenData };
+    console.log(tokenData);
+    if(!req.query.poNo) {
+        return resSend(res, true, 200, "Please send PO Number.",null, null);
     }
+    return resSend(res, true, 200, "Iok", req.query, null);
+    const {poNo} = req.query;
+    
+    // SELECT t1.* FROM sdbg_entry AS t1
+    // LEFT JOIN 
+    //          sdbg AS t2 
+    //      ON 
+    //          t2.purchasing_doc_no= t1.purchasing_doc_no 
+             
+    //          WHERE t2.status = 'ACCEPTED' AND t2.assigned_to = 600201;
+
+    // req.query.$tableName = NEW_SDBG;
+
+    // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    // try {
+
+    //     if (!req.query.poNo) {
+    //         return resSend(res, false, 400, "Please send po number", null, null);
+    //     }
+
+    //     getFilteredData(req, res);
+    // } catch (err) {
+    //     console.log("data not fetched", err);
+    //     resSend(res, false, 500, "Internal server error", null, null);
+    // }
 
 }
 
@@ -482,4 +499,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, list, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }
+module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }
