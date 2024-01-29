@@ -60,7 +60,7 @@ const inspectionCallLetter = async (req, res) => {
 
 
             let insertObj = inspectionCallLetterPayload(payload);
-            
+
             console.log("insertObj", insertObj);
             const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
             const response = await query({ query: q, values: val });
@@ -86,11 +86,30 @@ const inspectionCallLetter = async (req, res) => {
 const List = async (req, res) => {
 
     req.query.$tableName = `inspection_call_letter`;
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.purchasing_doc_no}}`;
+
     try {
-        getFilteredData(req, res);
+
+
+        if (!req.query.purchasing_doc_no) {
+            return resSend(res, false, 400, "Please send purchasing_doc_no", null, "");
+        }
+
+        const insp_call_query =
+            `SELECT call_ltr.*,
+                    file_type.name AS call_letter_file_name
+            FROM   inspection_call_letter AS call_ltr
+                   LEFT JOIN inspection_call_letter_file_type AS file_type
+                          ON file_type.id = call_ltr.call_letter_file_type
+            WHERE  ( 1 = 1
+                     AND purchasing_doc_no = ? );`;
+        const result = await query({ query: insp_call_query, values: [req.query.purchasing_doc_no] })
+
+        resSend(res, true, 200, "Inspection call letter fetched", result, "");
+
     } catch (err) {
         console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, "");
     }
     // resSend(res, true, 200, "oded!", req.query.dd, null);
 
