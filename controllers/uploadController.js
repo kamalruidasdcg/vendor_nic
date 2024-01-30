@@ -48,16 +48,14 @@ const uploadTNCMinuts = async (req, res) => {
   let fileData = {};
   const tokenData = { ...req.tokenData };
 
-  console.log("tokenData", tokenData);
-
   if (!req.body.purchasing_doc_no) {
     return resSend(res, true, 200, "Please send purchasing_doc_no !!.", null, null);
   }
-  const check = await isDealingOfficers(req.body.purchasing_doc_no, tokenData.vendor_code);
-  console.log("check", check)
-  if (!check) {
-    return resSend(res, false, 401, "You dont have access!!.", null, null);
-  }
+  // const check = await isDealingOfficers(req.body.purchasing_doc_no, tokenData.vendor_code);
+  // console.log("check", check)
+  // if (!check) {
+  //   return resSend(res, false, 401, "You dont have access!!.", null, null);
+  // }
 
   if (req.file) {
     fileData = {
@@ -83,7 +81,6 @@ const uploadTNCMinuts = async (req, res) => {
       values: [req.body.purchasing_doc_no],
     });
 
-    console.log("isExist", isExist);
     if (isExist && isExist[0].count > 0) {
       return resSend(res, true, 200, "Already upload a file !!.", null, null);
     }
@@ -104,7 +101,7 @@ const uploadTNCMinuts = async (req, res) => {
 async function isDealingOfficers(purchasing_doc_no, loginId) {
   const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = ?  AND ERNAM = ?;`
   const result = await query({ query: q, values: [purchasing_doc_no, loginId] });
-  console.log("result", result)
+
   if (result && result.length) {
     return result[0]["count"] > 0;
   }
