@@ -348,7 +348,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         if ((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "")) {
             return resSend(res, true, 200, "please send a valid p4ayload!", null, null);
         }
-        if (tokenData.internal_role_id == 1 && (!obj.assigned_to || obj.assigned_to == "")) {
+        if (tokenData.internal_role_id == 1 && obj.status == 'ACCEPTED' && (!obj.assigned_to || obj.assigned_to == "")) {
             return resSend(res, true, 200, "please send a assigned_to!", null, null);
         }
 
