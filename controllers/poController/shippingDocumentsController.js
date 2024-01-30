@@ -102,8 +102,8 @@ const List = async (req, res) => {
     try {
 
 
-        if (!req.query.purchasing_doc_no) {
-            return resSend(res, false, 400, "Please send purchasing_doc_no", null, "");
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send poNo", null, "");
         }
 
         const insp_call_query =
@@ -111,7 +111,7 @@ const List = async (req, res) => {
                 FROM   shipping_documents AS shipping_documents
             WHERE  ( 1 = 1
                      AND purchasing_doc_no = ? );`;
-        const result = await query({ query: insp_call_query, values: [req.query.purchasing_doc_no] })
+        const result = await query({ query: insp_call_query, values: [req.query.poNo] })
 
         resSend(res, true, 200, "Inspection call letter fetched", result, "");
 
