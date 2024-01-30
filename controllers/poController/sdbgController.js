@@ -4,7 +4,8 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE } = require("../../lib/constant");
+
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
 const { FINANCE } = require("../../lib/depertmentMaster");
 const { PENDING, ACCEPTED, ASSIGNED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
@@ -20,7 +21,7 @@ const { Console } = require('console');
 
 // add new post
 const submitSDBG = async (req, res) => {
- // return resSend(res, false, 200, "No data inserted", req.body, null);
+    // return resSend(res, false, 200, "No data inserted", req.body, null);
     try {
 
 
@@ -30,22 +31,22 @@ const submitSDBG = async (req, res) => {
             fileData = {
                 file_name: req.file.filename,
                 file_path: req.file.path,
-               // fileType: req.file.mimetype,
+                // fileType: req.file.mimetype,
                 //fileSize: req.file.size,
             };
             const tokenData = { ...req.tokenData };
             //console.log(tokenData);
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-            if(tokenData.user_type != USER_TYPE_VENDOR) {
+            if (tokenData.user_type != USER_TYPE_VENDOR) {
                 return resSend(res, false, 200, "Please please login as vendor for SDBG subminission.", null, null);
             }
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
-            
+
             payload.created_by_id = tokenData.vendor_code;
-                // console.log("payload..");
-                // console.log(payload);
-                //return;
+            // console.log("payload..");
+            // console.log(payload);
+            //return;
             const verifyStatus = [PENDING, RE_SUBMITTED];
 
             if ((!payload.purchasing_doc_no || !payload.remarks) && verifyStatus.includes(payload.status)) {
@@ -60,7 +61,7 @@ const submitSDBG = async (req, res) => {
             const result2 = await getSDBGData(GET_LATEST_SDBG, payload.purchasing_doc_no, ACCEPTED);
             // console.log("result2..");
             // console.log(result2);
-           // return;
+            // return;
             if (result2[0].count_po > 0) {
                 // const data = [{
                 //     purchasing_doc_no: result2[0]?.purchasing_doc_no,
@@ -157,7 +158,7 @@ const submitSDBG = async (req, res) => {
 
                 // }
 
-               // await handelEmail(payload);
+                // await handelEmail(payload);
 
 
                 resSend(res, true, 200, "file uploaded!", fileData, null);
@@ -185,56 +186,66 @@ const getSDBGData = async (getQuery, purchasing_doc_no, drawingStatus) => {
 
 const getSdbgEntry = async (req, res) => {
 
-    
-    const tokenData = { ...req.tokenData };
-    console.log(tokenData);
-    if(!req.query.poNo) {
-        return resSend(res, true, 200, "Please send PO Number.",null, null);
+    try {
+
+        const tokenData = { ...req.tokenData };
+
+        if (!req.query.poNo) {
+            return resSend(res, true, 200, "Please send PO Number.", null, null);
+        }
+        const { poNo } = req.query;
+        let Query = `SELECT t1.* FROM sdbg_entry AS t1
+                            LEFT JOIN 
+                                    sdbg AS t2 
+                                ON 
+                            t2.purchasing_doc_no= t1.purchasing_doc_no 
+                        WHERE t1.purchasing_doc_no = '${poNo}'`;
+
+        const dealingOfficer = await checkIsDealingOfficer(poNo, tokenData.vendor_code);
+
+        let sufix;
+        if (tokenData.department_id === USER_TYPE_GRSE_FINANCE && tokenData.internal_role_id === ASSIGNER) {
+            sufix = ` AND t2.status = '${FORWARD_TO_FINANCE}'`;
+            Query = Query + sufix;
+        } else if (tokenData.department_id === USER_TYPE_GRSE_FINANCE && tokenData.internal_role_id === STAFF) {
+            sufix = ` AND t2.status = '${ACCEPTED}' AND t2.assigned_to = '${tokenData.vendor_code}'`;
+            Query = Query + sufix;
+        } else if (dealingOfficer === 1) {
+            Query = Query;
+        } else {
+            return resSend(res, false, 200, "You are not authorized.", null, null);
+        }
+
+        // console.log("#$%^&*()_%^&");
+        // console.log(Query);
+        const result = await query({ query: Query, values: [] });
+        // console.log(result);
+
+        return resSend(res, false, 200, "data fetch successfully.", result[0], null);
+    } catch (error) {
+        return resSend(res, false, 400, "Data not insert!!", error, null);
     }
-    return resSend(res, true, 200, "Iok", req.query, null);
-    const {poNo} = req.query;
+}
+const checkIsDealingOfficer = async (purchasing_doc_no, vendor_code) => {
 
-    // SELECT t1.* FROM sdbg_entry AS t1
-    // LEFT JOIN 
-    //          sdbg AS t2 
-    //      ON 
-    //          t2.purchasing_doc_no= t1.purchasing_doc_no 
-             
-    //          WHERE t2.status = 'ACCEPTED' AND t2.assigned_to = 600201;
-
-    // req.query.$tableName = NEW_SDBG;
-
-    // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    // try {
-
-    //     if (!req.query.poNo) {
-    //         return resSend(res, false, 400, "Please send po number", null, null);
-    //     }
-
-    //     getFilteredData(req, res);
-    // } catch (err) {
-    //     console.log("data not fetched", err);
-    //     resSend(res, false, 500, "Internal server error", null, null);
-    // }
+    const getQuery = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = ? AND ERNAM = ?`;
+    const result = await query({ query: getQuery, values: [purchasing_doc_no, vendor_code] });
+    return result[0].man_no;
 
 }
 
 const sdbgSubmitByDealingOfficer = async (req, res) => {
-    const tokenData = { ...req.tokenData };
-    // console.log("tokenData7ujky6j");
-    // console.log(tokenData);
-    // return resSend(res, false, 400, "Please send po number", req.body, null);
+
     try {
-        //const tokenData = { ...req.tokenData };
+        const tokenData = { ...req.tokenData };
 
         const { ...obj } = req.body;
         if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.assigned_to || obj.assigned_to == "") {
             return resSend(res, false, 400, "INVALID PAYLOAD", null, null);
         }
+        const dealingOfficer = await checkIsDealingOfficer(obj.purchasing_doc_no, tokenData.vendor_code);
 
-        const getQuery = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = ? AND ERNAM = ?`;
-        const result = await query({ query: getQuery, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
-        if (result[0].man_no === 0) {
+        if (dealingOfficer === 0) {
             return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
         }
         // console.log(result);
@@ -316,10 +327,10 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
 const sdbgUpdateByFinance = async (req, res) => {
     // payload
-        // purchasing_doc_no, remarks, status, assigned_to, 
+    // purchasing_doc_no, remarks, status, assigned_to, 
     const tokenData = { ...req.tokenData };
     const { ...obj } = req.body;
-   // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
+    // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
     try {
         if (tokenData.department_id != FINANCE) {
             resSend(res, true, 200, "please login as finance!", null, null);
@@ -329,10 +340,10 @@ const sdbgUpdateByFinance = async (req, res) => {
         if (result[0].po_count === 0) {
             return resSend(res, true, 200, "This po is not forward to finance.Please contact with dealing officer.", null, null);
         }
-        if((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "")) {
-           return resSend(res, true, 200, "please send a valid p4ayload!", null, null);
+        if ((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "")) {
+            return resSend(res, true, 200, "please send a valid p4ayload!", null, null);
         }
-        if(tokenData.internal_role_id == 1 && (!obj.assigned_to || obj.assigned_to == "")) {
+        if (tokenData.internal_role_id == 1 && (!obj.assigned_to || obj.assigned_to == "")) {
             return resSend(res, true, 200, "please send a assigned_to!", null, null);
         }
 
@@ -356,7 +367,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         }
         let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
         let sdbgQuery = await query({ query: insertsdbg_q["q"], values: insertsdbg_q["val"] });
-        
+
         resSend(res, false, 200, "done!", sdbgQuery, null);
 
     } catch (error) {
@@ -369,8 +380,8 @@ const assigneeList = async (req, res) => {
     console.log(req.tokenData);
     const tokenData = { ...req.tokenData };
 
-       
-    if(tokenData.department_id != FINANCE || tokenData.internal_role_id != 1) {
+
+    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != 1) {
         return resSend(res, true, 200, "Please Login as Finance Assigner.", null, null);
     }
 
@@ -388,7 +399,7 @@ const assigneeList = async (req, res) => {
 
 
 
-   return resSend(res, true, 200, "SDBG assigneeList fetch successfully!", result, null);
+    return resSend(res, true, 200, "SDBG assigneeList fetch successfully!", result, null);
     // req.query.$tableName = NEW_SDBG;
 
     // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
@@ -499,4 +510,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }
+module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance, checkIsDealingOfficer }
