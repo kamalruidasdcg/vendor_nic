@@ -103,13 +103,12 @@ const shippingDocumentsPayload = (payload, status) => {
         "purchasing_doc_no": payload.purchasing_doc_no,
         "file_name": payload.fileName,
         "file_path": payload.filePath,
+        "shipping_doc_file_type": payload.shipping_doc_file_type,
         "remarks": payload.remarks ? payload.remarks : null,
-        "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
-        "created_by_name": payload.action_by_name,
-        "created_by_id": payload.action_by_id,
+        "created_at":  payload.created_at,
+        "created_by_id": payload.created_by_id,
     }
 
     return payloadObj;
