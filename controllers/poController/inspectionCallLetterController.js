@@ -96,13 +96,10 @@ const List = async (req, res) => {
         }
 
         const insp_call_query =
-            `SELECT call_ltr.*,
-                    file_type.name AS call_letter_file_name
+            `SELECT call_ltr.*
             FROM   inspection_call_letter AS call_ltr
-                   LEFT JOIN inspection_call_letter_file_type AS file_type
-                          ON file_type.id = call_ltr.call_letter_file_type
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? );`;
+                     AND purchasing_doc_no = ? )`;
         const result = await query({ query: insp_call_query, values: [req.query.purchasing_doc_no] })
 
         resSend(res, true, 200, "Inspection call letter fetched", result, "");
