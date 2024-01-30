@@ -3,6 +3,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
+const { QAP, RIC } = require("../../lib/depertmentMaster");
 
 
 
@@ -67,7 +68,7 @@ const tncdownload = async (req, res) => {
             return resSend(res, false, 200, "You dont have access", null, null);
         }
 
-        if (tokenData.department_id == 3 || tokenData.department_id == 3) {
+        if (tokenData.department_id == QAP || tokenData.department_id == RIC) {
 
             const fileName = `${purchesing_doc_no}.pdf`
             const downloadPath = path.join(__dirname, "..", "..", "uploads", "tncminutes", fileName);
