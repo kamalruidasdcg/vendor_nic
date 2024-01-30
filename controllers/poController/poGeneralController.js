@@ -15,6 +15,7 @@ const details = async (req, res) => {
     try {
 
         const queryParams = req.query;
+        const tokenData = { ...req.tokenData};
 
         if (!queryParams.id || queryParams.id === '0') {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
@@ -100,6 +101,7 @@ const details = async (req, res) => {
         result[0]["poType"] = poType
         result[0]["materialResult"] = materialResult || [];
         result[0]["timeline"] = timeline || [];
+        result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
 
@@ -108,6 +110,12 @@ const details = async (req, res) => {
         return resSend(res, false, 500, error.toString(), [], null);
     }
 };
+
+
+function isDO(po, user_id) {
+    console.log(po,);
+    return po.ERNAM == user_id;
+}
 
 
 function poTypeCheck(materialData) {
@@ -350,13 +358,13 @@ const poList = async (req, res) => {
             const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
             const poType = isMaterialTypePO === true ? "service" : "material";
 
-            const i = poArr.findIndex((el) => el.poNb == key);
-            let isDo = false;
-            if (i >= 0) {
-                isDo = poArr[i].po_creator == tokenData.vendor_code;
-            }
+            // const i = poArr.findIndex((el) => el.poNb == key);
+            // let isDo = false;
+            // if (i >= 0) {
+            //     isDo = poArr[i].po_creator == tokenData.vendor_code;
+            // }
 
-            result.push({ poNb: key, poType, isDo })
+            result.push({ poNb: key, poType })
         })
 
 
