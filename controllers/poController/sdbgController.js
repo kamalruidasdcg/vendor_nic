@@ -7,7 +7,7 @@ const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
 const { FINANCE } = require("../../lib/depertmentMaster");
-const { PENDING, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
+const { PENDING, ACCEPTED, ASSIGNED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
@@ -183,22 +183,39 @@ const getSDBGData = async (getQuery, purchasing_doc_no, drawingStatus) => {
     return result;
 }
 
-const list = async (req, res) => {
+const getSdbgEntry = async (req, res) => {
 
-    req.query.$tableName = NEW_SDBG;
-
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    try {
-
-        if (!req.query.poNo) {
-            return resSend(res, false, 400, "Please send po number", null, null);
-        }
-
-        getFilteredData(req, res);
-    } catch (err) {
-        console.log("data not fetched", err);
-        resSend(res, false, 500, "Internal server error", null, null);
+    
+    const tokenData = { ...req.tokenData };
+    console.log(tokenData);
+    if(!req.query.poNo) {
+        return resSend(res, true, 200, "Please send PO Number.",null, null);
     }
+    return resSend(res, true, 200, "Iok", req.query, null);
+    const {poNo} = req.query;
+
+    // SELECT t1.* FROM sdbg_entry AS t1
+    // LEFT JOIN 
+    //          sdbg AS t2 
+    //      ON 
+    //          t2.purchasing_doc_no= t1.purchasing_doc_no 
+             
+    //          WHERE t2.status = 'ACCEPTED' AND t2.assigned_to = 600201;
+
+    // req.query.$tableName = NEW_SDBG;
+
+    // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    // try {
+
+    //     if (!req.query.poNo) {
+    //         return resSend(res, false, 400, "Please send po number", null, null);
+    //     }
+
+    //     getFilteredData(req, res);
+    // } catch (err) {
+    //     console.log("data not fetched", err);
+    //     resSend(res, false, 500, "Internal server error", null, null);
+    // }
 
 }
 
@@ -211,11 +228,8 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         //const tokenData = { ...req.tokenData };
 
         const { ...obj } = req.body;
-        if (!obj || typeof obj !== 'object' || !Object.keys(obj).length) {
-            return responseSend(res, false, 400, "INVALID PAYLOAD", null, null);
-        }
-        if (!obj.purchasing_doc_no || obj.purchasing_doc_no == "") {
-            return resSend(res, false, 200, "Please send PO number.", null, null);
+        if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.assigned_to || obj.assigned_to == "") {
+            return resSend(res, false, 400, "INVALID PAYLOAD", null, null);
         }
 
         const getQuery = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = ? AND ERNAM = ?`;
@@ -275,7 +289,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             remarks: obj.remarks,
             status: "FORWARD_TO_FINANCE",
             assigned_from: tokenData.vendor_code,
-            assigned_to: "FINANCE",
+            assigned_to: obj.assigned_to,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
             created_by_id: tokenData.vendor_code,
@@ -310,13 +324,16 @@ const sdbgUpdateByFinance = async (req, res) => {
         if (tokenData.department_id != FINANCE) {
             resSend(res, true, 200, "please login as finance!", null, null);
         }
-         const getQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+        const getQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
         const result = await query({ query: getQuery, values: [obj.purchasing_doc_no, FORWARD_TO_FINANCE] });
         if (result[0].po_count === 0) {
             return resSend(res, true, 200, "This po is not forward to finance.Please contact with dealing officer.", null, null);
         }
-        if((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "") || (!obj.assigned_to || obj.assigned_to == "")) {
-           return resSend(res, true, 200, "please send a valid payload!", null, null);
+        if((!obj.purchasing_doc_no || obj.purchasing_doc_no == "") || (!obj.remarks || obj.remarks == "") || (!obj.status || obj.status == "")) {
+           return resSend(res, true, 200, "please send a valid p4ayload!", null, null);
+        }
+        if(tokenData.internal_role_id == 1 && (!obj.assigned_to || obj.assigned_to == "")) {
+            return resSend(res, true, 200, "please send a assigned_to!", null, null);
         }
 
         const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ? LIMIT 1`;
@@ -330,8 +347,8 @@ const sdbgUpdateByFinance = async (req, res) => {
             ...sdbgDataResult,
             remarks: obj.remarks,
             status: obj.status,
-            assigned_from: tokenData.vendor_code,
-            assigned_to: obj.assigned_to,
+            assigned_from: (tokenData.internal_role_id == 1) ? tokenData.vendor_code : null,
+            assigned_to: (tokenData.internal_role_id == 1) ? obj.assigned_to : null,
             created_at: getEpochTime(),
             created_by_name: "finance dept",
             created_by_id: tokenData.vendor_code,
@@ -349,21 +366,43 @@ const sdbgUpdateByFinance = async (req, res) => {
 }
 
 const assigneeList = async (req, res) => {
+    console.log(req.tokenData);
+    const tokenData = { ...req.tokenData };
 
-    req.query.$tableName = NEW_SDBG;
-
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-    try {
-
-        if (!req.query.poNo) {
-            return resSend(res, false, 400, "Please send po number", null, null);
-        }
-
-        getFilteredData(req, res);
-    } catch (err) {
-        console.log("data not fetched", err);
-        resSend(res, false, 500, "Internal server error", null, null);
+       
+    if(tokenData.department_id != FINANCE || tokenData.internal_role_id != 1) {
+        return resSend(res, true, 200, "Please Login as Finance Assigner.", null, null);
     }
+
+    const sdbgQuery = `SELECT t1.*, t2.CNAME, t3.USRID_LONG FROM emp_department_list AS t1
+        LEFT JOIN 
+            pa0002 AS t2 
+        ON 
+            t1.emp_id= t2.PERNR 
+        LEFT JOIN 
+            pa0105 AS t3 
+        ON 
+            (t2.PERNR = t3.PERNR AND t3.SUBTY = '0030') WHERE t1.dept_id = ? AND t1.internal_role_id = ?`;
+
+    const result = await query({ query: sdbgQuery, values: [FINANCE, 2] });
+
+
+
+   return resSend(res, true, 200, "SDBG assigneeList fetch successfully!", result, null);
+    // req.query.$tableName = NEW_SDBG;
+
+    // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    // try {
+
+    //     if (!req.query.poNo) {
+    //         return resSend(res, false, 400, "Please send po number", null, null);
+    //     }
+
+    //     getFilteredData(req, res);
+    // } catch (err) {
+    //     console.log("data not fetched", err);
+    //     resSend(res, false, 500, "Internal server error", null, null);
+    // }
 
 }
 
@@ -460,4 +499,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, list, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }
+module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance }

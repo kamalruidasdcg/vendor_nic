@@ -13,14 +13,12 @@ const sdbgPayload = (payload, status) => {
     const payloadObj = {
         // "id": 1, // auto incremant id
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName,
-        "file_path": payload.filePath,
+        "file_name": payload.fileName ? payload.fileName : null,
+        "file_path": payload.filePath ? payload.filePath : null,
         "remarks": payload.remarks ? payload.remarks : null,
         "status": status,
         "updated_by": payload.updated_by,
-        "bank_name": payload.bank_name ? payload.bank_name : null,
-        "transaction_id": payload.transaction_id ? payload.transaction_id : null,
-        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "vendor_code": payload.vendor_code,
         "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,

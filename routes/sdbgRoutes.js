@@ -22,10 +22,10 @@ router.post("/unlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
   sdbgController.unlock(req, res);
 });
 
-router.get("/list", [], (req, res) => {
-  sdbgController.list(req, res);
+router.get("/getSdbgEntry/", [veifyAccessToken], (req, res) => {
+  sdbgController.getSdbgEntry(req, res);
 });
-router.get("/assigneeList", [], (req, res) => {
+router.get("/assigneeList", [veifyAccessToken], (req, res) => {
   sdbgController.assigneeList(req, res);
 });
 
