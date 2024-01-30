@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE } = require("../../lib/constant");
+const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE } = require("../../lib/constant");
 
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
 const { FINANCE } = require("../../lib/depertmentMaster");
@@ -216,10 +216,7 @@ const getSdbgEntry = async (req, res) => {
             return resSend(res, false, 200, "You are not authorized.", null, null);
         }
 
-        // console.log("#$%^&*()_%^&");
-        // console.log(Query);
         const result = await query({ query: Query, values: [] });
-        // console.log(result);
 
         return resSend(res, false, 200, "data fetch successfully.", result[0], null);
     } catch (error) {
@@ -248,7 +245,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         if (dealingOfficer === 0) {
             return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
         }
-        // console.log(result);
+        
         const insertPayload = {
             purchasing_doc_no: obj.purchasing_doc_no,
             bank_name: obj.bank_name ? obj.bank_name : null,
@@ -280,7 +277,15 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             created_by: tokenData.vendor_code,
         };
         //console.log(insertPayload);
-        let { q, val } = generateQuery(INSERT, SDBG_ENTRY, insertPayload);
+        let dbQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = ?`;
+        const dbResult = await query({ query: dbQuery, values: [obj.purchasing_doc_no] });
+
+        // console.log("@#$%^&*(*&^");
+        // console.log(dbResult[0].po_count);
+       
+        const whereCondition = `purchasing_doc_no = "${obj.purchasing_doc_no}"`
+
+        let { q, val } = (dbResult[0].po_count > 0) ? generateQuery(UPDATE, SDBG_ENTRY, insertPayload, whereCondition) : generateQuery(INSERT, SDBG_ENTRY, insertPayload);
 
         let sdbgEntryQuery = await query({ query: q, values: val });
 
