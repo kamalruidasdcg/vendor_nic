@@ -208,8 +208,8 @@ const poList = async (req, res) => {
                     break;
 
                 default:
-                    console.log("other1");
-                    break;
+                    Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
+                    console.log("other1", Query);
 
             }
 
@@ -221,20 +221,24 @@ const poList = async (req, res) => {
         let strVal;
         try {
             strVal = await queryArrayTOString(Query, tokenData.user_type);
-        } catch(error) {
+        } catch (error) {
             return resSend(res, false, 400, "Error in db query.", error, null);
         }
-       
+
         if (!strVal || strVal == "") {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+
+        console.log("kkk", poQuery)
 
         if (poQuery == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
         const poArr = await query({ query: poQuery, values: [] });
+
+        console.log("poArr", poArr);
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
         //////////////////////////////////////////
@@ -336,14 +340,27 @@ const poList = async (req, res) => {
             })
         );
 
+        console.log("poArr---", poArr);
         const modifiedPOData = await poDataModify(poArr);
+        console.log("modifiedPOData", modifiedPOData);
 
         const result = [];
         Object.keys(modifiedPOData).forEach((key) => {
+
             const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
             const poType = isMaterialTypePO === true ? "service" : "material";
-            result.push({ poNb: key, poType })
+
+            const i = poArr.findIndex((el) => el.poNb == key);
+            let isDo = false;
+            if (i >= 0) {
+                isDo = poArr[i].po_creator == tokenData.vendor_code;
+            }
+
+            result.push({ poNb: key, poType, isDo })
         })
+
+
+        // ADDING IS isDO ( deling officers of the po);
 
 
 
@@ -353,6 +370,7 @@ const poList = async (req, res) => {
                 let obj = {};
                 obj.poNumber = item.poNb;
                 obj.poType = item.poType;
+                obj.isDo = item.isDo;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
