@@ -99,8 +99,8 @@ const shippingDocumentsPayload = (payload, status) => {
 
     const payloadObj = {
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName,
-        "file_path": payload.filePath,
+        "file_name": payload.fileName ? payload.fileName: null,
+        "file_path": payload.filePath ? payload.filePath : null,
         "file_type_id": payload.file_type_id,
         "file_type_name": payload.file_type_name,
         "remarks": payload.remarks ? payload.remarks : null,
@@ -116,8 +116,8 @@ const inspectionCallLetterPayload = (payload) => {
 
     const payloadObj = {
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName,
-        "file_path": payload.filePath,
+        "file_name": payload.fileName ? payload.fileName: null,
+        "file_path": payload.filePath ? payload.filePath : null,
         "file_type_id": payload.file_type_id,
         "file_type_name": payload.file_type_name,
         "remarks": payload.remarks ? payload.remarks : null,

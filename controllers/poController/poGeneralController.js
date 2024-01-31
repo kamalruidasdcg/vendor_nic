@@ -15,6 +15,7 @@ const details = async (req, res) => {
     try {
 
         const queryParams = req.query;
+        const tokenData = { ...req.tokenData};
 
         if (!queryParams.id || queryParams.id === '0') {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
@@ -100,6 +101,7 @@ const details = async (req, res) => {
         result[0]["poType"] = poType
         result[0]["materialResult"] = materialResult || [];
         result[0]["timeline"] = timeline || [];
+        result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
 
@@ -108,6 +110,12 @@ const details = async (req, res) => {
         return resSend(res, false, 500, error.toString(), [], null);
     }
 };
+
+
+function isDO(po, user_id) {
+    console.log(po,);
+    return po.ERNAM == user_id;
+}
 
 
 function poTypeCheck(materialData) {
@@ -178,14 +186,12 @@ const download = async (req, res) => {
 
 const poList = async (req, res) => {
     const tokenData = req.tokenData;
-    console.log(tokenData);
-    // return;
     try {
         let poQuery = "";
         let Query = "";
 
         if (tokenData.user_type === USER_TYPE_VENDOR) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE vendor_code = ${tokenData.vendor_code}`;
+            Query = `SELECT DISTINCT(EBELN) from ekko WHERE LIFNR = "${tokenData.vendor_code}"`;
         } else {
 
 
@@ -210,43 +216,39 @@ const poList = async (req, res) => {
                     break;
 
                 default:
-                    console.log("other1");
-                    break;
+                    Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
+                    console.log("other1", Query);
 
             }
 
         }
 
-        if (Query == "") {
+        if (!Query) {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
-        
         let strVal;
         try {
-            strVal = await queryArrayTOString(Query);
-            //console.log(strVal);
-        } catch(error) {
+            strVal = await queryArrayTOString(Query, tokenData.user_type);
+        } catch (error) {
             return resSend(res, false, 400, "Error in db query.", error, null);
         }
-       
+
         if (!strVal || strVal == "") {
-            return resSend(res, false, 400, "No PO found.", null, null);
+            return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+
+        console.log("kkk", poQuery)
 
         if (poQuery == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
         const poArr = await query({ query: poQuery, values: [] });
 
+        console.log("poArr", poArr);
+
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
-
-        // if() {}
-
-        // return;
-        // console.log("(((((((((((((((())))))))))))))))");
-        // console.log(poArr);
         //////////////////////////////////////////
         const resultArr = [];
 
@@ -261,10 +263,10 @@ const poList = async (req, res) => {
 
 
         // SDVG
-        let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
+        let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
         let SDVGArr = await query({ query: SDVGQuery, values: [] });
 
-        let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from new_sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+        let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let SDVGAsdArr = await query({ query: SDVGAsdQuery, values: [] });
 
         let SDVGCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1`;
@@ -346,14 +348,27 @@ const poList = async (req, res) => {
             })
         );
 
+        console.log("poArr---", poArr);
         const modifiedPOData = await poDataModify(poArr);
+        console.log("modifiedPOData", modifiedPOData);
 
         const result = [];
         Object.keys(modifiedPOData).forEach((key) => {
+
             const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
             const poType = isMaterialTypePO === true ? "service" : "material";
+
+            // const i = poArr.findIndex((el) => el.poNb == key);
+            // let isDo = false;
+            // if (i >= 0) {
+            //     isDo = poArr[i].po_creator == tokenData.vendor_code;
+            // }
+
             result.push({ poNb: key, poType })
         })
+
+
+        // ADDING IS isDO ( deling officers of the po);
 
 
 
@@ -363,6 +378,7 @@ const poList = async (req, res) => {
                 let obj = {};
                 obj.poNumber = item.poNb;
                 obj.poType = item.poType;
+                obj.isDo = item.isDo;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
