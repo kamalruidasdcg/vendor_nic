@@ -198,4 +198,4 @@ async function poDataModify(data) {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify }
+module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
