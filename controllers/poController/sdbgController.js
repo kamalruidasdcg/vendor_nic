@@ -235,7 +235,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
     try {
         const tokenData = { ...req.tokenData };
-
+ 
         const { ...obj } = req.body;
         if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.assigned_to || obj.assigned_to == "") {
             return resSend(res, false, 400, "INVALID PAYLOAD", null, null);
@@ -291,7 +291,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
         if (sdbgEntryQuery.error) {
             console.log(sdbgEntryQuery.error);
-            resSend(res, false, 201, "Data not 1insert!!", sdbgEntryQuery.error, null);
+            return resSend(res, false, 201, "Data not 1insert!!", sdbgEntryQuery.error, null);
         }
 
         const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ?`;
