@@ -194,7 +194,7 @@ const poList = async (req, res) => {
             Query = `SELECT DISTINCT(EBELN) from ekko WHERE LIFNR = "${tokenData.vendor_code}"`;
         } else {
 
-
+ 
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
