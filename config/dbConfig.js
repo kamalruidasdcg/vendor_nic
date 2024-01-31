@@ -4,27 +4,23 @@ const mysql = require("mysql2/promise");
 
 require("dotenv").config();
 
-
-
 const connObj = {
   host: process.env.DB_HOST_ADDRESS,
   port: process.env.DB_CONN_PORT,
   user: process.env.DB_USER,
-  password: "",
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   multipleStatements: true,
-}
+};
 
 // create the connection to database
 
 // const promiseConnection =  mysql.createConnection(connObj);
 
-
 // module.exports = connection;
 
-
 /**
- * 
+ *
  * @param {Object} { query, values }
  * @returns result Object
  */
@@ -42,10 +38,10 @@ async function query({ query, values = [] }) {
 }
 
 /**
- * DB CONNECTION 
+ * DB CONNECTION
  * **** MUST HAVE TO END CONNECTION *****
  * connection.end();
- * @returns 
+ * @returns
  */
 
 async function connection() {
@@ -57,8 +53,5 @@ async function connection() {
     return { error };
   }
 }
-
-
-
 
 module.exports = { query, connection };
