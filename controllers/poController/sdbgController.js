@@ -178,10 +178,23 @@ const submitSDBG = async (req, res) => {
 }
 
 
-const getSDBGData = async (getQuery, purchasing_doc_no, drawingStatus) => {
-    // const Q = `SELECT purchasing_doc_no FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-    const result = await query({ query: getQuery, values: [purchasing_doc_no, drawingStatus] });
-    return result;
+const getSDBGData = async (req, res) => {
+    try {
+        const tokenData = { ...req.tokenData };
+ 
+    if (!req.query.poNo) {
+        return resSend(res, true, 200, "Please send PO Number.", null, null);
+    }
+    
+    const Q = `SELECT * FROM ${SDBG} WHERE purchasing_doc_no = ? AND vendor_code = ?`;
+    const result = await query({ query: Q, values: [req.query.poNo, tokenData.vendor_code] });
+
+        return resSend(res, true, 200, "data fetch successfully.", result, null);
+    
+    } catch (error) {
+        return resSend(res, false, 400, "Data not fetch!!", error, null);
+    }
+    
 }
 
 const getSdbgEntry = async (req, res) => {
@@ -515,4 +528,4 @@ async function handelEmail(payload) {
 
 
 
-module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance, checkIsDealingOfficer }
+module.exports = { submitSDBG, getSdbgEntry, unlock, assigneeList, sdbgSubmitByDealingOfficer, sdbgUpdateByFinance, checkIsDealingOfficer, getSDBGData }
