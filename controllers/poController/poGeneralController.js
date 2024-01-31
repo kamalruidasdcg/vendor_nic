@@ -1,7 +1,7 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE } = require("../../lib/constant");
 const { ADD_DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -15,7 +15,7 @@ const details = async (req, res) => {
     try {
 
         const queryParams = req.query;
-        const tokenData = { ...req.tokenData};
+        const tokenData = { ...req.tokenData };
 
         if (!queryParams.id || queryParams.id === '0') {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
@@ -194,7 +194,7 @@ const poList = async (req, res) => {
             Query = `SELECT DISTINCT(EBELN) from ekko WHERE LIFNR = "${tokenData.vendor_code}"`;
         } else {
 
- 
+
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
@@ -214,9 +214,11 @@ const poList = async (req, res) => {
 
                     }
                     break;
-
-                default:
+                case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
+
+                    break;
+                default:
                     console.log("other1", Query);
 
             }
