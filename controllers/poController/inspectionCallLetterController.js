@@ -26,55 +26,59 @@ const inspectionCallLetter = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-
-            const tokenData = { ...req.tokenData };
-
-            const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
-
-            const payload = {
-                ...req.body,
-                vendor_code: tokenData.vendor_code,
-                created_at: getEpochTime(),
-                created_by_id: tokenData.vendor_code,
-                updated_by: by,
-                ...fileData,
-            };
-            console.log("payload", payload);
-            if (!payload.purchasing_doc_no) {
-
-                // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-                // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null, null);
-
-            }
-
-
-            // if (payload.status === PENDING) {
-            //     insertObj = inspectionCallLetterPayload(payload, PENDING);
-            // } else if (payload.status === RE_SUBMITTED) {
-            //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
-            // } else if (payload.status === APPROVED) {
-            //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
-            // }
-            // insertObj = inspectionCallLetterPayload(payload, PENDING);
-
-
-            let insertObj = inspectionCallLetterPayload(payload);
-
-            console.log("insertObj", insertObj);
-            const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
-            const response = await query({ query: q, values: val });
-
-            if (response.affectedRows) {
-                resSend(res, true, 200, "Ispection call letter inserted successfully !", null, null);
-            } else {
-                resSend(res, false, 400, "No data inserted", response, null);
-            }
-
-
-        } else {
-            resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
+        const tokenData = { ...req.tokenData };
+
+        const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
+
+        const payload = {
+            ...req.body,
+            vendor_code: tokenData.vendor_code,
+            created_at: getEpochTime(),
+            created_by_id: tokenData.vendor_code,
+            updated_by: by,
+            ...fileData,
+        };
+        console.log("payload", payload);
+        if (!payload.purchasing_doc_no) {
+
+            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+            // const isDel = handleFileDeletion(directory, req.file.filename);
+            return resSend(res, false, 400, "Please send valid payload", null, null);
+
+        }
+
+
+        // if (payload.status === PENDING) {
+        //     insertObj = inspectionCallLetterPayload(payload, PENDING);
+        // } else if (payload.status === RE_SUBMITTED) {
+        //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
+        // } else if (payload.status === APPROVED) {
+        //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
+        // }
+        // insertObj = inspectionCallLetterPayload(payload, PENDING);
+
+
+        let insertObj = inspectionCallLetterPayload(payload);
+
+        console.log("insertObj", insertObj);
+        const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
+        const response = await query({ query: q, values: val });
+
+        if (response.affectedRows) {
+
+            // await handleEmail();
+
+            resSend(res, true, 200, "Ispection call letter inserted successfully !", null, null);
+        } else {
+            resSend(res, false, 400, "No data inserted", response, null);
+        }
+
+
+        // }
+        // else {
+        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        // }
 
     } catch (error) {
         console.log("po add api", error)
@@ -113,6 +117,11 @@ const getIclData = async (purchasing_doc_no, drawingStatus) => {
     const isIclcknowledge = `SELECT purchasing_doc_no FROM ${INSPECTIONCALLLETTER} WHERE purchasing_doc_no = ? AND status = ?`;
     const acknowledgeResult = await query({ query: isIclcknowledge, values: [purchasing_doc_no, drawingStatus] });
     return acknowledgeResult;
+}
+
+
+async function handleEmail() {
+    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
 }
 
 module.exports = { inspectionCallLetter, List }
