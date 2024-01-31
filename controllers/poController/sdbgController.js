@@ -186,8 +186,8 @@ const getSDBGData = async (req, res) => {
         return resSend(res, true, 200, "Please send PO Number.", null, null);
     }
     
-    const Q = `SELECT * FROM ${SDBG} WHERE purchasing_doc_no = ? AND vendor_code = ?`;
-    const result = await query({ query: Q, values: [req.query.poNo, tokenData.vendor_code] });
+    const Q = `SELECT * FROM ${SDBG} WHERE purchasing_doc_no = ?`;
+    const result = await query({ query: Q, values: [req.query.poNo] });
 
         return resSend(res, true, 200, "data fetch successfully.", result, null);
     
