@@ -39,7 +39,7 @@ const shippingDocuments = async (req, res) => {
                 fileType: req.file.mimetype,
                 fileSize: req.file.size,
             };
-
+        }
             const tokenData = { ...req.tokenData };
 
             const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
@@ -79,15 +79,17 @@ const shippingDocuments = async (req, res) => {
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
+
+                // await handleEmail();
                 resSend(res, true, 200, "Shipping documents inserted successfully !", null, null);
             } else {
                 resSend(res, false, 400, "No data inserted", response, null);
             }
 
 
-        } else {
-            resSend(res, false, 400, "Please upload a valid File", fileData, null);
-        }
+        // } else {
+        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        // }
 
     } catch (error) {
         console.log("po add api", error)
@@ -123,8 +125,11 @@ const List = async (req, res) => {
 
 }
 
-module.exports = { shippingDocuments, List }
+async function handleEmail() {
+    // Email alert to dealing officer, RIC & CDO about the uploading of shipping documents
+}
 
+module.exports = { shippingDocuments, List }
 
 
 
