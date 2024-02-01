@@ -5,7 +5,8 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
+const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
+
 const { ADD_DRAWING } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -32,16 +33,34 @@ const submitDrawing = async (req, res) => {
             };
         
             const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-
             const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
 
-            if (!payload.purchasing_doc_no || !payload.updated_by || !payload.action_by_name || !payload.action_by_id || !verifyStatus.includes(payload.status)) {
+            if (!payload.purchasing_doc_no || !payload.remarks || !payload.status || !verifyStatus.includes(payload.status)) {
 
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend(res, false, 400, "Please send valid payload", null, null);
 
             }
+            
+            if (tokenData.user_type != USER_TYPE_VENDOR || tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
+                resSend(res, true, 200, "please login as Valid user!", null, null);
+            }
+
+            if (tokenData.user_type === USER_TYPE_VENDOR) {
+                const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE LIFNR = ?`;
+                const poArr = await query({ query: Query, values: [tokenData.vendor_code] });
+                if (poArr[0].po_count == 0) {
+                    return resSend(res, false, 200, "you are not authorised.", null, null);
+                }
+            }
+
+            payload.vendor_code = tokenData.vendor_code;
+            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+
+            payload.created_by_id = tokenData.vendor_code;
+
+           
 
 
             const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
