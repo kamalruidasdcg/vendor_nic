@@ -184,6 +184,44 @@ const download = async (req, res) => {
 }
 
 
+// const downloadLatest = async (req, res) => {
+
+
+//     try {
+
+//         if (!req.query.poNo) {
+//             return resSend(res, false, 400, "=Please send PO number", null, null);
+//         }
+//         let file = []
+//         try {
+
+//             file = await POfileFilter(req.query.poNo);
+//         } catch (error) {
+//             return resSend(res, false, 500, "GET FILE ERROR", error, null);
+//         }
+
+
+//         if (file?.length) {
+//             const fileName = file[0]
+//             const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po');
+//             console.log("directoryPath", directoryPath);
+
+//             const selectedPath = `${directoryPath}${fileName}`;
+//             res.download(path.join(__dirname, "..", selectedPath), (err) => {
+//                 if (err)
+//                     resSend(res, false, 404, "file not found", err, null)
+
+//             });
+//         } else {
+//             resSend(res, true, 200, "No file found", [], null);
+//         }
+
+//     } catch (error) {
+//         console.log("download po api error", error);
+//     }
+// }
+
+
 const poList = async (req, res) => {
     const tokenData = req.tokenData;
     try {
