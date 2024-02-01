@@ -4,6 +4,7 @@ const { query } = require("../../config/dbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { QAP, RIC } = require("../../lib/depertmentMaster");
+const { POfileFilter } = require("../../lib/fetchFileDirectory");
 
 
 
@@ -64,7 +65,7 @@ const tncdownload = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const { purchesing_doc_no } = req.query;
 
-        if(!purchesing_doc_no) {
+        if (!purchesing_doc_no) {
             return resSend(res, false, 200, "You dont have access", null, null);
         }
 
@@ -93,13 +94,45 @@ const tncdownload = async (req, res) => {
         }
     } catch (error) {
 
-        console.log("tncdownload api error", error);
-
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
     }
 
 
 }
 
 
+const downloadLatest = async (req, res) => {
+    try {
 
-module.exports = { download, tncdownload }
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send PO number", null, null);
+        }
+        let file = {}
+        try {
+
+            file = await POfileFilter(req.query.poNo);
+
+            if ( file.success && file?.data?.length) {
+                const fileName = file.data[0]
+                const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${fileName}`);
+                res.download(directoryPath, (err) => {
+                    if (err)
+                        resSend(res, false, 404, "file not found", err, null)
+
+                });
+            } else {
+                resSend(res, true, 200, file.msg, file.data, null);
+            }
+        } catch (error) {
+            return resSend(res, false, 500, "GET FILE ERROR", error, null);
+        }
+
+    } catch (error) {
+        console.log("download po api error", error);
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
+    }
+}
+
+
+
+module.exports = { download, tncdownload, downloadLatest }

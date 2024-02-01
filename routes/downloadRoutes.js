@@ -9,6 +9,9 @@ router.get("/", (req, res) => {
 router.get("/tnc", [veifyAccessToken], (req, res) => {
     downloadController.tncdownload(req, res);
 });
+router.get("/latestDocFile", [], (req, res) => {
+    downloadController.downloadLatest(req, res);
+});
 
 
 module.exports = router;
