@@ -80,7 +80,7 @@ const wmcList = async (req, res) => {
 
 
     } catch (error) {
-
+        return resSend(res, false, 500, "internal server error", error, null);
     }
 
 
@@ -157,7 +157,7 @@ const mrsList = async (req, res) => {
 
 
     } catch (error) {
-
+        return resSend(res, false, 500, "internal server error", error, null);
     }
 
 
