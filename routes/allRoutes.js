@@ -37,6 +37,7 @@ const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
 const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
 const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
+const materialRoutes = require("./materialRouter");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
 
 
@@ -93,6 +94,7 @@ router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
 router.use(poPrefix + "/shippingDocuments", shippingDocumentsRoutes);
+router.use(poPrefix + "/material", materialRoutes);
 
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);
