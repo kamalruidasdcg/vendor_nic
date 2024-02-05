@@ -1,7 +1,7 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, WBS_ELEMENT, PROJECT } = require("../../lib/constant");
 const { ADD_DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -265,11 +265,8 @@ const poList = async (req, res) => {
             }
 
         }
-
-        console.log("Query", Query);
-
         if (!Query) {
-            return resSend(res, false, 400, "you dont have permission.", null, null);
+            return resSend(res, false, 400, "you dont have permission or no data found", null, null);
         }
         let strVal;
         try {
@@ -443,17 +440,25 @@ const poList = async (req, res) => {
 
 
 const poListByPPNC = (queryData, tokenData) => {
-    let poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
 
-    if(queryData.project_code) {
-        poListQuery += ` AND project_code = "${queryData.project_code}"`;
+    let poListQuery = "";
+
+    if (queryData.type == PROJECT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.project_code) {
+            poListQuery += ` AND project_code = "${queryData.project_code}"`;
+        }
     }
-    if(queryData.wbs_id) {
-        poListQuery += ` AND wbs_id = "${queryData.wbs_id}"`;
+    if (queryData.type == WBS_ELEMENT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.wbs_id) {
+            poListQuery += ` AND wbs_id = "${queryData.wbs_id}"`;
+        }
     }
-    if(queryData.poNo) {
-        poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
-    }
+
+    // if (queryData.poNo) {
+    //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
+    // }
 
     return poListQuery;
 }
