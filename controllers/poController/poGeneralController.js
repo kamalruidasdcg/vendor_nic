@@ -445,14 +445,14 @@ const poListByPPNC = (queryData, tokenData) => {
 
     if (queryData.type == PROJECT) {
         poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
-        if (queryData.project_code) {
-            poListQuery += ` AND project_code = "${queryData.project_code}"`;
+        if (queryData.id) {
+            poListQuery += ` AND project_code = "${queryData.id}"`;
         }
     }
     if (queryData.type == WBS_ELEMENT) {
         poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
-        if (queryData.wbs_id) {
-            poListQuery += ` AND wbs_id = "${queryData.wbs_id}"`;
+        if (queryData.id) {
+            poListQuery += ` AND wbs_id = "${queryData.id}"`;
         }
     }
 
