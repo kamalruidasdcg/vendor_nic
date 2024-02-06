@@ -1,8 +1,8 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_DRAWING, USER_TYPE_GRSE_PURCHASE } = require("../../lib/constant");
 const { DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, USER_TYPE_GRSE_PURCHASE, WBS_ELEMENT, PROJECT } = require("../../lib/constant");
 const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -113,7 +113,6 @@ const details = async (req, res) => {
 
 
 function isDO(po, user_id) {
-    console.log(po,);
     return po.ERNAM == user_id;
 }
 
@@ -258,15 +257,18 @@ const poList = async (req, res) => {
                 case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
                     break;
+                case USER_TYPE_PPNC_DEPARTMENT:
+                    Query = poListByPPNC(req.query);
+
+                    break;
                 default:
                     console.log("other1", Query);
 
             }
 
         }
-
         if (!Query) {
-            return resSend(res, false, 400, "you dont have permission.", null, null);
+            return resSend(res, false, 400, "you dont have permission or no data found", null, null);
         }
         let strVal;
         try {
@@ -279,16 +281,12 @@ const poList = async (req, res) => {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
-
-        console.log("kkk", poQuery)
+        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`;
 
         if (poQuery == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
         const poArr = await query({ query: poQuery, values: [] });
-
-        console.log("poArr", poArr);
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
         //////////////////////////////////////////
@@ -390,9 +388,7 @@ console.log(drawingArr);
             })
         );
 
-        console.log("poArr---", poArr);
         const modifiedPOData = await poDataModify(poArr);
-        console.log("modifiedPOData", modifiedPOData);
 
         const result = [];
         Object.keys(modifiedPOData).forEach((key) => {
@@ -442,6 +438,31 @@ console.log(drawingArr);
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
     }
+}
+
+
+const poListByPPNC = (queryData, tokenData) => {
+
+    let poListQuery = "";
+
+    if (queryData.type == PROJECT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.id) {
+            poListQuery += ` AND project_code = "${queryData.id}"`;
+        }
+    }
+    if (queryData.type == WBS_ELEMENT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.id) {
+            poListQuery += ` AND wbs_id = "${queryData.id}"`;
+        }
+    }
+
+    // if (queryData.poNo) {
+    //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
+    // }
+
+    return poListQuery;
 }
 
 

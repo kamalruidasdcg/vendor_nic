@@ -112,14 +112,21 @@ const downloadLatest = async (req, res) => {
 
             file = await POfileFilter(req.query.poNo);
 
-            if ( file.success && file?.data?.length) {
+            if (file.success && file?.data?.length) {
                 const fileName = file.data[0]
                 const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${fileName}`);
-                res.download(directoryPath, (err) => {
-                    if (err)
-                        resSend(res, false, 404, "file not found", err, null)
+                const file_path = path.join('sapuploads', 'po', `${fileName}`)
+                const response = [{ full_file_path: directoryPath, file_name: fileName, file_path }];
+                
+                // res.download(directoryPath, (err) => {
+                //     if (err)
+                //     return resSend(res, false, 404, "file not found", err, null)
+                // });
 
-                });
+                if(!fileName) {
+                    return resSend(res, false, 404, "file not found", err, null)
+                }
+                resSend(res, true, 200, "File fetched successfully", response, null);
             } else {
                 resSend(res, true, 200, file.msg, file.data, null);
             }
