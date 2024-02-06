@@ -33,6 +33,8 @@ const router = express.Router();
 const billRoutes = require("./billRoutes");
 const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
+const drawingRoutes = require("./drawingRoutes");
+
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
 const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
@@ -89,6 +91,7 @@ const paymentPrefix = "/payment";
 router.use("/payment", billRoutes);
 const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
+router.use(poPrefix + "/drawing", drawingRoutes);
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
@@ -132,14 +135,7 @@ router.post(poPrefix + "/deptwiselog", [], (req, res) => {
 });
 
 
-// PO DRAWING CONTROLLER
 
-router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
-  drawingController.submitDrawing(req, res);
-});
-router.get(poPrefix + "/drawingList", [], (req, res) => {
-  drawingController.list(req, res);
-});
 
 // END OF DRAWING CONTROLLER
 

@@ -7,7 +7,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 
-const { ADD_DRAWING } = require("../../lib/tableName");
+const { DRAWING, EKKO } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -15,12 +15,19 @@ const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template'
 const SENDMAIL = require('../../lib/mailSend');
 const { mailTrigger } = require('../sendMailController');
 const { DRAWING_SUBMIT_BY_VENDOR, DRAWING_SUBMIT_BY_GRSE } = require('../../lib/event');
+const { Console } = require('console');
 
 
 // add new post
 const submitDrawing = async (req, res) => {
-
+    
+    // console.log("%^&*&^%%^&*(*&^%$");
+    // console.log("tokenData");
+    // return;
     try {
+        const tokenData = { ...req.tokenData };
+ 
+        const { ...obj } = req.body;
 
         // Handle Image Upload
         let fileData = {};
@@ -28,8 +35,8 @@ const submitDrawing = async (req, res) => {
             fileData = { 
                 fileName: req.file.filename,
                 filePath: req.file.path,
-                fileType: req.file.mimetype,
-                fileSize: req.file.size,
+                // fileType: req.file.mimetype,
+                // fileSize: req.file.size,
             };
         
             const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
@@ -43,13 +50,15 @@ const submitDrawing = async (req, res) => {
 
             }
             
-            if (tokenData.user_type != USER_TYPE_VENDOR || tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
+            if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
                 resSend(res, true, 200, "please login as Valid user!", null, null);
             }
 
             if (tokenData.user_type === USER_TYPE_VENDOR) {
-                const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE LIFNR = ?`;
-                const poArr = await query({ query: Query, values: [tokenData.vendor_code] });
+                const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = ? AND LIFNR = ?`;
+
+                const poArr = await query({ query: Query, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
+                console.log(poArr);
                 if (poArr[0].po_count == 0) {
                     return resSend(res, false, 200, "you are not authorised.", null, null);
                 }
@@ -61,8 +70,9 @@ const submitDrawing = async (req, res) => {
             payload.created_by_id = tokenData.vendor_code;
 
            
-
-
+            // console.log("%____________$");
+            //  console.log(payload);
+//return;
             const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
 
             if (result2 && result2?.length) {
@@ -78,6 +88,9 @@ const submitDrawing = async (req, res) => {
                 return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
             }
 
+            // console.log("%_&&___$");
+            // console.log(payload);
+//return;
             let insertObj;
 
             if (payload.status === PENDING) {
@@ -88,9 +101,12 @@ const submitDrawing = async (req, res) => {
                 insertObj = drawingPayload(payload, APPROVED);
             }
 
-            const { q, val } = generateQuery(INSERT, ADD_DRAWING, insertObj);
+           
+            const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
             const response = await query({ query: q, values: val });
-
+            console.log("%_&&_((((_$");
+            console.log(response);
+//return;
             if (response.affectedRows) {
 
                 
@@ -150,7 +166,7 @@ const submitDrawing = async (req, res) => {
 
 
 const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
-    const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${ADD_DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
+    const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
     const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, drawingStatus] });
     return acknowledgeResult;
 }
@@ -159,10 +175,26 @@ const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
 
 const list = async (req, res) => {
 
-    req.query.$tableName = ADD_DRAWING;
-
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+    
     try {
+        const tokenData = { ...req.tokenData };
+        const { poNo } = req.query;
+
+        if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
+            return resSend(res, true, 200, "you are not authorised.", null, null);
+        }
+
+        if(tokenData.user_type === USER_TYPE_VENDOR) {
+            const getQuery = `SELECT COUNT(EBELN) AS ven_no FROM ${EKKO} WHERE EBELN = ? AND LIFNR = ?`;
+            const result = await query({ query: getQuery, values: [poNo, tokenData.vendor_code] });
+            if (result[0].ven_no == 0) {
+                return resSend(res, true, 200, "you are not authorised for this PO.", null, null);
+            }
+        }
+
+        req.query.$tableName = DRAWING;
+
+        req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
 
         if (!req.query.poNo) {
             return resSend(res, false, 400, "Please send po number", null, null);
