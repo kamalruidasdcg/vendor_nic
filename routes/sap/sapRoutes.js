@@ -1,13 +1,9 @@
 const router = require("express").Router();
-const materialController = require("../../controllers/sapController/materialController");
-const paymentController = require("../../controllers/sapController/paymentController");
-const poDocsController = require("../../controllers/sapController/poDocsController");
-const sdbgController = require("../../controllers/sapController/sdbgController");
-const { dynamicallyUpload } = require("../../lib/fileUpload");
 const sdbgRoutes =  require("./sdbgRoutes");
 const paymentRoutes =  require("./paymentRoutes");
 const poGeneralRoutes =  require("./poGeneralRoutes");
-const dataInsert = require("../../controllers/dataInsertControllers");
+const sapTestRoutes =  require("./testRoutes");
+const materialRoutes =  require("./materialRoutes");
 
 /**
  * SAP API START 
@@ -19,22 +15,24 @@ const dataInsert = require("../../controllers/dataInsertControllers");
 router.use("/sdbg", sdbgRoutes);
 router.use("/payment", paymentRoutes);
 router.use("/po", poGeneralRoutes);
+router.use("/test", sapTestRoutes);
+router.use("/material", materialRoutes);
 
 // router.post("/po", [], (req, res) => {
 //     dataInsert.insertPOData(req, res);
 //   });
 
 // MATERIRLA ROUTE START -> 
-const mPrefix = "/material";
-router.get("/", (req, res) => {
-    materialController.list(req, res);
-});
+// const mPrefix = "/material";
+// router.get("/", (req, res) => {
+//     materialController.list(req, res);
+// });
 
 
 // MATERIAL ROUTE END 
 
 // <--- PAYMENT ROUTE START
-const paymentPrefix = "/payment";
+// const paymentPrefix = "/payment";
 
 // router.post(paymentPrefix + "/voucher", [dynamicallyUpload.single("file")], (req, res) => {
 //     paymentController.addPaymentVoucher(req, res);

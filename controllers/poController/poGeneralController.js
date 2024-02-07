@@ -1,8 +1,9 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF } = require("../../lib/constant");
-const { ADD_DRAWING, NEW_SDBG, SDBG_ACKNOWLEDGEMENT, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
+const { DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, WBS_ELEMENT, PROJECT } = require("../../lib/constant");
+const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../../services/po.services");
@@ -14,6 +15,7 @@ const details = async (req, res) => {
     try {
 
         const queryParams = req.query;
+        const tokenData = { ...req.tokenData };
 
         if (!queryParams.id || queryParams.id === '0') {
             return resSend(res, false, 400, "Please provided PO NO.", [], null);
@@ -99,6 +101,7 @@ const details = async (req, res) => {
         result[0]["poType"] = poType
         result[0]["materialResult"] = materialResult || [];
         result[0]["timeline"] = timeline || [];
+        result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
 
@@ -107,6 +110,11 @@ const details = async (req, res) => {
         return resSend(res, false, 500, error.toString(), [], null);
     }
 };
+
+
+function isDO(po, user_id) {
+    return po.ERNAM == user_id;
+}
 
 
 function poTypeCheck(materialData) {
@@ -146,7 +154,7 @@ const download = async (req, res) => {
 
     switch (type) {
         case "drawing":
-            fileFoundQuery = `SELECT * FROM ${tableName} WHERE drawing_id = ?`
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
             break;
         case "sdbg":
             fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
@@ -166,7 +174,7 @@ const download = async (req, res) => {
     }
 
     const selectedPath = `${downaoadPath}${response[0].file_name}`;
- 
+
     res.download(path.join(__dirname, "..", selectedPath), (err) => {
         if (err)
             resSend(res, false, 404, "file not found", err, null)
@@ -175,46 +183,105 @@ const download = async (req, res) => {
 }
 
 
+// const downloadLatest = async (req, res) => {
+
+
+//     try {
+
+//         if (!req.query.poNo) {
+//             return resSend(res, false, 400, "=Please send PO number", null, null);
+//         }
+//         let file = []
+//         try {
+
+//             file = await POfileFilter(req.query.poNo);
+//         } catch (error) {
+//             return resSend(res, false, 500, "GET FILE ERROR", error, null);
+//         }
+
+
+//         if (file?.length) {
+//             const fileName = file[0]
+//             const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po');
+//             console.log("directoryPath", directoryPath);
+
+//             const selectedPath = `${directoryPath}${fileName}`;
+//             res.download(path.join(__dirname, "..", selectedPath), (err) => {
+//                 if (err)
+//                     resSend(res, false, 404, "file not found", err, null)
+
+//             });
+//         } else {
+//             resSend(res, true, 200, "No file found", [], null);
+//         }
+
+//     } catch (error) {
+//         console.log("download po api error", error);
+//     }
+// }
+
+
 const poList = async (req, res) => {
     const tokenData = req.tokenData;
-    // return;
     try {
         let poQuery = "";
         let Query = "";
 
         if (tokenData.user_type === USER_TYPE_VENDOR) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE vendor_code = ${tokenData.vendor_code}`;
+            Query = `SELECT DISTINCT(EBELN) from ekko WHERE LIFNR = "${tokenData.vendor_code}"`;
         } else {
 
 
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
-                    if (tokenData.internal_role_id === QAP_ASSIGNER) {
+                    if (tokenData.internal_role_id === ASSIGNER) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
 
-                    } else if (tokenData.internal_role_id === QAP_STAFF) {
+                    } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
                     }
                     break;
+                case USER_TYPE_GRSE_FINANCE:
+                    if (tokenData.internal_role_id === ASSIGNER) {
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
-                default:
-                    console.log("other1");
+                    } else if (tokenData.internal_role_id === STAFF) {
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${ACCEPTED}' AND assigned_to = ${tokenData.vendor_code}`;
+
+                    }
                     break;
+                case USER_TYPE_GRSE_DRAWING:
+                    Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                    break;
+                case USER_TYPE_GRSE_PURCHASE:
+                    Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
+                    break;
+                case USER_TYPE_PPNC_DEPARTMENT:
+                    Query = poListByPPNC(req.query);
+
+                    break;
+                default:
+                    console.log("other1", Query);
 
             }
 
         }
+        if (!Query) {
+            return resSend(res, false, 400, "you dont have permission or no data found", null, null);
+        }
+        let strVal;
+        try {
+            strVal = await queryArrayTOString(Query, tokenData.user_type);
+        } catch (error) {
+            return resSend(res, false, 400, "Error in db query.", error, null);
+        }
 
-        if (Query == "") {
-            return resSend(res, false, 400, "you dont have permission.", null, null);
-        }
-        const strVal = await queryArrayTOString(Query);
         if (!strVal || strVal == "") {
-            return resSend(res, false, 400, "No PO found.", null, null);
+            return resSend(res, true, 200, "No PO found.", [], null);
         }
-        
-        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`
+
+        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`;
 
         if (poQuery == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
@@ -222,11 +289,6 @@ const poList = async (req, res) => {
         const poArr = await query({ query: poQuery, values: [] });
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
-
-       // if() {}
-
-        // return;
-
         //////////////////////////////////////////
         const resultArr = [];
 
@@ -241,10 +303,10 @@ const poList = async (req, res) => {
 
 
         // SDVG
-        let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from new_sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
+        let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
         let SDVGArr = await query({ query: SDVGQuery, values: [] });
 
-        let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from new_sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+        let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let SDVGAsdArr = await query({ query: SDVGAsdQuery, values: [] });
 
         let SDVGCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1`;
@@ -270,10 +332,10 @@ const poList = async (req, res) => {
         );
 
         // DRAWING
-        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
+        let drawingQuery = `select purchasing_doc_no,created_by_id,remarks,status,min(created_at) AS created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_id,status,remarks`;
         let drawingArr = await query({ query: drawingQuery, values: [] });
-
-        let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from add_drawing WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+console.log(drawingArr);
+        let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from ${DRAWING} WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let drawingAsdArr = await query({ query: drawingAsdQuery, values: [] });
 
         let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
@@ -330,10 +392,21 @@ const poList = async (req, res) => {
 
         const result = [];
         Object.keys(modifiedPOData).forEach((key) => {
+
             const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
             const poType = isMaterialTypePO === true ? "service" : "material";
+
+            // const i = poArr.findIndex((el) => el.poNb == key);
+            // let isDo = false;
+            // if (i >= 0) {
+            //     isDo = poArr[i].po_creator == tokenData.vendor_code;
+            // }
+
             result.push({ poNb: key, poType })
         })
+
+
+        // ADDING IS isDO ( deling officers of the po);
 
 
 
@@ -343,6 +416,7 @@ const poList = async (req, res) => {
                 let obj = {};
                 obj.poNumber = item.poNb;
                 obj.poType = item.poType;
+                obj.isDo = item.isDo;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
@@ -364,6 +438,31 @@ const poList = async (req, res) => {
     } catch (error) {
         return resSend(res, false, 500, error.toString(), [], null);
     }
+}
+
+
+const poListByPPNC = (queryData, tokenData) => {
+
+    let poListQuery = "";
+
+    if (queryData.type == PROJECT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.id) {
+            poListQuery += ` AND project_code = "${queryData.id}"`;
+        }
+    }
+    if (queryData.type == WBS_ELEMENT) {
+        poListQuery = `SELECT * FROM wbs WHERE 1 = 1`
+        if (queryData.id) {
+            poListQuery += ` AND wbs_id = "${queryData.id}"`;
+        }
+    }
+
+    // if (queryData.poNo) {
+    //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
+    // }
+
+    return poListQuery;
 }
 
 

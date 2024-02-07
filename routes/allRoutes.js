@@ -1,36 +1,41 @@
 const express = require("express");
 const {
-  fetchVenders,
   fetchpo,
   fetchOfficers,
   addBill,
   fetchBills,
-  fetchBill,
-  updateBill,
-  certifyBill,
-  forwardBillToDepartment,
 } = require("../controllers/allControllers");
 
 const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
 const { auth } = require("../controllers/auth");
-const paymentControllers = require("../controllers/paymentControllers");
-const poController = require("../controllers/poController");
+// const paymentControllers = require("../controllers/paymentControllers");
+// const poController = require("../controllers/poController");
 const drawingController = require("../controllers/poController/drawingController");
-const sdbgController = require("../controllers/poController/sdbgController");
+// const sdbgController = require("../controllers/poController/sdbgController");
 const qapController = require("../controllers/poController/qapController");
 const generalController = require("../controllers/poController/poGeneralController");
 const logController = require("../controllers/poController/logController");
-const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
-const WdcController = require("../controllers/poController/WdcController");
+// const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
-const downloadController = require("../controllers/poController/poDownloadController");
+// const downloadController = require("../controllers/poController/poDownloadController");
 const { uploadExcelFile, uploadDrawingFile, uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
-const { unlockPrivilege } = require("../services/auth.services");
+// const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 const billRoutes = require("./billRoutes");
+// const paymentRoutes = require("./paymentRouter");
+const sdbgRoutes = require("./sdbgRoutes");
+const drawingRoutes = require("./drawingRoutes");
+const wdcRoutes = require("./wdcRoutes");
+
+const dashboardRoutes = require("./dashboardRoutes");
+const downloadRoutes = require("./downloadRoutes");
+const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
+const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
+const materialRoutes = require("./materialRouter");
+const deptRoutes = require("./dept/deptRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
 
 
@@ -72,6 +77,7 @@ router.get("/reminder", sendReminderMail);
 
 // PO BILL APIS
 router.use("/bill", billRoutes);
+router.use("/dept",deptRoutes);
 
 // router.get("/fetchBill/:zbtno", [veifyAccessToken, authorizeRoute], fetchBill);
 // router.post("/updateBill/:zbtno", [veifyAccessToken, authorizeRoute], updateBill);
@@ -80,8 +86,17 @@ router.use("/bill", billRoutes);
 
 // PAYMENT APIS
 const paymentPrefix = "/payment";
-
 router.use("/payment", billRoutes);
+const poPrefix = "/po";
+router.use(poPrefix + "/sdbg", sdbgRoutes);
+router.use(poPrefix + "/drawing", drawingRoutes);
+router.use(poPrefix + "/wdc", wdcRoutes);
+
+router.use(poPrefix + "/dashboard", dashboardRoutes);
+router.use(poPrefix + "/download", downloadRoutes);
+router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
+router.use(poPrefix + "/shippingDocuments", shippingDocumentsRoutes);
+router.use(poPrefix + "/material", materialRoutes);
 
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);
@@ -108,14 +123,11 @@ router.use("/payment", billRoutes);
 
 // PO details
 
-const poPrefix = "/po";
-
-
 router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
   generalController.poList(req, res);
 });
 
-router.get(poPrefix + "/details", [], (req, res) => {
+router.get(poPrefix + "/details", [veifyAccessToken], (req, res) => {
   generalController.details(req, res);
 });
 
@@ -123,27 +135,19 @@ router.post(poPrefix + "/deptwiselog", [], (req, res) => {
   logController.getLogList(req, res);
 });
 
-// PO DRAWING CONTROLLER
 
-router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
-  drawingController.submitDrawing(req, res);
-});
-router.get(poPrefix + "/drawingList", [], (req, res) => {
-  drawingController.list(req, res);
-});
+
 
 // END OF DRAWING CONTROLLER
 
 
-router.post(poPrefix + "/inspectionCallLetter", [dynamicallyUpload.single("file")], (req, res) => {
-  inspectionCallLetterController.inspectionCallLetter(req, res);
-});
+// router.post(poPrefix + "/inspectionCallLetter", [dynamicallyUpload.single("file")], (req, res) => {
+//   inspectionCallLetterController.inspectionCallLetter(req, res);
+// });
 // ListOfInspectionCallLetter
-router.get(poPrefix + '/ListOfInspectionCallLetter', inspectionCallLetterController.List);
+// router.get(poPrefix + '/ListOfInspectionCallLetter', inspectionCallLetterController.List);
 
-// Wdc
-router.post(poPrefix + "/wdc", WdcController.wdc);
-router.get(poPrefix + '/ListOfWdc', WdcController.List);
+
 
 // ListOfShippingDocuments
 router.post(poPrefix + "/shippingDocuments", [dynamicallyUpload.single("file")], shippingDocumentsController.shippingDocuments);
@@ -157,24 +161,25 @@ router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 
 
 // file download for sdbg, drawing, qap
-router.get(poPrefix + "/download", [], (req, res) => {
-  downloadController.download(req, res);
-});
+// router.get(poPrefix + "/download", [], (req, res) => {
+//   downloadController.download(req, res);
+// });
 
 
 // SDBG CONTROLLER
 
-router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
-  sdbgController.submitSDBG(req, res);
-});
+// router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
+//   sdbgController.submitSDBG(req, res);
+// });
+// router.use(poPrefix + "/sdbg", paymentRoutes);
 
-router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
-  sdbgController.unlock(req, res);
-});
+// router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
+//   sdbgController.unlock(req, res);
+// });
 
-router.get(poPrefix + "/sdbgList", [], (req, res) => {
-  sdbgController.list(req, res);
-});
+// router.get(poPrefix + "/sdbgList", [], (req, res) => {
+//   sdbgController.list(req, res);
+// });
 
 
 // QAP CONTROLLERS

@@ -3,6 +3,8 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
+const { QAP, RIC } = require("../../lib/depertmentMaster");
+const { POfileFilter } = require("../../lib/fetchFileDirectory");
 
 
 
@@ -24,7 +26,7 @@ const download = async (req, res) => {
 
     switch (type) {
         case "drawing":
-            fileFoundQuery = `SELECT * FROM ${tableName} WHERE drawing_id = ?`
+            fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
             break;
         case "sdbg":
             fileFoundQuery = `SELECT * FROM ${tableName} WHERE id = ?`
@@ -56,6 +58,88 @@ const download = async (req, res) => {
     });
 }
 
+const tncdownload = async (req, res) => {
+
+    try {
+
+        const tokenData = { ...req.tokenData };
+        const { purchesing_doc_no } = req.query;
+
+        if (!purchesing_doc_no) {
+            return resSend(res, false, 200, "You dont have access", null, null);
+        }
+
+        if (tokenData.department_id == QAP || tokenData.department_id == RIC) {
+
+            const fileName = `${purchesing_doc_no}.pdf`
+            const downloadPath = path.join(__dirname, "..", "..", "uploads", "tncminutes", fileName);
+            const q = `SELECT file_name, file_path, file_type, purchasing_doc_no FROM tnc_minutes WHERE purchasing_doc_no = ? LIMIT 1`;
+            const result = await query({ query: q, values: [purchesing_doc_no] });
+            if (result.length) {
+                const response = [{ ...result[0], full_file_path: downloadPath }];
+                resSend(res, true, 200, "File fetched successfully", response, null);
+            } else {
+                resSend(res, true, 200, "No file found", [], null);
+
+            }
+
+            // res.download((downloadPath), (err) => {
+            //     if (err)
+            //         resSend(res, false, 404, "file not found", err, null)
+            // });
+
+        } else {
+
+            resSend(res, false, 401, "You dont have access", null, null);
+        }
+    } catch (error) {
+
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
+    }
 
 
-module.exports = { download }
+}
+
+
+const downloadLatest = async (req, res) => {
+    try {
+
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send PO number", null, null);
+        }
+        let file = {}
+        try {
+
+            file = await POfileFilter(req.query.poNo);
+
+            if (file.success && file?.data?.length) {
+                const fileName = file.data[0]
+                const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${fileName}`);
+                const file_path = path.join('sapuploads', 'po', `${fileName}`)
+                const response = [{ full_file_path: directoryPath, file_name: fileName, file_path }];
+                
+                // res.download(directoryPath, (err) => {
+                //     if (err)
+                //     return resSend(res, false, 404, "file not found", err, null)
+                // });
+
+                if(!fileName) {
+                    return resSend(res, false, 404, "file not found", err, null)
+                }
+                resSend(res, true, 200, "File fetched successfully", response, null);
+            } else {
+                resSend(res, true, 200, file.msg, file.data, null);
+            }
+        } catch (error) {
+            return resSend(res, false, 500, "GET FILE ERROR", error, null);
+        }
+
+    } catch (error) {
+        console.log("download po api error", error);
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
+    }
+}
+
+
+
+module.exports = { download, tncdownload, downloadLatest }
