@@ -262,12 +262,13 @@ const poList = async (req, res) => {
                                ON ekko.lifnr = lfa1.lifnr
                  WHERE  ekko.ebeln IN (${strVal})`;
 
-        if (poQuery == "") {
-            return resSend(res, false, 400, "you dont have permission.", null, null);
+        // if (poQuery == "") {
+        //     return resSend(res, false, 400, "you dont have permission.", null, null);
+        // }
+        const poArr = await query({ query: poQuery, values: [] });
+        if(!poArr) {
+            return resSend(res, false, 400, "No po found", poArr, null); 
         }
-        const poArr = await query({ query: poQuery, values: [strVal] });
-
-        console.log("poArr", poArr)
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
         //////////////////////////////////////////
@@ -397,8 +398,6 @@ const poList = async (req, res) => {
 
 
         // ADDING IS isDO ( deling officers of the po);
-
-        console.log("result", result);
 
         await Promise.all(
             result.map(async (item) => {
