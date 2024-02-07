@@ -183,44 +183,6 @@ const download = async (req, res) => {
 }
 
 
-// const downloadLatest = async (req, res) => {
-
-
-//     try {
-
-//         if (!req.query.poNo) {
-//             return resSend(res, false, 400, "=Please send PO number", null, null);
-//         }
-//         let file = []
-//         try {
-
-//             file = await POfileFilter(req.query.poNo);
-//         } catch (error) {
-//             return resSend(res, false, 500, "GET FILE ERROR", error, null);
-//         }
-
-
-//         if (file?.length) {
-//             const fileName = file[0]
-//             const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po');
-//             console.log("directoryPath", directoryPath);
-
-//             const selectedPath = `${directoryPath}${fileName}`;
-//             res.download(path.join(__dirname, "..", selectedPath), (err) => {
-//                 if (err)
-//                     resSend(res, false, 404, "file not found", err, null)
-
-//             });
-//         } else {
-//             resSend(res, true, 200, "No file found", [], null);
-//         }
-
-//     } catch (error) {
-//         console.log("download po api error", error);
-//     }
-// }
-
-
 const poList = async (req, res) => {
     const tokenData = req.tokenData;
     try {
@@ -279,12 +241,29 @@ const poList = async (req, res) => {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery = `SELECT ekko.EBELN AS poNb,ekko.BSART AS poType, ekpo.MATNR as m_number, mara.MTART as MTART, ekko.ERNAM AS po_creator FROM ekko left join ekpo on ekko.EBELN = ekpo.EBELN left join mara on ekpo.MATNR = mara.MATNR WHERE ekko.EBELN IN(${strVal});`;
+        poQuery =
+            `SELECT ekko.lifnr AS vendor_code,
+                        lfa1.name1 AS vendor_name,
+                        ekko.ebeln AS poNb,
+                        ekko.bsart AS poType,
+                        ekpo.matnr AS m_number,
+                        mara.mtart AS MTART,
+                        ekko.ernam AS po_creator
+                 FROM   ekko
+                        left join ekpo
+                               ON ekko.ebeln = ekpo.ebeln
+                        left join mara
+                               ON ekpo.matnr = mara.matnr
+                        left join lfa1
+                               ON ekko.lifnr = lfa1.lifnr
+                 WHERE  ekko.ebeln IN (${strVal})`;
 
         if (poQuery == "") {
             return resSend(res, false, 400, "you dont have permission.", null, null);
         }
-        const poArr = await query({ query: poQuery, values: [] });
+        const poArr = await query({ query: poQuery, values: [strVal] });
+
+        console.log("poArr", poArr)
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
         //////////////////////////////////////////
@@ -400,13 +379,18 @@ const poList = async (req, res) => {
             //     isDo = poArr[i].po_creator == tokenData.vendor_code;
             // }
 
-            result.push({ poNb: key, poType })
+            result.push({
+                poNb: key,
+                vendor_code: modifiedPOData[key][0].vendor_code,
+                vendor_name: modifiedPOData[key][0].vendor_name,
+                poType
+            });
         })
 
 
         // ADDING IS isDO ( deling officers of the po);
 
-
+        console.log("result", result);
 
         await Promise.all(
             result.map(async (item) => {
@@ -415,6 +399,8 @@ const poList = async (req, res) => {
                 obj.poNumber = item.poNb;
                 obj.poType = item.poType;
                 obj.isDo = item.isDo;
+                obj.vendor_code = item.vendor_code;
+                obj.vendor_name = item.vendor_name;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
