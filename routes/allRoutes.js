@@ -37,11 +37,22 @@ const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
+const { createTable } = require("../lib/createTableFromJson");
+const { resSend } = require("../lib/resSend");
 
 
 // FOR CHECHING SERVER IS RUNNING ...
 router.get("/ping", async (req, res) => {
-  res.status(200).json({ success: true, data: { queryData: req.query }, message: "SERVER IS RUNNING " })
+  res.status(200).json({ success: true, data: { queryData: req.query, re }, message: "SERVER IS RUNNING " })
+});
+router.get("/createTable", async (req, res) => {
+  try {
+    const re = await createTable();
+    resSend(res, true, 200, "success fully create table", re, "");
+    
+  } catch (error) {
+    resSend(res, false, 400, "table not created", {}, "");
+  }
 });
 
 router.get("/userping", veifyAccessToken, async (req, res) => {
