@@ -7,7 +7,7 @@ const {
 } = require("../controllers/allControllers");
 
 const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
-const { auth } = require("../controllers/auth");
+// const { auth } = require("../controllers/authConroller/auth");
 // const paymentControllers = require("../controllers/paymentControllers");
 // const poController = require("../controllers/poController");
 const drawingController = require("../controllers/poController/drawingController");
@@ -16,7 +16,6 @@ const qapController = require("../controllers/poController/qapController");
 const generalController = require("../controllers/poController/poGeneralController");
 const logController = require("../controllers/poController/logController");
 // const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
-const WdcController = require("../controllers/poController/WdcController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
@@ -28,6 +27,9 @@ const router = express.Router();
 const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
+const drawingRoutes = require("./drawingRoutes");
+const wdcRoutes = require("./wdcRoutes");
+
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
 const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
@@ -35,22 +37,11 @@ const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
-const { createTable } = require("../lib/createTableFromJson");
-const { resSend } = require("../lib/resSend");
 
 
 // FOR CHECHING SERVER IS RUNNING ...
 router.get("/ping", async (req, res) => {
-  res.status(200).json({ success: true, data: { queryData: req.query, re }, message: "SERVER IS RUNNING " })
-});
-router.get("/createTable", async (req, res) => {
-  try {
-    const re = await createTable();
-    resSend(res, true, 200, "success fully create table", re, "");
-    
-  } catch (error) {
-    resSend(res, false, 400, "table not created", {}, "");
-  }
+  res.status(200).json({ success: true, data: { queryData: req.query }, message: "SERVER IS RUNNING " })
 });
 
 router.get("/userping", veifyAccessToken, async (req, res) => {
@@ -65,7 +56,7 @@ router.get("/po", [veifyAccessToken, authorizeRoute], fetchpo);
 router.get("/officers", [veifyAccessToken, authorizeRoute], fetchOfficers);
 router.post("/addBill", [veifyAccessToken, authorizeRoute], addBill);
 router.post("/fetchBills", [veifyAccessToken, authorizeRoute], fetchBills);
-router.post("/login", auth);
+// router.post("/login", auth);
 
 // GENERAL GET AND UPDATE ROUTE
 
@@ -98,6 +89,9 @@ const paymentPrefix = "/payment";
 router.use("/payment", billRoutes);
 const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
+router.use(poPrefix + "/drawing", drawingRoutes);
+router.use(poPrefix + "/wdc", wdcRoutes);
+
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
@@ -142,14 +136,7 @@ router.post(poPrefix + "/deptwiselog", [], (req, res) => {
 });
 
 
-// PO DRAWING CONTROLLER
 
-router.post(poPrefix + "/drawing", [dynamicallyUpload.single("file")], (req, res) => {
-  drawingController.submitDrawing(req, res);
-});
-router.get(poPrefix + "/drawingList", [], (req, res) => {
-  drawingController.list(req, res);
-});
 
 // END OF DRAWING CONTROLLER
 
@@ -160,9 +147,7 @@ router.get(poPrefix + "/drawingList", [], (req, res) => {
 // ListOfInspectionCallLetter
 // router.get(poPrefix + '/ListOfInspectionCallLetter', inspectionCallLetterController.List);
 
-// Wdc
-router.post(poPrefix + "/wdc", WdcController.wdc);
-router.get(poPrefix + '/ListOfWdc', WdcController.List);
+
 
 // ListOfShippingDocuments
 router.post(poPrefix + "/shippingDocuments", [dynamicallyUpload.single("file")], shippingDocumentsController.shippingDocuments);
