@@ -6,14 +6,14 @@
 // } = require("../services/crypto.services");
 
 
-const { query } = require("../config/dbConfig");
-const { getAccessToken, getRefreshToken } = require("../services/jwt.services");
-const { resSend } = require("../lib/resSend");
-const { AUTH, USTER_TYPE } = require("../lib/tableName");
-const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
+const { query } = require("../../config/dbConfig");
+const { getAccessToken, getRefreshToken } = require("../../services/jwt.services");
+const { resSend } = require("../../lib/resSend");
+const { AUTH, USTER_TYPE } = require("../../lib/tableName");
+const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
-const rolePermission = require("../lib/role/deptWiseRolePermission");
+const rolePermission = require("../../lib/role/deptWiseRolePermission");
 
 
 
