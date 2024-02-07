@@ -181,6 +181,8 @@ async function poDataModify(data) {
                 "MTART": element.MTART,
                 "vendor_code": element.vendor_code,
                 "vendor_name": element.vendor_name,
+                "wbs_id": element.wbs_id,
+                "project_code": element.project_code,
             }
 
             obj[key] = [...val, newVal]
@@ -192,6 +194,8 @@ async function poDataModify(data) {
                 "MTART": element.MTART,
                 "vendor_code": element.vendor_code,
                 "vendor_name": element.vendor_name,
+                "wbs_id": element.wbs_id,
+                "project_code": element.project_code,
             }]
         }
 

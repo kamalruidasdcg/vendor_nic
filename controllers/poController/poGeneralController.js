@@ -241,9 +241,11 @@ const poList = async (req, res) => {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery =
+        poQuery = 
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
+                        wbs.project_code AS project_code,
+                        wbs.wbs_id AS wbs_id,
                         ekko.ebeln AS poNb,
                         ekko.bsart AS poType,
                         ekpo.matnr AS m_number,
@@ -254,6 +256,8 @@ const poList = async (req, res) => {
                                ON ekko.ebeln = ekpo.ebeln
                         left join mara
                                ON ekpo.matnr = mara.matnr
+                        left join wbs
+                               ON  wbs.purchasing_doc_no = ekko.ebeln
                         left join lfa1
                                ON ekko.lifnr = lfa1.lifnr
                  WHERE  ekko.ebeln IN (${strVal})`;
@@ -367,6 +371,8 @@ const poList = async (req, res) => {
 
         const modifiedPOData = await poDataModify(poArr);
 
+        console.log("modifiedPOData", modifiedPOData);
+
         const result = [];
         Object.keys(modifiedPOData).forEach((key) => {
 
@@ -383,6 +389,8 @@ const poList = async (req, res) => {
                 poNb: key,
                 vendor_code: modifiedPOData[key][0].vendor_code,
                 vendor_name: modifiedPOData[key][0].vendor_name,
+                wbs_id:modifiedPOData[key][0].wbs_id,
+                project_code: modifiedPOData[key][0].project_code,
                 poType
             });
         })
@@ -401,6 +409,8 @@ const poList = async (req, res) => {
                 obj.isDo = item.isDo;
                 obj.vendor_code = item.vendor_code;
                 obj.vendor_name = item.vendor_name;
+                obj.project_code = item.project_code;
+                obj.wbs_id = item.wbs_id;
                 const SDVGObj = await SDVGArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
 
                 obj.SDVG = (SDVGObj === undefined) ? 'N/A' : SDVGObj;
