@@ -78,17 +78,18 @@ const qapPayload = (payload, status) => {
     return payloadObj;
 }
 
-const wdcPayload = (payload, status) => {
+const wdcPayload = (payload) => {
 
     const payloadObj = {
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "remarks": payload.remarks ? payload.remarks : null,
-        "status": status,
+        "vendor_code": payload.vendor_code,
+        "file_name": payload.fileName ? payload.fileName : null,
+        "file_path": payload.filePath ? payload.filePath : null,
+        "remarks": payload.remarks,
+        "status": payload.status,
         "updated_by": payload.updated_by,
         "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
-        "created_by_name": payload.action_by_name,
-        "created_by_id": payload.action_by_id,
+        "created_by_id": payload.created_by_id,
     }
 
     return payloadObj;

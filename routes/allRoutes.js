@@ -16,7 +16,6 @@ const qapController = require("../controllers/poController/qapController");
 const generalController = require("../controllers/poController/poGeneralController");
 const logController = require("../controllers/poController/logController");
 // const inspectionCallLetterController = require("../controllers/poController/inspectionCallLetterController");
-const WdcController = require("../controllers/poController/WdcController");
 const shippingDocumentsController = require("../controllers/poController/shippingDocumentsController");
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
@@ -29,6 +28,7 @@ const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
+const wdcRoutes = require("./WdcRoutes");
 
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
@@ -90,6 +90,8 @@ router.use("/payment", billRoutes);
 const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
 router.use(poPrefix + "/drawing", drawingRoutes);
+router.use(poPrefix + "/wdc", wdcRoutes);
+
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
@@ -145,9 +147,7 @@ router.post(poPrefix + "/deptwiselog", [], (req, res) => {
 // ListOfInspectionCallLetter
 // router.get(poPrefix + '/ListOfInspectionCallLetter', inspectionCallLetterController.List);
 
-// Wdc
-router.post(poPrefix + "/wdc", WdcController.wdc);
-router.get(poPrefix + '/ListOfWdc', WdcController.List);
+
 
 // ListOfShippingDocuments
 router.post(poPrefix + "/shippingDocuments", [dynamicallyUpload.single("file")], shippingDocumentsController.shippingDocuments);
