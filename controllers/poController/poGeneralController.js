@@ -1,8 +1,8 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
+const { DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, WBS_ELEMENT, PROJECT } = require("../../lib/constant");
-const { ADD_DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -251,9 +251,11 @@ const poList = async (req, res) => {
 
                     }
                     break;
+                case USER_TYPE_GRSE_DRAWING:
+                    Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                    break;
                 case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
-
                     break;
                 case USER_TYPE_PPNC_DEPARTMENT:
                     Query = poListByPPNC(req.query);
@@ -330,10 +332,10 @@ const poList = async (req, res) => {
         );
 
         // DRAWING
-        let drawingQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from add_drawing WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
+        let drawingQuery = `select purchasing_doc_no,created_by_id,remarks,status,min(created_at) AS created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_id,status,remarks`;
         let drawingArr = await query({ query: drawingQuery, values: [] });
-
-        let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from add_drawing WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
+console.log(drawingArr);
+        let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from ${DRAWING} WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let drawingAsdArr = await query({ query: drawingAsdQuery, values: [] });
 
         let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
