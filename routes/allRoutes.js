@@ -7,7 +7,7 @@ const {
 } = require("../controllers/allControllers");
 
 const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
-const { auth } = require("../controllers/auth");
+// const { auth } = require("../controllers/authConroller/auth");
 // const paymentControllers = require("../controllers/paymentControllers");
 // const poController = require("../controllers/poController");
 const drawingController = require("../controllers/poController/drawingController");
@@ -56,7 +56,7 @@ router.get("/po", [veifyAccessToken, authorizeRoute], fetchpo);
 router.get("/officers", [veifyAccessToken, authorizeRoute], fetchOfficers);
 router.post("/addBill", [veifyAccessToken, authorizeRoute], addBill);
 router.post("/fetchBills", [veifyAccessToken, authorizeRoute], fetchBills);
-router.post("/login", auth);
+// router.post("/login", auth);
 
 // GENERAL GET AND UPDATE ROUTE
 

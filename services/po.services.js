@@ -19,7 +19,7 @@ const sdbgPayload = (payload, status) => {
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code,
-        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
+        "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name,
         "created_by_id": payload.action_by_id,
         "isLocked": payload.isLocked,
@@ -63,14 +63,14 @@ const qapPayload = (payload, status) => {
         // "id": 1, // auto incremant id
         "purchasing_doc_no": payload.purchasing_doc_no,
         "file_name": payload.fileName ? payload.fileName : null,
-        "file_path": payload.filePath ? payload.filePath: null,
+        "file_path": payload.filePath ? payload.filePath : null,
         "remarks": payload.remarks ? payload.remarks : null,
         "assigned_to": payload.assigned_to ? payload.assigned_to : null,
         "assigned_from": payload.assigned_from ? payload.assigned_from : null,
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
+        "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name ? payload.action_by_name : null,
         "created_by_id": payload.action_by_id,
     }
@@ -99,14 +99,14 @@ const shippingDocumentsPayload = (payload, status) => {
 
     const payloadObj = {
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName ? payload.fileName: null,
+        "file_name": payload.fileName ? payload.fileName : null,
         "file_path": payload.filePath ? payload.filePath : null,
         "file_type_id": payload.file_type_id,
         "file_type_name": payload.file_type_name,
         "remarks": payload.remarks ? payload.remarks : null,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at":  payload.created_at,
+        "created_at": payload.created_at,
         "created_by_id": payload.created_by_id,
     }
 
@@ -116,14 +116,14 @@ const inspectionCallLetterPayload = (payload) => {
 
     const payloadObj = {
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName ? payload.fileName: null,
+        "file_name": payload.fileName ? payload.fileName : null,
         "file_path": payload.filePath ? payload.filePath : null,
         "file_type_id": payload.file_type_id,
         "file_type_name": payload.file_type_name,
         "remarks": payload.remarks ? payload.remarks : null,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at":  payload.created_at,
+        "created_at": payload.created_at,
         "created_by_id": payload.created_by_id,
     }
 
@@ -170,7 +170,7 @@ const poModifyData = (queryResult) => {
 async function poDataModify(data) {
     if (!data || !Array.isArray(data) || !data.length) return [];
     let obj = {};
- data.forEach(element => {
+    data.forEach(element => {
         let key = element.poNb;
 
         if (key in obj) {
@@ -178,7 +178,11 @@ async function poDataModify(data) {
             let newVal = {
                 "poType": element.poType,
                 "m_number": element.m_number,
-                "MTART": element.MTART
+                "MTART": element.MTART,
+                "vendor_code": element.vendor_code,
+                "vendor_name": element.vendor_name,
+                "wbs_id": element.wbs_id,
+                "project_code": element.project_code,
             }
 
             obj[key] = [...val, newVal]
@@ -187,7 +191,11 @@ async function poDataModify(data) {
             obj[key] = [{
                 "poType": element.poType,
                 "m_number": element.m_number,
-                "MTART": element.MTART
+                "MTART": element.MTART,
+                "vendor_code": element.vendor_code,
+                "vendor_name": element.vendor_name,
+                "wbs_id": element.wbs_id,
+                "project_code": element.project_code,
             }]
         }
 
