@@ -161,7 +161,7 @@ const submitSDBG = async (req, res) => {
                 // await handelEmail(payload);
 
 
-                resSend(res, true, 200, "file uploaded!", fileData, null);
+                return resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
                 return resSend(res, false, 400, "No data inserted", response, null);
             }
@@ -351,7 +351,7 @@ const sdbgUpdateByFinance = async (req, res) => {
     // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
     try {
         if (tokenData.department_id != FINANCE) {
-            resSend(res, true, 200, "please login as finance!", null, null);
+            return resSend(res, true, 200, "please login as finance!", null, null);
         }
         const getQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
         const result = await query({ query: getQuery, values: [obj.purchasing_doc_no, FORWARD_TO_FINANCE] });
