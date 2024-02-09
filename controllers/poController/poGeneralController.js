@@ -2,7 +2,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime, queryArrayTOString } = require("../../lib/utils");
 const { DRAWING, SDBG, EKBE, EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, WBS_ELEMENT, PROJECT } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_QAP, ASSIGNER, STAFF, USER_TYPE_GRSE_FINANCE, USER_TYPE_GRSE_PURCHASE, USER_TYPE_PPNC_DEPARTMENT, WBS_ELEMENT, PROJECT, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 const { PENDING, ASSIGNED, ACCEPTED, RE_SUBMITTED, REJECTED, FORWARD_TO_FINANCE, RETURN_TO_DEALING_OFFICER } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -52,8 +52,55 @@ const details = async (req, res) => {
         if (!result?.length)
             return resSend(res, false, 404, "No PO number found !!", [], null);
 
-        const timelingQ = `SELECT MTEXT, PLAN_DATE, MO FROM ${ZPO_MILESTONE} WHERE EBELN = ?`;
-        const timeline = await query({ query: timelingQ, values: [queryParams.id] });
+        // const timelingQ = `SELECT MTEXT, PLAN_DATE, MO FROM ${ZPO_MILESTONE} WHERE EBELN = ?`;
+        const timelingQ =
+            `(SELECT a.*,
+                        b.status,
+                        b.purchasing_doc_no
+                 FROM   zpo_milestone AS a
+                        INNER JOIN (SELECT Max(id) AS id,
+                                           purchasing_doc_no,
+                                           status
+                                    FROM   sdbg
+                                    GROUP  BY purchasing_doc_no,
+                                              status) AS b
+                                ON ( b.purchasing_doc_no = a.ebeln )
+                 WHERE  a.mid = 1
+                        AND a.ebeln = ?)
+                UNION
+                (SELECT a.*,
+                        b.status,
+                        b.purchasing_doc_no
+                 FROM   zpo_milestone AS a
+                        INNER JOIN (SELECT id,
+                                           purchasing_doc_no,
+                                           status
+                                    FROM   drawing AS x
+                                    WHERE  id = (SELECT Max(id) AS id
+                                                 FROM   drawing AS y
+                                                 WHERE  y.purchasing_doc_no =
+                                                        x.purchasing_doc_no)) AS b
+                                ON ( b.purchasing_doc_no = a.ebeln )
+                 WHERE  a.mid = 2
+                        AND a.ebeln = ?)
+                UNION
+                (SELECT a.*,
+                        b.status,
+                        b.purchasing_doc_no
+                 FROM   zpo_milestone AS a
+                        INNER JOIN (SELECT id,
+                                           purchasing_doc_no,
+                                           status
+                                    FROM   qap_submission AS x
+                                    WHERE  id = (SELECT Max(id) AS id
+                                                 FROM   qap_submission AS y
+                                                 WHERE  y.purchasing_doc_no =
+                                                        x.purchasing_doc_no)) AS b
+                                ON ( b.purchasing_doc_no = a.ebeln )
+                 WHERE  a.mid = 3
+                        AND a.ebeln = ?)`;
+
+        const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
 
 
         // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
@@ -243,7 +290,7 @@ const poList = async (req, res) => {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
 
-        poQuery = 
+        poQuery =
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
                         wbs.project_code AS project_code,
@@ -268,8 +315,8 @@ const poList = async (req, res) => {
         //     return resSend(res, false, 400, "you dont have permission.", null, null);
         // }
         const poArr = await query({ query: poQuery, values: [] });
-        if(!poArr) {
-            return resSend(res, false, 400, "No po found", poArr, null); 
+        if (!poArr) {
+            return resSend(res, false, 400, "No po found", poArr, null);
         }
 
         // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
@@ -318,7 +365,7 @@ const poList = async (req, res) => {
         // DRAWING
         let drawingQuery = `select purchasing_doc_no,created_by_id,remarks,status,min(created_at) AS created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_id,status,remarks`;
         let drawingArr = await query({ query: drawingQuery, values: [] });
-console.log(drawingArr);
+        console.log(drawingArr);
         let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from ${DRAWING} WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let drawingAsdArr = await query({ query: drawingAsdQuery, values: [] });
 
@@ -392,7 +439,7 @@ console.log(drawingArr);
                 poNb: key,
                 vendor_code: modifiedPOData[key][0].vendor_code,
                 vendor_name: modifiedPOData[key][0].vendor_name,
-                wbs_id:modifiedPOData[key][0].wbs_id,
+                wbs_id: modifiedPOData[key][0].wbs_id,
                 project_code: modifiedPOData[key][0].project_code,
                 poType
             });

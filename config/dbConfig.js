@@ -8,7 +8,7 @@ const connObj = {
   host: process.env.DB_HOST_ADDRESS,
   port: process.env.DB_CONN_PORT,
   user: process.env.DB_USER,
-  password: "",
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   multipleStatements: true,
 };
