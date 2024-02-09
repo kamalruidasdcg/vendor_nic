@@ -8,6 +8,47 @@ const { getEpochTime } = require("../lib/utils");
  * @returns Object
  */
 
+const sdbgPayloadVendor = (obj, status) => {
+
+    const payloadObj = {
+        purchasing_doc_no: obj.purchasing_doc_no ? obj.purchasing_doc_no : null,
+        bank_name: obj.bank_name ? obj.bank_name : null,
+        branch_name: obj.branch_name ? obj.branch_name : null,
+        ifsc_code: obj.ifsc_code ? obj.ifsc_code : null,
+        bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
+        bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
+        bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
+        bank_city: obj.bank_city ? obj.bank_city : null,
+        pincode: obj.pincode ? obj.pincode : null,
+        bg_no: obj.user_type ? obj.user_type : null,
+        bg_date: obj.bg_date ? obj.bg_date : null,
+        bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
+        department: obj.department ? obj.department : null,
+        vendor_pincode: obj.vendor_pincode ? obj.vendor_pincode : null,
+        yard_no: obj.yard_no ? obj.yard_no : null,
+        extension_date1: obj.extension_date1 ? obj.extension_date1 : null,
+        release_date: obj.release_date ? obj.release_date : null,
+        demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : null,
+        extension_date: obj.extension_date ? obj.extension_date : null,
+        status: obj.status ? obj.status : null,
+        created_at: obj.created_at ? obj.created_at : null,
+        remarks: obj.remarks ? obj.remarks : null,
+        file_name: obj.file_name ? obj.file_name : null,
+        vendor_code: obj.vendor_code ? obj.vendor_code : null,
+        file_path: obj.file_path ? obj.file_path : null,
+        updated_by: obj.updated_by ? obj.updated_by : null,
+        created_by_id: obj.created_by_id ? obj.created_by_id : null,
+    }
+
+    return payloadObj;
+}
+/**
+ * Modify SDBG Payload object to insert data
+ * @param {Object} payload 
+ * @param {string} status 
+ * @returns Object
+ */
+
 const sdbgPayload = (payload, status) => {
 
     const payloadObj = {
@@ -16,13 +57,14 @@ const sdbgPayload = (payload, status) => {
         "file_name": payload.fileName ? payload.fileName : null,
         "file_path": payload.filePath ? payload.filePath : null,
         "remarks": payload.remarks ? payload.remarks : null,
-        "status": status,
+        "status": payload.status ? payload.status : null,
         "updated_by": payload.updated_by,
-        "vendor_code": payload.vendor_code,
+        "vendor_code": payload.vendor_code ? payload.vendor_code: null,
+        "assigned_from": payload.assigned_from ? payload.assigned_from: null ,
+        "assigned_to": payload.assigned_to ? payload.assigned_to: null ,
         "created_at": payload.created_at ? payload.created_at : getEpochTime(),
-        "created_by_name": payload.action_by_name,
-        "created_by_id": payload.action_by_id,
-        "isLocked": payload.isLocked,
+        "created_by_name": payload.action_by_name ? payload.action_by_name : null,
+        "created_by_id": payload.created_by_id,
     }
 
     return payloadObj;
@@ -45,7 +87,7 @@ const drawingPayload = (payload, status) => {
         "status": status,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
+        "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_id": payload.created_by_id,
     }
 
@@ -88,7 +130,7 @@ const wdcPayload = (payload) => {
         "remarks": payload.remarks,
         "status": payload.status,
         "updated_by": payload.updated_by,
-        "created_at":  payload.created_at ? payload.created_at : getEpochTime(),
+        "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_id": payload.created_by_id,
     }
 
@@ -206,4 +248,4 @@ async function poDataModify(data) {
 
 
 
-module.exports = { sdbgPayload, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
+module.exports = { sdbgPayload, sdbgPayloadVendor, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
