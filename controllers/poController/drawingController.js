@@ -180,17 +180,17 @@ const list = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const { poNo } = req.query;
 
-        if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
-            return resSend(res, true, 200, "you are not authorised.", null, null);
-        }
+        // if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
+        //     return resSend(res, true, 200, "you are not authorised.", null, null);
+        // }
 
-        if(tokenData.user_type === USER_TYPE_VENDOR) {
-            const getQuery = `SELECT COUNT(EBELN) AS ven_no FROM ${EKKO} WHERE EBELN = ? AND LIFNR = ?`;
-            const result = await query({ query: getQuery, values: [poNo, tokenData.vendor_code] });
-            if (result[0].ven_no == 0) {
-                return resSend(res, true, 200, "you are not authorised for this PO.", null, null);
-            }
-        }
+        // if(tokenData.user_type === USER_TYPE_VENDOR) {
+        //     const getQuery = `SELECT COUNT(EBELN) AS ven_no FROM ${EKKO} WHERE EBELN = ? AND LIFNR = ?`;
+        //     const result = await query({ query: getQuery, values: [poNo, tokenData.vendor_code] });
+        //     if (result[0].ven_no == 0) {
+        //         return resSend(res, true, 200, "you are not authorised for this PO.", null, null);
+        //     }
+        // }
 
         req.query.$tableName = DRAWING;
 
