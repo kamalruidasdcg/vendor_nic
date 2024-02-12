@@ -12,7 +12,7 @@ const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../
 
 /** APIS START ----->  */
 const details = async (req, res) => {
-    try {
+    try { 
 
         const queryParams = req.query;
         const tokenData = { ...req.tokenData };

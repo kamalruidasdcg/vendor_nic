@@ -18,7 +18,7 @@ const { mailTrigger } = require('../sendMailController');
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE } = require('../../lib/event');
 const { Console } = require('console');
 
-
+ 
 // add new post
 const submitSDBG = async (req, res) => {
     // return resSend(res, false, 200, "No data inserted", req.body, null);
@@ -26,7 +26,7 @@ const submitSDBG = async (req, res) => {
 
 
         // Handle Image Upload
-        let fileData = {};
+         let fileData = {};
         if (req.file) {
             fileData = {
                 file_name: req.file.filename,
