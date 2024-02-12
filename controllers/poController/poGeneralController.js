@@ -12,7 +12,7 @@ const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../
 
 /** APIS START ----->  */
 const details = async (req, res) => {
-    try {
+    try { 
 
         const queryParams = req.query;
         const tokenData = { ...req.tokenData };
@@ -245,7 +245,8 @@ const poList = async (req, res) => {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
-
+                        //  Query = await poListByEcko();
+                        console.log(Query);
                     } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
@@ -482,6 +483,16 @@ const poList = async (req, res) => {
     }
 }
 
+const poListByEcko = async (vendorCode = "") => { 
+    let sufx;
+    let qry = `SELECT DISTINCT(EBELN) from ekko`;
+    if(vendorCode != "") {
+        sufx = ` WHERE LIFNR = "${vendorCode}"`;
+        qry = qry+sufx;
+    }
+    return qry;
+}
+
 
 const poListByPPNC = (queryData, tokenData) => {
 
@@ -506,7 +517,6 @@ const poListByPPNC = (queryData, tokenData) => {
 
     return poListQuery;
 }
-
 
 
 

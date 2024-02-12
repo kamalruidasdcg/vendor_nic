@@ -18,7 +18,7 @@ const { mailTrigger } = require('../sendMailController');
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE } = require('../../lib/event');
 const { Console } = require('console');
 
-
+ 
 // add new post
 const submitSDBG = async (req, res) => {
     // return resSend(res, false, 200, "No data inserted", req.body, null);
@@ -26,7 +26,7 @@ const submitSDBG = async (req, res) => {
 
 
         // Handle Image Upload
-        let fileData = {};
+         let fileData = {};
         if (req.file) {
             fileData = {
                 file_name: req.file.filename,
@@ -268,14 +268,28 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
             bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
             bank_city: obj.bank_city ? obj.bank_city : null,
-            pincode: obj.pincode ? obj.pincode : null,
+
+            bank_pin_code: obj.bank_pin_code ? obj.bank_pin_code : null,
+
             bg_no: obj.bg_no ? obj.bg_no : null,
             bg_date: obj.bg_date ? obj.bg_date : null,
             bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
             department: obj.department ? obj.department : null,
             po_date: obj.po_date ? obj.po_date : null,
             yard_no: obj.yard_no ? obj.yard_no : null,
-            vendor_pincode: obj.vendor_pincode ? obj.vendor_pincode : null,
+
+            validity_date: obj.validity_date ? obj.validity_date : null,
+            claim_priod: obj.claim_priod ? obj.claim_priod : null,
+            check_list_reference: obj.check_list_reference ? obj.check_list_reference : null,
+            check_list_date: obj.check_list_date ? obj.check_list_date : null,
+            bg_type: obj.bg_type ? obj.bg_type : null,
+            vendor_name: obj.vendor_name ? obj.vendor_name : null,
+            vendor_address1: obj.vendor_address1 ? obj.vendor_address1 : null,
+            vendor_address2: obj.vendor_address2 ? obj.vendor_address2 : null,
+            vendor_address3: obj.vendor_address3 ? obj.vendor_address3 : null,
+            vendor_city: obj.vendor_city ? obj.vendor_city : null,
+
+            vendor_pin_code: obj.vendor_pin_code ? obj.vendor_pin_code : null,
             extension_date1: obj.extension_date1 ? obj.extension_date1 : null,
             extension_date2: obj.extension_date2 ? obj.extension_date2 : null,
             extension_date3: obj.extension_date3 ? obj.extension_date3 : null,
@@ -284,7 +298,9 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             extension_date6: obj.extension_date6 ? obj.extension_date6 : null,
             release_date: obj.release_date ? obj.release_date : null,
             demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : null,
-            extension_date: obj.extension_date ? obj.extension_date : null,
+            
+            entension_letter_date: obj.entension_letter_date ? obj.entension_letter_date : null,
+
             status: obj.status ? obj.status : null,
             created_at: getEpochTime(),
             created_by: tokenData.vendor_code,
