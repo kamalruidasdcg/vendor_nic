@@ -244,9 +244,10 @@ const poList = async (req, res) => {
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
-                        Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
-                        //  Query = await poListByEcko();
-                        console.log(Query);
+                       //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+                         Query = await poListByEcko();
+                        // console.log("****************$%^&*()(*&^%$");
+                        // console.log(Query);
                     } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
@@ -290,7 +291,8 @@ const poList = async (req, res) => {
         if (!strVal || strVal == "") {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
-
+// console.log("$%^&*()(*&^%$");
+// console.log(strVal);
         poQuery =
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
