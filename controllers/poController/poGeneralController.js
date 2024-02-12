@@ -246,8 +246,8 @@ const poList = async (req, res) => {
                     if (tokenData.internal_role_id === ASSIGNER) {
                        //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
                          Query = await poListByEcko();
-                        // console.log("****************$%^&*()(*&^%$");
-                        // console.log(Query);
+                        console.log("****************$%^&*()(*&^%$");
+                        console.log(Query);
                     } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
@@ -255,6 +255,7 @@ const poList = async (req, res) => {
                     break;
                 case USER_TYPE_GRSE_FINANCE:
                     if (tokenData.internal_role_id === ASSIGNER) {
+                        Query = await poListByEcko();
                         Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
                     } else if (tokenData.internal_role_id === STAFF) {
@@ -263,7 +264,8 @@ const poList = async (req, res) => {
                     }
                     break;
                 case USER_TYPE_GRSE_DRAWING:
-                    Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                   // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                   Query = await poListByEcko();
                     break;
                 case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
@@ -291,8 +293,8 @@ const poList = async (req, res) => {
         if (!strVal || strVal == "") {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
-// console.log("$%^&*()(*&^%$");
-// console.log(strVal);
+console.log("$%^&*()(*&^%$");
+console.log(strVal);
         poQuery =
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
