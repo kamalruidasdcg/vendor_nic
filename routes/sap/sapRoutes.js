@@ -4,6 +4,7 @@ const paymentRoutes =  require("./paymentRoutes");
 const poGeneralRoutes =  require("./poGeneralRoutes");
 const sapTestRoutes =  require("./testRoutes");
 const materialRoutes =  require("./materialRoutes");
+const wbsRoutes =  require("./wbsElementRoutes");
 
 /**
  * SAP API START 
@@ -15,6 +16,7 @@ const materialRoutes =  require("./materialRoutes");
 router.use("/sdbg", sdbgRoutes);
 router.use("/payment", paymentRoutes);
 router.use("/po", poGeneralRoutes);
+router.use("/wbs", wbsRoutes);
 router.use("/test", sapTestRoutes);
 router.use("/material", materialRoutes);
 
