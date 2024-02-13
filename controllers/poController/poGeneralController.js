@@ -12,7 +12,7 @@ const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../
 
 /** APIS START ----->  */
 const details = async (req, res) => {
-    try {
+    try { 
 
         const queryParams = req.query;
         const tokenData = { ...req.tokenData };
@@ -244,8 +244,10 @@ const poList = async (req, res) => {
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
-                        Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
-
+                       //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+                         Query = await poListByEcko();
+                        console.log("****************$%^&*()(*&^%$");
+                        console.log(Query);
                     } else if (tokenData.internal_role_id === STAFF) {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
 
@@ -253,6 +255,7 @@ const poList = async (req, res) => {
                     break;
                 case USER_TYPE_GRSE_FINANCE:
                     if (tokenData.internal_role_id === ASSIGNER) {
+                        // Query = await poListByEcko();
                         Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
                     } else if (tokenData.internal_role_id === STAFF) {
@@ -261,7 +264,8 @@ const poList = async (req, res) => {
                     }
                     break;
                 case USER_TYPE_GRSE_DRAWING:
-                    Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                   // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                   Query = await poListByEcko();
                     break;
                 case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
@@ -289,7 +293,8 @@ const poList = async (req, res) => {
         if (!strVal || strVal == "") {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
-
+console.log("$%^&*()(*&^%$");
+console.log(strVal);
         poQuery =
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
@@ -482,6 +487,16 @@ const poList = async (req, res) => {
     }
 }
 
+const poListByEcko = async (vendorCode = "") => { 
+    let sufx;
+    let qry = `SELECT DISTINCT(EBELN) from ekko`;
+    if(vendorCode != "") {
+        sufx = ` WHERE LIFNR = "${vendorCode}"`;
+        qry = qry+sufx;
+    }
+    return qry;
+}
+
 
 const poListByPPNC = (queryData, tokenData) => {
 
@@ -506,7 +521,6 @@ const poListByPPNC = (queryData, tokenData) => {
 
     return poListQuery;
 }
-
 
 
 
