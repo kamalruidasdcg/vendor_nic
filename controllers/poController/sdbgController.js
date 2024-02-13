@@ -17,7 +17,7 @@ const { mailInsert } = require('../../services/mai.services');
 const { mailTrigger } = require('../sendMailController');
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE } = require('../../lib/event');
 
- 
+
 // add new post
 const submitSDBG = async (req, res) => {
     // return resSend(res, false, 200, "No data inserted", req.body, null);
@@ -25,7 +25,7 @@ const submitSDBG = async (req, res) => {
 
 
         // Handle Image Upload
-         let fileData = {};
+        let fileData = {};
         if (req.file) {
             fileData = {
                 file_name: req.file.filename,
@@ -294,7 +294,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             extension_date6: obj.extension_date6 ? obj.extension_date6 : null,
             release_date: obj.release_date ? obj.release_date : null,
             demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : null,
-            
+
             entension_letter_date: obj.entension_letter_date ? obj.entension_letter_date : null,
 
             status: obj.status ? obj.status : null,
@@ -380,7 +380,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ? LIMIT 1`;
         let sdbgResult = await query({ query: Q, values: [obj.purchasing_doc_no] });
 
-        let sdbgDataResult = sdbgResult[0];
+        let sdbgDataResult = sdbgResult[0] || {};
         // console.log("sdbgDataResult");
         // console.log(sdbgDataResult);
         const insertPayloadForSdbg = {
