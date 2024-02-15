@@ -226,26 +226,26 @@ const list = async (req, res) => {
                      ON
                          (grse_officers_assignTo.PERNR = qap.assigned_to AND grse_officers_assignTo.SUBTY = "0030")
 
-                    WHERE `;
-        let qry = ``;
-        let valArr = ``;
-        if (tokenData.user_type === USER_TYPE_VENDOR) {
-            qry = `( qap.purchasing_doc_no = ? AND qap.vendor_code = ? )`;
-            valArr = [req.query.poNo, tokenData.vendor_code];
-        }
-        if (tokenData.department_id === USER_TYPE_GRSE_QAP && tokenData.internal_role_id === QAP_ASSIGNER) {
-            qry = `qap.purchasing_doc_no = ?`;
-            valArr = [req.query.poNo];
-        }
-        if (tokenData.department_id === USER_TYPE_GRSE_QAP && tokenData.internal_role_id === QAP_STAFF) {
-            qry = `( qap.purchasing_doc_no = ? AND qap.assigned_to = ? )`;
-            valArr = [req.query.poNo, tokenData.vendor_code];
-        }
-        const finalQuery = pre + qry;
-        if (finalQuery == "") {
-            resSend(res, true, 200, "no user type or deperment found.", fileData, null);
-        }
-        const result = await query({ query: finalQuery, values: valArr });
+                    WHERE qap.purchasing_doc_no = ?`;
+        // let qry = ``;
+        // let valArr = ``;
+        // if (tokenData.user_type === USER_TYPE_VENDOR) {
+        //     qry = `( qap.purchasing_doc_no = ? AND qap.vendor_code = ? )`;
+        //     valArr = [req.query.poNo, tokenData.vendor_code];
+        // }
+        // if (tokenData.department_id === USER_TYPE_GRSE_QAP && tokenData.internal_role_id === QAP_ASSIGNER) {
+        //     qry = `qap.purchasing_doc_no = ?`;
+        //     valArr = [req.query.poNo];
+        // }
+        // if (tokenData.department_id === USER_TYPE_GRSE_QAP && tokenData.internal_role_id === QAP_STAFF) {
+        //     qry = `( qap.purchasing_doc_no = ? AND qap.assigned_to = ? )`;
+        //     valArr = [req.query.poNo, tokenData.vendor_code];
+        // }
+        // const finalQuery = pre + qry;
+        // if (finalQuery == "") {
+        //     resSend(res, true, 200, "no user type or deperment found.", fileData, null);
+        // }
+        const result = await query({ query: pre, values: [req.query.poNo] });
         if (!result.length) {
             return resSend(res, true, 200, "No QAP found.", null, null);
         }
