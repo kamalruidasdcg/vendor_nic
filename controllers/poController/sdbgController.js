@@ -115,47 +115,8 @@ const submitSDBG = async (req, res) => {
         const response = await query({ query: q, values: val });
 
         if (response.affectedRows) {
-            // mail setup
-
-
-            // if (payload.status === PENDING) {
-
-            //     if (payload.updated_by == "VENDOR") {
-
-            //         const result = await poContactDetails(payload.purchasing_doc_no);
-            //         payload.delingOfficerName = result[0]?.dealingOfficerName;
-            //         payload.mailSendTo = result[0]?.dealingOfficerMail;
-            //         payload.vendor_name = result[0]?.vendor_name;
-            //         payload.vendor_code = result[0]?.vendor_code;
-            //         payload.sendAt = new Date(payload.created_at);
-            //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_VENDOR);
-
-            //     } else if (payload.updated_by == "GRSE") {
-
-            //         const result = await poContactDetails(payload.purchasing_doc_no);
-            //         payload.vendor_name = result[0]?.vendor_name;
-            //         payload.vendor_code = result[0]?.vendor_code;
-            //         payload.mailSendTo = result[0]?.vendor_mail_id;
-            //         payload.delingOfficerName = result[0]?.dealingOfficerName;
-            //         payload.sendAt = new Date(payload.created_at);
-
-            //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
-
-            //     }
-            // }
-            // if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
-
-            //     const result = await poContactDetails(payload.purchasing_doc_no);
-            //     payload.vendor_name = result[0]?.vendor_name;
-            //     payload.vendor_code = result[0]?.vendor_code;
-            //     payload.mailSendTo = result[0]?.vendor_mail_id;
-            //     payload.delingOfficerName = result[0]?.dealingOfficerName;
-            //     payload.sendAt = new Date(payload.created_at);
-            //     mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
-
-            // }
-
-            // await handelEmail(payload);
+            payload.insertId = response.insertId;
+            handelEmail(payload);
             return resSend(res, true, 200, "file uploaded!", fileData, null);
         }
         else {
@@ -534,6 +495,8 @@ async function handelEmail(payload) {
         payload.vendor_name = result[0]?.vendor_name;
         payload.vendor_code = result[0]?.vendor_code;
         payload.sendAt = new Date(payload.created_at);
+        payload.email_subject = "New SDBG Submitted by Vendor";
+
         await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
     }
 }

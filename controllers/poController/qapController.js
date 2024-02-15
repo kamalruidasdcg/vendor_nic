@@ -657,13 +657,12 @@ async function logEntry(payload, vendor_code, assigned_from, assigner_person_id)
                 item_info_id: payload.insertId,
                 remarks: payload.remarks,
                 purchasing_doc_no: payload.purchasing_doc_no,
-                created_at: payload.created_at,
-                created_by_id: payload.action_by_id
+                created_at: payload.created_at,                
+                created_by_id: payload.created_by_id
             })
         }
         const log = await deptLogEntry(logPayload)
     } catch (error) {
-
         console.log("log entry api", error);
 
     }

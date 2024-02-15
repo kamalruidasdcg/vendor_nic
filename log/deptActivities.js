@@ -34,28 +34,28 @@ const { DEPERTMENT_LOG } = require("../lib/tableName");
 //   }
 // }
 
-const logPayload = [
-  {
-    user_id: 600230,
-    depertment: 3,
-    action: "ACCEPT",
-    item_info_id: 50,
-    remarks: "QAP ACCEPTED",
-    purchasing_doc_no: "4700013227",
-    created_at: 1702535829,
-    created_by_id: 600231,
-  },
-  {
-    user_id: 600231,
-    depertment: 3,
-    action: "ACCEPT",
-    item_info_id: 50,
-    remarks: "QP ACCEPTED",
-    purchasing_doc_no: "4700013227",
-    created_at: 1702535829,
-    created_by_id: 600231,
-  },
-];
+// const logPayload = [
+//   {
+//     user_id: 600230,
+//     depertment: 3,
+//     action: "ACCEPT",
+//     item_info_id: 50,
+//     remarks: "QAP ACCEPTED",
+//     purchasing_doc_no: "4700013227",
+//     created_at: 1702535829,
+//     created_by_id: 600231,
+//   },
+//   {
+//     user_id: 600231,
+//     depertment: 3,
+//     action: "ACCEPT",
+//     item_info_id: 50,
+//     remarks: "QP ACCEPTED",
+//     purchasing_doc_no: "4700013227",
+//     created_at: 1702535829,
+//     created_by_id: 600231,
+//   },
+// ];
 
 
 /**
