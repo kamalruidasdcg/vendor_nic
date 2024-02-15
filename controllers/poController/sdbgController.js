@@ -258,7 +258,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         if (dealingOfficer === 0) {
             return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
         }
-        
+         
         const insertPayload = {
             purchasing_doc_no: obj.purchasing_doc_no,
             bank_name: obj.bank_name ? obj.bank_name : null,
