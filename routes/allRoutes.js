@@ -29,6 +29,7 @@ const billRoutes = require("./billRoutes");
 const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
 const wdcRoutes = require("./wdcRoutes");
+const ilmsRoutes = require("./ilmsRoutes");
 
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
@@ -91,6 +92,7 @@ const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
 router.use(poPrefix + "/drawing", drawingRoutes);
 router.use(poPrefix + "/wdc", wdcRoutes);
+router.use(poPrefix + "/ilms", ilmsRoutes);
 
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
