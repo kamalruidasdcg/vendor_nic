@@ -8,6 +8,9 @@ const { unlockPrivilege } = require("../services/auth.services");
 router.post("/submitILMS", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
   ilmsController.submitILMS(req, res);
 });
+router.get("/list", [], (req, res) => {
+  ilmsController.list(req, res);
+});
 
 // router.post("/sdbgSubmitByDealingOfficer", [veifyAccessToken], (req, res) => {
 //   sdbgController.sdbgSubmitByDealingOfficer(req, res);
