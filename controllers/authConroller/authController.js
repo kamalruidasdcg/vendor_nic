@@ -12,12 +12,7 @@ const { resSend } = require("../../lib/resSend");
 const { AUTH, USTER_TYPE } = require("../../lib/tableName");
 const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
-
 const rolePermission = require("../../lib/role/deptWiseRolePermission");
-
-
-
-
 
 const MAX_AGE = 24 * 60 * 60 * 1000;
 
@@ -107,6 +102,8 @@ const login = async (req, res) => {
         let result = await query({ query: login_Q, values: [req.body.vendor_code] });
         let user = {};
         let permission = {};
+        let privilege = {};
+        let privilegeId;
         let userDetails = [];
         if (!result.length) {
             return resSend(res, false, 404, "USER_NOT_FOUND");
@@ -151,27 +148,48 @@ const login = async (req, res) => {
 
                 // user = { user: { ...result[0] } };
             } else if (result[0]["user_type"] !== USER_TYPE_VENDOR) {
-
                 const grseDetaisQ =
-                    `SELECT t1.CNAME AS name, t2.USRID_LONG AS email
-                        FROM pa0002 
-                        AS t1 
-                    LEFT JOIN pa0105 
-                        AS t2
-                    ON
-                        (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030")
-                    WHERE 
-                         t1.PERNR = ?`;
+                    `SELECT t1.cname      AS NAME,
+                                t2.usrid_long AS email,
+                                privilege.id,
+                                privilege.sdbg,
+                                privilege.drawing,
+                                privilege.qap,
+                                privilege.inspectionCallLetter,
+                                privilege.shippingDocuments,
+                                privilege.gateEntry,
+                                privilege.grn,
+                                privilege.icgrn,
+                                privilege.wdc,
+                                privilege.bpgCopy,
+                                privilege.checkList,
+                                privilege.billRegistration,
+                                privilege.paymentVoucher
+                         FROM   pa0002 AS t1
+                                LEFT JOIN pa0105 AS t2
+                                       ON ( t1.pernr = t2.pernr
+                                            AND t2.subty = "0030" )
+                                LEFT JOIN emp_department_list AS emp
+                                       ON emp.emp_id = t1.pernr
+                                LEFT JOIN privilege AS privilege
+                                       ON emp.privilege_id = privilege.id
+                         WHERE  t1.pernr = ? `;
+
                 userDetails = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
 
+                console.log("userDetails", userDetails);
+
                 if (userDetails.length) {
-                    result[0] = { ...result[0], ...userDetails[0] };
+                    const { NAME, email, id, ...p } = userDetails[0];
+                    privilege = { ...p };
+                    privilegeId = id;
+                    result[0] = { ...result[0], NAME, email, };
                     const { department_name, role } = result[0];
                     const deptPermission = rolePermission[department_name];
                     if (deptPermission) {
                         deptPermission[role] = true;
                     }
-                    permission = deptPermission ? deptPermission : {};
+                    permission = deptPermission || {};
                 }
 
                 /**
@@ -191,7 +209,6 @@ const login = async (req, res) => {
                 }
                  */
             }
-
         }
 
         // commented because of previously use role base access. now no need 
@@ -200,6 +217,7 @@ const login = async (req, res) => {
 
         // deleting password from response
         delete result[0]["password"];
+
 
         // let sidebar_menu = { ...rolePermission };
         // added permission as per define in permission table
@@ -231,18 +249,25 @@ const login = async (req, res) => {
         // }
 
         // user["permission"] = sidebar_menu;
+        const obj = {}
 
-        user = { user: { ...result[0] }, permission };
+        if (privilege && typeof privilege == 'object') {
+            Object.keys(privilege).forEach((el) => {
+                obj[el] = { accessType: privilege[el] }
+            })
+        }
+
+
+        user = { user: { ...result[0] }, permission, privilege: obj };
 
         const payload = {
             username: user.user?.username,
             vendor_code: user.user?.vendor_code,
-            name: user.user?.name,
+            name: user.user?.name || user.user?.NAME,
             user_type: user.user?.user_type,
             department_id: user.user.department_id,
-            internal_role_id: user.user.internal_role_id
-
-            // user_type_name: user.user_type.user_type
+            internal_role_id: user.user?.internal_role_id,
+            privilege_id: privilegeId
         };
 
         const ACCESS_TOKEN_VALIDITY = "1d";
