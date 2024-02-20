@@ -1,3 +1,4 @@
+const { query } = require("../config/dbConfig");
 const { getEpochTime } = require("../lib/utils");
 
 
@@ -247,5 +248,34 @@ async function poDataModify(data) {
 }
 
 
+async function poDelingOfficersDetails(purchasing_doc_no, user_id = null) {
 
-module.exports = { sdbgPayload, sdbgPayloadVendor, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
+    let  poDealingOfficersQuery = `SELECT * FROM ekko WHERE 1 = 1 AND EBELN = ?`;
+    const val = [purchasing_doc_no]
+    if(user_id) {
+        poDealingOfficersQuery += ` AND ERNAM = ?`
+        val.push(user_id)
+    }
+
+    console.log("poDealingOfficersQuery", poDealingOfficersQuery);
+    console.log("val", val);
+    
+    const res = await query({ query: poDealingOfficersQuery, values: val});
+    const details = {
+        purchasing_doc_no: purchasing_doc_no,
+        name: "",
+        user_id: user_id,
+        email_id: "",
+        isDO: false,
+    }
+    if(res?.length) {
+        details.name = res[0].name;
+        details.email_id = res[0].email_id;
+        details.isDO = parseInt(user_id) == parseInt(res[0].ERNAM);
+    }
+    return {...details};
+}
+
+
+
+module.exports = { poDelingOfficersDetails, sdbgPayload, sdbgPayloadVendor, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
