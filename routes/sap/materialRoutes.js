@@ -9,5 +9,8 @@ router.get("/list", (req, res) => {
 router.post("/makt", (req, res) => {
     controller.makt(req, res);
 });
+router.post("/mseg", (req, res) => {
+    controller.mseg(req, res);
+});
 
 module.exports = router;
