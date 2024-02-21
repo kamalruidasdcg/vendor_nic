@@ -1,11 +1,11 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG } = require('../../lib/tableName');
+const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF } = require('../../lib/tableName');
 const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQuery, generateQueryArray } = require("../../lib/utils");
 const { getFilteredData } = require('../genralControlles');
-const { msegPayload } = require("../../services/sap.material.services")
+const { msegPayload, makfPayload } = require("../../services/sap.material.services")
 
 
 const makt = async (req, res) => {
@@ -72,8 +72,28 @@ const mseg = async (req, res) => {
         const payloadObj = await msegPayload(payload);
         const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
 
-        console.log("q", q);
-        console.log("val", val);
+        const response = await promiseConnection.query(q, [val]);
+        responseSend(res, "1", 200, "Data inserted successfully", response, null);
+    } catch (err) {
+        console.log("data not inserted", err);
+        responseSend(res, "0", 500, "Internal server errorR", err, null);
+    } finally {
+        await promiseConnection.end();
+    }
+
+
+};
+const mkpf = async (req, res) => {
+  
+    const promiseConnection = await connection();
+    try {
+        if (!req.body) {
+            responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+        }
+        const payload = req.body;
+        
+        const payloadObj = await makfPayload(payload);
+        const { q, val } = await generateQueryArray(INSERT, MKPF, payloadObj);
 
         const response = await promiseConnection.query(q, [val]);
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
@@ -105,4 +125,4 @@ const list = async (req, res) => {
 }
 
 
-module.exports = { list, makt, mseg }
+module.exports = { list, makt, mseg, mkpf }
