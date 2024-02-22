@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload } = require("../../services/po.services");
+const { sdbgPayload, sdbgPayloadVendor } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -53,23 +53,17 @@ const submitSDBG = async (req, res) => {
             const tokenData = { ...req.tokenData };
             //console.log(tokenData);
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+
+            payload = sdbgPayload(payload);
+            
             if (tokenData.user_type != USER_TYPE_VENDOR) {
-                return resSend(
-                    res,
-                    false,
-                    200,
-                    "Please please login as vendor for SDBG subminission.",
-                    null,
-                    null
-                );
+                return resSend( res, false, 200, "Please please login as vendor for SDBG subminission.", null, null);
             }
+
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
-
             payload.created_by_id = tokenData.vendor_code;
-            // console.log("payload..");
-            // console.log(payload);
-            //return;
+        
             const verifyStatus = [PENDING, RE_SUBMITTED];
 
             if (
@@ -78,25 +72,13 @@ const submitSDBG = async (req, res) => {
             ) {
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(
-                    res,
-                    false,
-                    400,
-                    "Please send valid pay1load",
-                    null,
-                    null
-                );
+                return resSend( res, false, 400, "Please send valid pay1load", null, null);
             }
 
             const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-            const result2 = await getSDBGData(
-                GET_LATEST_SDBG,
-                payload.purchasing_doc_no,
-                ACCEPTED
-            );
-            // console.log("result2..");
-            // console.log(result2);
-            // return;
+    
+            const result2 = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, ACCEPTED] });
+
             if (result2[0].count_po > 0) {
                 // const data = [{
                 //     purchasing_doc_no: result2[0]?.purchasing_doc_no,
@@ -106,54 +88,8 @@ const submitSDBG = async (req, res) => {
                 //     message: "The SDBG is already acknowledge. If you want to reopen, please contact with senior management."
                 // }];
 
-                return resSend(
-                    res,
-                    true,
-                    200,
-                    `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`,
-                    null,
-                    null
-                );
+                return resSend(res, true, 200, `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`, null, null);
             }
-
-            // let insertObj;
-
-            // if (payload.status === PENDING) {
-            //     payload = { ...payload, isLocked: 0 };
-            //     insertObj = sdbgPayload(payload, PENDING);
-            // } else if (payload.status === RE_SUBMITTED) {
-
-            //     // const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-            //     // console.log("iiii", result)
-
-            //     // if (!result || !result.length) {
-            //     //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-            //     // }
-
-            //     // payload = {
-            //     //     ...payload,
-            //     //     bank_name: result[0].bank_name,
-            //     //     transaction_id: result[0].transaction_id,
-            //     //     vendor_code: result[0].vendor_code,
-            //     // }
-
-            //     // insertObj = sdbgPayload(payload, RE_SUBMITTED);
-
-            // } else if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
-
-            //     const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-
-            //     if (!result || !result.length) {
-            //         return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
-            //     }
-            //     payload = { ...payload, isLocked: 1 };
-            //     insertObj = sdbgPayload(payload, ACKNOWLEDGED);
-            // }
-
             const { q, val } = generateQuery(INSERT, SDBG, payload);
             const response = await query({ query: q, values: val });
 
@@ -199,19 +135,12 @@ const submitSDBG = async (req, res) => {
 
                 // await handelEmail(payload);
 
-                return resSend(res, true, 200, "file uploaded!", fileData, null);
+                resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
-                return resSend(res, false, 400, "No data inserted", response, null);
+                resSend(res, false, 400, "No data inserted", response, null);
             }
         } else {
-            return resSend(
-                res,
-                false,
-                400,
-                "Please upload a valid File",
-                fileData,
-                null
-            );
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
     } catch (error) {
         console.log("SDGB Submission api", error);
