@@ -38,6 +38,7 @@ const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
 const { sendReminderMail } = require("../controllers/sapController/remaiderMailSendController");
+const { createTable } = require("../lib/createTableFromJson");
 
 
 // FOR CHECHING SERVER IS RUNNING ...
@@ -74,6 +75,18 @@ router.get("/reminder", sendReminderMail);
 // router.post("/certifyBill/:zbtno", [veifyAccessToken, authorizeRoute], certifyBill);
 // router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
 
+router.post("/createTable", async (req, res) => {
+
+
+  try {
+    const succ = await createTable();
+    console.log(succ);
+    res.status(200).json({ success: true, data: { queryData: req.query, api: succ }, message: "ping pong" })
+  } catch (error) {
+    res.status(500).json({ success: true, data: error, message: "error" })
+   
+  }
+});
 
 
 // PO BILL APIS
