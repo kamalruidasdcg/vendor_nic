@@ -5,6 +5,7 @@ const poGeneralRoutes =  require("./poGeneralRoutes");
 const sapTestRoutes =  require("./testRoutes");
 const materialRoutes =  require("./materialRoutes");
 const wbsRoutes =  require("./wbsElementRoutes");
+const qaRoutes =  require("./qaRoutes");
 
 /**
  * SAP API START 
@@ -19,6 +20,7 @@ router.use("/po", poGeneralRoutes);
 router.use("/wbs", wbsRoutes);
 router.use("/test", sapTestRoutes);
 router.use("/material", materialRoutes);
+router.use("/qa", qaRoutes);
 
 // router.post("/po", [], (req, res) => {
 //     dataInsert.insertPOData(req, res);
