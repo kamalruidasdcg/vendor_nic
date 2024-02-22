@@ -67,12 +67,12 @@ const submitSDBG = async (req, res) => {
             const verifyStatus = [PENDING, RE_SUBMITTED];
 
             if (
-                (!payload.purchasing_doc_no || !payload.remarks) &&
+                (!payload.purchasing_doc_no) &&
                 verifyStatus.includes(payload.status)
             ) {
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend( res, false, 400, "Please send valid pay1load", null, null);
+                return resSend( res, false, 400, "Please send valid payload", null, null);
             }
 
             const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
