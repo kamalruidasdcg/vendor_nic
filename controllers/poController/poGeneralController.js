@@ -284,6 +284,7 @@ const poList = async (req, res) => {
             return resSend(res, false, 400, "you dont have permission or no data found", null, null);
         }
         let strVal;
+        console.log("$%^&*()(*&^%$");
         try {
             strVal = await queryArrayTOString(Query, tokenData.user_type);
         } catch (error) {
