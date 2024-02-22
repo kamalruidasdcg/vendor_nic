@@ -59,9 +59,9 @@ const sdbgPayload = (payload, status) => {
         "remarks": payload.remarks ? payload.remarks : null,
         "status": payload.status ? payload.status : null,
         "updated_by": payload.updated_by,
-        "vendor_code": payload.vendor_code ? payload.vendor_code: null,
-        "assigned_from": payload.assigned_from ? payload.assigned_from: null ,
-        "assigned_to": payload.assigned_to ? payload.assigned_to: null ,
+        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
+        "assigned_from": payload.assigned_from ? payload.assigned_from : null,
+        "assigned_to": payload.assigned_to ? payload.assigned_to : null,
         "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_name": payload.action_by_name ? payload.action_by_name : null,
         "created_by_id": payload.created_by_id,
@@ -81,13 +81,15 @@ const drawingPayload = (payload, status) => {
     const payloadObj = {
         // "id": 1, // auto incremant id
         "purchasing_doc_no": payload.purchasing_doc_no,
-        "file_name": payload.fileName ? payload.fileName : null,
-        "file_path": payload.filePath ? payload.filePath : null,
-        "remarks": payload.remarks,
+        "file_name": payload.fileName || null,
+        "file_path": payload.filePath || null,
+        "remarks": payload.remarks || null,
         "status": status,
+        "actionType": payload.actionType || null,
+        "actionType_id": payload.actionType_id || null,
         "updated_by": payload.updated_by,
-        "vendor_code": payload.vendor_code ? payload.vendor_code : null,
-        "created_at": payload.created_at ? payload.created_at : getEpochTime(),
+        "vendor_code": payload.vendor_code || null,
+        "created_at": payload.created_at || getEpochTime(),
         "created_by_id": payload.created_by_id,
     }
 
