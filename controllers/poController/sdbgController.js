@@ -430,9 +430,9 @@ const sdbgUpdateByFinance = async (req, res) => {
             );
         }
         if (
-            tokenData.internal_role_id == 1 &&
-            obj.status == "ACCEPTED" &&
-            (!obj.assigned_to || obj.assigned_to == "")
+            tokenData.internal_role_id == ASSIGNER &&
+            obj.status == ACCEPTED &&
+            (!obj.assigned_to || obj.assigned_to)
         ) {
             return resSend(res, true, 200, "please send a assigned_to!", null, null);
         }
@@ -449,8 +449,8 @@ const sdbgUpdateByFinance = async (req, res) => {
             remarks: obj.remarks,
             status: obj.status,
             assigned_from:
-                tokenData.internal_role_id == 1 ? tokenData.vendor_code : null,
-            assigned_to: tokenData.internal_role_id == 1 ? obj.assigned_to : null,
+                tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
+            assigned_to: tokenData.internal_role_id == ASSIGNER ? obj.assigned_to : null,
             created_at: getEpochTime(),
             created_by_name: "finance dept",
             created_by_id: tokenData.vendor_code,

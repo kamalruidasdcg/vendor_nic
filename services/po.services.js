@@ -86,7 +86,7 @@ const drawingPayload = (payload, status) => {
         "remarks": payload.remarks || null,
         "status": status,
         "actionType": payload.actionType || null,
-        "actionType_id": payload.actionType_id || null,
+        "actionTypeId": payload.actionTypeId || null,
         "updated_by": payload.updated_by,
         "vendor_code": payload.vendor_code || null,
         "created_at": payload.created_at || getEpochTime(),
