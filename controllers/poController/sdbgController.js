@@ -472,7 +472,7 @@ const assigneeList = async (req, res) => {
     console.log(req.tokenData);
     const tokenData = { ...req.tokenData };
 
-    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != 1) {
+    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
         return resSend(
             res,
             true,
