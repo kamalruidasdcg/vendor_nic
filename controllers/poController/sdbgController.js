@@ -63,7 +63,6 @@ const submitSDBG = async (req, res) => {
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
             payload.created_by_id = tokenData.vendor_code;
-        
             const verifyStatus = [PENDING, RE_SUBMITTED];
 
             if (
@@ -357,22 +356,24 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             remarks: obj.remarks,
             status: "FORWARD_TO_FINANCE",
             assigned_from: tokenData.vendor_code,
-            assigned_to: obj.assigned_to,
+            assigned_to: obj.assigned_to || null,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
             created_by_id: tokenData.vendor_code,
             updated_by: "GRSE",
         };
-        // console.log("sdbg--");
-        // console.log(insertPayloadForSdbg);
-
+        console.log("sdbg--");
+        console.log(insertPayloadForSdbg);
         let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+        // console.log(insertsdbg_q);
+        // return;
         let sdbgQuery = await query({
             query: insertsdbg_q["q"],
             values: insertsdbg_q["val"],
         });
-        // console.log("rt67898uygy");
-        // console.log(sdbgQuery);
+
+        console.log("rt67898uygy");
+        console.log(sdbgQuery);
         return resSend(
             res,
             true,
@@ -429,13 +430,13 @@ const sdbgUpdateByFinance = async (req, res) => {
                 null
             );
         }
-        if (
-            tokenData.internal_role_id == ASSIGNER &&
-            obj.status == ACCEPTED &&
-            (!obj.assigned_to || obj.assigned_to)
-        ) {
-            return resSend(res, true, 200, "please send a assigned_to!", null, null);
-        }
+        // if (
+        //     tokenData.internal_role_id == ASSIGNER &&
+        //     obj.status == ACCEPTED &&
+        //     (!obj.assigned_to || obj.assigned_to)
+        // ) {
+        //     return resSend(res, true, 200, "please send a assigned_to!", null, null);
+        // }
 
         const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ? LIMIT 1`;
         let sdbgResult = await query({ query: Q, values: [obj.purchasing_doc_no] });
