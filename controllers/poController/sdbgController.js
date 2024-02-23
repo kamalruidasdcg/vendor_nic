@@ -217,7 +217,7 @@ const getSdbgEntry = async (req, res) => {
 
         return resSend(
             res,
-            false,
+            true,
             200,
             "data fetch successfully.",
             result[0],
