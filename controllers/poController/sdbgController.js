@@ -43,15 +43,18 @@ const submitSDBG = async (req, res) => {
     try {
         // Handle Image Upload
         let fileData = {};
+        console.log(req.file);
         if (req.file) {
             fileData = {
-                file_name: req.file.filename,
-                file_path: req.file.path,
+                fileName: req.file.filename,
+                filePath: req.file.path,
                 // fileType: req.file.mimetype,
                 //fileSize: req.file.size,
             };
+            
             const tokenData = { ...req.tokenData };
-            //console.log(tokenData);
+           console.log(tokenData);
+
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
 
             payload = sdbgPayload(payload);
@@ -89,6 +92,9 @@ const submitSDBG = async (req, res) => {
 
                 return resSend(res, true, 200, `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`, null, null);
             }
+            // console.log(payload);
+            // return;
+
             const { q, val } = generateQuery(INSERT, SDBG, payload);
             const response = await query({ query: q, values: val });
 
