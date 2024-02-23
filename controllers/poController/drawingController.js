@@ -1,13 +1,13 @@
 
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData, qapPayload } = require("../../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData, qapPayload, insertActualSubmission, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 
-const { DRAWING, EKKO } = require("../../lib/tableName");
+const { DRAWING, EKKO, SDBG, QAP_SUBMISSION, ILMS } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -20,25 +20,25 @@ const { Console } = require('console');
 
 // add new post
 const submitDrawing = async (req, res) => {
-    
+
     // console.log("%^&*&^%%^&*(*&^%$");
     // console.log("tokenData");
     // return;
     try {
         const tokenData = { ...req.tokenData };
- 
+
         const { ...obj } = req.body;
 
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
-            fileData = { 
+            fileData = {
                 fileName: req.file.filename,
                 filePath: req.file.path,
                 // fileType: req.file.mimetype,
                 // fileSize: req.file.size,
             };
-        
+
             const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
             const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
 
@@ -49,7 +49,7 @@ const submitDrawing = async (req, res) => {
                 return resSend(res, false, 400, "Please send valid payload", null, null);
 
             }
-            
+
             if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
                 resSend(res, true, 200, "please login as Valid user!", null, null);
             }
@@ -66,13 +66,9 @@ const submitDrawing = async (req, res) => {
 
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
-
             payload.created_by_id = tokenData.vendor_code;
 
-           
-            // console.log("%____________$");
-            //  console.log(payload);
-//return;
+
             const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
 
             if (result2 && result2?.length) {
@@ -90,7 +86,7 @@ const submitDrawing = async (req, res) => {
 
             // console.log("%_&&___$");
             // console.log(payload);
-//return;
+            //return;
             let insertObj;
 
             if (payload.status === PENDING) {
@@ -101,15 +97,20 @@ const submitDrawing = async (req, res) => {
                 insertObj = drawingPayload(payload, APPROVED);
             }
 
-           
+
             const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
             const response = await query({ query: q, values: val });
+            if (payload.status === APPROVED) {
+
+                const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData);
+                console.log("actual_subminission", actual_subminission);
+            }
             console.log("%_&&_((((_$");
             console.log(response);
-//return;
+            //return;
             if (response.affectedRows) {
 
-                
+
                 if (payload.status === PENDING) {
 
                     if (payload.updated_by == "VENDOR") {
@@ -130,7 +131,7 @@ const submitDrawing = async (req, res) => {
                         payload.mailSendTo = result[0]?.vendor_mail_id;
                         payload.delingOfficerName = result[0]?.dealingOfficerName;
                         payload.sendAt = new Date(payload.created_at);
-                        
+
                         mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
 
                     }
@@ -143,7 +144,7 @@ const submitDrawing = async (req, res) => {
                     payload.mailSendTo = result[0]?.vendor_mail_id;
                     payload.delingOfficerName = result[0]?.dealingOfficerName;
                     payload.sendAt = new Date(payload.created_at);
-                    mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
+                    // mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
 
                 }
 
@@ -174,8 +175,6 @@ const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
 
 
 const list = async (req, res) => {
-
-    
     try {
         const tokenData = { ...req.tokenData };
         const { poNo } = req.query;
@@ -243,7 +242,6 @@ async function poContactDetails(purchasing_doc_no) {
 
     return result;
 }
-
 
 
 module.exports = { submitDrawing, list }
