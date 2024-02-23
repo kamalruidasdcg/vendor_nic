@@ -359,7 +359,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         const insertPayloadForSdbg = {
             purchasing_doc_no: obj.purchasing_doc_no,
             ...sdbgDataResult,
-            remarks: obj.remarks,
+            remarks: "SDBG entry forwarded to Finance.",
             status: "FORWARD_TO_FINANCE",
             assigned_from: tokenData.vendor_code,
             assigned_to: obj.assigned_to || null,
