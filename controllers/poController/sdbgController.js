@@ -479,16 +479,16 @@ const assigneeList = async (req, res) => {
     console.log(req.tokenData);
     const tokenData = { ...req.tokenData };
 
-    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
-        return resSend(
-            res,
-            true,
-            200,
-            "Please Login as Finance Assigner.",
-            null,
-            null
-        );
-    }
+    // if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
+    //     return resSend(
+    //         res,
+    //         true,
+    //         200,
+    //         "Please Login as Finance Assigner.",
+    //         null,
+    //         null
+    //     );
+    // }
 
     const sdbgQuery = `SELECT t1.*, t2.CNAME, t3.USRID_LONG FROM emp_department_list AS t1
         LEFT JOIN 
