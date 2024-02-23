@@ -205,14 +205,13 @@ const getSdbgEntry = async (req, res) => {
             tokenData.department_id === USER_TYPE_GRSE_FINANCE &&
             tokenData.internal_role_id === STAFF
         ) {
-            sufix = ` AND t2.status = '${ACCEPTED}' AND t2.assigned_to = '${tokenData.vendor_code}'`;
+            sufix = ` AND t2.assigned_to = '${tokenData.vendor_code}'`;
             Query = Query + sufix;
         } else if (dealingOfficer === 1) {
             Query = Query;
         } else {
             return resSend(res, false, 200, "You are not authorized.", null, null);
         }
-
         const result = await query({ query: Query, values: [] });
 
         return resSend(
@@ -479,16 +478,16 @@ const assigneeList = async (req, res) => {
     console.log(req.tokenData);
     const tokenData = { ...req.tokenData };
 
-    // if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
-    //     return resSend(
-    //         res,
-    //         true,
-    //         200,
-    //         "Please Login as Finance Assigner.",
-    //         null,
-    //         null
-    //     );
-    // }
+    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
+        return resSend(
+            res,
+            true,
+            200,
+            "Please Login as Finance Assigner.",
+            null,
+            null
+        );
+    }
 
     const sdbgQuery = `SELECT t1.*, t2.CNAME, t3.USRID_LONG FROM emp_department_list AS t1
         LEFT JOIN 
