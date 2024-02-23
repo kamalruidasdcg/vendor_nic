@@ -259,7 +259,7 @@ const poList = async (req, res) => {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
                     } else if (tokenData.internal_role_id === STAFF) {
-                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${ACCEPTED}' AND assigned_to = ${tokenData.vendor_code}`;
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE assigned_to = ${tokenData.vendor_code}`;
 
                     }
                     break;

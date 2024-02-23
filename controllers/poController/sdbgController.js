@@ -469,7 +469,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             values: insertsdbg_q["val"],
         });
 
-        resSend(res, false, 200, "done!", sdbgQuery, null);
+        resSend(res, true, 200, "Assigned!", sdbgQuery, null);
     } catch (error) {
         resSend(res, false, 400, "somthing went wrong!", error, null);
     }
