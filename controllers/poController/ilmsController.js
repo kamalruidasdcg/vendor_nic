@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload } = require("../../services/po.services");
+const { sdbgPayload, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -153,6 +153,11 @@ const submitILMS = async (req, res) => {
 
             const { q, val } = generateQuery(INSERT, ILMS, payload);
             console.log(q);
+
+            if (payload.status === APPROVED || payload.status === ACCEPTED) {
+                const actual_subminission = await setActualSubmissionDate(payload, 4, tokenData, PENDING);
+                console.log("actual_subminission", actual_subminission);
+            }
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {

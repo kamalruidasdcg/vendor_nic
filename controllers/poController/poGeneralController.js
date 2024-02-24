@@ -53,52 +53,86 @@ const details = async (req, res) => {
             return resSend(res, false, 404, "No PO number found !!", [], null);
 
         // const timelingQ = `SELECT MTEXT, PLAN_DATE, MO FROM ${ZPO_MILESTONE} WHERE EBELN = ?`;
+
+        // GROUP  BY purchasing_doc_no, status
         const timelingQ =
-            `(SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT Max(id) AS id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   sdbg
-                                    GROUP  BY purchasing_doc_no,
-                                              status) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 1
-                        AND a.ebeln = ?)
-                UNION
-                (SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   drawing AS x
-                                    WHERE  id = (SELECT Max(id) AS id
-                                                 FROM   drawing AS y
-                                                 WHERE  y.purchasing_doc_no =
-                                                        x.purchasing_doc_no)) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 2
-                        AND a.ebeln = ?)
-                UNION
-                (SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   qap_submission AS x
-                                    WHERE  id = (SELECT Max(id) AS id
-                                                 FROM   qap_submission AS y
-                                                 WHERE  y.purchasing_doc_no =
-                                                        x.purchasing_doc_no)) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 3
-                        AND a.ebeln = ?)`;
+        `(SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 1 )
+                INNER JOIN (SELECT Max(id) AS id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   sdbg) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 1
+                AND a.ebeln = ?)
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 2 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   drawing AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   drawing AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 2
+                AND a.ebeln = ?)
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 3 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   qap_submission AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   qap_submission AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 3
+                AND a.ebeln = ?)
+                
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 3 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   qap_submission AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   qap_submission AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 3
+                AND a.ebeln = ?    
+            `;
 
         const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
 
