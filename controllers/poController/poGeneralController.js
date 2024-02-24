@@ -534,6 +534,6 @@ const poListByPPNC = (queryData, tokenData) => {
     return poListQuery;
 }
 
-
+// EBELN(VARCAT10),EBELP(VARCAT5),SLNO(INT3),WDC(CAHAR25)
 
 module.exports = { details, download, poList };
