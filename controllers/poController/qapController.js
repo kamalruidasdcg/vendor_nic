@@ -39,7 +39,7 @@ const submitQAP = async (req, res) => {
         if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
             // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
             // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", null, null);
+            return resSend(res, false, 200, "Remarks is mandotory!", null, null);
         }
         // if ((tokenData.user_type === USER_TYPE_VENDOR && activity_type === RE_SUBMITTED) || tokenData.department_id === USER_TYPE_GRSE_QAP) {
         //     if (!payload.assigned_from || !payload.assigned_to) {
