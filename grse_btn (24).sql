@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 23, 2024 at 10:11 AM
+-- Generation Time: Feb 24, 2024 at 10:47 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -24,219 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `a`
---
-
-CREATE TABLE `a` (
-  `ABLAD` varchar(25) DEFAULT NULL,
-  `AKTNR` varchar(10) DEFAULT NULL,
-  `ANLN1` varchar(12) DEFAULT NULL,
-  `ANLN2` varchar(4) DEFAULT NULL,
-  `APLZL` int(8) DEFAULT NULL,
-  `AUFNR` varchar(12) DEFAULT NULL,
-  `AUFPL` int(10) DEFAULT NULL,
-  `AUFPS` int(4) DEFAULT NULL,
-  `BELNR` varchar(10) DEFAULT NULL,
-  `BELUM` varchar(10) DEFAULT NULL,
-  `BEMOT` varchar(2) DEFAULT NULL,
-  `BERKZ` varchar(1) DEFAULT NULL,
-  `BESTQ` varchar(1) DEFAULT NULL,
-  `BNBTR` varchar(13) DEFAULT NULL,
-  `BPMNG` bigint(13) DEFAULT NULL,
-  `BPRME` varchar(3) DEFAULT NULL,
-  `BSTME` varchar(3) DEFAULT NULL,
-  `BSTMG` bigint(13) DEFAULT NULL,
-  `BUALT` varchar(13) DEFAULT NULL,
-  `BUDAT_MKPF` datetime DEFAULT NULL,
-  `BUKRS` varchar(4) DEFAULT NULL,
-  `BUSTM` varchar(4) DEFAULT NULL,
-  `BUSTW` varchar(4) DEFAULT NULL,
-  `BUZEI` int(3) DEFAULT NULL,
-  `BUZUM` int(3) DEFAULT NULL,
-  `BWART` varchar(3) DEFAULT NULL,
-  `BWLVS` int(3) DEFAULT NULL,
-  `BWTAR` varchar(10) DEFAULT NULL,
-  `CHARG` varchar(10) DEFAULT NULL,
-  `CONDI` varchar(2) DEFAULT NULL,
-  `CPUDT_MKPF` datetime DEFAULT NULL,
-  `CPUTM_MKPF` time DEFAULT NULL,
-  `CUOBJ_CH` bigint(18) DEFAULT NULL,
-  `DABRBZ` datetime DEFAULT NULL,
-  `DABRZ` datetime DEFAULT NULL,
-  `DISUB_OWNER` varchar(10) DEFAULT NULL,
-  `DMBTR` varchar(13) DEFAULT NULL,
-  `DMBUM` varchar(13) DEFAULT NULL,
-  `DYPLA` varchar(1) DEFAULT NULL,
-  `EBELN` varchar(10) DEFAULT NULL,
-  `EBELP` int(5) DEFAULT NULL,
-  `ELIKZ` varchar(1) DEFAULT NULL,
-  `EMATN` varchar(18) DEFAULT NULL,
-  `EMLIF` varchar(10) DEFAULT NULL,
-  `EQUNR` varchar(18) DEFAULT NULL,
-  `ERFME` varchar(3) DEFAULT NULL,
-  `ERFMG` bigint(13) DEFAULT NULL,
-  `EVERE` varchar(2) DEFAULT NULL,
-  `EVERS` varchar(2) DEFAULT NULL,
-  `EXBWR` varchar(13) DEFAULT NULL,
-  `EXVKW` varchar(13) DEFAULT NULL,
-  `FIPOS` varchar(14) DEFAULT NULL,
-  `FISTL` varchar(16) DEFAULT NULL,
-  `FKBER` varchar(16) DEFAULT NULL,
-  `FSH_COLLECTION` varchar(2) DEFAULT NULL,
-  `FSH_DEALLOC_QTY` bigint(13) DEFAULT NULL,
-  `FSH_SEASON` varchar(4) DEFAULT NULL,
-  `FSH_SEASON_YEAR` varchar(4) DEFAULT NULL,
-  `FSH_THEME` varchar(4) DEFAULT NULL,
-  `FSH_UMCOLL` varchar(2) DEFAULT NULL,
-  `FSH_UMSEA` varchar(4) DEFAULT NULL,
-  `FSH_UMSEA_YR` varchar(4) DEFAULT NULL,
-  `FSH_UMTHEME` varchar(4) DEFAULT NULL,
-  `GEBER` varchar(10) DEFAULT NULL,
-  `GJAHR` int(4) DEFAULT NULL,
-  `GRANT_NBR` varchar(20) DEFAULT NULL,
-  `GRUND` int(4) DEFAULT NULL,
-  `GSBER` varchar(4) DEFAULT NULL,
-  `HSDAT` datetime DEFAULT NULL,
-  `IMKEY` varchar(8) DEFAULT NULL,
-  `INSMK` varchar(1) DEFAULT NULL,
-  `J_1AGIRUPD` varchar(1) DEFAULT NULL,
-  `J_1BEXBASE` varchar(13) DEFAULT NULL,
-  `KBLNR` varchar(10) DEFAULT NULL,
-  `KBLPOS` int(3) DEFAULT NULL,
-  `KDAUF` varchar(10) DEFAULT NULL,
-  `KDEIN` int(4) DEFAULT NULL,
-  `KDPOS` int(6) DEFAULT NULL,
-  `KOKRS` varchar(4) DEFAULT NULL,
-  `KOSTL` varchar(10) DEFAULT NULL,
-  `KSTRG` varchar(12) DEFAULT NULL,
-  `KUNNR` varchar(10) DEFAULT NULL,
-  `KZBEW` varchar(1) DEFAULT NULL,
-  `KZBWS` varchar(1) DEFAULT NULL,
-  `KZEAR` varchar(1) DEFAULT NULL,
-  `KZSTR` varchar(1) DEFAULT NULL,
-  `KZVBR` varchar(1) DEFAULT NULL,
-  `KZZUG` varchar(1) DEFAULT NULL,
-  `LBKUM` bigint(13) DEFAULT NULL,
-  `LFBJA` int(4) DEFAULT NULL,
-  `LFBNR` varchar(10) DEFAULT NULL,
-  `LFPOS` int(4) DEFAULT NULL,
-  `LGNUM` varchar(3) DEFAULT NULL,
-  `LGORT` varchar(4) DEFAULT NULL,
-  `LGPLA` varchar(10) DEFAULT NULL,
-  `LGTYP` varchar(3) DEFAULT NULL,
-  `LIFNR` varchar(10) DEFAULT NULL,
-  `LINE_DEPTH` int(2) DEFAULT NULL,
-  `LINE_ID` int(6) DEFAULT NULL,
-  `LLIEF` varchar(10) DEFAULT NULL,
-  `LSMEH` varchar(3) DEFAULT NULL,
-  `LSMNG` bigint(13) DEFAULT NULL,
-  `LSTAR` varchar(6) DEFAULT NULL,
-  `MAA_URZEI` int(4) DEFAULT NULL,
-  `MATBF` varchar(18) DEFAULT NULL,
-  `MATNR` varchar(18) DEFAULT NULL,
-  `MAT_KDAUF` varchar(10) DEFAULT NULL,
-  `MAT_KDPOS` int(6) DEFAULT NULL,
-  `MAT_PSPNR` int(8) DEFAULT NULL,
-  `MBLNR` varchar(10) DEFAULT NULL,
-  `MEINS` varchar(3) DEFAULT NULL,
-  `MENGE` bigint(13) DEFAULT NULL,
-  `MENGU` varchar(1) DEFAULT NULL,
-  `MJAHR` int(4) DEFAULT NULL,
-  `MWSKZ` varchar(2) DEFAULT NULL,
-  `NPLNR` varchar(12) DEFAULT NULL,
-  `NSCHN` varchar(1) DEFAULT NULL,
-  `OICONDCOD` varchar(2) DEFAULT NULL,
-  `OINAVNW` varchar(13) DEFAULT NULL,
-  `PALAN` decimal(10,0) DEFAULT NULL,
-  `PAOBJNR` int(10) DEFAULT NULL,
-  `PARBU` varchar(4) DEFAULT NULL,
-  `PARENT_ID` int(6) DEFAULT NULL,
-  `PARGB` varchar(4) DEFAULT NULL,
-  `PBAMG` bigint(13) DEFAULT NULL,
-  `PLPLA` varchar(10) DEFAULT NULL,
-  `PPRCTR` varchar(10) DEFAULT NULL,
-  `PRCTR` varchar(10) DEFAULT NULL,
-  `PROJN` varchar(16) DEFAULT NULL,
-  `PRZNR` varchar(12) DEFAULT NULL,
-  `PS_PSP_PNR` int(8) DEFAULT NULL,
-  `QINSPST` varchar(1) DEFAULT NULL,
-  `RSART` varchar(1) DEFAULT NULL,
-  `RSNUM` int(10) DEFAULT NULL,
-  `RSPOS` int(4) DEFAULT NULL,
-  `SAKTO` varchar(10) DEFAULT NULL,
-  `SALK3` varchar(13) DEFAULT NULL,
-  `SGTXT` varchar(50) DEFAULT NULL,
-  `SGT_CHINT` varchar(1) DEFAULT NULL,
-  `SGT_RCAT` varchar(16) DEFAULT NULL,
-  `SGT_SCAT` varchar(16) DEFAULT NULL,
-  `SGT_UMSCAT` varchar(16) DEFAULT NULL,
-  `SHKUM` varchar(1) DEFAULT NULL,
-  `SHKZG` varchar(1) DEFAULT NULL,
-  `SJAHR` int(4) DEFAULT NULL,
-  `SMBLN` varchar(10) DEFAULT NULL,
-  `SMBLP` int(4) DEFAULT NULL,
-  `SOBKZ` varchar(1) DEFAULT NULL,
-  `SPE_GTS_STOCK_TY` varchar(1) DEFAULT NULL,
-  `TANUM` int(10) DEFAULT NULL,
-  `TBNUM` int(10) DEFAULT NULL,
-  `TBPOS` int(4) DEFAULT NULL,
-  `TBPRI` varchar(1) DEFAULT NULL,
-  `TCODE2_MKPF` varchar(20) DEFAULT NULL,
-  `TXJCD` varchar(15) DEFAULT NULL,
-  `UBNUM` int(10) DEFAULT NULL,
-  `UMBAR` varchar(10) DEFAULT NULL,
-  `UMCHA` varchar(10) DEFAULT NULL,
-  `UMLGO` varchar(4) DEFAULT NULL,
-  `UMMAB` varchar(18) DEFAULT NULL,
-  `UMMAT` varchar(18) DEFAULT NULL,
-  `UMSOK` varchar(1) DEFAULT NULL,
-  `UMWRK` varchar(4) DEFAULT NULL,
-  `UMZST` varchar(1) DEFAULT NULL,
-  `UMZUS` varchar(1) DEFAULT NULL,
-  `URZEI` int(4) DEFAULT NULL,
-  `USNAM_MKPF` varchar(12) DEFAULT NULL,
-  `VBELN_IM` varchar(10) DEFAULT NULL,
-  `VBELP_IM` int(6) DEFAULT NULL,
-  `VFDAT` datetime DEFAULT NULL,
-  `VGART_MKPF` varchar(2) DEFAULT NULL,
-  `VKMWS` varchar(2) DEFAULT NULL,
-  `VKWRA` varchar(13) DEFAULT NULL,
-  `VKWRT` varchar(13) DEFAULT NULL,
-  `VPRSV` varchar(1) DEFAULT NULL,
-  `VPTNR` varchar(10) DEFAULT NULL,
-  `VSCHN` varchar(1) DEFAULT NULL,
-  `WEANZ` int(3) DEFAULT NULL,
-  `WEMPF` varchar(12) DEFAULT NULL,
-  `WERKS` varchar(4) DEFAULT NULL,
-  `WERTU` varchar(1) DEFAULT NULL,
-  `WEUNB` varchar(1) DEFAULT NULL,
-  `WRF_CHARSTC1` varchar(18) DEFAULT NULL,
-  `WRF_CHARSTC2` varchar(18) DEFAULT NULL,
-  `WRF_CHARSTC3` varchar(18) DEFAULT NULL,
-  `XAUTO` varchar(1) DEFAULT NULL,
-  `XBEAU` varchar(1) DEFAULT NULL,
-  `XBLNR_MKPF` varchar(16) DEFAULT NULL,
-  `XBLVS` varchar(1) DEFAULT NULL,
-  `XMACC` varchar(1) DEFAULT NULL,
-  `XOBEW` varchar(1) DEFAULT NULL,
-  `XRUEJ` varchar(1) DEFAULT NULL,
-  `XRUEM` varchar(1) DEFAULT NULL,
-  `XSAUF` varchar(1) DEFAULT NULL,
-  `XSERG` varchar(1) DEFAULT NULL,
-  `XSKST` varchar(1) DEFAULT NULL,
-  `XSPRO` varchar(1) DEFAULT NULL,
-  `XWOFF` varchar(1) DEFAULT NULL,
-  `XWSBR` varchar(1) DEFAULT NULL,
-  `ZEILE` int(4) DEFAULT NULL,
-  `ZEKKN` int(2) DEFAULT NULL,
-  `ZUSCH` varchar(1) DEFAULT NULL,
-  `ZUSTD` varchar(1) DEFAULT NULL,
-  `ZUSTD_T156M` varchar(1) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `actualsubmissiondate`
 --
 
@@ -245,10 +32,17 @@ CREATE TABLE `actualsubmissiondate` (
   `purchasing_doc_no` varchar(10) NOT NULL,
   `milestoneId` int(2) NOT NULL,
   `milestoneText` text NOT NULL,
-  `actualSubmissionDate` int(20) NOT NULL,
+  `actualSubmissionDate` bigint(20) NOT NULL,
   `created_at` bigint(20) NOT NULL,
   `created_by_id` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `actualsubmissiondate`
+--
+
+INSERT INTO `actualsubmissiondate` (`id`, `purchasing_doc_no`, `milestoneId`, `milestoneText`, `actualSubmissionDate`, `created_at`, `created_by_id`) VALUES
+(1, '7800000047', 2, 'ACTUAL DRAWING SUBMISSION DATE', 1708757077577, 1708757092818, '600400');
 
 -- --------------------------------------------------------
 
@@ -350,7 +144,9 @@ INSERT INTO `auth` (`id`, `user_type`, `department_id`, `internal_role_id`, `use
 (19, 0, 16, 0, 'RIC', '1234', 'grse_RIC', '600300', '2024-01-23 16:44:53', NULL),
 (20, 0, 15, 2, 'grse_FINANCE_STAFF', '1234', 'grse_FINANCE_STAFF', '600201', '2024-01-23 16:44:53', NULL),
 (21, 0, 17, 1, 'Po dealing officer', '1234', 'Po dealing officer', '493834', '2024-01-23 16:44:53', NULL),
-(22, 2, 2, 1, 'CDO(drawing officer)', '1234', 'CDO(drawing officer)', '600400', '2024-01-23 16:44:53', NULL);
+(22, 2, 2, 1, 'CDO(drawing officer)', '1234', 'CDO(drawing officer)', '600400', '2024-01-23 16:44:53', NULL),
+(23, 0, 15, 2, 'grse_FINANCE_STAFF', '1234', 'grse_FINANCE_STAFF', '600202', '2024-01-23 16:44:53', NULL),
+(24, 0, 15, 2, 'grse_FINANCE_STAFF', '1234', 'grse_FINANCE_STAFF', '600203', '2024-01-23 16:44:53', NULL);
 
 -- --------------------------------------------------------
 
@@ -525,7 +321,7 @@ CREATE TABLE `drawing` (
   `file_path` varchar(500) DEFAULT NULL,
   `remarks` text DEFAULT NULL,
   `status` varchar(20) NOT NULL,
-  `actionType_id` int(2) DEFAULT NULL,
+  `actionTypeId` int(2) DEFAULT NULL,
   `actionType` varchar(100) DEFAULT NULL,
   `updated_by` varchar(30) NOT NULL,
   `created_at` bigint(20) NOT NULL,
@@ -536,9 +332,9 @@ CREATE TABLE `drawing` (
 -- Dumping data for table `drawing`
 --
 
-INSERT INTO `drawing` (`id`, `purchasing_doc_no`, `file_name`, `vendor_code`, `file_path`, `remarks`, `status`, `actionType_id`, `actionType`, `updated_by`, `created_at`, `created_by_id`) VALUES
-(1, '7800000040', 'file', '5000', '/drawing/apc.pdf', 'drawing', 'PENDING', NULL, '', 'VENDOR', 1697106743, '6000229'),
-(2, '7800000040', 'file', '5000', '/drawing/apc.pdf', 'drawing', 'PENDING', NULL, '', 'VENDOR', 1697106744, '6000229');
+INSERT INTO `drawing` (`id`, `purchasing_doc_no`, `file_name`, `vendor_code`, `file_path`, `remarks`, `status`, `actionTypeId`, `actionType`, `updated_by`, `created_at`, `created_by_id`) VALUES
+(1, '7800000047', '1708757077569-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf', '50005041', 'uploads\\submitDrawing\\1708757077569-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf', 'REMARKS 1', 'PENDING', NULL, NULL, 'VENDOR', 1708757077577, '50005041'),
+(2, '7800000047', '1708757092806-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf', '50005041', 'uploads\\submitDrawing\\1708757092806-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf', 'REMARKS 1', 'APPROVED', NULL, NULL, 'GRSE', 1708757092818, '600400');
 
 -- --------------------------------------------------------
 
@@ -1022,7 +818,8 @@ INSERT INTO `inspection_call_letter` (`id`, `purchasing_doc_no`, `file_name`, `f
 (14, '13141411411', '1706517824595-setup ftp server in Linux server.pdf', 1, '', '600232', 'uploads\\inspectionCallLetter\\1706517824595-setup ftp server in Linux server.pdf', 'new', 'GRSE', 1706517824602, '600232'),
 (15, '13141411411', '1706524822832-setup ftp server in Linux server.pdf', 1, '', '600232', 'uploads\\inspectionCallLetter\\1706524822832-setup ftp server in Linux server.pdf', 'new', 'GRSE', 1706524822841, '600232'),
 (16, '13141411411', '1706594417130-setup ftp server in Linux server.pdf', 1, 'my file', '600232', 'uploads\\inspectionCallLetter\\1706594417130-setup ftp server in Linux server.pdf', 'new', 'GRSE', 1706594417135, '600232'),
-(17, '13141411411', NULL, 1, 'my file', '600232', NULL, 'new', 'GRSE', 1706679523511, '600232');
+(17, '13141411411', NULL, 1, 'my file', '600232', NULL, 'new', 'GRSE', 1706679523511, '600232'),
+(18, '13141411411', NULL, 1, 'my file', '600252', NULL, 'new', 'GRSE', 1708756554370, '600252');
 
 -- --------------------------------------------------------
 
@@ -1098,6 +895,8 @@ INSERT INTO `lfa1` (`LIFNR`, `LAND1`, `NAME1`, `ORT01`, `ORT02`, `PFACH`, `REGIO
 ('50000437', 'IN', 'TATA STEEL LTD', 'KOLKATA', NULL, NULL, '25', 'DOMV', NULL, 'EN', 'AAAFA1890Q', '033 2282 1687', '24AAAFA1890Q1Z9', '0000-00-00'),
 ('50005041', 'IN', 'PriceWaterhouseCoopers Pvt Ltd', 'KOLKATA', NULL, NULL, '25', 'DOMV', NULL, 'EN', 'AABCP9181H', NULL, '19AABCP9181H1Z1', '0000-00-00'),
 ('50007545', 'IN', 'DCG DATA -CORE SYSTEMS (INDIA) PRIV', 'KOLKATA', NULL, NULL, '25', 'DOMV', NULL, 'EN', 'AAFCD4828F', NULL, '19AAFCD4828F1ZL', '0000-00-00'),
+('50007560', '900', 'dcg', 'ddd', 'jjdjd', 'kkkk', 'jjj', 'jeje', 'y', 'uuuu', '876545678', '9876789876', '6677882', '2024-02-24'),
+('50007561', '900', 'dcg', 'ddd', 'jjdjd', 'kkkk', 'jjj', 'jeje', 'y', 'uuuu', '876545678', '9876789876', '6677882', '2024-02-24'),
 ('600229', 'IN', 'naskar sir', 'KOLKATA', NULL, NULL, '25', 'DOMV', NULL, 'EN', 'AAFCD4828F', NULL, '19AAFCD4828F1ZL', '0000-00-00');
 
 -- --------------------------------------------------------
@@ -1123,7 +922,8 @@ INSERT INTO `makt` (`id`, `MATNR`, `SPRAS`, `MAKTX`, `MAKTG`) VALUES
 (2, '1000001009', '5', 'S', 'ABCD'),
 (3, '1000001009', '5', 'S', 'ABCD'),
 (4, '1000001009', '5', 'S', 'ABCD'),
-(5, '1000001009', '5', 'S', 'ABCD');
+(5, '1000001009', '5', 'S', 'ABCD'),
+(7, 'XXXXX', '5', 'S', 'ABCD');
 
 -- --------------------------------------------------------
 
@@ -1147,7 +947,8 @@ INSERT INTO `mara` (`MATNR`, `MTART`) VALUES
 ('SER08205', 'ZDIN'),
 ('SER08206', 'ZDIN'),
 ('000000015114117149', 'ZROH'),
-('000000015128076737', 'ZROH');
+('000000015128076737', 'ZROH'),
+('XXXXX', 'ZDIN');
 
 -- --------------------------------------------------------
 
@@ -1161,11 +962,11 @@ CREATE TABLE `mkpf` (
   `VGART` varchar(2) DEFAULT NULL COMMENT 'Transaction/Event Type',
   `BLART` varchar(2) DEFAULT NULL COMMENT 'Document Type',
   `BLAUM` varchar(2) DEFAULT NULL COMMENT 'Document type of revaluation document',
-  `BLDAT` datetime DEFAULT NULL COMMENT 'Document Date in Document',
-  `BUDAT` datetime DEFAULT NULL COMMENT 'Posting Date in the Document',
-  `CPUDT` datetime DEFAULT NULL COMMENT 'Day On Which Accounting Document Was Entered',
+  `BLDAT` date DEFAULT NULL COMMENT 'Document Date in Document',
+  `BUDAT` date DEFAULT NULL COMMENT 'Posting Date in the Document',
+  `CPUDT` date DEFAULT NULL COMMENT 'Day On Which Accounting Document Was Entered',
   `CPUTM` time DEFAULT NULL COMMENT 'Time of Entry',
-  `AEDAT` datetime DEFAULT NULL COMMENT 'Last Changed On',
+  `AEDAT` date DEFAULT NULL COMMENT 'Last Changed On',
   `USNAM` varchar(12) DEFAULT NULL COMMENT 'User Name',
   `TCODE` varchar(4) DEFAULT NULL COMMENT 'Not More Closely Defined Area, Possibly Used for Patchlevels',
   `XBLNR` varchar(16) DEFAULT NULL COMMENT 'Reference Document Number',
@@ -1195,8 +996,8 @@ CREATE TABLE `mkpf` (
 --
 
 INSERT INTO `mkpf` (`MBLNR`, `MJAHR`, `VGART`, `BLART`, `BLAUM`, `BLDAT`, `BUDAT`, `CPUDT`, `CPUTM`, `AEDAT`, `USNAM`, `TCODE`, `XBLNR`, `BKTXT`, `FRATH`, `FRBNR`, `WEVER`, `XABLN`, `AWSYS`, `BLA2D`, `TCODE2`, `BFWMS`, `EXNUM`, `SPE_BUDAT_UHR`, `SPE_BUDAT_ZONE`, `LE_VBELN`, `SPE_LOGSYS`, `SPE_MDNUM_EWM`, `GTS_CUSREF_NO`, `FLS_RSTO`, `MSR_ACTIVE`, `KNUMV`) VALUES
-('1000001009', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-11-07 00:00:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('1000001010', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-11-07 00:00:00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+('1000001009', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-11-07', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('1000001010', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-11-07', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1362,7 +1163,7 @@ CREATE TABLE `mseg` (
   `VKWRT` varchar(13) DEFAULT NULL COMMENT 'Value at Sales Prices Including Value-Added Tax',
   `AKTNR` varchar(10) DEFAULT NULL COMMENT 'Promotion',
   `ZEKKN` int(2) DEFAULT NULL COMMENT 'Sequential Number of Account Assignment',
-  `VFDAT` datetime DEFAULT NULL COMMENT 'Shelf Life Expiration or Best-Before Date',
+  `VFDAT` date DEFAULT NULL COMMENT 'Shelf Life Expiration or Best-Before Date',
   `CUOBJ_CH` bigint(18) DEFAULT NULL COMMENT 'Internal object number of the batch classification',
   `EXVKW` varchar(13) DEFAULT NULL COMMENT 'Externally Entered Sales Value in Local Currency',
   `PPRCTR` varchar(10) DEFAULT NULL COMMENT 'Partner Profit Center',
@@ -1379,9 +1180,9 @@ CREATE TABLE `mseg` (
   `SALK3` varchar(13) DEFAULT NULL COMMENT 'Value of total valuated stock before the posting',
   `VPRSV` varchar(1) DEFAULT NULL COMMENT 'Price control indicator',
   `FKBER` varchar(16) DEFAULT NULL COMMENT 'Functional Area',
-  `DABRBZ` datetime DEFAULT NULL COMMENT 'Reference date for settlement',
-  `VKWRA` varchar(13) DEFAULT NULL COMMENT 'Value at sales prices excluding value-added tax',
-  `DABRZ` datetime DEFAULT NULL COMMENT 'Reference date for settlement',
+  `DABRBZ` date DEFAULT NULL COMMENT 'Reference date for settlement',
+  `VKWRA` date DEFAULT NULL COMMENT 'Value at sales prices excluding value-added tax',
+  `DABRZ` date DEFAULT NULL COMMENT 'Reference date for settlement',
   `XBEAU` varchar(1) DEFAULT NULL COMMENT 'Purchase order created at time of goods receipt',
   `LSMNG` bigint(13) DEFAULT NULL COMMENT 'Quantity in Unit of Measure from Delivery Note',
   `LSMEH` varchar(3) DEFAULT NULL COMMENT 'Unit of Measure From Delivery Note',
@@ -1394,7 +1195,7 @@ CREATE TABLE `mseg` (
   `EMATN` varchar(18) DEFAULT NULL COMMENT 'Material number corresponding to manufacturer part number',
   `J_1AGIRUPD` varchar(1) DEFAULT NULL COMMENT 'Goods issue revaluation performed',
   `VKMWS` varchar(2) DEFAULT NULL COMMENT 'Tax on Sales/Purchases Code',
-  `HSDAT` datetime DEFAULT NULL COMMENT 'Date of Manufacture',
+  `HSDAT` date DEFAULT NULL COMMENT 'Date of Manufacture',
   `BERKZ` varchar(1) DEFAULT NULL COMMENT 'Material Staging Indicator for Production Supply',
   `MAT_KDAUF` varchar(10) DEFAULT NULL COMMENT 'Sales order number of valuated sales order stock',
   `MAT_KDPOS` int(6) DEFAULT NULL COMMENT 'Sales Order Item of Valuated Sales Order Stock',
@@ -1412,8 +1213,8 @@ CREATE TABLE `mseg` (
   `KBLPOS` int(3) DEFAULT NULL COMMENT 'Earmarked Funds: Document Item',
   `XMACC` varchar(1) DEFAULT NULL COMMENT 'Multiple Account Assignment',
   `VGART_MKPF` varchar(2) DEFAULT NULL COMMENT 'Transaction/Event Type',
-  `BUDAT_MKPF` datetime DEFAULT NULL COMMENT 'Posting Date in the Document',
-  `CPUDT_MKPF` datetime DEFAULT NULL COMMENT 'Day On Which Accounting Document Was Entered',
+  `BUDAT_MKPF` date DEFAULT NULL COMMENT 'Posting Date in the Document',
+  `CPUDT_MKPF` date DEFAULT NULL COMMENT 'Day On Which Accounting Document Was Entered',
   `CPUTM_MKPF` time DEFAULT NULL COMMENT 'Time of Entry',
   `USNAM_MKPF` varchar(12) DEFAULT NULL COMMENT 'User Name',
   `XBLNR_MKPF` varchar(16) DEFAULT NULL COMMENT 'Reference Document Number',
@@ -2065,17 +1866,17 @@ CREATE TABLE `qals` (
   `STAFO` varchar(6) DEFAULT NULL COMMENT 'Update group for statistics update',
   `STAT30` varchar(1) DEFAULT NULL COMMENT 'Origin of Inspection Lot Unit of Measure for LIS Interface',
   `QINFSTATUS` varchar(8) DEFAULT NULL COMMENT 'QINF Status',
-  `ENSTEHDAT` datetime DEFAULT NULL COMMENT 'Date of Lot Creation',
+  `ENSTEHDAT` date DEFAULT NULL COMMENT 'Date of Lot Creation',
   `ENTSTEZEIT` time DEFAULT NULL COMMENT 'Time of Lot Creation',
   `ERSTELLER` varchar(12) DEFAULT NULL COMMENT 'Name of User Who Created the Data Record',
-  `ERSTELDAT` datetime DEFAULT NULL COMMENT 'Date on Which the Data Record Was Created',
+  `ERSTELDAT` date DEFAULT NULL COMMENT 'Date on Which the Data Record Was Created',
   `ERSTELZEIT` time DEFAULT NULL COMMENT 'Time of Lot Creation',
   `AENDERER` varchar(12) DEFAULT NULL COMMENT 'Name of User who Most Recently Changed the Data Record',
-  `AENDERDAT` datetime DEFAULT NULL COMMENT 'Date on Which Data Record Was Changed',
+  `AENDERDAT` date DEFAULT NULL COMMENT 'Date on Which Data Record Was Changed',
   `AENDERZEIT` time DEFAULT NULL COMMENT 'Time of Lot Change',
-  `PASTRTERM` datetime DEFAULT NULL COMMENT 'Inspection Start Date',
+  `PASTRTERM` date DEFAULT NULL COMMENT 'Inspection Start Date',
   `PASTRZEIT` time DEFAULT NULL COMMENT 'Inspection Start Time',
-  `PAENDTERM` datetime DEFAULT NULL COMMENT 'End Date of the Inspection',
+  `PAENDTERM` date DEFAULT NULL COMMENT 'End Date of the Inspection',
   `PAENDZEIT` time DEFAULT NULL COMMENT 'Inspection End Time',
   `PLNTY` varchar(1) DEFAULT NULL COMMENT 'Task List Type',
   `PLNNR` varchar(8) DEFAULT NULL COMMENT 'Key for Task List Group',
@@ -2099,7 +1900,7 @@ CREATE TABLE `qals` (
   `SELHERST` varchar(10) DEFAULT NULL COMMENT 'Number of Manufacturer',
   `SELKUNNR` varchar(10) DEFAULT NULL COMMENT 'Account number of customer',
   `SELPPLVERW` varchar(3) DEFAULT NULL COMMENT 'Task list usage',
-  `GUELTIGAB` datetime DEFAULT NULL COMMENT 'Key Date for Selecting Records or Changing Task Lists',
+  `GUELTIGAB` date DEFAULT NULL COMMENT 'Key Date for Selecting Records or Changing Task Lists',
   `AUFNR` varchar(12) DEFAULT NULL COMMENT 'Order Number',
   `AUFPL` int(10) DEFAULT NULL COMMENT 'Routing number of operations in the order',
   `CUOBJ` bigint(18) DEFAULT NULL COMMENT 'Configuration (internal object number)',
@@ -2115,8 +1916,8 @@ CREATE TABLE `qals` (
   `XCHPF` varchar(1) DEFAULT NULL COMMENT 'Batch management requirement indicator',
   `CHARG` varchar(10) DEFAULT NULL COMMENT 'Batch Number',
   `LAGORTCHRG` varchar(4) DEFAULT NULL COMMENT 'Storage Location',
-  `ZEUGNISBIS` datetime DEFAULT NULL COMMENT 'Valid-To Date for The Batch Certificate',
-  `VFDAT` datetime DEFAULT NULL COMMENT 'Shelf Life Expiration or Best-Before Date',
+  `ZEUGNISBIS` date DEFAULT NULL COMMENT 'Valid-To Date for The Batch Certificate',
+  `VFDAT` date DEFAULT NULL COMMENT 'Shelf Life Expiration or Best-Before Date',
   `LICHN` varchar(15) DEFAULT NULL COMMENT 'Vendor Batch Number',
   `SOBKZ` varchar(1) DEFAULT NULL COMMENT 'Special Stock Indicator',
   `PS_PSP_PNR` int(8) DEFAULT NULL COMMENT 'Valuated Sales Order Stock WBS Element',
@@ -2130,7 +1931,7 @@ CREATE TABLE `qals` (
   `MJAHR` int(4) DEFAULT NULL COMMENT 'Material Document Year',
   `MBLNR` varchar(10) DEFAULT NULL COMMENT 'Number of Material Document',
   `ZEILE` int(4) DEFAULT NULL COMMENT 'Item in Material Document',
-  `BUDAT` datetime DEFAULT NULL COMMENT 'Posting Date in the Document',
+  `BUDAT` date DEFAULT NULL COMMENT 'Posting Date in the Document',
   `BWART` varchar(3) DEFAULT NULL COMMENT 'Movement Type (Inventory Management)',
   `WERKVORG` varchar(4) DEFAULT NULL COMMENT 'Plant Where Stock for Inspection Lot Is Held',
   `LAGORTVORG` varchar(4) DEFAULT NULL COMMENT 'Storage Location for Inspection Lot Stock',
@@ -2203,7 +2004,7 @@ CREATE TABLE `qals` (
   `KONT_KDAUF` varchar(10) DEFAULT NULL COMMENT 'Sales Order Number',
   `KONT_KDPOS` int(6) DEFAULT NULL COMMENT 'Item Number in Sales Order',
   `IMKEY` varchar(8) DEFAULT NULL COMMENT 'Internal Key for Real Estate Object',
-  `DABRZ` datetime DEFAULT NULL COMMENT 'Reference date for settlement',
+  `DABRZ` date DEFAULT NULL COMMENT 'Reference date for settlement',
   `KSTRG` varchar(12) DEFAULT NULL COMMENT 'Cost Object',
   `PAOBJNR` int(10) DEFAULT NULL COMMENT 'Profitability Segment Number (CO-PA)',
   `PRCTR` varchar(10) DEFAULT NULL COMMENT 'Profit Center',
@@ -3733,7 +3534,7 @@ ALTER TABLE `zpo_milestone`
 -- AUTO_INCREMENT for table `actualsubmissiondate`
 --
 ALTER TABLE `actualsubmissiondate`
-  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `archive_emails`
@@ -3745,7 +3546,7 @@ ALTER TABLE `archive_emails`
 -- AUTO_INCREMENT for table `auth`
 --
 ALTER TABLE `auth`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `bill_registration`
@@ -3811,7 +3612,7 @@ ALTER TABLE `ilms`
 -- AUTO_INCREMENT for table `inspection_call_letter`
 --
 ALTER TABLE `inspection_call_letter`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `inspection_call_letter_file_type`
@@ -3829,7 +3630,7 @@ ALTER TABLE `internal_role_master`
 -- AUTO_INCREMENT for table `makt`
 --
 ALTER TABLE `makt`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `mrs`
