@@ -64,9 +64,8 @@ const submitILMS = async (req, res) => {
             //         null
             //     );
             // }
-            payload.vendor_code = tokenData.vendor_code;
-            payload.updated_by = "VENDOR";
-
+            payload.vendor_code = (tokenData.user_type === USER_TYPE_VENDOR) ? tokenData.vendor_code : null;
+            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
             payload.created_by_id = tokenData.vendor_code;
             // console.log("payload..");
             // console.log(payload);
@@ -153,6 +152,7 @@ const submitILMS = async (req, res) => {
             // }
 
             const { q, val } = generateQuery(INSERT, ILMS, payload);
+            console.log(q);
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
