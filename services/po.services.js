@@ -140,6 +140,19 @@ const wdcPayload = (payload) => {
         "updated_by": payload.updated_by,
         "created_at": payload.created_at ? payload.created_at : getEpochTime(),
         "created_by_id": payload.created_by_id,
+        "wdc_ref_no": payload.wdc_ref_no ? payload.wdc_ref_no : null,
+        "wdc_date": payload.wdc_date ? payload.wdc_date : null,
+        "po_line_iten_no": payload.po_line_iten_no ? payload.po_line_iten_no : null,
+        "job_location": payload.job_location ? payload.job_location : null,
+        "yard_no": payload.yard_no ? payload.yard_no : null,
+        "actual_start_date": payload.actual_start_date ? payload.actual_start_date : null,
+        "actual_completion_date": payload.actual_completion_date ? payload.actual_completion_date : null,
+        "unit": payload.unit ? payload.unit : null,
+        "messurment": payload.messurment ? payload.messurment : null,
+        "quantity": payload.quantity ? payload.quantity : null,
+        "entry_by_production": payload.entry_by_production ? payload.entry_by_production : null,
+        "stage_datiels": payload.stage_datiels ? payload.stage_datiels : null,
+        "actual_payable_amount": payload.actual_payable_amount ? payload.actual_payable_amount : null,
     }
 
     return payloadObj;

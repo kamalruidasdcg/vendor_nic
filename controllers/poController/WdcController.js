@@ -9,6 +9,8 @@ const path = require('path');
 const { wdcPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
+const { Verify } = require("crypto");
+const { VENDOR } = require("../../lib/depertmentMaster");
 
 
 exports.wdc = async (req, res) => {
@@ -41,14 +43,28 @@ let fileData = {};
             console.log(fileData);
             const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
             
-            payload.vendor_code = tokenData.vendor_code;
+            payload.vendor_code = (tokenData.user_type === USER_TYPE_VENDOR) ? tokenData.vendor_code : null;
             payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
 
             payload.created_by_id = tokenData.vendor_code;
+            console.log(payload);
+
+            const wmcListQuery = `SELECT vendor_code FROM ${WDC} WHERE purchasing_doc_no = ?`;
+
+            const result = await query({ query: wmcListQuery, values: [req.body.purchasing_doc_no] });
+
+            if (result.length > 0) {
+                if(result[0].vendor_code != null) {
+                    payload.vendor_code = result[0].vendor_code;
+                }
+            } 
 
             const insertObj = wdcPayload(payload);
-//             console.log(insertObj);
-// return;
+            console.log(insertObj);
+
+            
+              
+//return;
             const { q, val } = generateQuery(INSERT, WDC, insertObj);
             const response = await query({ query: q, values: val });
 
