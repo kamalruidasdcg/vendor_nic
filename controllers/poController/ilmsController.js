@@ -50,6 +50,7 @@ const submitILMS = async (req, res) => {
                 // fileType: req.file.mimetype,
                 //fileSize: req.file.size,
             };
+        }
             const tokenData = { ...req.tokenData };
             //console.log(tokenData);
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
@@ -200,16 +201,16 @@ const submitILMS = async (req, res) => {
             } else {
                 return resSend(res, false, 400, "No data inserted", response, null);
             }
-        } else {
-            return resSend(
-                res,
-                false,
-                400,
-                "Please upload a valid File",
-                fileData,
-                null
-            );
-        }
+        // } else {
+        //     return resSend(
+        //         res,
+        //         false,
+        //         400,
+        //         "Please upload a valid File",
+        //         fileData,
+        //         null
+        //     );
+        // }
     } catch (error) {
         console.log("SDGB Submission api", error);
 
