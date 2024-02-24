@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload, sdbgPayloadVendor } = require("../../services/po.services");
+const { sdbgPayload, sdbgPayloadVendor, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -24,6 +24,7 @@ const {
     REJECTED,
     FORWARD_TO_FINANCE,
     RETURN_TO_DEALING_OFFICER,
+    APPROVED,
 } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -468,6 +469,13 @@ const sdbgUpdateByFinance = async (req, res) => {
             values: insertsdbg_q["val"],
         });
 
+        console.log("ACCEPTED1");
+        if (insertPayloadForSdbg.status === APPROVED || insertPayloadForSdbg.status === ACCEPTED) {
+            console.log("ACCEPTED2");
+            const actual_subminission = await setActualSubmissionDate(insertPayloadForSdbg, 1, tokenData, PENDING);
+            console.log("actual_subminission", actual_subminission);
+        }
+        console.log("ACCEPTED3");
         resSend(res, true, 200, "Assigned!", sdbgQuery, null);
     } catch (error) {
         resSend(res, false, 400, "somthing went wrong!", error, null);

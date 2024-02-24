@@ -186,8 +186,8 @@ const submitQAP = async (req, res) => {
         const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
         const response = await query({ query: q, values: val });
 
-        if (payload.status === APPROVED || payload.status === ACCEPTED) {
-            const actual_subminission = await setActualSubmissionDate(payload, 3, tokenData, PENDING);
+        if (insertObj.status === APPROVED || insertObj.status === ACCEPTED) {
+            const actual_subminission = await setActualSubmissionDate(insertObj, 3, tokenData, PENDING);
             console.log("actual_subminission", actual_subminission);
         }
 
