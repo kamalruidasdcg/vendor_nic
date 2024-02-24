@@ -57,6 +57,8 @@ const submitDrawing = async (req, res) => {
             if (tokenData.user_type === USER_TYPE_VENDOR) {
                 const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = ? AND LIFNR = ?`;
 
+                console.log(obj);
+
                 const poArr = await query({ query: Query, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
                 console.log(poArr);
                 if (poArr[0].po_count == 0) {
@@ -101,7 +103,6 @@ const submitDrawing = async (req, res) => {
             const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
             const response = await query({ query: q, values: val });
             if (payload.status === APPROVED) {
-
                 const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData);
                 console.log("actual_subminission", actual_subminission);
             }
