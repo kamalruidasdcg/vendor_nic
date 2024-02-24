@@ -1,4 +1,4 @@
-const { getEpochTime } = require("../lib/utils");
+const { getEpochTime, formatDate, formatTime } = require("../lib/utils");
 
 /*
  * Modify zfi_bgm_1_Payload payload object to insert data
@@ -138,7 +138,7 @@ const msegPayload = async (payload) => {
     VKWRT: obj.VKWRT || null,
     AKTNR: obj.AKTNR || null,
     ZEKKN: obj.ZEKKN || null,
-    VFDAT: obj.VFDAT || null,
+    VFDAT: formatDate(obj.VFDAT), // date 
     CUOBJ_CH: obj.CUOBJ_CH || null,
     EXVKW: obj.EXVKW || null,
     PPRCTR: obj.PPRCTR || null,
@@ -155,9 +155,9 @@ const msegPayload = async (payload) => {
     SALK3: obj.SALK3 || null,
     VPRSV: obj.VPRSV || null,
     FKBER: obj.FKBER || null,
-    DABRBZ: obj.DABRBZ || null,
-    VKWRA: obj.VKWRA || null,
-    DABRZ: obj.DABRZ || null,
+    DABRBZ: formatDate(obj.DABRBZ), // date
+    VKWRA: formatDate(obj.VKWRA), // date
+    DABRZ: formatDate(obj.DABRZ), // date
     XBEAU: obj.XBEAU || null,
     LSMNG: obj.LSMNG || null,
     LSMEH: obj.LSMEH || null,
@@ -170,7 +170,7 @@ const msegPayload = async (payload) => {
     EMATN: obj.EMATN || null,
     J_1AGIRUPD: obj.J_1AGIRUPD || null,
     VKMWS: obj.VKMWS || null,
-    HSDAT: obj.HSDAT || null,
+    HSDAT: formatDate(obj.HSDAT), // date
     BERKZ: obj.BERKZ || null,
     MAT_KDAUF: obj.MAT_KDAUF || null,
     MAT_KDPOS: obj.MAT_KDPOS || null,
@@ -188,9 +188,9 @@ const msegPayload = async (payload) => {
     KBLPOS: obj.KBLPOS || null,
     XMACC: obj.XMACC || null,
     VGART_MKPF: obj.VGART_MKPF || null,
-    BUDAT_MKPF: obj.BUDAT_MKPF || null,
-    CPUDT_MKPF: obj.CPUDT_MKPF || null,
-    CPUTM_MKPF: obj.CPUTM_MKPF || null,
+    BUDAT_MKPF: formatDate(obj.BUDAT_MKPF), // date
+    CPUDT_MKPF: formatDate(obj.CPUDT_MKPF), // date
+    CPUTM_MKPF: formatTime(obj.CPUTM_MKPF), // time
     USNAM_MKPF: obj.USNAM_MKPF || null,
     XBLNR_MKPF: obj.XBLNR_MKPF || null,
     TCODE2_MKPF: obj.TCODE2_MKPF || null,
@@ -229,11 +229,11 @@ const makfPayload = async (payload) => {
     VGART: obj.VGART || null,
     BLART: obj.BLART || null,
     BLAUM: obj.BLAUM || null,
-    BLDAT: obj.BLDAT || null,
-    BUDAT: obj.BUDAT || null,
-    CPUDT: obj.CPUDT || null,
-    CPUTM: obj.CPUTM || null,
-    AEDAT: obj.AEDAT || null,
+    BLDAT: formatDate(obj.BLDAT),
+    BUDAT: formatDate(obj.BUDAT),
+    CPUDT: formatDate(obj.CPUDT),
+    CPUTM: formatTime(obj.CPUTM),
+    AEDAT: formatDate(obj.AEDAT),
     USNAM: obj.USNAM || null,
     TCODE: obj.TCODE || null,
     XBLNR: obj.XBLNR || null,
@@ -264,5 +264,8 @@ const makfPayload = async (payload) => {
 
   return pl;
 };
+
+
+
 
 module.exports = { msegPayload, makfPayload };

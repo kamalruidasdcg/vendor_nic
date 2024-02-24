@@ -1,13 +1,13 @@
 
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData, qapPayload } = require("../../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData, qapPayload, insertActualSubmission, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 
-const { DRAWING, EKKO } = require("../../lib/tableName");
+const { DRAWING, EKKO, SDBG, QAP_SUBMISSION, ILMS } = require("../../lib/tableName");
 const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -20,142 +20,116 @@ const { Console } = require('console');
 
 // add new post
 const submitDrawing = async (req, res) => {
-    
+
     // console.log("%^&*&^%%^&*(*&^%$");
     // console.log("tokenData");
     // return;
     try {
         const tokenData = { ...req.tokenData };
- 
+
         const { ...obj } = req.body;
 
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
-            fileData = { 
+            fileData = {
                 fileName: req.file.filename,
                 filePath: req.file.path,
                 // fileType: req.file.mimetype,
                 // fileSize: req.file.size,
             };
-        
-            const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-            const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
-
-            if (!payload.purchasing_doc_no || !payload.remarks || !payload.status || !verifyStatus.includes(payload.status)) {
-
-                // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
-                // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null, null);
-
-            }
-            
-            if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
-                resSend(res, true, 200, "please login as Valid user!", null, null);
-            }
-
-            if (tokenData.user_type === USER_TYPE_VENDOR) {
-                const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = ? AND LIFNR = ?`;
-
-                const poArr = await query({ query: Query, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
-                console.log(poArr);
-                if (poArr[0].po_count == 0) {
-                    return resSend(res, false, 200, "you are not authorised.", null, null);
-                }
-            }
-
-            payload.vendor_code = tokenData.vendor_code;
-            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
-
-            payload.created_by_id = tokenData.vendor_code;
-
-           
-            // console.log("%____________$");
-            //  console.log(payload);
-//return;
-            const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
-
-            if (result2 && result2?.length) {
-
-                const data = [{
-                    purchasing_doc_no: result2[0]?.purchasing_doc_no,
-                    status: result2[0]?.status,
-                    approvedName: result2[0]?.created_by_name,
-                    approvedById: result2[0]?.created_by_id,
-                    message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
-                }];
-
-                return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
-            }
-
-            // console.log("%_&&___$");
-            // console.log(payload);
-//return;
-            let insertObj;
-
-            if (payload.status === PENDING) {
-                insertObj = drawingPayload(payload, PENDING);
-            } else if (payload.status === RE_SUBMITTED) {
-                // insertObj = drawingPayload(payload, RE_SUBMITTED);
-            } else if (payload.status === APPROVED) {
-                insertObj = drawingPayload(payload, APPROVED);
-            }
-
-           
-            const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
-            const response = await query({ query: q, values: val });
-            console.log("%_&&_((((_$");
-            console.log(response);
-//return;
-            if (response.affectedRows) {
-
-                
-                if (payload.status === PENDING) {
-
-                    if (payload.updated_by == "VENDOR") {
-
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.mailSendTo = result[0]?.dealingOfficerMail;
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.sendAt = new Date(payload.created_at);
-                        mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_VENDOR);
-
-                    } else if (payload.updated_by == "GRSE") {
-
-                        const result = await poContactDetails(payload.purchasing_doc_no);
-                        payload.vendor_name = result[0]?.vendor_name;
-                        payload.vendor_code = result[0]?.vendor_code;
-                        payload.mailSendTo = result[0]?.vendor_mail_id;
-                        payload.delingOfficerName = result[0]?.dealingOfficerName;
-                        payload.sendAt = new Date(payload.created_at);
-                        
-                        mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
-
-                    }
-                }
-                if (payload.status === APPROVED && payload.updated_by == "GRSE") {
-
-                    const result = await poContactDetails(payload.purchasing_doc_no);
-                    payload.vendor_name = result[0]?.vendor_name;
-                    payload.vendor_code = result[0]?.vendor_code;
-                    payload.mailSendTo = result[0]?.vendor_mail_id;
-                    payload.delingOfficerName = result[0]?.dealingOfficerName;
-                    payload.sendAt = new Date(payload.created_at);
-                    mailTrigger({ ...payload }, DRAWING_SUBMIT_BY_GRSE);
-
-                }
-
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            } else {
-                resSend(res, false, 400, "No data inserted", response, null);
-            }
-
-
-        } else {
-            resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
+
+        const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+        const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
+
+        if (!payload.purchasing_doc_no || !payload.status || !verifyStatus.includes(payload.status)) {
+
+            // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
+            // const isDel = handleFileDeletion(directory, req.file.filename);
+            return resSend(res, false, 400, "Please send valid payload", null, null);
+
+        }
+
+        if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_DRAWING) {
+            return resSend(res, true, 200, "please login as Valid user!", null, null);
+        }
+
+        if (tokenData.user_type === USER_TYPE_VENDOR) {
+            const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = ? AND LIFNR = ?`;
+
+            const poArr = await query({ query: Query, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
+            console.log(poArr);
+            if (poArr[0].po_count == 0) {
+                return resSend(res, false, 200, "you are not authorised.", null, null);
+            }
+        }
+
+        payload.vendor_code = tokenData.vendor_code;
+        payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+
+        payload.created_by_id = tokenData.vendor_code;
+
+        const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
+        console.log("result", result2);
+
+        if (result2 && result2?.length) {
+
+            const data = [{
+                purchasing_doc_no: result2[0]?.purchasing_doc_no,
+                status: result2[0]?.status,
+                approvedName: result2[0]?.created_by_name,
+                approvedById: result2[0]?.created_by_id,
+                message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
+            }];
+
+            return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
+        }
+
+        let insertObj;
+
+        if (payload.status === PENDING) {
+            payload.vendor_code = tokenData.vendor_code;
+            insertObj = drawingPayload(payload, PENDING);
+        } else if (payload.status === RE_SUBMITTED) {
+            payload.vendor_code = tokenData.vendor_code;
+            // insertObj = drawingPayload(payload, RE_SUBMITTED);
+        } else if (payload.status === APPROVED) {
+            // payload.vendor_code = payload.vendor_code;
+
+            const drawingData = await getDrawingData(payload.purchasing_doc_no, PENDING);
+
+            console.log("drawingData", drawingData);
+            if (drawingData && drawingData.length) {
+                payload.vendor_code = drawingData[0].vendor_code;
+            }
+            console.log("payload", payload);
+            insertObj = drawingPayload(payload, APPROVED);
+        }
+
+
+        const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
+        const response = await query({ query: q, values: val });
+
+        if (payload.status === APPROVED) {
+            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData);
+            console.log("actual_subminission", actual_subminission);
+        }
+
+        console.log("%_&&_((((_$");
+        console.log(response);
+        //return;
+        if (response.affectedRows) {
+
+            resSend(res, true, 200, "file uploaded!", fileData, null);
+        } else {
+            resSend(res, false, 400, "No data inserted", response, null);
+        }
+
+
+        // } else {
+        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        // }
 
     } catch (error) {
         console.log("Drawing submission api", error);
@@ -166,7 +140,7 @@ const submitDrawing = async (req, res) => {
 
 
 const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
-    const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
+    const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, vendor_code,  created_by_id FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
     const acknowledgeResult = await query({ query: isSDBGAcknowledge, values: [purchasing_doc_no, drawingStatus] });
     return acknowledgeResult;
 }
@@ -175,7 +149,7 @@ const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
 
 const list = async (req, res) => {
 
-    
+
     try {
         const tokenData = { ...req.tokenData };
         const { poNo } = req.query;
@@ -243,7 +217,6 @@ async function poContactDetails(purchasing_doc_no) {
 
     return result;
 }
-
 
 
 module.exports = { submitDrawing, list }
