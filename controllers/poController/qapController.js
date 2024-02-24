@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF, USER_TYPE_VENDOR } = require("../../lib/constant");
+const { INSERT, USER_TYPE_GRSE_QAP, QAP_STAFF, USER_TYPE_VENDOR, ASSIGNER } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
 const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED, ASSIGNED, UPDATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -55,7 +55,7 @@ const submitQAP = async (req, res) => {
 
             ///////// CHECK ROLE IS ASSIGNER /////////////////
             if (activity_type === ASSIGNED) {
-                if (tokenData.internal_role_id === QAP_ASSIGNER) {
+                if (tokenData.internal_role_id === ASSIGNER) {
                     const checkAssigneQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?`;
                     const resAssigneQry = await query({ query: checkAssigneQuery, values: [purchasing_doc_no, ASSIGNED] });
                     if (resAssigneQry[0].countval > 0) {
@@ -64,7 +64,7 @@ const submitQAP = async (req, res) => {
                     }
 
                 } else {
-                    message = `you dont have permission.`;
+                    message = `You dont have permission.`;
                     return resSend(res, true, 200, message, null, null);
                 }
             }
