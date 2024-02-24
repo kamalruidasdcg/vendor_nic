@@ -98,7 +98,7 @@ const submitQAP = async (req, res) => {
                     message: "The QAP is already approved. If you want to reopen, please contact with senior management."
                 }];
 
-                return resSend(res, true, 200, `This QAP aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
+                return resSend(res, false, 200, `This QAP for ${payload.purchasing_doc_no} is already ${APPROVED}`, data, null);
             }
             ///////// CHECK IS ALLREADY APPROVED /////////////////
 
