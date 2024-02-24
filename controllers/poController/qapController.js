@@ -226,7 +226,7 @@ const list = async (req, res) => {
                      ON
                          (grse_officers_assignTo.PERNR = qap.assigned_to AND grse_officers_assignTo.SUBTY = "0030")
 
-                    WHERE qap.purchasing_doc_no = ?`;
+                    WHERE qap.purchasing_doc_no = ? ORDER BY qap.id ASC`;
         // let qry = ``;
         // let valArr = ``;
         // if (tokenData.user_type === USER_TYPE_VENDOR) {
