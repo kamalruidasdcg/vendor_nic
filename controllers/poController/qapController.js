@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_GRSE_QAP, QAP_ASSIGNER, QAP_STAFF, USER_TYPE_VENDOR } = require("../../lib/constant");
+const { INSERT, USER_TYPE_GRSE_QAP, QAP_STAFF, USER_TYPE_VENDOR, ASSIGNER } = require("../../lib/constant");
 const { QAP_SUBMISSION } = require("../../lib/tableName");
 const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED, ASSIGNED, UPDATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -39,7 +39,7 @@ const submitQAP = async (req, res) => {
         if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
             // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
             // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", null, null);
+            return resSend(res, false, 200, "Remarks is mandotory!", null, null);
         }
         // if ((tokenData.user_type === USER_TYPE_VENDOR && activity_type === RE_SUBMITTED) || tokenData.department_id === USER_TYPE_GRSE_QAP) {
         //     if (!payload.assigned_from || !payload.assigned_to) {
@@ -55,7 +55,7 @@ const submitQAP = async (req, res) => {
 
             ///////// CHECK ROLE IS ASSIGNER /////////////////
             if (activity_type === ASSIGNED) {
-                if (tokenData.internal_role_id === QAP_ASSIGNER) {
+                if (tokenData.internal_role_id === ASSIGNER) {
                     const checkAssigneQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?`;
                     const resAssigneQry = await query({ query: checkAssigneQuery, values: [purchasing_doc_no, ASSIGNED] });
                     if (resAssigneQry[0].countval > 0) {
@@ -64,7 +64,7 @@ const submitQAP = async (req, res) => {
                     }
 
                 } else {
-                    message = `you dont have permission.`;
+                    message = `You dont have permission.`;
                     return resSend(res, true, 200, message, null, null);
                 }
             }
@@ -98,7 +98,7 @@ const submitQAP = async (req, res) => {
                     message: "The QAP is already approved. If you want to reopen, please contact with senior management."
                 }];
 
-                return resSend(res, true, 200, `This QAP aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
+                return resSend(res, false, 200, `This QAP for ${payload.purchasing_doc_no} is already ${APPROVED}`, data, null);
             }
             ///////// CHECK IS ALLREADY APPROVED /////////////////
 
@@ -226,7 +226,7 @@ const list = async (req, res) => {
                      ON
                          (grse_officers_assignTo.PERNR = qap.assigned_to AND grse_officers_assignTo.SUBTY = "0030")
 
-                    WHERE qap.purchasing_doc_no = ?`;
+                    WHERE qap.purchasing_doc_no = ? ORDER BY qap.id ASC`;
         // let qry = ``;
         // let valArr = ``;
         // if (tokenData.user_type === USER_TYPE_VENDOR) {
