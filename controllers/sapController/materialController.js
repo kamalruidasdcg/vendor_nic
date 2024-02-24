@@ -1,5 +1,5 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF } = require('../../lib/tableName');
+const { NEW_SDBG, MAKT, MARA, MSEG, MKPF } = require('../../lib/tableName');
 const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
@@ -18,19 +18,27 @@ const makt = async (req, res) => {
 
         try {
 
-            const { ...obj } = req.body;
+            let payload = req.body;
 
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length) {
+
+            if (Array.isArray(req.body)) {
+                payload = req.body.length > 0 ? req.body[0] : null;
+            } else if (typeof req.body === 'object' && req.body !== null) {
+                payload = req.body;
+            }
+
+
+            if (!payload || typeof payload !== 'object' || !Object.keys(payload).length) {
                 return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
             }
 
             await promiseConnection.beginTransaction();
 
             insertPayload = {
-                MATNR: obj.MATNR ? obj.MATNR : null,
-                SPRAS: obj.SPRAS ? obj.SPRAS : null,
-                MAKTX: obj.MAKTX ? obj.MAKTX : null,
-                MAKTG: obj.MAKTG ? obj.MAKTG : null,
+                MATNR: payload.MATNR || null,
+                SPRAS: payload.SPRAS || null,
+                MAKTX: payload.MAKTX || null,
+                MAKTG: payload.MAKTG || null,
             };
 
             const ekkoTableInsert = generateQuery(INSERT, MAKT, insertPayload);
@@ -40,8 +48,20 @@ const makt = async (req, res) => {
             } catch (error) {
                 return responseSend(res, "0", 502, "Data insert failed !!", error, null);
             }
+            try {
 
-            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+                const maraTablePayload = {
+                    MTART: payload.MTART,
+                    MATNR: payload.MATNR
+                }
+                const maraTableInsert = generateQuery(INSERT, MARA, maraTablePayload);
+
+                const [results] = await promiseConnection.execute(maraTableInsert["q"], maraTableInsert["val"]);
+            } catch (error) {
+                return responseSend(res, "0", 502, "Data insert failed !!", error, null);
+            }
+
+            await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
             return responseSend(res, "1", 200, "data insert succeed.", [], null);
@@ -61,14 +81,14 @@ const makt = async (req, res) => {
     }
 };
 const mseg = async (req, res) => {
-  
+
     const promiseConnection = await connection();
     try {
         if (!req.body) {
             responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
         const payload = req.body;
-        
+
         const payloadObj = await msegPayload(payload);
         const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
 
@@ -84,14 +104,14 @@ const mseg = async (req, res) => {
 
 };
 const mkpf = async (req, res) => {
-  
+
     const promiseConnection = await connection();
     try {
         if (!req.body) {
             responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
         const payload = req.body;
-        
+
         const payloadObj = await makfPayload(payload);
         const { q, val } = await generateQueryArray(INSERT, MKPF, payloadObj);
 
