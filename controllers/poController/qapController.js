@@ -130,7 +130,18 @@ const submitQAP = async (req, res) => {
 
             }
         }
-
+        
+        const GET_Assigner = `SELECT vendor_code,assigned_from, assigned_to FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
+        const GET_Assigner_Qry = await query({ query: GET_Assigner, values: [purchasing_doc_no, ASSIGNED] });
+        console.log(GET_Assigner_Qry);
+        if(GET_Assigner_Qry.length > 0) {
+            payload.vendor_code = GET_Assigner_Qry[0].vendor_code;
+            payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
+            payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
+        }
+//         console.log("DFGHJKJHGF>>>>>>>>>>>>>>>>>>>");
+// console.log(payload);
+//return;
 
 
         //////// SET STATUS AND CREATE QAP PAYLOAD /////////
