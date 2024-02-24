@@ -3,9 +3,7 @@ const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS } = require('../..
 const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
-const { generateQuery, generateQueryArray } = require("../../lib/utils");
-const { getFilteredData } = require('../genralControlles');
-const { msegPayload, makfPayload } = require("../../services/sap.material.services");
+const { generateQueryArray } = require("../../lib/utils");
 const { qalsPayload } = require('../../services/sap.qa.services');
 
 
