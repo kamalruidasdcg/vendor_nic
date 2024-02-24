@@ -53,16 +53,16 @@ const submitILMS = async (req, res) => {
             const tokenData = { ...req.tokenData };
             //console.log(tokenData);
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-            if (tokenData.user_type != USER_TYPE_VENDOR) {
-                return resSend(
-                    res,
-                    false,
-                    200,
-                    "Please please login as vendor for ILMS subminission.",
-                    null,
-                    null
-                );
-            }
+            // if (tokenData.user_type != USER_TYPE_VENDOR) {
+            //     return resSend(
+            //         res,
+            //         false,
+            //         200,
+            //         "Please please login as vendor for ILMS subminission.",
+            //         null,
+            //         null
+            //     );
+            // }
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
 
@@ -79,7 +79,7 @@ const submitILMS = async (req, res) => {
                     res,
                     false,
                     400,
-                    "Please send valid pay1load",
+                    "Please send valid payload",
                     null,
                     null
                 );
