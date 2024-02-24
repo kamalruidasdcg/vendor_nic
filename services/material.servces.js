@@ -39,4 +39,21 @@ const mrsPayload = (payload) => {
     return payloadObj;
 }
 
-module.exports = { wmcPayload, mrsPayload }
+const mirPayload = (payload) => {
+
+    const payloadObj = {
+        "purchasing_doc_no": payload.purchasing_doc_no,
+        "file_name": payload.fileName ? payload.fileName : null,
+        "file_path": payload.filePath ? payload.filePath : null,
+        "type": payload.document_type ? payload.document_type : null,
+        "remarks": payload.remarks ? payload.remarks : null,
+        "status": payload.status,
+        "updated_by": payload.updated_by,
+        "created_at":  payload.created_at,
+        "created_by_id": payload.created_by_id,
+    }
+
+    return payloadObj;
+}
+
+module.exports = { wmcPayload, mrsPayload, mirPayload }
