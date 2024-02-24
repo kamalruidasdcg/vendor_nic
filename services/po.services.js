@@ -1,4 +1,8 @@
-const { getEpochTime } = require("../lib/utils");
+const { query } = require("../config/dbConfig");
+const { INSERT } = require("../lib/constant");
+const { PENDING } = require("../lib/status");
+const { ACTUAL_SUBMISSION_DATE, ILMS, QAP_SUBMISSION, DRAWING, SDBG } = require("../lib/tableName");
+const { getEpochTime, generateQuery } = require("../lib/utils");
 
 
 /**
@@ -251,5 +255,79 @@ async function poDataModify(data) {
 }
 
 
+/**
+ * insertActualSubmission funton
+ * @param {Object} data 
+ */
+const insertActualSubmission = async (data) => {
+    try {
+        let payload = { ...data }
+        const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DATE, payload);
+        const result = await query({ query: q, values: val });
+    } catch (error) {
+        console.log("insertActualSubmission function errrrrr");
+    }
+}
 
-module.exports = { sdbgPayload, sdbgPayloadVendor, drawingPayload, qapPayload, poModifyData, wdcPayload, shippingDocumentsPayload, poDataModify, inspectionCallLetterPayload }
+
+
+async function setActualSubmissionDate(payload, mid, tokenData) {
+
+    const getTableName = (mid) => {
+        switch (mid) {
+            case 1: return SDBG;
+            case 2: return DRAWING;
+            case 3: return QAP_SUBMISSION;
+            case 4: return ILMS;
+            default: return null;
+        }
+    };
+
+    const tableName = getTableName(mid);
+    if (!tableName || !mid) return false;
+
+    
+    const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND vendor_code = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
+    const result = await query({ query: getlatestData, values: [payload.purchasing_doc_no, payload.vendor_code, PENDING] });
+    console.log(payload.purchasing_doc_no, payload.vendor_code, PENDING);
+    console.log(getlatestData);
+    console.log(result, "result");
+    const mtext = {
+        1: "ACTUAL SDBG SUBMISSION DATE",
+        2: "ACTUAL DRAWING SUBMISSION DATE",
+        3: "ACTUAL QAP SUBMISSION DATE",
+        4: "ACTUAL ILMS SUBMISSION DATE",
+    }
+
+    if (result && result.length) {
+        const payloadObj = {
+            purchasing_doc_no: payload.purchasing_doc_no,
+            milestoneId: mid,
+            milestoneText: mtext[mid],
+            actualSubmissionDate: result[0].created_at,
+            created_at: payload.created_at,
+            created_by_id: tokenData.vendor_code
+        }
+console.log("payload");
+        const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DATE, payloadObj);
+        const response = await query({ query: q, values: val });
+
+        return true;
+    }
+    return false;
+}
+
+
+module.exports = {
+    sdbgPayload,
+    sdbgPayloadVendor,
+    drawingPayload,
+    qapPayload,
+    poModifyData,
+    wdcPayload,
+    shippingDocumentsPayload,
+    poDataModify,
+    inspectionCallLetterPayload,
+    insertActualSubmission,
+    setActualSubmissionDate
+}
