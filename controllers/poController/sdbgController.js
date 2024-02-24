@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload } = require("../../services/po.services");
+const { sdbgPayload, sdbgPayloadVendor } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -43,60 +43,44 @@ const submitSDBG = async (req, res) => {
     try {
         // Handle Image Upload
         let fileData = {};
+        console.log(req.file);
         if (req.file) {
             fileData = {
-                file_name: req.file.filename,
-                file_path: req.file.path,
+                fileName: req.file.filename,
+                filePath: req.file.path,
                 // fileType: req.file.mimetype,
                 //fileSize: req.file.size,
             };
+            
             const tokenData = { ...req.tokenData };
-            //console.log(tokenData);
+           console.log(tokenData);
+
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+
+            payload = sdbgPayload(payload);
+            
             if (tokenData.user_type != USER_TYPE_VENDOR) {
-                return resSend(
-                    res,
-                    false,
-                    200,
-                    "Please please login as vendor for SDBG subminission.",
-                    null,
-                    null
-                );
+                return resSend( res, false, 200, "Please please login as vendor for SDBG subminission.", null, null);
             }
+
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
-
             payload.created_by_id = tokenData.vendor_code;
-            // console.log("payload..");
-            // console.log(payload);
-            //return;
             const verifyStatus = [PENDING, RE_SUBMITTED];
 
             if (
-                (!payload.purchasing_doc_no || !payload.remarks) &&
+                (!payload.purchasing_doc_no) &&
                 verifyStatus.includes(payload.status)
             ) {
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(
-                    res,
-                    false,
-                    400,
-                    "Please send valid pay1load",
-                    null,
-                    null
-                );
+                return resSend( res, false, 400, "Please send valid payload", null, null);
             }
 
             const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-            const result2 = await getSDBGData(
-                GET_LATEST_SDBG,
-                payload.purchasing_doc_no,
-                ACCEPTED
-            );
-            // console.log("result2..");
-            // console.log(result2);
-            // return;
+    
+            const result2 = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, ACCEPTED] });
+
             if (result2[0].count_po > 0) {
                 // const data = [{
                 //     purchasing_doc_no: result2[0]?.purchasing_doc_no,
@@ -106,53 +90,10 @@ const submitSDBG = async (req, res) => {
                 //     message: "The SDBG is already acknowledge. If you want to reopen, please contact with senior management."
                 // }];
 
-                return resSend(
-                    res,
-                    true,
-                    200,
-                    `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`,
-                    null,
-                    null
-                );
+                return resSend(res, true, 200, `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`, null, null);
             }
-
-            // let insertObj;
-
-            // if (payload.status === PENDING) {
-            //     payload = { ...payload, isLocked: 0 };
-            //     insertObj = sdbgPayload(payload, PENDING);
-            // } else if (payload.status === RE_SUBMITTED) {
-
-            //     // const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-            //     // console.log("iiii", result)
-
-            //     // if (!result || !result.length) {
-            //     //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-            //     // }
-
-            //     // payload = {
-            //     //     ...payload,
-            //     //     bank_name: result[0].bank_name,
-            //     //     transaction_id: result[0].transaction_id,
-            //     //     vendor_code: result[0].vendor_code,
-            //     // }
-
-            //     // insertObj = sdbgPayload(payload, RE_SUBMITTED);
-
-            // } else if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
-
-            //     const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-
-            //     if (!result || !result.length) {
-            //         return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
-            //     }
-            //     payload = { ...payload, isLocked: 1 };
-            //     insertObj = sdbgPayload(payload, ACKNOWLEDGED);
-            // }
+            // console.log(payload);
+            // return;
 
             const { q, val } = generateQuery(INSERT, SDBG, payload);
             const response = await query({ query: q, values: val });
@@ -199,19 +140,12 @@ const submitSDBG = async (req, res) => {
 
                 // await handelEmail(payload);
 
-                return resSend(res, true, 200, "file uploaded!", fileData, null);
+                resSend(res, true, 200, "file uploaded!", fileData, null);
             } else {
-                return resSend(res, false, 400, "No data inserted", response, null);
+                resSend(res, false, 400, "No data inserted", response, null);
             }
         } else {
-            return resSend(
-                res,
-                false,
-                400,
-                "Please upload a valid File",
-                fileData,
-                null
-            );
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
     } catch (error) {
         console.log("SDGB Submission api", error);
@@ -228,10 +162,10 @@ const getSDBGData = async (req, res) => {
             return resSend(res, true, 200, "Please send PO Number.", null, null);
         }
 
-        const Q = `SELECT * FROM ${SDBG} WHERE purchasing_doc_no = ? AND vendor_code = ?`;
+        const Q = `SELECT * FROM ${SDBG} WHERE purchasing_doc_no = ?`;
         const result = await query({
             query: Q,
-            values: [req.query.poNo, tokenData.vendor_code],
+            values: [req.query.poNo],
         });
 
         return resSend(res, true, 200, "data fetch successfully.", result, null);
@@ -271,19 +205,18 @@ const getSdbgEntry = async (req, res) => {
             tokenData.department_id === USER_TYPE_GRSE_FINANCE &&
             tokenData.internal_role_id === STAFF
         ) {
-            sufix = ` AND t2.status = '${ACCEPTED}' AND t2.assigned_to = '${tokenData.vendor_code}'`;
+            sufix = ` AND t2.assigned_to = '${tokenData.vendor_code}'`;
             Query = Query + sufix;
         } else if (dealingOfficer === 1) {
             Query = Query;
         } else {
             return resSend(res, false, 200, "You are not authorized.", null, null);
         }
-
         const result = await query({ query: Query, values: [] });
 
         return resSend(
             res,
-            false,
+            true,
             200,
             "data fetch successfully.",
             result[0],
@@ -425,25 +358,27 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         const insertPayloadForSdbg = {
             purchasing_doc_no: obj.purchasing_doc_no,
             ...sdbgDataResult,
-            remarks: obj.remarks,
+            remarks: "SDBG entry forwarded to Finance.",
             status: "FORWARD_TO_FINANCE",
             assigned_from: tokenData.vendor_code,
-            assigned_to: obj.assigned_to,
+            assigned_to: obj.assigned_to || null,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
             created_by_id: tokenData.vendor_code,
             updated_by: "GRSE",
         };
-        // console.log("sdbg--");
-        // console.log(insertPayloadForSdbg);
-
+        console.log("sdbg--");
+        console.log(insertPayloadForSdbg);
         let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+        // console.log(insertsdbg_q);
+        // return;
         let sdbgQuery = await query({
             query: insertsdbg_q["q"],
             values: insertsdbg_q["val"],
         });
-        // console.log("rt67898uygy");
-        // console.log(sdbgQuery);
+
+        console.log("rt67898uygy");
+        console.log(sdbgQuery);
         return resSend(
             res,
             true,
@@ -500,13 +435,13 @@ const sdbgUpdateByFinance = async (req, res) => {
                 null
             );
         }
-        if (
-            tokenData.internal_role_id == 1 &&
-            obj.status == "ACCEPTED" &&
-            (!obj.assigned_to || obj.assigned_to == "")
-        ) {
-            return resSend(res, true, 200, "please send a assigned_to!", null, null);
-        }
+        // if (
+        //     tokenData.internal_role_id == ASSIGNER &&
+        //     obj.status == ACCEPTED &&
+        //     (!obj.assigned_to || obj.assigned_to)
+        // ) {
+        //     return resSend(res, true, 200, "please send a assigned_to!", null, null);
+        // }
 
         const Q = `SELECT file_name,file_path,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = ? LIMIT 1`;
         let sdbgResult = await query({ query: Q, values: [obj.purchasing_doc_no] });
@@ -520,8 +455,8 @@ const sdbgUpdateByFinance = async (req, res) => {
             remarks: obj.remarks,
             status: obj.status,
             assigned_from:
-                tokenData.internal_role_id == 1 ? tokenData.vendor_code : null,
-            assigned_to: tokenData.internal_role_id == 1 ? obj.assigned_to : null,
+                tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
+            assigned_to: tokenData.internal_role_id == ASSIGNER ? obj.assigned_to : null,
             created_at: getEpochTime(),
             created_by_name: "finance dept",
             created_by_id: tokenData.vendor_code,
@@ -533,7 +468,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             values: insertsdbg_q["val"],
         });
 
-        resSend(res, false, 200, "done!", sdbgQuery, null);
+        resSend(res, true, 200, "Assigned!", sdbgQuery, null);
     } catch (error) {
         resSend(res, false, 400, "somthing went wrong!", error, null);
     }
@@ -543,7 +478,7 @@ const assigneeList = async (req, res) => {
     console.log(req.tokenData);
     const tokenData = { ...req.tokenData };
 
-    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != 1) {
+    if (tokenData.department_id != FINANCE || tokenData.internal_role_id != ASSIGNER) {
         return resSend(
             res,
             true,
