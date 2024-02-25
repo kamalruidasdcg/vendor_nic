@@ -758,7 +758,7 @@ async function getQapSave(req, res) {
    try {
     const tokenData = req.tokenData;
 
-    if(!req.query.poNo) {
+    if(!req.query.poNo || tokenData.department_id != USER_TYPE_GRSE_QAP) {
         return resSend(res, true, 200, "Please send valid payload!.", null, null);
     }
 
@@ -778,7 +778,23 @@ async function getQapSave(req, res) {
 }
 
 async function deleteQapSave(req, res) {
-    return resSend(res, true, 200, "deleteQapSave!", req.query, null);
+    try {
+        const tokenData = req.tokenData;
+
+        if(!req.query.poNo || tokenData.department_id != USER_TYPE_GRSE_QAP) {
+            return resSend(res, true, 200, "you dont have permination!.", null, null);
+        }
+        
+        const deleteQapSaveQuery = `DELETE FROM ${QAP_SAVE} WHERE purchasing_doc_no = ?`;
+        const deleteQapSave = await query({ query: deleteQapSaveQuery, values: [req.query.poNo] });
+
+        return resSend(res, true, 200, "delete successfully.", deleteQapSave, null);
+
+
+    } catch(err) {
+        resSend(res, false, 500, "Internal server error", err, null);
+    }
+    
 }
 
 module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList, insertQapSave,  getQapSave, deleteQapSave}

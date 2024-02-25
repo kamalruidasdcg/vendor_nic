@@ -217,16 +217,17 @@ router.post(poPrefix + "/insertQapSave", [veifyAccessToken, dynamicallyUpload.si
 });
 
 router.get(poPrefix + "/deleteQapSave", [veifyAccessToken], (req, res) => {
-  qapController.qapSave(req, res);
+  qapController.deleteQapSave(req, res);
 });
 
 router.get(poPrefix + "/getQapSave", [veifyAccessToken], (req, res) => {
   qapController.getQapSave(req, res);
-});
+})
+
 
 //internalDepartmentList
-router.get(poPrefix + "/deleteQapSave", [], (req, res) => {
-  qapController.deleteQapSave(req, res);
+router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
+  qapController.internalDepartmentList(req, res);
 });
 
 router.get(poPrefix + "/internalDepartmentEmpList", [], (req, res) => {
