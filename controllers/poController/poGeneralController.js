@@ -12,7 +12,7 @@ const { sdbgPayload, drawingPayload, poModifyData, poDataModify } = require("../
 
 /** APIS START ----->  */
 const details = async (req, res) => {
-    try { 
+    try {
 
         const queryParams = req.query;
         const tokenData = { ...req.tokenData };
@@ -53,52 +53,86 @@ const details = async (req, res) => {
             return resSend(res, false, 404, "No PO number found !!", [], null);
 
         // const timelingQ = `SELECT MTEXT, PLAN_DATE, MO FROM ${ZPO_MILESTONE} WHERE EBELN = ?`;
+
+        // GROUP  BY purchasing_doc_no, status
         const timelingQ =
-            `(SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT Max(id) AS id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   sdbg
-                                    GROUP  BY purchasing_doc_no,
-                                              status) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 1
-                        AND a.ebeln = ?)
-                UNION
-                (SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   drawing AS x
-                                    WHERE  id = (SELECT Max(id) AS id
-                                                 FROM   drawing AS y
-                                                 WHERE  y.purchasing_doc_no =
-                                                        x.purchasing_doc_no)) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 2
-                        AND a.ebeln = ?)
-                UNION
-                (SELECT a.*,
-                        b.status,
-                        b.purchasing_doc_no
-                 FROM   zpo_milestone AS a
-                        INNER JOIN (SELECT id,
-                                           purchasing_doc_no,
-                                           status
-                                    FROM   qap_submission AS x
-                                    WHERE  id = (SELECT Max(id) AS id
-                                                 FROM   qap_submission AS y
-                                                 WHERE  y.purchasing_doc_no =
-                                                        x.purchasing_doc_no)) AS b
-                                ON ( b.purchasing_doc_no = a.ebeln )
-                 WHERE  a.mid = 3
-                        AND a.ebeln = ?)`;
+        `(SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 1 )
+                INNER JOIN (SELECT Max(id) AS id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   sdbg) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 1
+                AND a.ebeln = ?)
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 2 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   drawing AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   drawing AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 2
+                AND a.ebeln = ?)
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 3 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   qap_submission AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   qap_submission AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 3
+                AND a.ebeln = ?)
+                
+        UNION
+        (SELECT a.*,
+                b.status,
+                b.purchasing_doc_no,
+                act.actualsubmissiondate
+         FROM   zpo_milestone AS a
+                LEFT JOIN actualsubmissiondate AS act
+                       ON ( act.purchasing_doc_no = a.ebeln
+                            AND act.milestoneid = 3 )
+                INNER JOIN (SELECT id,
+                                   purchasing_doc_no,
+                                   status
+                            FROM   qap_submission AS x
+                            WHERE  id = (SELECT Max(id) AS id
+                                         FROM   qap_submission AS y
+                                         WHERE  y.purchasing_doc_no =
+                                                x.purchasing_doc_no)) AS b
+                        ON ( b.purchasing_doc_no = a.ebeln )
+         WHERE  a.mid = 3
+                AND a.ebeln = ?    
+            `;
 
         const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
 
@@ -244,8 +278,8 @@ const poList = async (req, res) => {
             switch (tokenData.department_id) {
                 case USER_TYPE_GRSE_QAP:
                     if (tokenData.internal_role_id === ASSIGNER) {
-                       //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
-                         Query = await poListByEcko();
+                        //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+                        Query = poListByEcko();
                         console.log("****************$%^&*()(*&^%$");
                         console.log(Query);
                     } else if (tokenData.internal_role_id === STAFF) {
@@ -259,13 +293,13 @@ const poList = async (req, res) => {
                         Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
                     } else if (tokenData.internal_role_id === STAFF) {
-                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${ACCEPTED}' AND assigned_to = ${tokenData.vendor_code}`;
+                        Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE assigned_to = ${tokenData.vendor_code}`;
 
                     }
                     break;
                 case USER_TYPE_GRSE_DRAWING:
-                   // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
-                   Query = await poListByEcko();
+                    // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+                    Query = poListByEcko();
                     break;
                 case USER_TYPE_GRSE_PURCHASE:
                     Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = "${tokenData.vendor_code}"`;
@@ -284,6 +318,7 @@ const poList = async (req, res) => {
             return resSend(res, false, 400, "you dont have permission or no data found", null, null);
         }
         let strVal;
+        console.log("$%^&*()(*&^%$");
         try {
             strVal = await queryArrayTOString(Query, tokenData.user_type);
         } catch (error) {
@@ -293,8 +328,8 @@ const poList = async (req, res) => {
         if (!strVal || strVal == "") {
             return resSend(res, true, 200, "No PO found.", [], null);
         }
-console.log("$%^&*()(*&^%$");
-console.log(strVal);
+        console.log("$%^&*()(*&^%$");
+        console.log(strVal);
         poQuery =
             `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
@@ -348,24 +383,27 @@ console.log(strVal);
         let SDVGCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1`;
         let SDVGCsdArr = await query({ query: SDVGCsdQuery, values: [] });
 
-        await Promise.all(
-            SDVGArr.map(async (item) => {
+        if (SDVGCsdArr.length) {
 
-                if (SDVGCsdArr.length) {
-                    let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
-                } else {
-                    item.contractual_submission_date = undefined;
-                }
+            await Promise.all(
+                SDVGArr.map(async (item) => {
 
-                if (SDVGAsdArr.length) {
-                    let asdArr = await SDVGAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
-                } else {
-                    item.actual_submission_date = undefined;
-                }
-            })
-        );
+                    if (SDVGCsdArr.length) {
+                        let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
+                    } else {
+                        item.contractual_submission_date = undefined;
+                    }
+
+                    if (SDVGAsdArr.length) {
+                        let asdArr = await SDVGAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
+                    } else {
+                        item.actual_submission_date = undefined;
+                    }
+                })
+            );
+        }
 
         // DRAWING
         let drawingQuery = `select purchasing_doc_no,created_by_id,remarks,status,min(created_at) AS created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_id,status,remarks`;
@@ -377,23 +415,26 @@ console.log(strVal);
         let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
         let drawingCsdArr = await query({ query: drawingCsdQuery, values: [] });
 
-        await Promise.all(
-            drawingArr.map(async (item) => {
-                if (SDVGCsdArr.length) {
-                    let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
-                } else {
-                    item.contractual_submission_date = undefined;
-                }
+        if (drawingArr.length) {
 
-                if (drawingAsdArr.length) {
-                    let asdArr = await drawingAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
-                } else {
-                    item.actual_submission_date = undefined;
-                }
-            })
-        );
+            await Promise.all(
+                drawingArr.map(async (item) => {
+                    if (SDVGCsdArr.length) {
+                        let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
+                    } else {
+                        item.contractual_submission_date = undefined;
+                    }
+
+                    if (drawingAsdArr.length) {
+                        let asdArr = await drawingAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
+                    } else {
+                        item.actual_submission_date = undefined;
+                    }
+                })
+            );
+        }
 
         // QAP
         let qapQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
@@ -403,26 +444,31 @@ console.log(strVal);
         let qapAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from qap_submission WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
         let qapAsdArr = await query({ query: qapAsdQuery, values: [] });
 
-        let qapCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3`;
-        let qapCsdArr = await query({ query: qapCsdQuery, values: [] });
+        // let qapCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3`;
+        // let qapCsdArr = await query({ query: qapCsdQuery, values: [] });
 
-        await Promise.all(
-            qapArr.map(async (item) => {
-                if (SDVGCsdArr.length) {
-                    let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
-                } else {
-                    item.contractual_submission_date = undefined;
-                }
 
-                if (qapAsdArr.length) {
-                    let asdArr = await qapAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
-                    (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
-                } else {
-                    item.actual_submission_date = undefined;
-                }
-            })
-        );
+        if (qapArr.length) {
+
+            await Promise.all(
+                qapArr.map(async (item) => {
+                    if (SDVGCsdArr.length) {
+                        let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
+                    } else {
+                        item.contractual_submission_date = undefined;
+                    }
+
+                    if (qapAsdArr.length) {
+                        let asdArr = await qapAsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                        (asdArr) ? item.actual_submission_date = asdArr.actual_submission_date : item.actual_submission_date = undefined;
+                    } else {
+                        item.actual_submission_date = undefined;
+                    }
+                })
+            );
+        }
+
 
         const modifiedPOData = await poDataModify(poArr);
 
@@ -487,12 +533,12 @@ console.log(strVal);
     }
 }
 
-const poListByEcko = async (vendorCode = "") => { 
+const poListByEcko = (vendorCode = "") => {
     let sufx;
     let qry = `SELECT DISTINCT(EBELN) from ekko`;
-    if(vendorCode != "") {
+    if (vendorCode != "") {
         sufx = ` WHERE LIFNR = "${vendorCode}"`;
-        qry = qry+sufx;
+        qry = qry + sufx;
     }
     return qry;
 }
@@ -522,6 +568,6 @@ const poListByPPNC = (queryData, tokenData) => {
     return poListQuery;
 }
 
-
+// EBELN(VARCAT10),EBELP(VARCAT5),SLNO(INT3),WDC(CAHAR25)
 
 module.exports = { details, download, poList };

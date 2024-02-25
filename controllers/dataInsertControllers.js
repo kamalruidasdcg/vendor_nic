@@ -2,8 +2,8 @@
 const { query, connection } = require("../config/dbConfig");
 const { INSERT, TRUE } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
-const { EKKO, EKPO, ZPO_MILESTONE } = require("../lib/tableName");
-const { generateQuery } = require("../lib/utils");
+const { EKKO } = require("../lib/tableName");
+const { generateQuery, formatDate } = require("../lib/utils");
 // const mysql = require("mysql2/promise");
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
@@ -13,15 +13,23 @@ const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
 
 const insertPOData = async (req, res) => {
     let insertPayload = {};
-    
+    let payload = {};
+
     try {
-     
+
         const promiseConnection = await connection();
         let transactionSuccessful = false;
+        if (Array.isArray(req.body)) {
+            payload = req.body.length > 0 ? req.body[0] : null;
+        } else if (typeof req.body === 'object' && req.body !== null) {
+            payload = req.body;
+        }
+
+        const { EKPO, ZPO_MILESTONE, ...obj } = payload;
 
         try {
 
-            const { ekpo, zpo_milestone, ...obj } = req.body;
+
 
             if (!obj || typeof obj !== 'object' || !Object.keys(obj).length) {
                 return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
@@ -35,7 +43,7 @@ const insertPOData = async (req, res) => {
                 BSTYP: obj.BSTYP ? obj.BSTYP : null,
                 BSART: obj.BSART ? obj.BSART : null,
                 LOEKZ: obj.LOEKZ ? obj.LOEKZ : null,
-                AEDAT: obj.AEDAT ? obj.AEDAT : null,
+                AEDAT: formatDate(obj.AEDAT),
                 ERNAM: obj.ERNAM ? obj.ERNAM : null,
                 LIFNR: obj.LIFNR ? obj.LIFNR : null,
                 EKORG: obj.EKORG ? obj.EKORG : null,
@@ -53,20 +61,19 @@ const insertPOData = async (req, res) => {
 
             const insertPromiseFn = [];
 
-            if (zpo_milestone?.length) {
+            if (ZPO_MILESTONE?.length) {
                 const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
-                const zpo_milestone_table_val = zpo_milestoneTableData(zpo_milestone)
+                const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE)
                 insertPromiseFn.push(promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]))
-
             }
 
-            if (ekpo?.length) {
+            if (EKPO?.length) {
                 const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                const ekpo_table_val = ekpoTableData(ekpo);
+                const ekpo_table_val = ekpoTableData(EKPO);
                 insertPromiseFn.push(promiseConnection.query(insert_ekpo_table, [ekpo_table_val]))
 
             }
-            if(insertPromiseFn.length) {
+            if (insertPromiseFn.length) {
                 const insert = await Promise.all(insertPromiseFn);
             }
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
@@ -77,9 +84,9 @@ const insertPOData = async (req, res) => {
 
             if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
                 //console.log("Connectio");
-                
+
                 try {
-                    await sendMail(insertPayload);
+                    // await sendMail(insertPayload);
                     responseSend(res, "1", 200, "data insert succeed with mail trigere", [], null);
                 } catch (error) {
                     responseSend(res, "1", 201, "Data insert but mail not send !!", error, null);
@@ -87,7 +94,7 @@ const insertPOData = async (req, res) => {
             } else {
                 responseSend(res, "1", 200, "data insert succeed without mail.", [], null);
             }
-            
+
         } catch (error) {
             responseSend(res, "0", 502, "Data insert failed !!", error, null);
         }
@@ -110,7 +117,7 @@ function ekpoTableData(data) {
         obj.EBELP ? obj.EBELP : null,
         obj.LOEKZ ? obj.LOEKZ : null,
         obj.STATU ? obj.STATU : null,
-        obj.AEDAT ? obj.AEDAT : null,
+        formatDate(obj.AEDAT),
         obj.TXZ01 ? obj.TXZ01 : null,
         obj.MATNR ? obj.MATNR : null,
         obj.BUKRS ? obj.BUKRS : null,
@@ -131,7 +138,7 @@ function zpo_milestoneTableData(data) {
         obj.EBELN,
         obj.MID ? obj.MID : null,
         obj.MTEXT ? obj.MTEXT : null,
-        obj.PLAN_DATE ? obj.PLAN_DATE : null,
+        formatDate(obj.PLAN_DATE),
         obj.MO ? obj.MO : null
     ]);
 
@@ -146,16 +153,16 @@ async function sendMail(data) {
                 LEFT JOIN lfa1 AS v
                   ON v.lifnr = v_add.persnumber
         WHERE  v_add.persnumber = ? ;`;
-        const result = await query({ query: q, values: [data.LIFNR] });
+    const result = await query({ query: q, values: [data.LIFNR] });
     // const result = [
     //     {
     //       vendor_email: 'mainak.dutta@datacoresystems.co.in',
     //       vendor_name: 'PriceWaterhouseCoopers Pvt Ltd'
     //     }
     //   ];
-      console.log(result);
-      console.log(data);
-      //console.log(res);
+    console.log(result);
+    console.log(data);
+    //console.log(res);
     if (result.length) {
         console.log(result.length);
         const payload = {
@@ -165,7 +172,7 @@ async function sendMail(data) {
             vendor_email: result[0].vendor_email
         }
         console.log(payload);
-        
+
         await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC);
     }
 

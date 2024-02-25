@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload } = require("../../services/po.services");
+const { sdbgPayload, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -24,6 +24,7 @@ const {
     REJECTED,
     FORWARD_TO_FINANCE,
     RETURN_TO_DEALING_OFFICER,
+    ACKNOWLEDGED,
 } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../genralControlles");
@@ -50,22 +51,22 @@ const submitILMS = async (req, res) => {
                 // fileType: req.file.mimetype,
                 //fileSize: req.file.size,
             };
+        }
             const tokenData = { ...req.tokenData };
             //console.log(tokenData);
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-            if (tokenData.user_type != USER_TYPE_VENDOR) {
-                return resSend(
-                    res,
-                    false,
-                    200,
-                    "Please please login as vendor for ILMS subminission.",
-                    null,
-                    null
-                );
-            }
-            payload.vendor_code = tokenData.vendor_code;
-            payload.updated_by = "VENDOR";
-
+            // if (tokenData.user_type != USER_TYPE_VENDOR) {
+            //     return resSend(
+            //         res,
+            //         false,
+            //         200,
+            //         "Please please login as vendor for ILMS subminission.",
+            //         null,
+            //         null
+            //     );
+            // }
+            payload.vendor_code = (tokenData.user_type === USER_TYPE_VENDOR) ? tokenData.vendor_code : null;
+            payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
             payload.created_by_id = tokenData.vendor_code;
             // console.log("payload..");
             // console.log(payload);
@@ -79,7 +80,7 @@ const submitILMS = async (req, res) => {
                     res,
                     false,
                     400,
-                    "Please send valid pay1load",
+                    "Please send valid payload",
                     null,
                     null
                 );
@@ -152,6 +153,12 @@ const submitILMS = async (req, res) => {
             // }
 
             const { q, val } = generateQuery(INSERT, ILMS, payload);
+            console.log(q);
+
+            if (payload.status === APPROVED || payload.status === ACCEPTED || payload.status === ACKNOWLEDGED) {
+                const actual_subminission = await setActualSubmissionDate(payload, 4, tokenData, PENDING);
+                console.log("actual_subminission", actual_subminission);
+            }
             const response = await query({ query: q, values: val });
 
             if (response.affectedRows) {
@@ -200,16 +207,16 @@ const submitILMS = async (req, res) => {
             } else {
                 return resSend(res, false, 400, "No data inserted", response, null);
             }
-        } else {
-            return resSend(
-                res,
-                false,
-                400,
-                "Please upload a valid File",
-                fileData,
-                null
-            );
-        }
+        // } else {
+        //     return resSend(
+        //         res,
+        //         false,
+        //         400,
+        //         "Please upload a valid File",
+        //         fileData,
+        //         null
+        //     );
+        // }
     } catch (error) {
         console.log("SDGB Submission api", error);
 

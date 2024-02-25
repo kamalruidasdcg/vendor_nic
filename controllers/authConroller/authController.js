@@ -106,7 +106,7 @@ const login = async (req, res) => {
         let privilegeId;
         let userDetails = [];
         if (!result.length) {
-            return resSend(res, false, 404, "USER_NOT_FOUND");
+            return resSend(res, false, 200, "USER_NOT_FOUND");
         }
 
         if (req.body.password !== result[0]["password"]) {
