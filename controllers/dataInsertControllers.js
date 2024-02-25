@@ -3,7 +3,7 @@ const { query, connection } = require("../config/dbConfig");
 const { INSERT, TRUE } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
 const { EKKO } = require("../lib/tableName");
-const { generateQuery } = require("../lib/utils");
+const { generateQuery, formatDate } = require("../lib/utils");
 // const mysql = require("mysql2/promise");
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
@@ -43,7 +43,7 @@ const insertPOData = async (req, res) => {
                 BSTYP: obj.BSTYP ? obj.BSTYP : null,
                 BSART: obj.BSART ? obj.BSART : null,
                 LOEKZ: obj.LOEKZ ? obj.LOEKZ : null,
-                AEDAT: obj.AEDAT ? obj.AEDAT : null,
+                AEDAT: formatDate(obj.AEDAT),
                 ERNAM: obj.ERNAM ? obj.ERNAM : null,
                 LIFNR: obj.LIFNR ? obj.LIFNR : null,
                 EKORG: obj.EKORG ? obj.EKORG : null,
@@ -65,7 +65,6 @@ const insertPOData = async (req, res) => {
                 const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
                 const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE)
                 insertPromiseFn.push(promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]))
-
             }
 
             if (EKPO?.length) {
@@ -87,7 +86,7 @@ const insertPOData = async (req, res) => {
                 //console.log("Connectio");
 
                 try {
-                    await sendMail(insertPayload);
+                    // await sendMail(insertPayload);
                     responseSend(res, "1", 200, "data insert succeed with mail trigere", [], null);
                 } catch (error) {
                     responseSend(res, "1", 201, "Data insert but mail not send !!", error, null);
@@ -118,7 +117,7 @@ function ekpoTableData(data) {
         obj.EBELP ? obj.EBELP : null,
         obj.LOEKZ ? obj.LOEKZ : null,
         obj.STATU ? obj.STATU : null,
-        obj.AEDAT ? obj.AEDAT : null,
+        formatDate(obj.AEDAT),
         obj.TXZ01 ? obj.TXZ01 : null,
         obj.MATNR ? obj.MATNR : null,
         obj.BUKRS ? obj.BUKRS : null,
@@ -139,7 +138,7 @@ function zpo_milestoneTableData(data) {
         obj.EBELN,
         obj.MID ? obj.MID : null,
         obj.MTEXT ? obj.MTEXT : null,
-        obj.PLAN_DATE ? obj.PLAN_DATE : null,
+        formatDate(obj.PLAN_DATE),
         obj.MO ? obj.MO : null
     ]);
 
