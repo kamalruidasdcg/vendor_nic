@@ -60,7 +60,7 @@ const details = async (req, res) => {
         (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
-                act.actualsubmissiondate
+                act.actualSubmissionDate
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
@@ -76,7 +76,7 @@ const details = async (req, res) => {
         (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
-                act.actualsubmissiondate
+                act.actualSubmissionDate
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
@@ -96,7 +96,7 @@ const details = async (req, res) => {
         (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
-                act.actualsubmissiondate
+                act.actualSubmissionDate
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
@@ -117,7 +117,7 @@ const details = async (req, res) => {
         (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
-                act.actualsubmissiondate
+                act.actualSubmissionDate
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
@@ -125,16 +125,15 @@ const details = async (req, res) => {
                 INNER JOIN (SELECT id,
                                    purchasing_doc_no,
                                    status
-                            FROM   qap_submission AS x
+                            FROM   ilms AS x
                             WHERE  id = (SELECT Max(id) AS id
-                                         FROM   qap_submission AS y
+                                         FROM   ilms AS y
                                          WHERE  y.purchasing_doc_no =
                                                 x.purchasing_doc_no)) AS b
                         ON ( b.purchasing_doc_no = a.ebeln )
          WHERE  a.mid = 4
-                AND a.ebeln = ?    );
-            `;
-            const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
+                AND a.ebeln = ? );`;
+            const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id] });
 
 
         // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
