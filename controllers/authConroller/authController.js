@@ -27,7 +27,7 @@ const login = async (req, res) => {
     try {
 
         if (!req.body.vendor_code || !req.body.password) {
-            return resSend(res, false, 400, "MANDATORY_INPUTS_REQUIRED");
+            return resSend(res, false, 200, "MANDATORY_INPUTS_REQUIRED");
         }
 
         // const userQuery = `SELECT * FROM ${AUTH} WHERE username = "${req.body.username}"`;
@@ -114,7 +114,7 @@ const login = async (req, res) => {
 
         if (req.body.password !== result[0]["password"]) {
             console.log("U R given Password -->", req.body.password, "Please check !!");
-            return resSend(res, false, 401, "INCORRECT_PASSWORD");
+            return resSend(res, false, 200, "INCORRECT_PASSWORD");
         } else if (req.body.password === result[0]["password"]) {
             if (result[0]["user_type"] === USER_TYPE_VENDOR) {
                 const vendorDetailsQ =

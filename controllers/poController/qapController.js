@@ -5,7 +5,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, USER_TYPE_GRSE_QAP, QAP_STAFF, USER_TYPE_VENDOR, ASSIGNER } = require("../../lib/constant");
-const { QAP_SUBMISSION } = require("../../lib/tableName");
+const { QAP_SUBMISSION, QAP_SAVE } = require("../../lib/tableName");
 const { PENDING, APPROVED, RE_SUBMITTED, ACCEPTED, REJECTED, SAVED, ASSIGNED, UPDATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -273,6 +273,7 @@ const list = async (req, res) => {
     }
 
 }
+
 async function poContactDetails(purchasing_doc_no) {
     const po_contact_details_query = `SELECT 
         t1.EBELN, 
@@ -724,7 +725,43 @@ async function getAssigneeMailId() {
     }
 }
 
-module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList }
+async function insertQapSave(req, res) {
+   // return resSend(res, true, 200, "qapSave!", req.query, null);
+   try {
+        const tokenData = { ...req.tokenData };
+        let fileData = {};
+        if (req.file) {
+            fileData = {
+                file_name: req.file.filename,
+                file_path: req.file.path,
+                // fileType: req.file.mimetype,
+                // fileSize: req.file.size,
+            };
+        }
+        let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+
+        // payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+        payload.created_by_id = tokenData.vendor_code;
+       console.log(payload);
+
+        
+        const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
+        const response = await query({ query: q, values: val });
+        return resSend(res, true, 200, "Data inserted.", response, null);
+   } catch(error) {
+        return resSend(res, false, 400, "error.", error, null);
+   }
+}
+
+async function getQapSave(req, res) {
+   return resSend(res, true, 200, "getQapSave!", req.query, null);
+}
+
+async function deleteQapSave(req, res) {
+    return resSend(res, true, 200, "deleteQapSave!", req.query, null);
+}
+
+module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList, insertQapSave,  getQapSave, deleteQapSave}
 //     const response = await query({ query: q, values: [sub_dept_id] });
 //     resSend(res, true, 200, "oded!", response, null);
 // } catch (err) {

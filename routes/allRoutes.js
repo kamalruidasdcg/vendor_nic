@@ -211,9 +211,22 @@ router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
   qapController.list(req, res);
 });
 
+// QAP SAVE getQapSave deleteQapSave
+router.post(poPrefix + "/insertQapSave", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
+  qapController.insertQapSave(req, res);
+});
+
+router.get(poPrefix + "/deleteQapSave", [veifyAccessToken], (req, res) => {
+  qapController.qapSave(req, res);
+});
+
+router.get(poPrefix + "/getQapSave", [veifyAccessToken], (req, res) => {
+  qapController.getQapSave(req, res);
+});
+
 //internalDepartmentList
-router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
-  qapController.internalDepartmentList(req, res);
+router.get(poPrefix + "/deleteQapSave", [], (req, res) => {
+  qapController.deleteQapSave(req, res);
 });
 
 router.get(poPrefix + "/internalDepartmentEmpList", [], (req, res) => {
