@@ -112,7 +112,7 @@ const submitDrawing = async (req, res) => {
         const response = await query({ query: q, values: val });
 
         if (payload.status === APPROVED) {
-            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData);
+            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData, PENDING);
             console.log("actual_subminission", actual_subminission);
         }
 

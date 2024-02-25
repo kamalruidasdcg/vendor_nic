@@ -1,5 +1,5 @@
 const path = require('path');
-const { qapPayload } = require("../../services/po.services");
+const { qapPayload, setActualSubmissionDate } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -139,9 +139,7 @@ const submitQAP = async (req, res) => {
             payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
             payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
         }
-//         console.log("DFGHJKJHGF>>>>>>>>>>>>>>>>>>>");
-// console.log(payload);
-//return;
+
 
 
         //////// SET STATUS AND CREATE QAP PAYLOAD /////////
@@ -185,6 +183,11 @@ const submitQAP = async (req, res) => {
 
         const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
         const response = await query({ query: q, values: val });
+
+        if (payload.status === APPROVED) {
+            const actual_subminission = await setActualSubmissionDate(payload, 3, tokenData, PENDING);
+            console.log("actual_subminission", actual_subminission);
+        }
         if (response.affectedRows) {
             payload.insertId = response.insertId;
             payload.sendAt = new Date(payload.created_at);

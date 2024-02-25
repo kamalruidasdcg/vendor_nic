@@ -271,7 +271,7 @@ const insertActualSubmission = async (data) => {
 
 
 
-async function setActualSubmissionDate(payload, mid, tokenData) {
+async function setActualSubmissionDate(payload, mid, tokenData, status) {
 
     const getTableName = (mid) => {
         switch (mid) {
@@ -288,8 +288,8 @@ async function setActualSubmissionDate(payload, mid, tokenData) {
 
     
     const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND vendor_code = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
-    const result = await query({ query: getlatestData, values: [payload.purchasing_doc_no, payload.vendor_code, PENDING] });
-    console.log(payload.purchasing_doc_no, payload.vendor_code, PENDING);
+    const result = await query({ query: getlatestData, values: [payload.purchasing_doc_no, payload.vendor_code, status] });
+    console.log(payload.purchasing_doc_no, payload.vendor_code, status);
     console.log(getlatestData);
     console.log(result, "result");
     const mtext = {
