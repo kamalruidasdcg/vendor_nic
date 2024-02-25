@@ -1,6 +1,14 @@
 const http = require('http');
 require("dotenv").config();
 
+/**
+ * makeHttpRequest function to call external api from node backend
+ * @param {String} url 
+ * @param {String} method 
+ * @param {JSON} postData 
+ * @returns Promise
+ */
+
 function makeHttpRequest(url, method = 'GET', postData = null) {
   return new Promise((resolve, reject) => {
     // Parse the URL
