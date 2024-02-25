@@ -754,7 +754,27 @@ async function insertQapSave(req, res) {
 }
 
 async function getQapSave(req, res) {
-   return resSend(res, true, 200, "getQapSave!", req.query, null);
+   // return resSend(res, true, 200, "getQapSave!", req.query, null);
+   try {
+    const tokenData = req.tokenData;
+
+    if(!req.query.poNo) {
+        return resSend(res, true, 200, "Please send valid payload!.", null, null);
+    }
+
+    const getQapSaveQuery = `SELECT * FROM ${QAP_SAVE} WHERE purchasing_doc_no = ?`;
+    const resgetQapSave = await query({ query: getQapSaveQuery, values: [req.query.poNo] });
+                    
+    
+        if (!resgetQapSave.length) {
+            return resSend(res, true, 200, "No QAP found.", null, null);
+        }
+        
+        return resSend(res, true, 200, "data fetched successfully.", resgetQapSave, null);
+    } catch (err) {
+        console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, null);
+    }
 }
 
 async function deleteQapSave(req, res) {
