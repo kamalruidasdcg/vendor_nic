@@ -1,4 +1,5 @@
 const http = require('http');
+require("dotenv").config();
 
 function makeHttpRequest(url, method = 'GET', postData = null) {
   return new Promise((resolve, reject) => {
@@ -12,9 +13,9 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
       path: urlParts.pathname,
       method: method.toUpperCase(),
       headers: {
-        'Content-Type': 'application/json', // Adjust content type as needed
-        'username': 'mahidur_da_sap',
-        'password': '1234'
+        'Content-Type': 'application/json',
+        'username': process.env.SAP_API_AUTH_USERNAME || 'mahidur_da_sap',
+        'password': process.env.SAP_API_AUTH_PASSWORD || '1234'
       },
     };
 
@@ -63,10 +64,10 @@ async function fetchData() {
 
     const postUrl = 'http://10.13.1.165:4001/api/v1/sap/material/makt';
     const postData = {
-      "MATNR": "MAINAK",
-      "SPRAS": "MAINAK",
+      "MATNR": "MAINAK2",
+      "SPRAS": "MAINAK2",
       "MAKTX": "S",
-      "MAKTG": "MAINAK",
+      "MAKTG": "MAINAK2",
       "MTART": "ZDIN"
     }; // Replace with your actual payload
     const postResponse = await makeHttpRequest(postUrl, 'POST', postData);
