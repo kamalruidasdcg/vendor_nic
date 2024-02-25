@@ -1,50 +1,80 @@
+const http = require('http');
 
+function makeHttpRequest(url, method = 'GET', postData = null) {
+  return new Promise((resolve, reject) => {
+    // Parse the URL
+    const urlParts = new URL(url);
 
-const https = require('https');
+    // Define the options for the HTTP request
+    const options = {
+      hostname: urlParts.hostname,
+      port: urlParts.port,
+      path: urlParts.pathname,
+      method: method.toUpperCase(),
+      headers: {
+        'Content-Type': 'application/json', // Adjust content type as needed
+        'username': 'mahidur_da_sap',
+        'password': '1234'
+      },
+    };
 
-const externalBackendURL = 'http://grsebld1dev:8000/sap/bc/zobps_out_api'; // Replace with your actual external backend URL
+    // Add postData to the request if provided
+    if (method.toUpperCase() === 'POST' && postData !== null) {
+      const postDataString = JSON.stringify(postData);
+      options.headers['Content-Length'] = Buffer.byteLength(postDataString);
+    }
 
-const payload = {
-    "ZBTNO": "varchar(11)",
-    "ERDAT": "date 8",
-    "ERZET": "time 6",
-    "ERNAM": "archar(12",
-    "LAEDA": "date 8",
-    "AENAM": "	varchar(12)",
-    "LIFNR": "varchar(10)",
-    "ZVBNO": "varchar(40)",
-    "EBELN": "varchar(10)",
-    "DPERNR1": "int(8)",
-    "ZRMK1": "varchar(140)",
+    // Make the HTTP request
+    const req = http.request(options, (res) => {
+      let data = '';
+
+      // A chunk of data has been received.
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      // The whole response has been received.
+      res.on('end', () => {
+        resolve(data);
+      });
+    });
+
+    // Handle errors
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    // If it's a POST request, write the postData to the request
+    if (method.toUpperCase() === 'POST' && postData !== null) {
+      req.write(JSON.stringify(postData));
+    }
+
+    // End the request
+    req.end();
+  });
 }
 
-const postData = JSON.stringify(dataToSend);
+// Example usage with async/await
+async function fetchData() {
+  try {
+    const getUrl = 'http://10.13.1.165:4001/api/v1/ping';
+    const getResponse = await makeHttpRequest(getUrl);
+    console.log('GET Response from the server:', getResponse);
 
-const options = {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    // Add any additional headers if required by your external backend
-  },
-};
+    const postUrl = 'http://10.13.1.165:4001/api/v1/sap/material/makt';
+    const postData = {
+      "MATNR": "MAINAK",
+      "SPRAS": "MAINAK",
+      "MAKTX": "S",
+      "MAKTG": "MAINAK",
+      "MTART": "ZDIN"
+    }; // Replace with your actual payload
+    const postResponse = await makeHttpRequest(postUrl, 'POST', postData);
+    console.log('POST Response from the server:', postResponse);
+  } catch (error) {
+    console.error('Error making the request:', error.message);
+  }
+}
 
-const req = https.request(externalBackendURL, options, (res) => {
-  let responseData = '';
-
-  res.on('data', (chunk) => {
-    responseData += chunk;
-  });
-
-  res.on('end', () => {
-    console.log('Data successfully sent to external backend:', responseData);
-    // Handle success or additional logic here
-  });
-});
-
-req.on('error', (error) => {
-  console.error('Error sending data to external backend:', error.message);
-  // Handle error or additional error logic here
-});
-
-req.write(postData);
-req.end();
+// Call the async function
+fetchData();
