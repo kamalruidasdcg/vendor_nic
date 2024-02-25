@@ -56,7 +56,8 @@ const details = async (req, res) => {
 
         // GROUP  BY purchasing_doc_no, status
         const timelingQ =
-        `(SELECT a.*,
+        `
+        (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
                 act.actualsubmissiondate
@@ -120,7 +121,7 @@ const details = async (req, res) => {
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
-                            AND act.milestoneid = 3 )
+                            AND act.milestoneid = 4 )
                 INNER JOIN (SELECT id,
                                    purchasing_doc_no,
                                    status
@@ -130,11 +131,10 @@ const details = async (req, res) => {
                                          WHERE  y.purchasing_doc_no =
                                                 x.purchasing_doc_no)) AS b
                         ON ( b.purchasing_doc_no = a.ebeln )
-         WHERE  a.mid = 3
-                AND a.ebeln = ?    
+         WHERE  a.mid = 4
+                AND a.ebeln = ?    );
             `;
-
-        const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
+            const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id] });
 
 
         // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
