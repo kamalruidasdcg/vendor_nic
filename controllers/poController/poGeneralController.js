@@ -137,27 +137,27 @@ const details = async (req, res) => {
 
 
         const timeLineQuery = `
-        (SELECT a.*, sub.actualSubmissionDate FROM   zpo_milestone AS a 
+        (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 1)
             WHERE a.EBELN = ? AND a.MID = 1)
             
             UNION
-            (SELECT a.*, sub.actualSubmissionDate FROM   zpo_milestone AS a 
+            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 2)
             WHERE a.EBELN = ? AND a.MID = 2)
             
             UNION
             
-            (SELECT a.*, sub.actualSubmissionDate FROM   zpo_milestone AS a 
+            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 3)
             WHERE a.EBELN = ? AND a.MID= 3)
             
             UNION
             
-            (SELECT a.*, sub.actualSubmissionDate FROM   zpo_milestone AS a 
+            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 4)
             WHERE a.EBELN = ? AND a.MID = 4);
