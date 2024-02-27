@@ -3,10 +3,11 @@ const { query, connection } = require("../config/dbConfig");
 const { INSERT, TRUE } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
 const { EKKO } = require("../lib/tableName");
-const { generateQuery, formatDate } = require("../lib/utils");
+const { generateQuery, formatDate, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../lib/utils");
 // const mysql = require("mysql2/promise");
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
+const { ekpoTablePayload, zpo_milestonePayload } = require("../services/sap.po.services");
 
 // require("dotenv").config();
 
@@ -50,10 +51,11 @@ const insertPOData = async (req, res) => {
                 EKGRP: obj.EKGRP ? obj.EKGRP : null,
             };
 
-            const ekkoTableInsert = generateQuery(INSERT, EKKO, insertPayload);
+            // const ekkoTableInsert = generateQuery(INSERT, EKKO, insertPayload);
+            const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, EKKO, "EBELN");
 
             try {
-                const [results] = await promiseConnection.execute(ekkoTableInsert["q"], ekkoTableInsert["val"]);
+                const [results] = await promiseConnection.execute(ekkoTableInsert);
                 console.log("results", results);
             } catch (error) {
                 return responseSend(res, "0", 502, "Data insert failed !!", error, null);
@@ -61,22 +63,52 @@ const insertPOData = async (req, res) => {
 
 
             const insertPromiseFn = [];
-
+            console.log("ZPO_MILESTONE", ZPO_MILESTONE);
             if (ZPO_MILESTONE?.length) {
-                const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
-                const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE)
-                insertPromiseFn.push(promiseConnection.query(insert_zpo_milestone_table, [zpo_milestone_table_val]))
+
+                try {
+
+
+                    // const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
+                    console.log("ZPO_MILESTONE", ZPO_MILESTONE);
+                    const zmilestonePayload = await zpo_milestonePayload(ZPO_MILESTONE);
+                    console.log('ekpopayload', zmilestonePayload);
+                    // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
+                    const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, "zpo_milestone", "C_PKEY");
+                    console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
+                    insertPromiseFn.push(promiseConnection.execute(insert_zpo_milestone_table));
+                    // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
+                    // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
+
+                    insertPromiseFn.push(promiseConnection.execute(insert_zpo_milestone_table));
+                } catch (error) {
+                    console.log("error, zpo milestone", error);
+                }
             }
 
+        
+
             if (EKPO?.length) {
-                const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                const ekpo_table_val = ekpoTableData(EKPO);
-                insertPromiseFn.push(promiseConnection.query(insert_ekpo_table, [ekpo_table_val]))
+
+                try {
+                    
+               
+                const ekpopayload = await ekpoTablePayload(EKPO);
+                // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
+                const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", "C_PKEY");
+                console.log("insert_ekpo_table", insert_ekpo_table);
+                insertPromiseFn.push(promiseConnection.execute(insert_ekpo_table));
+            } catch (error) {
+                console.log("error, ekpo", error);
+                    
+            }
 
             }
             if (insertPromiseFn.length) {
                 const insert = await Promise.all(insertPromiseFn);
-             }
+
+                console.log("insert", insert);
+            }
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
@@ -140,7 +172,7 @@ function zpo_milestoneTableData(data) {
         obj.EBELN,
         obj.MID ? obj.MID : null,
         obj.MTEXT ? obj.MTEXT : null,
-        formatDate( obj.PLAN_DATE),
+        formatDate(obj.PLAN_DATE),
         obj.MO ? obj.MO : null
     ]);
 
