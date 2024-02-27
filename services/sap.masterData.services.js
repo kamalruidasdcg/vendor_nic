@@ -11,7 +11,7 @@ const lfa1Payload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    LIFNR: obj.LIFNR || null,
+    LIFNR: obj.LIFNR,
     LAND1: obj.LAND1 || null,
     NAME1: obj.NAME1 || null,
     ORT01: obj.ORT01 || null,
@@ -30,12 +30,12 @@ const lfa1Payload = async (payload) => {
 };
 
 
-const addUserPayload = async (payload) => {
-  if (!payload || !Array.isArray(payload) || !payload.length) {
+const addUserPayload = async (obj) => {
+  if (!obj || !Array.isArray(obj) || !obj.length) {
     throw new Error("Please send valid payload");
   }
-  const pl = payload.map((obj) => ({
-    PERNR: obj.PERNR || null,
+  const pl = obj.map((obj) => ({
+    PERNR: obj.PERNR,
     SUBTY: obj.SUBTY || null,
     OBJPS: obj.OBJPS || null,
     SPRPS: obj.SPRPS || null,
