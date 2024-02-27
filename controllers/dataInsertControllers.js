@@ -54,6 +54,7 @@ const insertPOData = async (req, res) => {
 
             try {
                 const [results] = await promiseConnection.execute(ekkoTableInsert["q"], ekkoTableInsert["val"]);
+                console.log("results", results);
             } catch (error) {
                 return responseSend(res, "0", 502, "Data insert failed !!", error, null);
             }
@@ -75,7 +76,7 @@ const insertPOData = async (req, res) => {
             }
             if (insertPromiseFn.length) {
                 const insert = await Promise.all(insertPromiseFn);
-            }
+             }
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
@@ -100,6 +101,7 @@ const insertPOData = async (req, res) => {
         }
         finally {
             if (!transactionSuccessful) {
+                console.log("Connection End" + "--->" + "connection release");
                 await promiseConnection.rollback();
             }
             const connEnd = await promiseConnection.end();
@@ -138,7 +140,7 @@ function zpo_milestoneTableData(data) {
         obj.EBELN,
         obj.MID ? obj.MID : null,
         obj.MTEXT ? obj.MTEXT : null,
-        formatDate(obj.PLAN_DATE),
+        formatDate( obj.PLAN_DATE),
         obj.MO ? obj.MO : null
     ]);
 
@@ -267,4 +269,3 @@ module.exports = { insertPOData };
 //       { EBELN: "7777777777", MID: "M-2", MTEXT: "IM IN - 2", PLAN_DATE: "2023-11-03", MO: "O" },
 //     ],
 //   };
-

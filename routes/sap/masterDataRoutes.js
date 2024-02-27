@@ -10,4 +10,9 @@ router.post("/lfa1", (req, res) => {
     controller.lfa1(req, res);
 });
 
+router.post("/addUser", (req, res) => {
+    controller.addUser(req, res);
+});
+
+
 module.exports = router;

@@ -20,6 +20,7 @@ const makt = async (req, res) => {
 
             let payload = req.body;
 
+            console.log("payload ---makt", payload);
 
             if (Array.isArray(req.body)) {
                 payload = req.body.length > 0 ? req.body[0] : null;
@@ -45,6 +46,8 @@ const makt = async (req, res) => {
 
             try {
                 const [results] = await promiseConnection.execute(ekkoTableInsert["q"], ekkoTableInsert["val"]);
+            console.log("results", results);
+            
             } catch (error) {
                 return responseSend(res, "0", 502, "Data insert failed !!", error, null);
             }
@@ -57,6 +60,8 @@ const makt = async (req, res) => {
                 const maraTableInsert = generateQuery(INSERT, MARA, maraTablePayload);
 
                 const [results] = await promiseConnection.execute(maraTableInsert["q"], maraTableInsert["val"]);
+                console.log("results", results);
+            
             } catch (error) {
                 return responseSend(res, "0", 502, "Data insert failed !!", error, null);
             }
@@ -93,6 +98,7 @@ const mseg = async (req, res) => {
         const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
 
         const response = await promiseConnection.query(q, [val]);
+        console.log("response", response);
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);

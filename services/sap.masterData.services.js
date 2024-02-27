@@ -30,6 +30,30 @@ const lfa1Payload = async (payload) => {
 };
 
 
+const addUserPayload = async (payload) => {
+  if (!payload || !Array.isArray(payload) || !payload.length) {
+    throw new Error("Please send valid payload");
+  }
+  const pl = payload.map((obj) => ({
+    PERNR: obj.PERNR || null,
+    SUBTY: obj.SUBTY || null,
+    OBJPS: obj.OBJPS || null,
+    SPRPS: obj.SPRPS || null,
+    ENDDA: formatDate(obj.ENDDA),
+    BEGDA: formatDate(obj.BEGDA),
+    SEQNR: obj.SEQNR || null,
+    AEDTM: formatDate(obj.AEDTM),
+    UNAME: obj.UNAME || null,
+    CNAME: obj.CNAME || null,
+    GESCH: obj.GESCH || null,
+    GBDAT: formatDate(obj.GBDAT),
+    NATIO: obj.NATIO || null,
+    EMAIL: obj.EMAIL || null,
+    PHONE: obj.PHONE || null,
+  }));
+  return pl;
+};
 
 
-module.exports = { lfa1Payload };
+
+module.exports = { lfa1Payload, addUserPayload };
