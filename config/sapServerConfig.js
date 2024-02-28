@@ -15,6 +15,21 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
     const urlParts = new URL(url);
 
     // Define the options for the HTTP request
+    const credential = process.env.SAP_API_AUTH_USERNAME + process.env.SAP_API_AUTH_PASSWORD 
+    const base64Credentials = Buffer.from().toString('base64');
+
+// const options = {
+//   'method': 'GET',
+//   'hostname': '10.101.111.109',
+//   'port': 4001,
+//   'path': '/api/v1/ping',
+//   'headers': {
+//     'Authorization': 'Basic ' + base64Credentials
+//   },
+//   'maxRedirects': 20
+// };
+
+
     const options = {
       hostname: urlParts.hostname,
       port: urlParts.port,
@@ -22,8 +37,7 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
       method: method.toUpperCase(),
       headers: {
         'Content-Type': 'application/json',
-        'username': process.env.SAP_API_AUTH_USERNAME || 'mahidur_da_sap',
-        'password': process.env.SAP_API_AUTH_PASSWORD || '1234'
+        'Authorization': 'Basic ' + base64Credentials
       },
     };
 
@@ -66,11 +80,13 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
 // Example usage with async/await
 async function fetchData() {
   try {
-    const getUrl = 'http://10.13.1.165:4001/api/v1/ping';
+    const getUrl = 'http://10.101.111.109:4001/api/v1/ping';
+    console.log("getUrl", getUrl);
     const getResponse = await makeHttpRequest(getUrl);
     console.log('GET Response from the server:', getResponse);
 
-    const postUrl = 'http://10.13.1.165:4001/api/v1/sap/material/makt';
+    // const postUrl = 'http://10.13.1.165:4001/api/v1/sap/material/makt';
+    const postUrl = 'http://10.101.111.109:4001/api/v1/sap/material/makt';
     const postData = {
       "MATNR": "MAINAK2",
       "SPRAS": "MAINAK2",
