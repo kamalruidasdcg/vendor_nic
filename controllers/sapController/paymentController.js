@@ -1,10 +1,10 @@
 
-const { resSend } = require("../../lib/resSend");
+const { resSend, responseSend } = require("../../lib/resSend");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { PAYMENT_ADVICE2, PAYMENT_VOUCHER } = require('../../lib/tableName');
-const { paymentPayload } = require("../../services/sap.payment.services");
+const { paymentPayload, ztfi_bil_defacePayload } = require("../../services/sap.payment.services");
 const { INSERT } = require("../../lib/constant");
-const { getEpochTime, generateQuery } = require("../../lib/utils");
+const { getEpochTime, generateQuery, generateInsertUpdateQuery } = require("../../lib/utils");
 const { query } = require("../../config/dbConfig");
 
 
@@ -53,13 +53,13 @@ const addPaymentVoucher = async (req, res) => {
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
-        // payment payload
+    // payment payload
 
-        // "purchasing_doc_no": "4700013229",
-        // "file": "sample.pdf",
-        // "vendor_code": "50000437",
-        // "action_by_name": "S Roy",
-        // "action_by_id": "600224",
+    // "purchasing_doc_no": "4700013229",
+    // "file": "sample.pdf",
+    // "vendor_code": "50000437",
+    // "action_by_name": "S Roy",
+    // "action_by_id": "600224",
 
 }
 const addPaymentAdvise = async (req, res) => {
@@ -106,15 +106,45 @@ const addPaymentAdvise = async (req, res) => {
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
-        // payment payload
+    // payment payload
 
-        // "purchasing_doc_no": "4700013229",
-        // "file": "sample.pdf",
-        // "vendor_code": "50000437",
-        // "action_by_name": "S Roy",
-        // "action_by_id": "600224",
+    // "purchasing_doc_no": "4700013229",
+    // "file": "sample.pdf",
+    // "vendor_code": "50000437",
+    // "action_by_name": "S Roy",
+    // "action_by_id": "600224",
 
 }
 
+const ztfi_bil_deface = async (req, res) => {
 
-module.exports = { addPaymentVoucher, addPaymentAdvise }
+    try {
+        if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+        }
+
+        const payload = req.body;
+        if (!payload || !payload.ZREGNUM || !payload.SEQNO || !payload.ZBILLPER) {
+            return responseSend(res, "F", 400, "Invalid payload.", null, null);
+        }
+
+        const payloadObj = await ztfi_bil_defacePayload(payload);
+        const mkpfInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", "C_PKEY");
+        console.log(", mkpfInsertQuery", mkpfInsertQuery);
+        const response = await query({ query: mkpfInsertQuery, values: [] });
+        console.log("response", response);
+        if (response.affectedRows) {
+            responseSend(res, "S", 200, "Data inserted successfully", response, null);
+
+        } else {
+            // resSend(res, false, 400, "No data inserted", response, null);
+            responseSend(res, "F", 400, "Data inserted successfully", response, null);
+
+        }
+        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+    } catch (err) {
+        console.log("data not inserted", err);
+        responseSend(res, "0", 500, "Internal server errorR", err, null);
+    }
+}
+module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface }

@@ -25,6 +25,8 @@ const lfa1Payload = async (payload) => {
     TELFX: obj.TELFX || null,
     STCD3: obj.STCD3 || null,
     ZZVENVALDT: formatDate(obj.ZZVENVALDT),
+    EMAIL: obj.EMAIL || null,
+    PHONE: obj.PHONE || null,
   }));
   return pl;
 };
