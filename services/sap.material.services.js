@@ -11,9 +11,10 @@ const msegPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    MBLNR: obj.MBLNR || null,
-    MJAHR: obj.MJAHR || null,
-    ZEILE: obj.ZEILE || null,
+    C_PKEY: `${obj.MBLNR}-${obj.MJAHR}-${obj.ZEILE}`,
+    MBLNR: obj.MBLNR,
+    MJAHR: obj.MJAHR,
+    ZEILE: obj.ZEILE,
     LINE_ID: obj.LINE_ID || null,
     PARENT_ID: obj.PARENT_ID || null,
     LINE_DEPTH: obj.LINE_DEPTH || null,

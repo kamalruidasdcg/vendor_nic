@@ -105,10 +105,16 @@ const mseg = async (req, res) => {
         }
         const payload = req.body;
 
-        const payloadObj = await msegPayload(payload);
-        const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
 
-        const response = await promiseConnection.query(q, [val]);
+        // insertPayload = await msegPayload (obj);
+        // console.log(insertPayload, "jjjjjjjjjjjjj");
+
+        
+        const payloadObj = await msegPayload(payload);
+        const ekkoTableInsert = await generateQueryForMultipleData(payloadObj, "mseg", "C_PKEY");
+        // const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
+
+        const response = await promiseConnection.query(ekkoTableInsert);
         console.log("response", response);
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
