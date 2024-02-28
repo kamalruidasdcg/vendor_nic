@@ -86,22 +86,22 @@ const insertPOData = async (req, res) => {
                 }
             }
 
-        
+
 
             if (EKPO?.length) {
 
                 try {
-                    
-               
-                const ekpopayload = await ekpoTablePayload(EKPO);
-                // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", "C_PKEY");
-                console.log("insert_ekpo_table", insert_ekpo_table);
-                insertPromiseFn.push(promiseConnection.execute(insert_ekpo_table));
-            } catch (error) {
-                console.log("error, ekpo", error);
-                    
-            }
+
+
+                    const ekpopayload = await ekpoTablePayload(EKPO);
+                    // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
+                    const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", "C_PKEY");
+                    console.log("insert_ekpo_table", insert_ekpo_table);
+                    insertPromiseFn.push(promiseConnection.execute(insert_ekpo_table));
+                } catch (error) {
+                    console.log("error, ekpo", error);
+
+                }
 
             }
             if (insertPromiseFn.length) {
