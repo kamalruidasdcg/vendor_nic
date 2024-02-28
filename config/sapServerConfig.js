@@ -15,19 +15,11 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
     const urlParts = new URL(url);
 
     // Define the options for the HTTP request
-    const credential = process.env.SAP_API_AUTH_USERNAME + process.env.SAP_API_AUTH_PASSWORD 
-    const base64Credentials = Buffer.from().toString('base64');
-
-// const options = {
-//   'method': 'GET',
-//   'hostname': '10.101.111.109',
-//   'port': 4001,
-//   'path': '/api/v1/ping',
-//   'headers': {
-//     'Authorization': 'Basic ' + base64Credentials
-//   },
-//   'maxRedirects': 20
-// };
+    const Username = process.env.SAP_API_AUTH_USERNAME || "KAMAL";
+    const Password = process.env.SAP_API_AUTH_PASSWORD || "RUIDAS";
+    const credential = Username+":"+Password;
+    const base64Credentials = Buffer.from(credential).toString('base64');
+    console.log(base64Credentials, "base64Credentials");
 
 
     const options = {
@@ -39,6 +31,7 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
         'Content-Type': 'application/json',
         'Authorization': 'Basic ' + base64Credentials
       },
+      'maxRedirects': 5
     };
 
     // Add postData to the request if provided
