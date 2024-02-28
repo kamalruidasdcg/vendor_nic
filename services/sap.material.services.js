@@ -224,6 +224,7 @@ const makfPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
+    C_PKEY: `${obj.MBLNR}-${obj.MJAHR}`,
     MBLNR: obj.MBLNR || null,
     MJAHR: obj.MJAHR || null,
     VGART: obj.VGART || null,

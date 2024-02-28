@@ -20,17 +20,18 @@ const { getEpochTime } = require("../lib/utils");
 
 
 const wbsPayload = async (payload) => {
-console.log("payyyyyy", payload);
-if (!payload || !Array.isArray(payload) || !payload.length) {
-throw new Error("Please send valid payload");
-}
-const pl = payload.map((obj) => ({
-EBELN: obj.EBELN,
-EBELP: obj.EBELP || null,
-WBS_ELEMENT: obj.WBS_ELEMENT || null,
-NETWORK: obj.NETWORK || null
-}));
-return pl;
+    console.log("payyyyyy", payload);
+    if (!payload || !Array.isArray(payload) || !payload.length) {
+        throw new Error("Please send valid payload");
+    }
+    const pl = payload.map((obj) => ({
+        C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
+        EBELN: obj.EBELN,
+        EBELP: obj.EBELP,
+        WBS_ELEMENT: obj.WBS_ELEMENT || null,
+        NETWORK: obj.NETWORK || null
+    }));
+    return pl;
 };
 
 module.exports = { wbsPayload }

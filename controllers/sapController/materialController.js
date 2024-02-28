@@ -130,9 +130,9 @@ const mkpf = async (req, res) => {
         const payload = req.body;
 
         const payloadObj = await makfPayload(payload);
-        const { q, val } = await generateQueryArray(INSERT, MKPF, payloadObj);
+        const mkpfInsertQuery = await generateQueryForMultipleData(payloadObj, MKPF, "C_PKEY");
 
-        const response = await promiseConnection.query(q, [val]);
+        const response = await promiseConnection.query(mkpfInsertQuery);
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);
