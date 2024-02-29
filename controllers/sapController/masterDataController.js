@@ -12,12 +12,12 @@ const lfa1 = async (req, res) => {
 
     try {
 
-    /**
-     * PAYLOAD MODIFICATION
-     * IF PAYLOADA IS A OBJECT THEN PUSH IN TO A ARRAY
-     * ELSE PAYLOAD = req.body
-     * THIS MODIFICATION IS DONE FOR SEND MULTIPLE DATA INSERT AND INSERT / UPDATE QUERY
-     */
+        /**
+         * PAYLOAD MODIFICATION
+         * IF PAYLOADA IS A OBJECT THEN PUSH IN TO A ARRAY
+         * ELSE PAYLOAD = req.body
+         * THIS MODIFICATION IS DONE FOR SEND MULTIPLE DATA INSERT AND INSERT / UPDATE QUERY
+         */
         let payload = [];
         if (req.body && Array.isArray(req.body)) {
             payload = req.body;
@@ -32,9 +32,13 @@ const lfa1 = async (req, res) => {
 
         const payloadObj = await lfa1Payload(payload);
         console.log("payloadObj", payloadObj);
-        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1 , "LIFNR");
+        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, "LIFNR");
         const response = await query({ query: multipleUserInsertQ, values: [] });
-        responseSend(res, "1", 200, "Data inserted successfully", response, null);
+        if (response.affectedRows) {
+            responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
+        } else {
+            responseSend(res, "F", 400, "data insert filed !!", response, null);
+        }
 
     } catch (error) {
         console.log("data not inserted", error);
@@ -96,7 +100,12 @@ const addUser = async (req, res) => {
         console.log("payloadObj", payloadObj);
         const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, "PERNR");
         const response = await query({ query: multipleUserInsertQ, values: [] });
-        responseSend(res, "1", 200, "Data inserted successfully", response, null);
+
+        if (response.affectedRows) {
+            responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
+        } else {
+            responseSend(res, "F", 400, "data insert filed !!", response, null);
+        }
     } catch (err) {
         console.log("data not inserted", err);
         responseSend(res, "0", 500, "Internal server errorR", err, null);

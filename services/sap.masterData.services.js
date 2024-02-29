@@ -38,20 +38,10 @@ const addUserPayload = async (obj) => {
   }
   const pl = obj.map((obj) => ({
     PERNR: obj.PERNR,
-    SUBTY: obj.SUBTY || null,
-    OBJPS: obj.OBJPS || null,
-    SPRPS: obj.SPRPS || null,
-    ENDDA: formatDate(obj.ENDDA),
-    BEGDA: formatDate(obj.BEGDA),
-    SEQNR: obj.SEQNR || null,
-    AEDTM: formatDate(obj.AEDTM),
-    UNAME: obj.UNAME || null,
     CNAME: obj.CNAME || null,
-    GESCH: obj.GESCH || null,
-    GBDAT: formatDate(obj.GBDAT),
-    NATIO: obj.NATIO || null,
-    EMAIL: obj.EMAIL || null,
     PHONE: obj.PHONE || null,
+    EMAIL: obj.EMAIL || null,
+    PERSG: obj.PERSG || null,
   }));
   return pl;
 };
