@@ -32,7 +32,7 @@ const insertPOData = async (req, res) => {
 
 
 
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length) {
+            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.EBELN) {
                 return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
             }
 
