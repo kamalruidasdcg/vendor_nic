@@ -17,6 +17,7 @@ const lfa1Payload = async (payload) => {
     STCD3: obj.STCD3 || null,
     EMAIL: obj.EMAIL || null,
     PHONE: obj.PHONE || null,
+    TELF2: obj.TELF2 || null,
   }));
   return pl;
 };
