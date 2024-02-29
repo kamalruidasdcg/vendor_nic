@@ -12,19 +12,9 @@ const lfa1Payload = async (payload) => {
   }
   const pl = payload.map((obj) => ({
     LIFNR: obj.LIFNR,
-    LAND1: obj.LAND1 || null,
     NAME1: obj.NAME1 || null,
-    ORT01: obj.ORT01 || null,
-    ORT02: obj.ORT02 || null,
-    PFACH: obj.PFACH || null,
-    REGIO: obj.REGIO || null,
-    KTOKK: obj.KTOKK || null,
-    LOEVM_X: obj.LOEVM_X || null,
-    SPRAS: obj.SPRAS || null,
     STCD1: obj.STCD1 || null,
-    TELFX: obj.TELFX || null,
     STCD3: obj.STCD3 || null,
-    ZZVENVALDT: formatDate(obj.ZZVENVALDT),
     EMAIL: obj.EMAIL || null,
     PHONE: obj.PHONE || null,
   }));

@@ -145,40 +145,6 @@ const insertPOData = async (req, res) => {
 };
 
 
-function ekpoTableData(data) {
-    return data.map((obj) => [
-        obj.EBELN,
-        obj.EBELP ? obj.EBELP : null,
-        obj.LOEKZ ? obj.LOEKZ : null,
-        obj.STATU ? obj.STATU : null,
-        formatDate(obj.AEDAT),
-        obj.TXZ01 ? obj.TXZ01 : null,
-        obj.MATNR ? obj.MATNR : null,
-        obj.BUKRS ? obj.BUKRS : null,
-        obj.WERKS ? obj.WERKS : null,
-        obj.LGORT ? obj.LGORT : null,
-        obj.MATKL ? obj.MATKL : null,
-        obj.KTMNG ? obj.KTMNG : null,
-        obj.MENGE ? obj.MENGE : null,
-        obj.MEINS ? obj.MEINS : null,
-        obj.NETPR ? obj.NETPR : null,
-        obj.NETWR ? obj.NETWR : null,
-        obj.MWSKZ ? obj.MWSKZ : null,
-    ]);
-
-}
-function zpo_milestoneTableData(data) {
-    return data.map((obj) => [
-        obj.EBELN,
-        obj.MID ? obj.MID : null,
-        obj.MTEXT ? obj.MTEXT : null,
-        formatDate(obj.PLAN_DATE),
-        obj.MO ? obj.MO : null
-    ]);
-
-}
-
-
 async function sendMail(data) {
     const q =
         `SELECT v_add.smtp_addr AS vendor_email,
