@@ -30,7 +30,7 @@ const lfa1 = async (req, res) => {
             return responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
 
-        const payloadObj = await lfa1Payload(payload);;
+        const payloadObj = await lfa1Payload(payload);
         console.log("payloadObj", payloadObj);
         const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1 , "LIFNR");
         const response = await query({ query: multipleUserInsertQ, values: [] });

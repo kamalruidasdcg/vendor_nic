@@ -15,9 +15,9 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
     const urlParts = new URL(url);
 
     // Define the options for the HTTP request
-    const Username = process.env.SAP_API_AUTH_USERNAME || "KAMAL";
-    const Password = process.env.SAP_API_AUTH_PASSWORD || "RUIDAS";
-    const credential = Username+":"+Password;
+    const Username = process.env.SAP_API_AUTH_USERNAME || "dcg1";
+    const Password = process.env.SAP_API_AUTH_PASSWORD || "data#100";
+    const credential = Username + ":" + Password;
     const base64Credentials = Buffer.from(credential).toString('base64');
     console.log(base64Credentials, "base64Credentials");
 
@@ -70,29 +70,33 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
   });
 }
 
+
+module.exports = { makeHttpRequest }
+
+
 // Example usage with async/await
-async function fetchData() {
-  try {
-    const getUrl = 'http://10.101.111.109:4001/api/v1/ping';
-    console.log("getUrl", getUrl);
-    const getResponse = await makeHttpRequest(getUrl);
-    console.log('GET Response from the server:', getResponse);
+// async function fetchData() {
+//   try {
+//     const postUrl = "http://10.181.1.31:8010/sap/bc/zoBPS_WDC"
+  
+//     const wdc_payload =
+//     {
+//       "ebeln": "898991",
+//       "ebelp": 20,
+//       "slno": "1",
+//       "wdc": "d/wdc"
+//     }
 
-    // const postUrl = 'http://10.13.1.165:4001/api/v1/sap/material/makt';
-    const postUrl = 'http://10.101.111.109:4001/api/v1/sap/material/makt';
-    const postData = {
-      "MATNR": "MAINAK2",
-      "SPRAS": "MAINAK2",
-      "MAKTX": "S",
-      "MAKTG": "MAINAK2",
-      "MTART": "ZDIN"
-    }; // Replace with your actual payload
-    const postResponse = await makeHttpRequest(postUrl, 'POST', postData);
-    console.log('POST Response from the server:', postResponse);
-  } catch (error) {
-    console.error('Error making the request:', error.message);
-  }
-}
+    
+//     console.log("postUrl", postUrl);
+//     console.log("wdc_payload", wdc_payload);
 
-// Call the async function
-fetchData();
+//     const postResponse = await makeHttpRequest(postUrl, 'POST', wdc_payload);
+//     console.log('POST Response from the server:', postResponse);
+//   } catch (error) {
+//     console.error('Error making the request:', error.message);
+//   }
+// }
+
+// // Call the async function
+// fetchData();
