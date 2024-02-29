@@ -15,7 +15,7 @@ const {
 } = require("../../lib/constant");
 
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG } = require("../../lib/tableName");
-const { FINANCE } = require("../../lib/depertmentMaster");
+const { FINANCE, VENDOR } = require("../../lib/depertmentMaster");
 const {
     PENDING,
     ACCEPTED,
@@ -23,8 +23,9 @@ const {
     RE_SUBMITTED,
     REJECTED,
     FORWARD_TO_FINANCE,
-    RETURN_TO_DEALING_OFFICER,
+    RETURN_TO_DO,
     APPROVED,
+    SUBMITTED
 } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -55,11 +56,13 @@ const submitSDBG = async (req, res) => {
             
             const tokenData = { ...req.tokenData };
            console.log(tokenData);
+           const reference_no = `BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
 
-            let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+            let payload = { reference_no : reference_no, ...req.body,  ...fileData, created_at: getEpochTime() };
 
             payload = sdbgPayload(payload);
             
+           
             if (tokenData.user_type != USER_TYPE_VENDOR) {
                 return resSend( res, false, 200, "Please please login as vendor for SDBG subminission.", null, null);
             }
@@ -67,8 +70,13 @@ const submitSDBG = async (req, res) => {
             payload.vendor_code = tokenData.vendor_code;
             payload.updated_by = "VENDOR";
             payload.created_by_id = tokenData.vendor_code;
-            const verifyStatus = [PENDING, RE_SUBMITTED];
+            // console.log("#$%^&*())(*&^$");
+            // console.log(payload);
+            // return;
+            const verifyStatus = [SUBMITTED, RE_SUBMITTED];
 
+
+           
             if (
                 (!payload.purchasing_doc_no) &&
                 verifyStatus.includes(payload.status)
@@ -77,24 +85,35 @@ const submitSDBG = async (req, res) => {
                 // const isDel = handleFileDeletion(directory, req.file.filename);
                 return resSend( res, false, 400, "Please send valid payload", null, null);
             }
+            console.log(payload);
+            //const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
+            
+            const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no, ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
-            const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-    
-            const result2 = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, ACCEPTED] });
+            //const result2 = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no] });
 
-            if (result2[0].count_po > 0) {
-                // const data = [{
-                //     purchasing_doc_no: result2[0]?.purchasing_doc_no,
-                //     status: result2[0]?.status,
-                //     acknowledgedByName: result2[0]?.created_by_name,
-                //     acknowledgedById: result2[0]?.created_by_id,
-                //     message: "The SDBG is already acknowledge. If you want to reopen, please contact with senior management."
-                // }];
+            console.log("#$%^&*()(*&^%$#$%^&*))))))))))");
+            console.log(GET_LATEST_SDBG);
+          // return;
 
-                return resSend(res, true, 200, `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`, null, null);
+            if(GET_LATEST_SDBG.length > 0) {
+                if (GET_LATEST_SDBG[0].status == APPROVED) {
+
+                    return resSend(res, true, 200, `The SDBG is already ${APPROVED}.`, null, null);
+                }
+                
+                // if (result2[0].status == REJECTED  && tokenData.user_type != VENDOR) {
+                //     return resSend(res, true, 200, `The SDBG is already ${REJECTED}.Vendor need to upload.`, null, null);
+                // }
+
+                // if (result2[0].status == RETURN_TO_DO  && tokenData.department_id == FINANCE) {
+                //     return resSend(res, true, 200, `The SDBG is only edit by DO.`, null, null);
+                // }
             }
             // console.log(payload);
             // return;
+
+
 
             const { q, val } = generateQuery(INSERT, SDBG, payload);
             const response = await query({ query: q, values: val });
@@ -154,6 +173,16 @@ const submitSDBG = async (req, res) => {
         return resSend(res, false, 500, "internal server error", [], null);
     }
 };
+
+const get_latest_sdbg = async (purchasing_doc_no) => {
+    const GET_LATEST_SDBG = `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
+
+    const result2 = await query({ query: GET_LATEST_SDBG, values: [purchasing_doc_no] });
+
+    // console.log("#$%^&*()(*&^%$#$%^&*");
+    //console.log(result2);
+    return result2;
+}
 
 const getSDBGData = async (req, res) => {
     try {
@@ -269,6 +298,17 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             );
         }
 
+        const GET_LATEST_SDBG = await get_latest_sdbg(obj.purchasing_doc_no, ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
+
+        if(GET_LATEST_SDBG.length > 0) {
+            if (GET_LATEST_SDBG[0].status == ACCEPTED) {
+                return resSend(res, true, 200, `The SDBG is already acknowledge.`, null, null);
+            }
+            if (GET_LATEST_SDBG[0].status == REJECTED || GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE) {
+                return resSend(res, true, 200, `The SDBG is already ${GET_LATEST_SDBG[0].status}.`, null, null);
+            }
+        }
+
         const insertPayload = {
             purchasing_doc_no: obj.purchasing_doc_no,
             bank_name: obj.bank_name ? obj.bank_name : null,
@@ -316,10 +356,11 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
                 ? obj.entension_letter_date
                 : null,
 
-            status: "FORWARD_TO_FINANCE",
+            status: obj.status,
             created_at: getEpochTime(),
             created_by: tokenData.vendor_code,
         };
+
         //console.log(insertPayload);
         let dbQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = ?`;
         const dbResult = await query({
@@ -345,7 +386,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
                 res,
                 false,
                 201,
-                "Data not 1insert!!",
+                "Data not insert!!",
                 sdbgEntryQuery.error,
                 null
             );
@@ -357,11 +398,12 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         // console.log("sdbgDataResult");
         // console.log(sdbgDataResult);
         const insertPayloadForSdbg = {
+            reference_no: obj.reference_no,
             purchasing_doc_no: obj.purchasing_doc_no,
             ...sdbgDataResult,
-            remarks: "SDBG entry forwarded to Finance.",
-            status: "FORWARD_TO_FINANCE",
-            assigned_from: tokenData.vendor_code,
+            remarks: (obj.status === REJECTED) ? `This SDBG is ${REJECTED}`:`SDBG entry forwarded to Finance.`,
+            status: obj.status,
+            assigned_from: (obj.status === REJECTED) ? null : tokenData.vendor_code,
             assigned_to: obj.assigned_to || null,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
@@ -380,11 +422,12 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
         console.log("rt67898uygy");
         console.log(sdbgQuery);
+        let msg = (obj.status === REJECTED) ? `This SDBG is Rejected.` : `Forworded to finance successfully!`;
         return resSend(
             res,
             true,
             200,
-            "Forworded to finance successfully!",
+            msg,
             sdbgQuery,
             null
         );
@@ -404,21 +447,46 @@ const sdbgUpdateByFinance = async (req, res) => {
         if (tokenData.department_id != FINANCE) {
             return resSend(res, true, 200, "please login as finance!", null, null);
         }
-        const getQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-        const result = await query({
-            query: getQuery,
-            values: [obj.purchasing_doc_no, FORWARD_TO_FINANCE],
-        });
-        if (result[0].po_count === 0) {
-            return resSend(
-                res,
-                true,
-                200,
-                "This po is not forward to finance.Please contact with dealing officer.",
-                null,
-                null
-            );
+        const GET_LATEST_SDBG = await get_latest_sdbg(obj.purchasing_doc_no, ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
+       if(GET_LATEST_SDBG[0].status == APPROVED) {
+        return resSend(
+            res,
+            true,
+            200,
+            `This po is alreafy ${APPROVED}.`,
+            null,
+            null
+        );
+       }
+console.log(tokenData.internal_role_id);
+console.log(GET_LATEST_SDBG[0].status);
+
+        if(GET_LATEST_SDBG.length > 0) {
+            if (tokenData.internal_role_id == ASSIGNER && GET_LATEST_SDBG[0].status != FORWARD_TO_FINANCE) {
+
+                return resSend(
+                    res,
+                    true,
+                    200,
+                    "This po is not forward to finance.Please contact with dealing officer.",
+                    null,
+                    null
+                );
+            }
+            if (tokenData.internal_role_id == STAFF && GET_LATEST_SDBG[0].status != ACCEPTED) {
+
+                return resSend(
+                    res,
+                    true,
+                    200,
+                    "This po is not accepted by finance head.",
+                    null,
+                    null
+                );
+            }
+
         }
+        
         if (
             !obj.purchasing_doc_no ||
             obj.purchasing_doc_no == "" ||
@@ -431,7 +499,7 @@ const sdbgUpdateByFinance = async (req, res) => {
                 res,
                 true,
                 200,
-                "please send a valid p4ayload!",
+                "please send a valid payload!",
                 null,
                 null
             );
@@ -451,6 +519,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         // console.log("sdbgDataResult");
         // console.log(sdbgDataResult);
         const insertPayloadForSdbg = {
+            reference_no: obj.reference_no,
             purchasing_doc_no: obj.purchasing_doc_no,
             ...sdbgDataResult,
             remarks: obj.remarks,

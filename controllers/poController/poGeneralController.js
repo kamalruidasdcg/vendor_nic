@@ -56,7 +56,7 @@ const details = async (req, res) => {
 
         // GROUP  BY purchasing_doc_no, status
         const timelingQ =
-            `
+        `
         (SELECT a.*,
                 b.status,
                 b.purchasing_doc_no,
@@ -133,66 +133,7 @@ const details = async (req, res) => {
                         ON ( b.purchasing_doc_no = a.ebeln )
          WHERE  a.mid = 4
                 AND a.ebeln = ? );`;
-
-
-
-        const timeLineQuery = `
-        (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
-            LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 1)
-            WHERE a.EBELN = ? AND a.MID = 1)
-            
-            UNION
-            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
-            LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 2)
-            WHERE a.EBELN = ? AND a.MID = 2)
-            
-            UNION
-            
-            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
-            LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 3)
-            WHERE a.EBELN = ? AND a.MID= 3)
-            
-            UNION
-            
-            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
-            LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 4)
-            WHERE a.EBELN = ? AND a.MID = 4);
-        `;
-        const timeline = await query({ query: timeLineQuery, values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id] });
-
-
-
-
-        const getLatest = `
-        (SELECT purchasing_doc_no, status, "1" as flag FROM sdbg WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
-
-        UNION
-
-        (SELECT purchasing_doc_no, status, "2" as flag FROM drawing WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
-
-        UNION
-
-        (SELECT purchasing_doc_no, status, "3" as flag FROM qap_submission WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
-
-        UNION
-
-        (SELECT purchasing_doc_no, status, "4" as flag FROM ilms WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1);`;
-
-
-        const curret_data = await query({ query: getLatest, values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id] });
-                console.log("curret_data", curret_data, timeline);
-        let timelineData;
-        if (timeline.length) {
-            timelineData = joinArrays(timeline, curret_data)
-        }
-
-
-
-
+            const timeline = await query({ query: timelingQ, values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id] });
 
 
         // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
@@ -239,7 +180,7 @@ const details = async (req, res) => {
         // result[0]["material"] = arrDate || [];
         result[0]["poType"] = poType
         result[0]["materialResult"] = materialResult || [];
-        result[0]["timeline"] = timelineData || [];
+        result[0]["timeline"] = timeline || [];
         result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
 
         resSend(res, true, 200, "data fetch scussfully.", result, null);
@@ -347,7 +288,7 @@ const poList = async (req, res) => {
                     break;
                 case USER_TYPE_GRSE_FINANCE:
                     if (tokenData.internal_role_id === ASSIGNER) {
-                        Query = poListByEcko();
+                        Query =  poListByEcko();
                         // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
 
                     } else if (tokenData.internal_role_id === STAFF) {
@@ -473,12 +414,14 @@ const poList = async (req, res) => {
         let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
         let drawingCsdArr = await query({ query: drawingCsdQuery, values: [] });
 
-        if (drawingArr.length) {
+        console.log("drawingCsdArr",drawingCsdArr)
+
+        // if (drawingArr.length) {
 
             await Promise.all(
                 drawingArr.map(async (item) => {
-                    if (SDVGCsdArr.length) {
-                        let csdArr = await SDVGCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
+                    if (drawingCsdArr.length) {
+                        let csdArr = await drawingCsdArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.purchasing_doc_no);
                         (csdArr) ? item.contractual_submission_date = csdArr.contractual_submission_date : item.contractual_submission_date = "N/A";
                     } else {
                         item.contractual_submission_date = undefined;
@@ -492,7 +435,7 @@ const poList = async (req, res) => {
                     }
                 })
             );
-        }
+        // }
 
         // QAP
         let qapQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
@@ -625,21 +568,6 @@ const poListByPPNC = (queryData, tokenData) => {
 
     return poListQuery;
 }
-
-
-
-function joinArrays(arr1, arr2) {
-    return arr1.map(item1 => {
-        const matchingItem = arr2.find(item2 => item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag);
-
-        if (matchingItem) {
-            return { ...item1, ...matchingItem };
-        }
-
-        return item1;
-    });
-}
-
 
 // EBELN(VARCAT10),EBELP(VARCAT5),SLNO(INT3),WDC(CAHAR25)
 
