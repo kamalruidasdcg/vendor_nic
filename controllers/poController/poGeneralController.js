@@ -44,6 +44,7 @@ const {
   poDataModify,
 } = require("../../services/po.services");
 const { currentStageHandler } = require("../../services/currentStage");
+const { STORE, RIC } = require("../../lib/depertmentMaster");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -386,8 +387,15 @@ const poList = async (req, res) => {
           Query = poListByPPNC(req.query);
 
           break;
+        case STORE:
+          Query = poListByEcko();
+          break;
+        case RIC:
+          Query = poListByEcko();
+          break;
         default:
-          console.log("other1", Query);
+          Query = poListByEcko();
+          console.log("DEFAULT ALL PO SHOWING . . . . ", Query);
       }
     }
     if (!Query) {
