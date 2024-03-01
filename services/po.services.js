@@ -56,7 +56,8 @@ const sdbgPayloadVendor = (obj, status) => {
 const sdbgPayload = (payload, status) => {
 
     const payloadObj = {
-        // "id": 1, // auto incremant id
+        // "id": 1, // auto incremant id 
+        "reference_no": payload.reference_no,
         "purchasing_doc_no": payload.purchasing_doc_no,
         "file_name": payload.fileName || null,
         "file_path": payload.filePath || null,
