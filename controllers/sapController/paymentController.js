@@ -140,7 +140,7 @@ const ztfi_bil_deface = async (req, res) => {
 
         } else {
             // resSend(res, false, 400, "No data inserted", response, null);
-            responseSend(res, "F", 400, "Data inserted successfully", response, null);
+            responseSend(res, "F", 400, "Data inserted failed", response, null);
 
         }
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
