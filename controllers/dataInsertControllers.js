@@ -26,7 +26,12 @@ const insertPOData = async (req, res) => {
             payload = req.body;
         }
 
+        console.log("payload", req.body);
+
         const { EKPO, ZPO_MILESTONE, ...obj } = payload;
+
+        console.log("EKPO", EKPO);
+        console.log("ZPO_MILESTONE", ZPO_MILESTONE);
 
         try {
 
@@ -63,19 +68,19 @@ const insertPOData = async (req, res) => {
 
 
             const insertPromiseFn = [];
-            console.log("ZPO_MILESTONE", ZPO_MILESTONE);
+            // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
             if (ZPO_MILESTONE?.length) {
 
                 try {
 
 
                     // const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
-                    console.log("ZPO_MILESTONE", ZPO_MILESTONE);
+                    // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
                     const zmilestonePayload = await zpo_milestonePayload(ZPO_MILESTONE);
                     console.log('ekpopayload', zmilestonePayload);
                     // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, "zpo_milestone", "C_PKEY");
-                    console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
+                    // console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
                     insertPromiseFn.push(promiseConnection.execute(insert_zpo_milestone_table));
                     // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
                     // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
@@ -93,7 +98,8 @@ const insertPOData = async (req, res) => {
                 try {
 
 
-                    const ekpopayload = await ekpoTablePayload(EKPO);
+                    const ekpopayload = await ekpoTablePayload(EKPO, obj.EBELN);
+                    console.log("ekpopayload", ekpopayload);
                     // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
                     const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", "C_PKEY");
                     console.log("insert_ekpo_table", insert_ekpo_table);
@@ -137,7 +143,7 @@ const insertPOData = async (req, res) => {
                 await promiseConnection.rollback();
             }
             const connEnd = await promiseConnection.end();
-            console.log("Connection End" + "--->" + "connection release");
+            console.log("Connection End" + "--->" + "connection releasettttttttttt");
         }
     } catch (error) {
         responseSend(res, "0", 400, "Error in database conn!!", error, null);

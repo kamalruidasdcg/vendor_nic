@@ -104,6 +104,7 @@ const mseg = async (req, res) => {
             responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
         const payload = req.body;
+        console.log("payload mseg", payload);
 
 
         // insertPayload = await msegPayload (obj);
@@ -140,13 +141,26 @@ const mkpf = async (req, res) => {
         if (!req.body) {
             responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
-        const payload = req.body;
+        // const payload = req.body;
+
+        let payload = [];
+        if (req.body && Array.isArray(req.body)) {
+            payload = req.body;
+        } else if (payload && typeof req.body === 'object') {
+            payload.push(req.body);
+        }
+
+        console.log("mkpf", req.body);
+
+
 
         const payloadObj = await makfPayload(payload);
+        console.log("payloadObj mkpf", payloadObj);
+
         const mkpfInsertQuery = await generateQueryForMultipleData(payloadObj, MKPF, "C_PKEY");
 
         const [response] = await promiseConnection.query(mkpfInsertQuery);
-        console.log("response", response);
+        console.log("response mkpf", response);
         if (response.affectedRows) {
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
         } else {

@@ -22,13 +22,13 @@ const zpo_milestonePayload = async (payload) => {
   return pl;
 };
 
-const ekpoTablePayload = async (obj) => {
+const ekpoTablePayload = async (obj, poNo) => {
   if (!obj || !Array.isArray(obj) || !obj.length) {
     throw new Error("Please send valid payload");
   }
   const pl = obj.map((obj) => ({
-    C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
-    EBELN: obj.EBELN,
+    C_PKEY: `${poNo}-${obj.EBELP}`,
+    EBELN: poNo,
     EBELP: obj.EBELP,
     LOEKZ: obj.LOEKZ || null,
     STATU: obj.STATU || null,
