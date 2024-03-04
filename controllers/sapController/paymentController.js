@@ -124,14 +124,16 @@ const ztfi_bil_deface = async (req, res) => {
         }
 
         const payload = req.body;
+        console.log('payload zdeface', payload);
         if (!payload || !payload.ZREGNUM || !payload.SEQNO || !payload.ZBILLPER) {
+
             return responseSend(res, "F", 400, "Invalid payload.", null, null);
         }
 
         const payloadObj = await ztfi_bil_defacePayload(payload);
-        const mkpfInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", "C_PKEY");
-        console.log(", mkpfInsertQuery", mkpfInsertQuery);
-        const response = await query({ query: mkpfInsertQuery, values: [] });
+        const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", "C_PKEY");
+        // console.log(", ztfi_bil_deface", zdefaceInsertQuery);
+        const response = await query({ query: zdefaceInsertQuery, values: [] });
         console.log("response", response);
         if (response.affectedRows) {
             responseSend(res, "S", 200, "Data inserted successfully", response, null);
