@@ -7,6 +7,7 @@ const materialRoutes =  require("./materialRoutes");
 const wbsRoutes =  require("./wbsElementRoutes");
 const qaRoutes =  require("./qaRoutes");
 const masterDataRoutes =  require("./masterDataRoutes");
+const storeRoutes =  require("./storeRoutes");
 
 /**
  * SAP API START 
@@ -22,6 +23,7 @@ router.use("/wbs", wbsRoutes);
 router.use("/test", sapTestRoutes);
 router.use("/material", materialRoutes);
 router.use("/mdata", masterDataRoutes);
+router.use("/store",storeRoutes );
 router.use("/qa", qaRoutes);
 
 // router.post("/po", [], (req, res) => {
