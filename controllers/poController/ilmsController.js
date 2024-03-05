@@ -86,71 +86,6 @@ const submitILMS = async (req, res) => {
                 );
             }
 
-            // const GET_LATEST_SDBG = `SELECT COUNT(purchasing_doc_no) AS count_po FROM ${SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-            // const result2 = await getSDBGData(
-            //     GET_LATEST_SDBG,
-            //     payload.purchasing_doc_no,
-            //     ACCEPTED
-            // );
-            // console.log("result2..");
-            // console.log(result2);
-            // return;
-            //if (result2[0].count_po > 0) {
-                // const data = [{
-                //     purchasing_doc_no: result2[0]?.purchasing_doc_no,
-                //     status: result2[0]?.status,
-                //     acknowledgedByName: result2[0]?.created_by_name,
-                //     acknowledgedById: result2[0]?.created_by_id,
-                //     message: "The SDBG is already acknowledge. If you want to reopen, please contact with senior management."
-                // }];
-
-            //     return resSend(
-            //         res,
-            //         true,
-            //         200,
-            //         `The SDBG is already acknowledge. If you want to reopen, please contact with dealing officer.`,
-            //         null,
-            //         null
-            //     );
-            // }
-
-            // let insertObj;
-
-            // if (payload.status === PENDING) {
-            //     payload = { ...payload, isLocked: 0 };
-            //     insertObj = sdbgPayload(payload, PENDING);
-            // } else if (payload.status === RE_SUBMITTED) {
-
-            //     // const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     // const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-            //     // console.log("iiii", result)
-
-            //     // if (!result || !result.length) {
-            //     //     return resSend(res, true, 200, "No SDBG found to resubmit", null, null);
-            //     // }
-
-            //     // payload = {
-            //     //     ...payload,
-            //     //     bank_name: result[0].bank_name,
-            //     //     transaction_id: result[0].transaction_id,
-            //     //     vendor_code: result[0].vendor_code,
-            //     // }
-
-            //     // insertObj = sdbgPayload(payload, RE_SUBMITTED);
-
-            // } else if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
-
-            //     const GET_LATEST_SDBG = `SELECT bank_name, transaction_id, vendor_code FROM ${NEW_SDBG} WHERE purchasing_doc_no = ? AND status = ?`;
-
-            //     const result = await query({ query: GET_LATEST_SDBG, values: [payload.purchasing_doc_no, PENDING] });
-
-            //     if (!result || !result.length) {
-            //         return resSend(res, true, 200, "No SDBG found to acknowledge", null, null);
-            //     }
-            //     payload = { ...payload, isLocked: 1 };
-            //     insertObj = sdbgPayload(payload, ACKNOWLEDGED);
-            // }
 
             const { q, val } = generateQuery(INSERT, ILMS, payload);
             console.log(q);
@@ -207,18 +142,8 @@ const submitILMS = async (req, res) => {
             } else {
                 return resSend(res, false, 400, "No data inserted", response, null);
             }
-        // } else {
-        //     return resSend(
-        //         res,
-        //         false,
-        //         400,
-        //         "Please upload a valid File",
-        //         fileData,
-        //         null
-        //     );
-        // }
     } catch (error) {
-        console.log("SDGB Submission api", error);
+        console.log("ILMS Submission api", error);
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
