@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload, sdbgPayloadVendor, setActualSubmissionDate } = require("../../services/po.services");
+const { sdbgPayload, sdbgPayloadVendor, setActualSubmissionDate, create_reference_no } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -34,8 +34,9 @@ const submitSDBG = async (req, res) => {
 
             const tokenData = { ...req.tokenData };
             console.log(tokenData);
-            const reference_no = `BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
-
+            // create_reference_no = async (type, vendor_code)
+            const reference_no = await create_reference_no("BG", tokenData.vendor_code); //`BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
+           
             let payload = { reference_no: reference_no, ...req.body, ...fileData, created_at: getEpochTime() };
 
             payload = sdbgPayload(payload);
@@ -260,10 +261,13 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         const tokenData = { ...req.tokenData };
 
         const { ...obj } = req.body;
-
-        console.log(obj.purchasing_doc_no);
-        if (!obj || typeof obj !== "object" || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == "") {
-            return resSend(res, false, 400, "INVALID PAYLOAD", null, null);
+        console.log('obj.status');
+        console.log(obj.status);
+        if (!obj || typeof obj !== "object" || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == ""  || !obj.reference_no || obj.reference_no == "" || !obj.status || !obj.remarks || obj.remarks == "") {
+            return resSend(res, false, 400, "INVALID PAYLOAD", null, null); 
+        }
+        if (obj.status != FORWARD_TO_FINANCE && obj.status != REJECTED ) {
+            return resSend(res, false, 400, "PLEASE SEND A VALID STATUS", null, null); 
         }
         const dealingOfficer = await checkIsDealingOfficer(obj.purchasing_doc_no, tokenData.vendor_code);
 
@@ -405,7 +409,7 @@ const sdbgUpdateByFinance = async (req, res) => {
     // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
     try {
 
-        if (!obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.remarks || obj.remarks == "" || !obj.status || obj.status == "") {
+        if (!obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.reference_no || obj.reference_no == "" || !obj.remarks || obj.remarks == "" || !obj.status || obj.status == "") {
             return resSend(res, true, 200, "please send a valid payload!", null, null);
         }
 

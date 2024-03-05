@@ -343,6 +343,16 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
   return false;
 }
 
+const create_reference_no = async (type, vendor_code) => {
+    try {
+        const reference_no = `${type}-${getEpochTime()}-${vendor_code.slice(-4)}`;
+        return reference_no;
+    } catch (error) {
+      console.log("error into create reference_no :"`${error}`);
+    }
+  };
+
+
 module.exports = {
   sdbgPayload,
   sdbgPayloadVendor,
@@ -355,4 +365,5 @@ module.exports = {
   inspectionCallLetterPayload,
   insertActualSubmission,
   setActualSubmissionDate,
+  create_reference_no,
 };

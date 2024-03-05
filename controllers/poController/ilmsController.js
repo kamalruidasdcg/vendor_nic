@@ -1,5 +1,5 @@
 const path = require("path");
-const { sdbgPayload, setActualSubmissionDate } = require("../../services/po.services");
+const { sdbgPayload, setActualSubmissionDate, create_reference_no } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
@@ -14,11 +14,13 @@ const {
     USER_TYPE_GRSE_FINANCE,
 } = require("../../lib/constant");
 
-const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG, ILMS } = require("../../lib/tableName");
+const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG, ILMS, DRAWING } = require("../../lib/tableName");
 const { FINANCE } = require("../../lib/depertmentMaster");
 const {
     PENDING,
+    SUBMITTED,
     ACCEPTED,
+    APPROVED,
     ASSIGNED,
     RE_SUBMITTED,
     REJECTED,
@@ -53,8 +55,18 @@ const submitILMS = async (req, res) => {
             };
         }
             const tokenData = { ...req.tokenData };
-            //console.log(tokenData);
+
             let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+            // 2 for drawind depertment//
+            if (tokenData.department_id == 2 && (!payload.reference_no || payload.reference_no == "")) {
+               
+                return resSend(res,false,400,"Please send valid reference_no",null,null);
+            }
+
+            if (tokenData.user_type == USER_TYPE_VENDOR) {
+                payload.reference_no = await create_reference_no("ILMS", tokenData.vendor_code);
+            }
+            
             // if (tokenData.user_type != USER_TYPE_VENDOR) {
             //     return resSend(
             //         res,
@@ -86,7 +98,7 @@ const submitILMS = async (req, res) => {
                 );
             }
 
-
+          
             const { q, val } = generateQuery(INSERT, ILMS, payload);
             console.log(q);
 
