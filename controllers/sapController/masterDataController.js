@@ -1,9 +1,8 @@
 
 const { VENDOR_MASTER_LFA1, EMPLAYEE_MASTER_PA0002 } = require('../../lib/tableName');
 const { query } = require("../../config/dbConfig");
-const { INSERT } = require("../../lib/constant");
 const { responseSend } = require("../../lib/resSend");
-const { generateQueryArray, generateQueryForMultipleData } = require("../../lib/utils");
+const { generateQueryForMultipleData } = require("../../lib/utils");
 const { lfa1Payload, addUserPayload } = require('../../services/sap.masterData.services');
 
 
