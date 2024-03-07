@@ -264,10 +264,10 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         console.log('obj.status');
         console.log(obj.status);
         if (!obj || typeof obj !== "object" || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == ""  || !obj.reference_no || obj.reference_no == "" || !obj.status || !obj.remarks || obj.remarks == "") {
-            return resSend(res, false, 400, "INVALID PAYLOAD", null, null); 
+            return resSend(res, false, 200, "INVALID PAYLOAD", null, null); 
         }
         if (obj.status != FORWARD_TO_FINANCE && obj.status != REJECTED ) {
-            return resSend(res, false, 400, "PLEASE SEND A VALID STATUS", null, null); 
+            return resSend(res, false, 200, "PLEASE SEND A VALID STATUS", null, null); 
         }
         const dealingOfficer = await checkIsDealingOfficer(obj.purchasing_doc_no, tokenData.vendor_code);
 

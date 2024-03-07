@@ -87,15 +87,15 @@ const sdbgPayload = (payload, status) => {
  * @returns Object
  */
 const drawingPayload = (payload, status) => {
+  console.log("((((((((((((((((");
   const payloadObj = {
-    // "id": 1, // auto incremant id
+    reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName || null,
     file_path: payload.filePath || null,
     remarks: payload.remarks || null,
     status: status,
     actionType: payload.actionType || null,
-    actionTypeId: payload.actionTypeId || null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code || null,
     created_at: payload.created_at || getEpochTime(),
@@ -344,13 +344,25 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
 }
 
 const create_reference_no = async (type, vendor_code) => {
-    try {
-        const reference_no = `${type}-${getEpochTime()}-${vendor_code.slice(-4)}`;
-        return reference_no;
-    } catch (error) {
-      console.log("error into create reference_no :"`${error}`);
-    }
-  };
+  try {
+    const reference_no = `${type}-${getEpochTime()}-${vendor_code.slice(-4)}`;
+    return reference_no;
+  } catch (error) {
+    console.log("error into create reference_no :"`${error}`);
+  }
+};
+
+const get_latest_activity = async (table_name, purchasing_doc_no, reference_no) => {
+  try {
+    const ilms_query = `SELECT file_name,file_path,vendor_code,created_at,status FROM ${table_name} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY created_at DESC LIMIT 1`;
+    const result = await query({ query: ilms_query, values: [reference_no, purchasing_doc_no] });
+    //console.log("__get_latest_activity__");
+    console.log(result[0]);
+    return result[0];
+  } catch (error) {
+    console.log("error into get_latest_activity function :"`${error}`);
+  }
+}
 
 
 module.exports = {
@@ -366,4 +378,5 @@ module.exports = {
   insertActualSubmission,
   setActualSubmissionDate,
   create_reference_no,
+  get_latest_activity,
 };
