@@ -2,6 +2,7 @@ const path = require("path");
 const {
   qapPayload,
   setActualSubmissionDate,
+  create_reference_no,
 } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
@@ -16,7 +17,6 @@ const {
 } = require("../../lib/constant");
 const { QAP_SUBMISSION, QAP_SAVE } = require("../../lib/tableName");
 const {
-  PENDING,
   APPROVED,
   RE_SUBMITTED,
   ACCEPTED,
@@ -86,18 +86,23 @@ const submitQAP = async (req, res) => {
       ///////// CHECK ROLE IS ASSIGNER /////////////////
       if (activity_type === ASSIGNED) {
         if (tokenData.internal_role_id === ASSIGNER) {
-          // const checkAssigneQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?`;
-          // const resAssigneQry = await query({
-          //   query: checkAssigneQuery,
-          //   values: [purchasing_doc_no, ASSIGNED],
-          // });
-          // console.log(resAssigneQry);
-          //   if (resAssigneQry[0].countval > 0) {
-          //     message = `This QAP has already ${ASSIGNED}`;
-          //     return resSend(res, true, 200, message, null, null);
-          //   }
+          const checkAssigneQuery = `SELECT COUNT(is_assign) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND is_assign = ?`;
+          const resAssigneQry = await query({
+            query: checkAssigneQuery,
+            values: [purchasing_doc_no, 1],
+          });
+          if (resAssigneQry[0].countval > 0) {
+            const removeOldAssignee = `UPDATE qap_submission SET is_assign = 0 WHERE purchasing_doc_no = ? AND is_assign = ?`;
+            const resAssigneQry = await query({
+              query: removeOldAssignee,
+              values: [purchasing_doc_no, 1],
+            });
+            payload.is_assign = 1;
+            // message = `This QAP has already ${ASSIGNED}`;
+            // return resSend(res, true, 200, message, null, null);
+          }
         } else {
-          message = `You dont have permission!`;
+          message = `You don't have permission!`;
           return resSend(res, true, 200, message, null, null);
         }
       }
@@ -112,7 +117,7 @@ const submitQAP = async (req, res) => {
             values: [purchasing_doc_no, ASSIGNED, tokenData.vendor_code],
           });
           if (resAssigneStaffQry[0].countval === 0) {
-            message = `you dont have permission.`;
+            message = `You don't have permission.`;
             return resSend(res, true, 200, message, null, null);
           }
         }
@@ -150,10 +155,6 @@ const submitQAP = async (req, res) => {
       ///////// CHECK IS ALLREADY APPROVED /////////////////
     }
 
-    // if (tokenData.user_type === USER_TYPE_VENDOR && activity_type === PENDING) {
-    //     payload.assigned_from = null;
-    //     payload.assigned_to = null;
-    // }
     if (activity_type !== SUBMITTED) {
       const status = activity_type == ASSIGNED ? SUBMITTED : ASSIGNED;
       const qapDetails = await getMailIds(payload.purchasing_doc_no, status);
@@ -162,43 +163,63 @@ const submitQAP = async (req, res) => {
         return resSend(
           res,
           false,
-          400,
+          200,
           "Vendors need to upload the QAP first!",
           null,
           null
         );
 
-      if (activity_type == ASSIGNED) {
-        payload.vendor_code = qapDetails.data.vendor_code;
-        const details = await getNameAndEmail(
-          qapDetails.data.vendor_code,
-          payload.assigned_from,
-          payload.assigned_to
-        );
-        if (details.success) {
-          payload = { ...payload, ...details.data };
-        }
-      } else {
-        payload.vendor_code = qapDetails.data.vendor_code;
-        payload.assigned_to = qapDetails.data.assigned_to;
-        payload.assigned_from = qapDetails.data.assigned_from;
-        payload.created_by_name = qapDetails.data.created_by_name;
+      // if (activity_type == ASSIGNED) {
+      //   payload.vendor_code = qapDetails.data.vendor_code;
+      //   const details = await getNameAndEmail(
+      //     qapDetails.data.vendor_code,
+      //     payload.assigned_from,
+      //     payload.assigned_to,
+      //     payload.is_assign
+      //   );
+      //   if (details.success) {
+      //     payload = { ...payload, ...details.data };
+      //   }
+      //   console.log(payload);
+      // } else {
+      //   payload.vendor_code = qapDetails.data.vendor_code;
+      //   payload.assigned_to = qapDetails.data.assigned_to;
+      //   payload.assigned_from = qapDetails.data.assigned_from;
+      //   payload.created_by_name = qapDetails.data.created_by_name;
 
-        payload = { ...payload, ...qapDetails.data };
-      }
+      //   payload = { ...payload, ...qapDetails.data };
+      // }
     }
 
-    const GET_Assigner = `SELECT vendor_code,assigned_from, assigned_to FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
-    const GET_Assigner_Qry = await query({
-      query: GET_Assigner,
-      values: [purchasing_doc_no, ASSIGNED],
-    });
-    console.log(GET_Assigner_Qry);
-    if (GET_Assigner_Qry.length > 0) {
-      payload.vendor_code = GET_Assigner_Qry[0].vendor_code;
-      payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
-      payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
+    if (tokenData.user_type === USER_TYPE_VENDOR) {
+      const reference_no = await create_reference_no(
+        "QAP",
+        tokenData.vendor_code
+      );
+      payload = { ...payload, reference_no };
+    } else {
+      const GET_ref_no = `SELECT reference_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ?`;
+      const GET_ref_qry = await query({
+        query: GET_ref_no,
+        values: [purchasing_doc_no],
+      });
+      payload = {
+        ...payload,
+        reference_no: GET_ref_qry[GET_ref_qry.length - 1]?.reference_no || "",
+      };
     }
+
+    // const GET_Assigner = `SELECT vendor_code,assigned_from, assigned_to FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
+    // const GET_Assigner_Qry = await query({
+    //   query: GET_Assigner,
+    //   values: [purchasing_doc_no, ASSIGNED],
+    // });
+    // console.log(GET_Assigner_Qry);
+    // if (GET_Assigner_Qry.length > 0) {
+    //   payload.vendor_code = GET_Assigner_Qry[0].vendor_code;
+    //   payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
+    //   payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
+    // }
 
     //////// SET STATUS AND CREATE QAP PAYLOAD /////////
     let insertObj;
@@ -256,7 +277,7 @@ const submitQAP = async (req, res) => {
         insertObj,
         3,
         tokenData,
-        PENDING
+        SUBMITTED
       );
       console.log("actual_subminission", actual_subminission);
     }
@@ -423,7 +444,7 @@ const internalDepartmentEmpList = async (req, res) => {
 
 async function handelMail(tokenData, payload) {
   if (tokenData.user_type === USER_TYPE_VENDOR) {
-    if (payload.status === PENDING) {
+    if (payload.status === SUBMITTED) {
       // await logEntry(payload, tokenData.vendor_code, payload.assigned_from, null);
       // await mailSendToAssignee(payload);
       // await logEntry(payload, tokenData.vendor_code, null, null);
@@ -890,21 +911,3 @@ module.exports = {
   getQapSave,
   deleteQapSave,
 };
-//     const response = await query({ query: q, values: [sub_dept_id] });
-//     resSend(res, true, 200, "oded!", response, null);
-// } catch (err) {
-//     console.log("data not fetched", err);
-// }
-
-// req.query.$tableName = `sub_dept`;
-// req.query.$select = "id,name";
-// try {
-//   getFilteredData(req, res);
-// } catch(err) {
-//   console.log("data not fetched", err);
-// }
-// resSend(res, true, 200, "oded!", req.query, null);
-
-// }
-
-// module.exports = { submitQAP, list, internalDepartmentList, internalDepartmentEmpList }

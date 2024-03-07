@@ -112,7 +112,7 @@ const drawingPayload = (payload, status) => {
  */
 const qapPayload = (payload, status) => {
   const payloadObj = {
-    // "id": 1, // auto incremant id
+    reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
@@ -120,6 +120,7 @@ const qapPayload = (payload, status) => {
     action_type: payload.action_type ? payload.action_type : null,
     assigned_to: payload.assigned_to ? payload.assigned_to : null,
     assigned_from: payload.assigned_from ? payload.assigned_from : null,
+    is_assign: payload.is_assign ? payload.is_assign : 0,
     status: status,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
@@ -127,9 +128,9 @@ const qapPayload = (payload, status) => {
     created_by_name: payload.action_by_name ? payload.action_by_name : null,
     created_by_id: payload.action_by_id,
   };
-
+ 
   return payloadObj;
-};
+};;
 
 const wdcPayload = (payload) => {
   const payloadObj = {
