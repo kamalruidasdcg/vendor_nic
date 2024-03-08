@@ -61,7 +61,7 @@ const reservationLineItemPayload = async (payload) => {
     XWAOK: obj.XWAOK || null,
     XLOEK: obj.XLOEK || null,
     PSPEL: obj.PSPEL || null,
-    BDTER: obj.BDTER || null,
+    BDTER: formatDate(obj.BDTER),
   }));
   return pl;
 };
