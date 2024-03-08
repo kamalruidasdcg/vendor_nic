@@ -279,10 +279,10 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
         if (GET_LATEST_SDBG.length > 0) {
             if (GET_LATEST_SDBG[0].status == ACCEPTED) {
-                return resSend(res, true, 200, `The SDBG is already acknowledge.`, null, null);
+                return resSend(res, false, 200, `The SDBG is already acknowledge.`, null, null);
             }
             if (GET_LATEST_SDBG[0].status == REJECTED || GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE) {
-                return resSend(res, true, 200, `The SDBG is already ${GET_LATEST_SDBG[0].status}.`, null, null);
+                return resSend(res, false, 200, `The SDBG is already ${GET_LATEST_SDBG[0].status}.`, null, null);
             }
         }
 
