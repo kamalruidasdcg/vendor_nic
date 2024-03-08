@@ -5,6 +5,7 @@ const { query } = require('../config/dbConfig');
 require("dotenv").config();
 const { storeRefreshToken } = require('./token.services')
 const apiAccessList = require("../lib/apiList");
+const basicAuth = require('express-basic-auth');
 ;
 // const ACCESS_TOKEN_SECRET = "accessTopSecret";
 // const REFRESH_TOKEN_SECRET = "refreshTopSecret";
@@ -143,8 +144,8 @@ const veifyAccessToken = async (req, res, next) => {
 
         if (!tokenData) return resSend(res, false, 401, "INVALID_EXPIRED_TOKEN");
 
-       // const validRole = await veifyAccessTokenRole(tokenData);
-       // if (!validRole) return resSend(res, false, 401, "Access Denied: YOU DONT HAVE ACCESS");
+        // const validRole = await veifyAccessTokenRole(tokenData);
+        // if (!validRole) return resSend(res, false, 401, "Access Denied: YOU DONT HAVE ACCESS");
 
         req["tokenData"] = tokenData;
 
@@ -217,7 +218,7 @@ const authorizeRoute = async (req, res, next) => {
 
 function isRouteAllowedForRole(role, targetRoute) {
     // ADMIN ACCESS ALL ROUTE
-    if ( role == 5 || role== "5") return true;
+    if (role == 5 || role == "5") return true;
 
     const allowedRoutes = apiAccessList[role];
     if (allowedRoutes) {
@@ -246,4 +247,12 @@ function isRouteAllowedForRole(role, targetRoute) {
 }
 
 
-module.exports = { getAccessToken, getRefreshToken, veifyAccessToken, verifyOnlyAccessToken, authorizeRoute };
+// Middleware for Basic Authentication
+const basicAuthVerification = basicAuth({
+    users: { [process.env.SAP_API_AUTH_USERNAME]: process.env.SAP_API_AUTH_PASSWORD }, 
+    challenge: true,
+    unauthorizedResponse: 'Unauthorized'
+});
+
+
+module.exports = { getAccessToken, getRefreshToken, veifyAccessToken, verifyOnlyAccessToken, authorizeRoute, basicAuthVerification };
