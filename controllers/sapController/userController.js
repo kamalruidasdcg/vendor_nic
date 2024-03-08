@@ -116,9 +116,9 @@ const reservationList = async (req, res) => {
         resb.ERFMG AS quantityDropdown,
         resb.XWAOK as moment,
         resb.XLOEK as itemDeleted,
-        resb.PSPEN as wbsElement,
+        resb.PSPEL as wbsElement,
         resb.BDTER AS itemReservationDate,
-        resb.ENMNG AD quantWithdrawal
+        resb.ENMNG as quantWithdrawal
 	FROM rkpf as rkpf 
 	LEFT JOIN resb AS resb
     	ON(rkpf.RSNUM = resb.RSNUM)
