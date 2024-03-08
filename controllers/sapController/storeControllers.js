@@ -4,7 +4,7 @@ const {  TRUE } = require("../../lib/constant");
 const { responseSend } = require("../../lib/resSend");
 const {  GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
 const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
-const { generateInsertUpdateQuery } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 
 
 const insertGateEntryData = async (req, res) => {

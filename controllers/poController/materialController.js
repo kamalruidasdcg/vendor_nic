@@ -188,13 +188,14 @@ const materialIssue = async (req, res) => {
                     mseg.EBELP as poItemNumber,
                     mseg.RSNUM as reservationNo,
                     mseg.LIFNR as vendor_code,
-                    mseg.MENGE as requiredQty
+                    mseg.MENGE as requiredQty,
+                    mseg.KOSTL as costCenter
                 FROM mseg AS mseg
                 	LEFT JOIN mkpf AS mkpf
                     	ON( mseg.MBLNR = mkpf.MBLNR)
                      LEFT JOIN makt AS makt
                     	ON( mseg.MATNR = makt.MATNR) 
-                        WHERE 1 = 1`
+                        WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201') )`
 
 
         let val = []

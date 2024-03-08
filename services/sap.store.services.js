@@ -22,6 +22,7 @@ const gateEntryHeaderPayload = async (obj) => {
     DELIV_DATE: formatDate(obj.DELIV_DATE),
     TRANS_NO: obj.TRANS_NO || null,
     TRAN_NAME: obj.TRAN_NAME || null,
+    VEH_REG_NO: obj.VEH_REG_NO || null,
     LR_NO: obj.LR_NO || null,
     LR_DATE: formatDate(obj.LR_DATE),
     EXNUM: obj.EXNUM || null,
@@ -35,11 +36,11 @@ const gateEntryDataPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = obj.map((obj) => ({
-    C_PKEY: `${poNo}-${obj.EBELP}`,
-    ENTRY_NO: obj.ENTRY_NO || null,
-    EBELN: obj.EBELN || null,
-    EBELP: obj.EBELP || null,
-    W_YEAR: obj.W_YEAR || null,
+    C_PKEY: `${obj.ENTRY_NO}-${obj.EBELN}-${EBELP}-${obj.W_YEAR}`,
+    ENTRY_NO: obj.ENTRY_NO,
+    EBELN: obj.EBELN,
+    EBELP: obj.EBELP,
+    W_YEAR: obj.W_YEAR,
     CH_QTY: obj.CH_QTY || null,
     MATNR: obj.MATNR || null,
     TXZ01: obj.TXZ01 || null,
