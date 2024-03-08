@@ -1,7 +1,7 @@
 
 const { RESERVATION_RKPF_TABLE, RESERVATION_RESB_TABLE } = require('../../lib/tableName');
-const { connection } = require("../../config/dbConfig");
-const { responseSend } = require("../../lib/resSend");
+const { connection, query } = require("../../config/dbConfig");
+const { responseSend, resSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { reservationLineItemPayload, reservationHeaderPayload } = require('../../services/sap.user.services');
 const { TRUE, FALSE } = require('../../lib/constant');
@@ -78,4 +78,103 @@ const reservation = async (req, res) => {
     }
 };
 
-module.exports = { reservation }
+const reservationList = async (req, res) => {
+
+    try {
+
+        // if (!req.body) {
+        //     return resSend(res, false, 400, "Please send body", null, "");
+        // }
+
+        console.log(req.body);
+
+        let q =
+            `SELECT 
+        rkpf.RSNUM as reservationNumber,
+		rkpf.RSDAT as reservationDate,
+        rkpf.USNAM as userName,
+        rkpf.BWART as moventType,
+        rkpf.WEMPF as goodsRecipient,
+        rkpf.KOSTL as costCenter,
+        rkpf.EBELN as purchising_doc_no,
+        rkpf.EBELP as itemNumber,
+        rkpf.UMWRK as receivingPlant,
+        rkpf.UMLGO as receivingLocation,
+        rkpf.PS_PSP_PNR as wbs,
+        resb.RSPOS as reservationItemNumber,
+        resb.RSART as recordType,
+        resb.BDART as requirmentType,
+        resb.RSSTA as reservationStatus,
+        resb.KZEAR as reservationFinalIssue,
+        resb.MATNR as materialNubmer,
+        resb.WERKS as plant,
+        resb.LGORT as storageLocation,
+        resb.CHARG as batchNumber,
+        resb.BDMNG as requirementQty,
+        resb.MEINS as unit,
+        resb.BWART as itemMomentType 
+	FROM rkpf as rkpf 
+	LEFT JOIN resb AS resb
+    	ON(rkpf.RSNUM = resb.RSNUM)
+    WHERE 1 = 1 `;
+
+
+        let val = []
+
+        if (req.body.RSNUM) {
+            q = q.concat(" AND rkpf.RSNUM = ?");
+            val.push(req.body.MBLNR);
+        }
+
+
+        console.log("q", q, val);
+
+
+
+        const result = await query({ query: q, values: val });
+
+        let response = {
+            reservationNumber: null,
+            reservationDate: null,
+            userName: null,
+            moventType: null,
+            goodsRecipient: null,
+            costCenter: null,
+            purchising_doc_no: null,
+            itemNumber: null,
+            receivingPlant: null,
+            receivingLocation: null,
+            wbs: null,
+            lineItem: result
+        }
+
+        console.log("result", result);
+
+        if (result.length > 0) {
+            response.reservationNumber = result[0].reservationNumber,
+                response.reservationDate = result[0].reservationDate,
+                response.userName = result[0].userName,
+                response.moventType = result[0].moventType,
+                response.goodsRecipient = result[0].goodsRecipient,
+                response.costCenter = result[0].costCenter,
+                response.purchising_doc_no = result[0].purchising_doc_no,
+                response.itemNumber = result[0].itemNumber,
+                response.receivingPlant = result[0].receivingPlant,
+                response.receivingLocation = result[0].receivingLocation,
+                response.wbs = result[0].wbs,
+
+                resSend(res, true, 200, "Data fetched successfully", response, null);
+        } else {
+            resSend(res, false, 200, "No Record Found", response, null);
+        }
+
+
+    } catch (error) {
+        return resSend(res, false, 500, "internal server error", error, null);
+    }
+
+
+}
+
+
+module.exports = { reservation, reservationList }
