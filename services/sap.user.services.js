@@ -1,4 +1,4 @@
-const {  formatDate } = require("../lib/utils");
+const { formatDate } = require("../lib/utils");
 
 /*
  * Modify RKPF payload object to insert data
@@ -57,6 +57,11 @@ const reservationLineItemPayload = async (payload) => {
     MEINS: obj.MEINS || null,
     ENMNG: obj.ENMNG || null,
     BWART: obj.BWART || null,
+    ERFMG: obj.ERFMG || null,
+    XWAOK: obj.XWAOK || null,
+    XLOEK: obj.XLOEK || null,
+    PSPEL: obj.PSPEL || null,
+    BDTER: obj.BDTER || null,
   }));
   return pl;
 };

@@ -112,12 +112,17 @@ const reservationList = async (req, res) => {
         resb.CHARG as batchNumber,
         resb.BDMNG as requirementQty,
         resb.MEINS as unit,
-        resb.BWART as itemMomentType 
+        resb.BWART as itemMomentType,
+        resb.ERFMG AS quantityDropdown,
+        resb.XWAOK as moment,
+        resb.XLOEK as itemDeleted,
+        resb.PSPEN as wbsElement,
+        resb.BDTER AS itemReservationDate,
+        resb.ENMNG AD quantWithdrawal
 	FROM rkpf as rkpf 
 	LEFT JOIN resb AS resb
     	ON(rkpf.RSNUM = resb.RSNUM)
     WHERE 1 = 1 `;
-
 
         let val = []
 
