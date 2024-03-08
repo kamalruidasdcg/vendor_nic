@@ -44,6 +44,7 @@ const {
   poDataModify,
 } = require("../../services/po.services");
 const { currentStageHandler } = require("../../services/currentStage");
+const { STORE, RIC } = require("../../lib/depertmentMaster");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -361,10 +362,8 @@ const poList = async (req, res) => {
           if (tokenData.internal_role_id === ASSIGNER) {
             //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
             Query = poListByEcko();
-            console.log("****************$%^&*()(*&^%$");
-            console.log(Query);
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code}`;
+            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = ${tokenData.vendor_code} AND is_assign = 1`;
           }
           break;
         case USER_TYPE_GRSE_FINANCE:
@@ -386,8 +385,15 @@ const poList = async (req, res) => {
           Query = poListByPPNC(req.query);
 
           break;
+        case STORE:
+          Query = poListByEcko();
+          break;
+        case RIC:
+          Query = poListByEcko();
+          break;
         default:
-          console.log("other1", Query);
+          Query = poListByEcko();
+          console.log("DEFAULT ALL PO SHOWING . . . . ", Query);
       }
     }
     if (!Query) {

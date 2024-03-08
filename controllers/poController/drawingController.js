@@ -1,14 +1,14 @@
 
 const path = require('path');
-const { sdbgPayload, drawingPayload, poModifyData, qapPayload, insertActualSubmission, setActualSubmissionDate } = require("../../services/po.services");
+const { sdbgPayload, drawingPayload, poModifyData, qapPayload, insertActualSubmission, setActualSubmissionDate, create_reference_no, get_latest_activity } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 
-const { DRAWING, EKKO, SDBG, QAP_SUBMISSION, ILMS } = require("../../lib/tableName");
-const { PENDING, ACKNOWLEDGED, RE_SUBMITTED, APPROVED } = require("../../lib/status");
+const { DRAWING, EKKO, EKPO, SDBG, QAP_SUBMISSION, ILMS } = require("../../lib/tableName");
+const { SUBMIT, ACKNOWLEDGED, RE_SUBMITTED, APPROVED, REJECTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
@@ -19,6 +19,20 @@ const { Console } = require('console');
 
 
 // add new post
+function poTypeCheck(materialData) {
+    const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
+    // const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO
+    // regex.test(materialType);
+    let isMatched = true;
+  
+    for (let i = 0; i < materialData.length; i++) {
+      isMatched = regex.test(materialData[i]?.MTART);
+      if (isMatched === false) break;
+    }
+  
+    return isMatched;
+  }
+
 const submitDrawing = async (req, res) => {
 
     // console.log("%^&*&^%%^&*(*&^%$");
@@ -41,9 +55,49 @@ const submitDrawing = async (req, res) => {
         }
 
         const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-        const verifyStatus = [PENDING, RE_SUBMITTED, APPROVED]
+        const verifyStatus = [SUBMIT, RE_SUBMITTED, APPROVED];
 
-        if (!payload.purchasing_doc_no || !payload.status || !verifyStatus.includes(payload.status)) {
+        let materialQuery = `SELECT
+            mat.EBELP AS material_item_number,
+            mat.KTMNG AS material_quantity, 
+            mat.MATNR AS material_code,
+            mat.MEINS AS material_unit,
+
+            materialLineItems.EINDT as contractual_delivery_date, 
+            materialMaster.*, 
+            mat_desc.MAKTX as mat_description
+            FROM ${EKPO} AS  mat 
+                LEFT JOIN eket AS materialLineItems
+                    ON (materialLineItems.EBELN = mat.EBELN AND materialLineItems.EBELP = mat.EBELP )
+                LEFT JOIN mara AS materialMaster 
+                    ON (materialMaster.MATNR = mat.MATNR)
+                LEFT JOIN makt AS mat_desc
+                    ON mat_desc.MATNR = mat.MATNR
+            WHERE mat.EBELN = ?`;
+
+    let materialResult = await query({
+      query: materialQuery,
+      values: [payload.purchasing_doc_no],
+    });
+
+    const isMaterialTypePO = poTypeCheck(materialResult);
+
+    const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
+
+        console.log("-----materialResult----");
+        console.log(poType);
+        if(poType === "MATERIAL" && tokenData.department_id == USER_TYPE_GRSE_DRAWING && (!payload.reference_no || payload.reference_no == "")) {
+            return resSend(res, false, 200, "please send valid reference_no.", null, null);
+
+        }
+        if(poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR && (!payload.reference_no || payload.reference_no == "")) {
+            return resSend(res, false, 200, "please send valid reference_no by vendor.", null, null);
+
+        }
+      //  return;
+      
+
+        if (!payload.purchasing_doc_no || !payload.status) {
 
             // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
             // const isDel = handleFileDeletion(directory, req.file.filename);
@@ -64,12 +118,26 @@ const submitDrawing = async (req, res) => {
                 return resSend(res, false, 200, "you are not authorised.", null, null);
             }
         }
-
         payload.vendor_code = tokenData.vendor_code;
+        const last_data = await get_latest_activity(DRAWING, payload.purchasing_doc_no, payload.reference_no);
+
+        if(tokenData.user_type != USER_TYPE_VENDOR && poType === "MATERIAL") {
+            payload.vendor_code = last_data.vendor_code;
+        } 
+        if(last_data && typeof last_data !== "object" && Object.keys(last_data).length &&last_data.status == REJECTED) {
+            return resSend(res, false, 200, `This Drawing already REJECTED.`, null, null);
+        }
+
         payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
 
         payload.created_by_id = tokenData.vendor_code;
+        if(!payload.reference_no) {
+            payload.reference_no = await create_reference_no("DW", tokenData.vendor_code);
+        }
 
+        // console.log("-----payload.reference_no----");
+        // console.log(payload);
+        // return;
         const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
         console.log("result", result2);
 
@@ -88,31 +156,36 @@ const submitDrawing = async (req, res) => {
 
         let insertObj;
 
-        if (payload.status === PENDING) {
-            payload.vendor_code = tokenData.vendor_code;
-            insertObj = drawingPayload(payload, PENDING);
-        } else if (payload.status === RE_SUBMITTED) {
-            payload.vendor_code = tokenData.vendor_code;
-            // insertObj = drawingPayload(payload, RE_SUBMITTED);
-        } else if (payload.status === APPROVED) {
-            // payload.vendor_code = payload.vendor_code;
+        // if (payload.status === SUBMIT) {
+        //     payload.vendor_code = tokenData.vendor_code;
+        //     insertObj = drawingPayload(payload, SUBMIT);
+        // } else if (payload.status === RE_SUBMITTED) {
+        //     payload.vendor_code = tokenData.vendor_code;
+        //     // insertObj = drawingPayload(payload, RE_SUBMITTED);
+        // } else if (payload.status === APPROVED) {
+        //     // payload.vendor_code = payload.vendor_code;
 
-            const drawingData = await getDrawingData(payload.purchasing_doc_no, PENDING);
+        //     const drawingData = await getDrawingData(payload.purchasing_doc_no, SUBMIT);
 
-            console.log("drawingData", drawingData);
-            if (drawingData && drawingData.length) {
-                payload.vendor_code = drawingData[0].vendor_code;
-            }
-            console.log("payload", payload);
-            insertObj = drawingPayload(payload, APPROVED);
-        }
-
+        //     console.log("drawingData", drawingData);
+        //     if (drawingData && drawingData.length) {
+        //         payload.vendor_code = drawingData[0].vendor_code;
+        //     }
+        //     console.log("payload", payload);
+        //     insertObj = drawingPayload(payload, payload.status);
+        // }
+        insertObj = drawingPayload(payload, payload.status);
+        // console.log("%******************");
+        // console.log(payload);
+        // console.log("%_&&_((((_$");
+        // console.log(insertObj);
+        // return;
 
         const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
         const response = await query({ query: q, values: val });
 
         if (payload.status === APPROVED) {
-            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData, PENDING);
+            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData, SUBMIT);
             console.log("actual_subminission", actual_subminission);
         }
 
@@ -121,7 +194,7 @@ const submitDrawing = async (req, res) => {
         //return;
         if (response.affectedRows) {
 
-            resSend(res, true, 200, "file uploaded!", fileData, null);
+            resSend(res, true, 200, `Drawing ${payload.status}`, fileData, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
