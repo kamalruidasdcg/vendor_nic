@@ -201,7 +201,7 @@ const getSdbgEntry = async (req, res) => {
             return resSend(res, true, 200, "Please send PO Number.", null, null);
         }
         const { poNo } = req.query;
-        let Query = `SELECT t1.* FROM sdbg_entry AS t1
+        let Query = `SELECT t1.*,t2.reference_no FROM sdbg_entry AS t1
                             LEFT JOIN 
                                     sdbg AS t2 
                                 ON 
@@ -274,15 +274,15 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         if (dealingOfficer === 0) {
             return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
         }
-
+console.log("@#$%^&*&^%$#@#$%^&*");
         const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(obj.purchasing_doc_no, obj.reference_no); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
         if (GET_LATEST_SDBG.length > 0) {
             if (GET_LATEST_SDBG[0].status == ACCEPTED) {
-                return resSend(res, true, 200, `The SDBG is already acknowledge.`, null, null);
+                return resSend(res, false, 200, `The SDBG is already acknowledge.`, null, null);
             }
             if (GET_LATEST_SDBG[0].status == REJECTED || GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE) {
-                return resSend(res, true, 200, `The SDBG is already ${GET_LATEST_SDBG[0].status}.`, null, null);
+                return resSend(res, false, 200, `The SDBG is already ${GET_LATEST_SDBG[0].status}.`, null, null);
             }
         }
 
@@ -377,7 +377,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             remarks: (obj.status === REJECTED) ? `This SDBG is ${REJECTED}` : `SDBG entry forwarded to Finance.`,
             status: obj.status,
             assigned_from: (obj.status === REJECTED) ? null : tokenData.vendor_code,
-            assigned_to: obj.assigned_to || null,
+            assigned_to:( obj.assigned_to) ? obj.assigned_to : null,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
             created_by_id: tokenData.vendor_code,
@@ -453,7 +453,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             status: obj.status,
             assigned_from:
                 tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
-            assigned_to: tokenData.internal_role_id == ASSIGNER ? obj.assigned_to : null,
+            assigned_to: tokenData.internal_role_id == ASSIGNER ?  null : obj.assigned_to ,
             last_assigned: 1,
             created_at: getEpochTime(),
             created_by_name: "finance dept",
