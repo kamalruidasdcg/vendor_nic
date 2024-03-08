@@ -66,8 +66,7 @@ const sdbgPayload = (payload, status) => {
     file_path: payload.filePath || null,
     remarks: payload.remarks || null,
     status: payload.status || null,
-    actionTypeId: payload.actionTypeId || null,
-    actionType: payload.actionType || null,
+    action_type: payload.action_type || null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code || null,
     assigned_from: payload.assigned_from || null,
@@ -76,7 +75,7 @@ const sdbgPayload = (payload, status) => {
     created_by_name: payload.action_by_name || null,
     created_by_id: payload.created_by_id,
   };
-
+ 
   return payloadObj;
 };
 
