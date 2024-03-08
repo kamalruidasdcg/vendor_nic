@@ -201,7 +201,7 @@ const getSdbgEntry = async (req, res) => {
             return resSend(res, true, 200, "Please send PO Number.", null, null);
         }
         const { poNo } = req.query;
-        let Query = `SELECT t1.* FROM sdbg_entry AS t1
+        let Query = `SELECT t1.*,t2.reference_no FROM sdbg_entry AS t1
                             LEFT JOIN 
                                     sdbg AS t2 
                                 ON 
