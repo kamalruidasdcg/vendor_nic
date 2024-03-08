@@ -19,9 +19,9 @@ const reservation = async (req, res) => {
         } else if (typeof req.body === 'object' && req.body !== null) {
             payload = req.body;
         }
-        const { RESB, ...obj } = payload;
+        const { TAB_RESB, ...obj } = payload;
 
-        console.log("RESB", RESB);
+        console.log("TAB_RESB", TAB_RESB);
         console.log("obj", obj);
 
         try {
@@ -41,9 +41,9 @@ const reservation = async (req, res) => {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
-            if (RESB?.length) {
+            if (TAB_RESB?.length) {
                 try {
-                    const resbPayload = await reservationLineItemPayload(RESB);
+                    const resbPayload = await reservationLineItemPayload(TAB_RESB);
                     console.log('ekpopayload', resbPayload);
                     const insert_resb_table = await generateQueryForMultipleData(resbPayload, RESERVATION_RESB_TABLE, "C_PKEY");
                     const [results] = await promiseConnection.execute(insert_resb_table);
