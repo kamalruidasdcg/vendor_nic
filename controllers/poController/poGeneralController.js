@@ -262,14 +262,15 @@ const details = async (req, res) => {
     };
 
     currentStage.current = await currentStageHandler(queryParams.id);
+    console.log(queryParams.id);
+    const DO = await doDetails(queryParams.id);
 
-    // result[0]["material"] = arrDate || [];
     result[0]["currentStage"] = currentStage;
     result[0]["poType"] = poType;
     result[0]["materialResult"] = materialResult || [];
     result[0]["timeline"] = timelineData || [];
     result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
-
+    result[0]["doInfo"] = (DO.length > 0) ? DO[0] : `N/A`;
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
     return resSend(res, false, 500, error.toString(), [], null);
@@ -619,6 +620,25 @@ const poList = async (req, res) => {
     return resSend(res, false, 500, error.toString(), [], null);
   }
 };
+
+
+
+
+const doDetails = async (str) => {
+  const doQry = `SELECT t1.PERNR,t1.CNAME,t2.ERNAM,t2.EBELN
+        FROM 
+            pa0002 AS t1 
+        LEFT JOIN 
+            ekko AS t2 
+        ON 
+            (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN IN(${str})`;
+
+    const doArr = await query({ query: doQry, values: [] });
+
+    return doArr;
+};
+
+
 
 const poListByEcko = (vendorCode = "") => {
   let sufx;
