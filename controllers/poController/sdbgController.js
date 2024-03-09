@@ -35,7 +35,7 @@ const submitSDBG = async (req, res) => {
             const tokenData = { ...req.tokenData };
             console.log(tokenData);
             // create_reference_no = async (type, vendor_code)
-            const reference_no = await create_reference_no("BG", tokenData.vendor_code); //`BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
+            const reference_no = await create_reference_no("SD", tokenData.vendor_code); //`BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
            
             let payload = { reference_no: reference_no, ...req.body, ...fileData, created_at: getEpochTime() };
 
