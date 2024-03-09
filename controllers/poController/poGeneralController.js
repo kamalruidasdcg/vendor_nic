@@ -12,6 +12,8 @@ const {
   EKKO,
   EKPO,
   ZPO_MILESTONE,
+  QAP_SUBMISSION,
+  ILMS,
 } = require("../../lib/tableName");
 const {
   INSERT,
@@ -44,7 +46,7 @@ const {
   poDataModify,
 } = require("../../services/po.services");
 const { currentStageHandler } = require("../../services/currentStage");
-const { STORE, RIC } = require("../../lib/depertmentMaster");
+const { STORE, RIC, QAP } = require("../../lib/depertmentMaster");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -446,6 +448,7 @@ const poList = async (req, res) => {
       return resSend(res, false, 400, "No po found", poArr, null);
     }
 
+
     // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
     //////////////////////////////////////////
     const resultArr = [];
@@ -458,128 +461,67 @@ const poList = async (req, res) => {
     );
     str = str.slice(0, -1);
 
-    // SDVG
-    let SDVGQuery = `select purchasing_doc_no,created_by_name,status,min(created_at) AS created_at from sdbg WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status`;
-    let SDVGArr = await query({ query: SDVGQuery, values: [] });
+    // do
 
-    let SDVGAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from sdbg WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
-    let SDVGAsdArr = await query({ query: SDVGAsdQuery, values: [] });
+    let doQry = `SELECT t1.PERNR,t1.CNAME,t2.ERNAM,t2.EBELN
+        FROM 
+            pa0002 AS t1 
+        LEFT JOIN 
+            ekko AS t2 
+        ON 
+            (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN IN(${str})`;
 
-    let SDVGCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1`;
-    let SDVGCsdArr = await query({ query: SDVGCsdQuery, values: [] });
+    let doArr = await query({ query: doQry, values: [] });
 
-    if (SDVGCsdArr.length) {
-      await Promise.all(
-        SDVGArr.map(async (item) => {
-          if (SDVGCsdArr.length) {
-            let csdArr = await SDVGCsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            csdArr
-              ? (item.contractual_submission_date =
-                  csdArr.contractual_submission_date)
-              : (item.contractual_submission_date = "N/A");
-          } else {
-            item.contractual_submission_date = undefined;
-          }
+    // console.log("&&&&&&&&&&&&^^^^^^^^^^");
+    // console.log(doArr);
+    // return;
+    // SD
+    
+    let SdbgLastStatus = `select purchasing_doc_no,status,created_at from ${SDBG} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let SdgbLastStatusArr = await query({ query: SdbgLastStatus, values: [] });
 
-          if (SDVGAsdArr.length) {
-            let asdArr = await SDVGAsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            asdArr
-              ? (item.actual_submission_date = asdArr.actual_submission_date)
-              : (item.actual_submission_date = undefined);
-          } else {
-            item.actual_submission_date = undefined;
-          }
-        })
-      );
-    }
+    let SdbgActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 1 group by purchasing_doc_no`;
+    let SdbgActualSubmissionDateArr = await query({ query: SdbgActualSubmissionDate, values: [] });
+
+    let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
+    let SdbgContractualSubmissionDateArr = await query({ query: SdbgContractualSubmissionDate, values: [] });
+    // SD
+
 
     // DRAWING
-    let drawingQuery = `select purchasing_doc_no,created_by_id,remarks,status,min(created_at) AS created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_id,status,remarks`;
-    let drawingArr = await query({ query: drawingQuery, values: [] });
-    console.log(drawingArr);
-    let drawingAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from ${DRAWING} WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
-    let drawingAsdArr = await query({ query: drawingAsdQuery, values: [] });
+    let DrawingLastStatus = `select purchasing_doc_no,status,created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let DrawingLastStatusArr = await query({ query: DrawingLastStatus, values: [] });
 
-    let drawingCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2`;
-    let drawingCsdArr = await query({ query: drawingCsdQuery, values: [] });
+    let DrawingActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 2 group by purchasing_doc_no`;
+    let DrawingActualSubmissionDateArr = await query({ query: DrawingActualSubmissionDate, values: [] });
 
-    if (drawingArr.length) {
-      await Promise.all(
-        drawingArr.map(async (item) => {
-          if (SDVGCsdArr.length) {
-            let csdArr = await SDVGCsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            csdArr
-              ? (item.contractual_submission_date =
-                  csdArr.contractual_submission_date)
-              : (item.contractual_submission_date = "N/A");
-          } else {
-            item.contractual_submission_date = undefined;
-          }
+    let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2  group by EBELN`;
+    let DrawingContractualSubmissionDateArr = await query({ query: DrawingContractualSubmissionDate, values: [] });
+    // DRAWING
 
-          if (drawingAsdArr.length) {
-            let asdArr = await drawingAsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            asdArr
-              ? (item.actual_submission_date = asdArr.actual_submission_date)
-              : (item.actual_submission_date = undefined);
-          } else {
-            item.actual_submission_date = undefined;
-          }
-        })
-      );
-    }
 
     // QAP
-    let qapQuery = `select purchasing_doc_no,created_by_name,remarks,status,min(created_at) AS created_at from qap_submission WHERE purchasing_doc_no IN(${str}) group by purchasing_doc_no,created_by_name,status,remarks`;
-    let qapArr = await query({ query: qapQuery, values: [] });
+    let qapLastStatus = `select purchasing_doc_no,status,created_at from ${QAP_SUBMISSION} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let qapLastStatusArr = await query({ query: qapLastStatus, values: [] });
 
-    let qapAsdQuery = `select purchasing_doc_no,min(created_at) AS actual_submission_date from qap_submission WHERE purchasing_doc_no IN(${str}) AND updated_by = 'GRSE' group by purchasing_doc_no`;
-    let qapAsdArr = await query({ query: qapAsdQuery, values: [] });
+    let qapActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 3 group by purchasing_doc_no`;
+    let qapActualSubmissionDateArr = await query({ query: qapActualSubmissionDate, values: [] });
 
-    // let qapCsdQuery = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3`;
-    // let qapCsdArr = await query({ query: qapCsdQuery, values: [] });
+    let qapContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3  group by EBELN`;
+    let qapContractualSubmissionDateArr = await query({ query: qapContractualSubmissionDate, values: [] });
+    // QAP
+    
+    // ILMS
+    let ilmsLastStatus = `select purchasing_doc_no,status,created_at from ${ILMS} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let ilmsLastStatusArr = await query({ query: ilmsLastStatus, values: [] });
 
-    if (qapArr.length) {
-      await Promise.all(
-        qapArr.map(async (item) => {
-          if (SDVGCsdArr.length) {
-            let csdArr = await SDVGCsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            csdArr
-              ? (item.contractual_submission_date =
-                  csdArr.contractual_submission_date)
-              : (item.contractual_submission_date = "N/A");
-          } else {
-            item.contractual_submission_date = undefined;
-          }
+    let ilmsActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 4 group by purchasing_doc_no`;
+    let ilmsActualSubmissionDateArr = await query({ query: ilmsActualSubmissionDate, values: [] });
 
-          if (qapAsdArr.length) {
-            let asdArr = await qapAsdArr.find(
-              ({ purchasing_doc_no }) =>
-                purchasing_doc_no == item.purchasing_doc_no
-            );
-            asdArr
-              ? (item.actual_submission_date = asdArr.actual_submission_date)
-              : (item.actual_submission_date = undefined);
-          } else {
-            item.actual_submission_date = undefined;
-          }
-        })
-      );
-    }
+    let ilmsContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 4  group by EBELN`;
+    let ilmsContractualSubmissionDateArr = await query({ query: ilmsContractualSubmissionDate, values: [] });
+    // ILMS
 
     const modifiedPOData = await poDataModify(poArr);
 
@@ -589,12 +531,6 @@ const poList = async (req, res) => {
     Object.keys(modifiedPOData).forEach((key) => {
       const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
       const poType = isMaterialTypePO === true ? "service" : "material";
-
-      // const i = poArr.findIndex((el) => el.poNb == key);
-      // let isDo = false;
-      // if (i >= 0) {
-      //     isDo = poArr[i].po_creator == tokenData.vendor_code;
-      // }
 
       result.push({
         poNb: key,
@@ -621,24 +557,59 @@ const poList = async (req, res) => {
         obj.vendor_name = item.vendor_name;
         obj.project_code = item.project_code;
         obj.wbs_id = item.wbs_id;
-        const SDVGObj = await SDVGArr.find(
-          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-        );
 
-        obj.SDVG = SDVGObj === undefined ? "N/A" : SDVGObj;
+        ////////////// SD /////////////////
+        const SDVGObj = {};
+        const SdbgActualSubmission = await SdbgActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+        // console.log('SdbgActualSubmission----------');
+        // console.log(SdbgActualSubmission);
+        const SdbgContractualSubmission = await SdbgContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+        const SdgbLast = SdgbLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission ?  SdbgContractualSubmission.contractual_submission_date : "N/A";
+        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission ?  SdbgActualSubmission.actualSubmissionDate : "N/A";
+        SDVGObj.SdLastStatus = SdgbLast ?  SdgbLast.status : "N/A";
+        obj.SD = SDVGObj;
+        ////////////// SD /////////////////
 
-        const drawingObj = await drawingArr.find(
-          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-        );
+         ////////////// DRAWING /////////////////
+         const DrawingObj = {};
+         const DrawingActualSubmission = await DrawingActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const DrawingContractualSubmission = await DrawingContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const DrawingLast = DrawingLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         DrawingObj.DrawingContractualSubmissionDate = DrawingContractualSubmission ?  DrawingContractualSubmission.contractual_submission_date : "N/A";
+         DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission ?  DrawingActualSubmission.actualSubmissionDate : "N/A";
+         DrawingObj.DrawingLastStatus = DrawingLast ?  DrawingLast.status : "N/A";
+        ////////////// DRAWING /////////////////
+         obj.Drawing = DrawingObj;
 
-        obj.Drawing = drawingObj === undefined ? "N/A" : drawingObj;
+         
+         ////////////// QAP /////////////////
+         const qapObj = {};
+         const qapActualSubmission = await qapActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const qapContractualSubmission = await qapContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const qapLast = qapLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         qapObj.qapContractualSubmissionDate = qapContractualSubmission ?  qapContractualSubmission.contractual_submission_date : "N/A";
+         qapObj.qapActualSubmissionDate = qapActualSubmission ?  qapActualSubmission.actualSubmissionDate : "N/A";
+         qapObj.qapLastStatus = qapLast ?  qapLast.status : "N/A";
+        ////////////// QAP /////////////////
+         obj.QAP = qapObj;
 
-        const qapObj = await qapArr.find(
-          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-        );
+         ////////////// ILMS /////////////////
+         const ilmsObj = {};
+         const ilmsActualSubmission = await ilmsActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const ilmsContractualSubmission = await ilmsContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         const ilmsLast = ilmsLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+         ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission ?  ilmsContractualSubmission.contractual_submission_date : "N/A";
+         ilmsObj.qapActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate : "N/A";
+         ilmsObj.ilmsLastStatus = ilmsLast ?  ilmsLast.status : "N/A";
+        ////////////// ILMS /////////////////
+        obj.ILMS = ilmsObj;
 
-        obj.qapSubmission = qapObj === undefined ? "N/A" : qapObj;
-
+        //// DO 
+       // const DOObj = {};
+        const DOObj = await doArr.find(({ EBELN }) => EBELN == item.poNb);
+       // DOObj.doData = doInfo ? doInfo : "N/A";
+        obj.DO = DOObj ? DOObj : "N/A";
         resultArr.push(obj);
       })
     );
