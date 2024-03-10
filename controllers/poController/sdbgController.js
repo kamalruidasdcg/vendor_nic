@@ -16,6 +16,8 @@ const { mailInsert } = require("../../services/mai.services");
 const { mailTrigger } = require("../sendMailController");
 const { SDBG_SUBMIT_BY_VENDOR, SDBG_SUBMIT_BY_GRSE, } = require("../../lib/event");
 const { Console } = require("console");
+const { makeHttpRequest } = require("../../config/sapServerConfig");
+const { zfi_bgm_1_Payload } = require("../../services/sap.services");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -36,7 +38,7 @@ const submitSDBG = async (req, res) => {
             console.log(tokenData);
             // create_reference_no = async (type, vendor_code)
             const reference_no = await create_reference_no("SD", tokenData.vendor_code); //`BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
-           
+
             let payload = { reference_no: reference_no, ...req.body, ...fileData, created_at: getEpochTime() };
 
             payload = sdbgPayload(payload);
@@ -263,18 +265,18 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         const { ...obj } = req.body;
         console.log('obj.status');
         console.log(obj.status);
-        if (!obj || typeof obj !== "object" || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == ""  || !obj.reference_no || obj.reference_no == "" || !obj.status || !obj.remarks || obj.remarks == "") {
-            return resSend(res, false, 200, "INVALID PAYLOAD", null, null); 
+        if (!obj || typeof obj !== "object" || !Object.keys(obj).length || !obj.purchasing_doc_no || obj.purchasing_doc_no == "" || !obj.reference_no || obj.reference_no == "" || !obj.status || !obj.remarks || obj.remarks == "") {
+            return resSend(res, false, 200, "INVALID PAYLOAD", null, null);
         }
-        if (obj.status != FORWARD_TO_FINANCE && obj.status != REJECTED ) {
-            return resSend(res, false, 200, "PLEASE SEND A VALID STATUS", null, null); 
+        if (obj.status != FORWARD_TO_FINANCE && obj.status != REJECTED) {
+            return resSend(res, false, 200, "PLEASE SEND A VALID STATUS", null, null);
         }
         const dealingOfficer = await checkIsDealingOfficer(obj.purchasing_doc_no, tokenData.vendor_code);
 
         if (dealingOfficer === 0) {
             return resSend(res, false, 200, "Please Login as dealing officer.", null, null);
         }
-console.log("@#$%^&*&^%$#@#$%^&*");
+        console.log("@#$%^&*&^%$#@#$%^&*");
         const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(obj.purchasing_doc_no, obj.reference_no); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
         if (GET_LATEST_SDBG.length > 0) {
@@ -344,7 +346,7 @@ console.log("@#$%^&*&^%$#@#$%^&*");
 
             //console.log(insertPayload);
             let dbQuery = `SELECT COUNT(purchasing_doc_no) AS po_count FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = ?`;
-            const dbResult = await query({query: dbQuery, values: [obj.purchasing_doc_no],});
+            const dbResult = await query({ query: dbQuery, values: [obj.purchasing_doc_no], });
 
             // console.log("@#$%^&*(*&^");
             // console.log(dbResult[0].po_count);
@@ -377,7 +379,7 @@ console.log("@#$%^&*&^%$#@#$%^&*");
             remarks: (obj.status === REJECTED) ? `This SDBG is ${REJECTED}` : `SDBG entry forwarded to Finance.`,
             status: obj.status,
             assigned_from: (obj.status === REJECTED) ? null : tokenData.vendor_code,
-            assigned_to:( obj.assigned_to) ? obj.assigned_to : null,
+            assigned_to: (obj.assigned_to) ? obj.assigned_to : null,
             created_at: getEpochTime(),
             created_by_name: "Dealing officer",
             created_by_id: tokenData.vendor_code,
@@ -388,7 +390,7 @@ console.log("@#$%^&*&^%$#@#$%^&*");
         let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
         // console.log(insertsdbg_q);
         // return;
-        let sdbgQuery = await query({ query: insertsdbg_q["q"], values: insertsdbg_q["val"],});
+        let sdbgQuery = await query({ query: insertsdbg_q["q"], values: insertsdbg_q["val"], });
 
         console.log("rt67898uygy");
         console.log(sdbgQuery);
@@ -453,7 +455,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             status: obj.status,
             assigned_from:
                 tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
-            assigned_to: tokenData.internal_role_id == ASSIGNER ?  null : obj.assigned_to ,
+            assigned_to: tokenData.internal_role_id == ASSIGNER ? null : obj.assigned_to,
             last_assigned: 1,
             created_at: getEpochTime(),
             created_by_name: "finance dept",
@@ -475,6 +477,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         if (insertPayloadForSdbg.status === APPROVED) {
             console.log("ACCEPTED2");
             const actual_subminission = await setActualSubmissionDate(insertPayloadForSdbg, 1, tokenData, PENDING);
+            const result = await sendBgToSap(payload);
             console.log("actual_subminission", actual_subminission);
         }
         console.log("ACCEPTED3");
@@ -629,6 +632,22 @@ async function handelEmail(payload) {
         await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
     }
 }
+
+
+async function sendBgToSap(payload) {
+    try {
+        const postUrl = "http://grsebld1dev:8010/sap/bc/zobps_sdbg_ent";
+        console.log("postUrl", postUrl);
+        console.log("wdc_payload -->", );
+        let payload = { ...payload };
+        let modified = await zfi_bgm_1_Payload(payload);
+        const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
+        console.log('POST Response from the server:', postResponse);
+    } catch (error) {
+        console.error('Error making the request:', error.message);
+    }
+}
+
 
 module.exports = {
     submitSDBG,
