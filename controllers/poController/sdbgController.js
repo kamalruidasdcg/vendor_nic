@@ -342,7 +342,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           res,
           false,
           200,
-          `The SDBG is already approved.`,
+          `The BG is already approved.`,
           null,
           null
         );
@@ -355,7 +355,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           res,
           false,
           200,
-          `The SDBG is already ${GET_LATEST_SDBG[0].status}.`,
+          `The BG is already ${GET_LATEST_SDBG[0].status}.`,
           null,
           null
         );
@@ -460,8 +460,8 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       ...sdbgDataResult,
       remarks:
         obj.status === REJECTED
-          ? `This SDBG is ${REJECTED}`
-          : `SDBG entry forwarded to Finance.`,
+          ? `This BG is ${REJECTED}`
+          : `BG entry forwarded to Finance.`,
       status: obj.status,
       assigned_from: obj.status === REJECTED ? null : tokenData.vendor_code,
       assigned_to: obj.assigned_to || null,
@@ -470,11 +470,8 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       created_by_id: tokenData.vendor_code,
       updated_by: "GRSE",
     };
-    // console.log("sdbg--");
-    // console.log(insertPayloadForSdbg);
+
     let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
-    // console.log(insertsdbg_q);
-    // return;
     let sdbgQuery = await query({
       query: insertsdbg_q["q"],
       values: insertsdbg_q["val"],
@@ -484,7 +481,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
     // console.log(sdbgQuery);
     let msg =
       obj.status === REJECTED
-        ? `This SDBG is Rejected.`
+        ? `This BG is Rejected.`
         : `Forworded to finance successfully!`;
     return resSend(res, true, 200, msg, sdbgQuery, null);
   } catch (error) {
@@ -527,9 +524,8 @@ const sdbgUpdateByFinance = async (req, res) => {
     const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(
       obj.purchasing_doc_no,
       obj.reference_no
-    ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
-    // console.log(GET_LATEST_SDBG[0].status);
-    // return;
+    );
+
     if (
       GET_LATEST_SDBG[0].status == APPROVED ||
       GET_LATEST_SDBG[0].status == REJECTED ||
@@ -537,9 +533,9 @@ const sdbgUpdateByFinance = async (req, res) => {
     ) {
       return resSend(
         res,
-        true,
+        false,
         200,
-        `This po is already ${GET_LATEST_SDBG[0].status}.`,
+        `The BG is already ${GET_LATEST_SDBG[0].status}.`,
         null,
         null
       );
