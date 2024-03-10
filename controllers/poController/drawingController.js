@@ -8,7 +8,7 @@ const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 
 const { DRAWING, EKKO, EKPO, SDBG, QAP_SUBMISSION, ILMS } = require("../../lib/tableName");
-const { SUBMIT, ACKNOWLEDGED, RE_SUBMITTED, APPROVED, REJECTED } = require("../../lib/status");
+const { SUBMITTED, ACKNOWLEDGED, RE_SUBMITTED, APPROVED, REJECTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { DRAWING_SUBMIT_MAIL_TEMPLATE } = require('../../templates/mail-template');
@@ -55,7 +55,7 @@ const submitDrawing = async (req, res) => {
         }
 
         const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-        const verifyStatus = [SUBMIT, RE_SUBMITTED, APPROVED];
+        const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED];
 
         let materialQuery = `SELECT
             mat.EBELP AS material_item_number,
@@ -109,7 +109,15 @@ const submitDrawing = async (req, res) => {
             return resSend(res, true, 200, "please login as Valid user!", null, null);
         }
 
+        
+
         if (tokenData.user_type === USER_TYPE_VENDOR) {
+// console.log("##########");
+// console.log(tokenData.user_type);
+// //return;
+            if (payload.status == APPROVED || payload.status == REJECTED) {
+                return resSend(res, true, 200, `vendor can not ${tokenData.status}!`, null, null);
+            }
             const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = ? AND LIFNR = ?`;
 
             const poArr = await query({ query: Query, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
@@ -120,12 +128,13 @@ const submitDrawing = async (req, res) => {
         }
         payload.vendor_code = tokenData.vendor_code;
         const last_data = await get_latest_activity(DRAWING, payload.purchasing_doc_no, payload.reference_no);
-
+console.log(last_data.status);
+//return;
         if(tokenData.user_type != USER_TYPE_VENDOR && poType === "MATERIAL") {
             payload.vendor_code = last_data.vendor_code;
         } 
-        if(last_data && typeof last_data !== "object" && Object.keys(last_data).length &&last_data.status == REJECTED) {
-            return resSend(res, false, 200, `This Drawing already REJECTED.`, null, null);
+        if(last_data && typeof last_data == "object" && Object.keys(last_data).length && (last_data.status == REJECTED || last_data.status == APPROVED)) {
+            return resSend(res, false, 200, `This Drawing already ${last_data.status}.`, null, null);
         }
 
         payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
@@ -138,21 +147,21 @@ const submitDrawing = async (req, res) => {
         // console.log("-----payload.reference_no----");
         // console.log(payload);
         // return;
-        const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
-        console.log("result", result2);
+        // const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
+        // console.log("result", result2);
 
-        if (result2 && result2?.length) {
+        // if (result2 && result2?.length) {
 
-            const data = [{
-                purchasing_doc_no: result2[0]?.purchasing_doc_no,
-                status: result2[0]?.status,
-                approvedName: result2[0]?.created_by_name,
-                approvedById: result2[0]?.created_by_id,
-                message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
-            }];
+        //     const data = [{
+        //         purchasing_doc_no: result2[0]?.purchasing_doc_no,
+        //         status: result2[0]?.status,
+        //         approvedName: result2[0]?.created_by_name,
+        //         approvedById: result2[0]?.created_by_id,
+        //         message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
+        //     }];
 
-            return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
-        }
+        //     return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
+        // }
 
         let insertObj;
 
@@ -185,7 +194,7 @@ const submitDrawing = async (req, res) => {
         const response = await query({ query: q, values: val });
 
         if (payload.status === APPROVED) {
-            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData, SUBMIT);
+            const actual_subminission = await setActualSubmissionDate(payload, 2, tokenData, SUBMITTED);
             console.log("actual_subminission", actual_subminission);
         }
 
