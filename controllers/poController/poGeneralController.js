@@ -270,7 +270,7 @@ const details = async (req, res) => {
     result[0]["materialResult"] = materialResult || [];
     result[0]["timeline"] = timelineData || [];
     result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
-    result[0]["doInfo"] = (DO.length > 0) ? DO[0] : `N/A`;
+    result[0]["doInfo"] = (DO.length > 0) ? DO[0] :  NULL;
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
     return resSend(res, false, 500, error.toString(), [], null);
@@ -566,9 +566,9 @@ const poList = async (req, res) => {
         // console.log(SdbgActualSubmission);
         const SdbgContractualSubmission = await SdbgContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
         const SdgbLast = SdgbLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission ?  SdbgContractualSubmission.contractual_submission_date : "N/A";
-        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission ?  SdbgActualSubmission.actualSubmissionDate : "N/A";
-        SDVGObj.SdLastStatus = SdgbLast ?  SdgbLast.status : "N/A";
+        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission ?  SdbgContractualSubmission.contractual_submission_date :  NULL;
+        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission ?  SdbgActualSubmission.actualSubmissionDate :  NULL;
+        SDVGObj.SdLastStatus = SdgbLast ?  SdgbLast.status :  NULL;
         obj.SD = SDVGObj;
         ////////////// SD /////////////////
 
@@ -577,9 +577,9 @@ const poList = async (req, res) => {
          const DrawingActualSubmission = await DrawingActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const DrawingContractualSubmission = await DrawingContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const DrawingLast = DrawingLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         DrawingObj.DrawingContractualSubmissionDate = DrawingContractualSubmission ?  DrawingContractualSubmission.contractual_submission_date : "N/A";
-         DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission ?  DrawingActualSubmission.actualSubmissionDate : "N/A";
-         DrawingObj.DrawingLastStatus = DrawingLast ?  DrawingLast.status : "N/A";
+         DrawingObj.DrawingContractualSubmissionDate = DrawingContractualSubmission ?  DrawingContractualSubmission.contractual_submission_date :  NULL;
+         DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission ?  DrawingActualSubmission.actualSubmissionDate :  NULL;
+         DrawingObj.DrawingLastStatus = DrawingLast ?  DrawingLast.status :  NULL;
         ////////////// DRAWING /////////////////
          obj.Drawing = DrawingObj;
 
@@ -589,9 +589,9 @@ const poList = async (req, res) => {
          const qapActualSubmission = await qapActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const qapContractualSubmission = await qapContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const qapLast = qapLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         qapObj.qapContractualSubmissionDate = qapContractualSubmission ?  qapContractualSubmission.contractual_submission_date : "N/A";
-         qapObj.qapActualSubmissionDate = qapActualSubmission ?  qapActualSubmission.actualSubmissionDate : "N/A";
-         qapObj.qapLastStatus = qapLast ?  qapLast.status : "N/A";
+         qapObj.qapContractualSubmissionDate = qapContractualSubmission ?  qapContractualSubmission.contractual_submission_date :  NULL;
+         qapObj.qapActualSubmissionDate = qapActualSubmission ?  qapActualSubmission.actualSubmissionDate :  NULL;
+         qapObj.qapLastStatus = qapLast ?  qapLast.status :  NULL;
         ////////////// QAP /////////////////
          obj.QAP = qapObj;
 
@@ -600,17 +600,17 @@ const poList = async (req, res) => {
          const ilmsActualSubmission = await ilmsActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const ilmsContractualSubmission = await ilmsContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const ilmsLast = ilmsLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission ?  ilmsContractualSubmission.contractual_submission_date : "N/A";
-         ilmsObj.qapActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate : "N/A";
-         ilmsObj.ilmsLastStatus = ilmsLast ?  ilmsLast.status : "N/A";
+         ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission ?  ilmsContractualSubmission.contractual_submission_date :  NULL;
+         ilmsObj.qapActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate :  NULL;
+         ilmsObj.ilmsLastStatus = ilmsLast ?  ilmsLast.status :  NULL;
         ////////////// ILMS /////////////////
         obj.ILMS = ilmsObj;
 
         //// DO 
        // const DOObj = {};
         const DOObj = await doArr.find(({ EBELN }) => EBELN == item.poNb);
-       // DOObj.doData = doInfo ? doInfo : "N/A";
-        obj.DO = DOObj ? DOObj : "N/A";
+       // DOObj.doData = doInfo ? doInfo :  NULL;
+        obj.DO = DOObj ? DOObj :  NULL;
         resultArr.push(obj);
       })
     );
