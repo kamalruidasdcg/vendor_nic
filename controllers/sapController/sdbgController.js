@@ -1,6 +1,6 @@
 
 const { responseSend } = require("../../lib/resSend");
-const { zfi_bgm_1_Payload } = require("../../services/sap.services");
+const { zfi_bgm_1_Payload, ztfi_bil_defacePayload } = require("../../services/sap.services");
 const { SDBG_PAYMENT_ADVICE } = require('../../lib/tableName');
 const { generateQueryArray } = require('../../lib/utils');
 const { connection } = require('../../config/dbConfig');
