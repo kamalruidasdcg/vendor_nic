@@ -601,7 +601,7 @@ const poList = async (req, res) => {
          const ilmsContractualSubmission = await ilmsContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          const ilmsLast = ilmsLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
          ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission ?  ilmsContractualSubmission.contractual_submission_date : null;
-         ilmsObj.qapActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate : null;
+         ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate : null;
          ilmsObj.ilmsLastStatus = ilmsLast ?  ilmsLast.status : null;
         ////////////// ILMS /////////////////
         obj.ILMS = ilmsObj;
