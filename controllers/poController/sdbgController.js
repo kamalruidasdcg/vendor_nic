@@ -788,8 +788,10 @@ async function handelEmail(payload) {
 
 
 async function sendBgToSap(payload) {
+
     try {
-        const postUrl = "http://grsebld1dev:8010/sap/bc/zobps_sdbg_ent";
+        const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
+        const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
         console.log("postUrl", postUrl);
         console.log("wdc_payload -->", );
         let payload = { ...payload };
