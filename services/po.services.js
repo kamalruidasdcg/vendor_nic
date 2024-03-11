@@ -1,12 +1,13 @@
 const { query } = require("../config/dbConfig");
 const { INSERT } = require("../lib/constant");
-const { PENDING } = require("../lib/status");
+const { SUBMITTED } = require("../lib/status");
 const {
   ACTUAL_SUBMISSION_DATE,
   ILMS,
   QAP_SUBMISSION,
   DRAWING,
   SDBG,
+  ACTUAL_SUBMISSION_DB,
 } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 
@@ -75,7 +76,7 @@ const sdbgPayload = (payload, status) => {
     created_by_name: payload.action_by_name || null,
     created_by_id: payload.created_by_id,
   };
- 
+
   return payloadObj;
 };
 
@@ -127,9 +128,9 @@ const qapPayload = (payload, status) => {
     created_by_name: payload.action_by_name ? payload.action_by_name : null,
     created_by_id: payload.action_by_id,
   };
- 
+
   return payloadObj;
-};;
+};
 
 const wdcPayload = (payload) => {
   const payloadObj = {
@@ -173,7 +174,6 @@ const shippingDocumentsPayload = (payload, status) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
-    file_type_id: payload.file_type_id,
     file_type_name: payload.file_type_name,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
@@ -304,16 +304,14 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
   const tableName = getTableName(mid);
   if (!tableName || !mid) return false;
 
-  const st = status || PENDING;
+  const st = status || SUBMITTED;
 
   const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND vendor_code = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
   const result = await query({
     query: getlatestData,
     values: [payload.purchasing_doc_no, payload.vendor_code, st],
   });
-  console.log(payload.purchasing_doc_no, payload.vendor_code, st);
-  console.log(getlatestData);
-  console.log(result, "result");
+
   const mtext = {
     1: "ACTUAL SDBG SUBMISSION DATE",
     2: "ACTUAL DRAWING SUBMISSION DATE",
@@ -331,13 +329,8 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
       created_by_id: tokenData.vendor_code,
     };
     console.log("payload");
-    const { q, val } = generateQuery(
-      INSERT,
-      ACTUAL_SUBMISSION_DATE,
-      payloadObj
-    );
+    const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
     const response = await query({ query: q, values: val });
-
     return true;
   }
   return false;
@@ -352,18 +345,24 @@ const create_reference_no = async (type, vendor_code) => {
   }
 };
 
-const get_latest_activity = async (table_name, purchasing_doc_no, reference_no) => {
+const get_latest_activity = async (
+  table_name,
+  purchasing_doc_no,
+  reference_no
+) => {
   try {
     const ilms_query = `SELECT file_name,file_path,vendor_code,created_at,status FROM ${table_name} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY created_at DESC LIMIT 1`;
-    const result = await query({ query: ilms_query, values: [reference_no, purchasing_doc_no] });
+    const result = await query({
+      query: ilms_query,
+      values: [reference_no, purchasing_doc_no],
+    });
     //console.log("__get_latest_activity__");
     console.log(result[0]);
     return result[0];
   } catch (error) {
     console.log("error into get_latest_activity function :"`${error}`);
   }
-}
-
+};
 
 module.exports = {
   sdbgPayload,

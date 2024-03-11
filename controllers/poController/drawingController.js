@@ -122,7 +122,7 @@ const submitDrawing = async (req, res) => {
         res,
         false,
         200,
-        "please send valid reference_no.",
+        "Please send valid reference_no.",
         null,
         null
       );
@@ -136,7 +136,7 @@ const submitDrawing = async (req, res) => {
         res,
         false,
         200,
-        "please send valid reference_no by vendor.",
+        "Please send valid reference_no by vendor.",
         null,
         null
       );
@@ -195,7 +195,7 @@ const submitDrawing = async (req, res) => {
         res,
         false,
         200,
-        `This Drawing already ${last_data.status}.`,
+        `This Drawing is already ${last_data.status}.`,
         null,
         null
       );

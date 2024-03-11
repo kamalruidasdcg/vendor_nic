@@ -270,7 +270,7 @@ const details = async (req, res) => {
     result[0]["materialResult"] = materialResult || [];
     result[0]["timeline"] = timelineData || [];
     result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
-    result[0]["doInfo"] = (DO.length > 0) ? DO[0] : null;
+    result[0]["doInfo"] = DO.length > 0 ? DO[0] : null;
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
     return resSend(res, false, 500, error.toString(), [], null);
@@ -404,7 +404,7 @@ const poList = async (req, res) => {
         res,
         false,
         400,
-        "you dont have permission or no data found",
+        "You don't have permission or no data found",
         null,
         null
       );
@@ -419,8 +419,6 @@ const poList = async (req, res) => {
     if (!strVal || strVal == "") {
       return resSend(res, true, 200, "No PO found.", [], null);
     }
-    console.log("$%^&*()(*&^%$");
-    console.log(strVal);
     poQuery = `SELECT ekko.lifnr AS vendor_code,
                         lfa1.name1 AS vendor_name,
                         wbs.project_code AS project_code,
@@ -441,14 +439,10 @@ const poList = async (req, res) => {
                                ON ekko.lifnr = lfa1.lifnr
                  WHERE  ekko.ebeln IN (${strVal})`;
 
-    // if (poQuery == "") {
-    //     return resSend(res, false, 400, "you dont have permission.", null, null);
-    // }
     const poArr = await query({ query: poQuery, values: [] });
     if (!poArr) {
       return resSend(res, false, 400, "No po found", poArr, null);
     }
-
 
     // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
     //////////////////////////////////////////
@@ -478,50 +472,75 @@ const poList = async (req, res) => {
     // console.log(doArr);
     // return;
     // SD
-    
+
     let SdbgLastStatus = `select purchasing_doc_no,status,created_at from ${SDBG} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
     let SdgbLastStatusArr = await query({ query: SdbgLastStatus, values: [] });
 
     let SdbgActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 1 group by purchasing_doc_no`;
-    let SdbgActualSubmissionDateArr = await query({ query: SdbgActualSubmissionDate, values: [] });
+    let SdbgActualSubmissionDateArr = await query({
+      query: SdbgActualSubmissionDate,
+      values: [],
+    });
 
     let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
-    let SdbgContractualSubmissionDateArr = await query({ query: SdbgContractualSubmissionDate, values: [] });
+    let SdbgContractualSubmissionDateArr = await query({
+      query: SdbgContractualSubmissionDate,
+      values: [],
+    });
     // SD
-
 
     // DRAWING
     let DrawingLastStatus = `select purchasing_doc_no,status,created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
-    let DrawingLastStatusArr = await query({ query: DrawingLastStatus, values: [] });
+    let DrawingLastStatusArr = await query({
+      query: DrawingLastStatus,
+      values: [],
+    });
 
     let DrawingActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 2 group by purchasing_doc_no`;
-    let DrawingActualSubmissionDateArr = await query({ query: DrawingActualSubmissionDate, values: [] });
+    let DrawingActualSubmissionDateArr = await query({
+      query: DrawingActualSubmissionDate,
+      values: [],
+    });
 
     let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 2  group by EBELN`;
-    let DrawingContractualSubmissionDateArr = await query({ query: DrawingContractualSubmissionDate, values: [] });
+    let DrawingContractualSubmissionDateArr = await query({
+      query: DrawingContractualSubmissionDate,
+      values: [],
+    });
     // DRAWING
-
 
     // QAP
     let qapLastStatus = `select purchasing_doc_no,status,created_at from ${QAP_SUBMISSION} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
     let qapLastStatusArr = await query({ query: qapLastStatus, values: [] });
 
     let qapActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 3 group by purchasing_doc_no`;
-    let qapActualSubmissionDateArr = await query({ query: qapActualSubmissionDate, values: [] });
+    let qapActualSubmissionDateArr = await query({
+      query: qapActualSubmissionDate,
+      values: [],
+    });
 
     let qapContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 3  group by EBELN`;
-    let qapContractualSubmissionDateArr = await query({ query: qapContractualSubmissionDate, values: [] });
+    let qapContractualSubmissionDateArr = await query({
+      query: qapContractualSubmissionDate,
+      values: [],
+    });
     // QAP
-    
+
     // ILMS
     let ilmsLastStatus = `select purchasing_doc_no,status,created_at from ${ILMS} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
     let ilmsLastStatusArr = await query({ query: ilmsLastStatus, values: [] });
 
     let ilmsActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = 4 group by purchasing_doc_no`;
-    let ilmsActualSubmissionDateArr = await query({ query: ilmsActualSubmissionDate, values: [] });
+    let ilmsActualSubmissionDateArr = await query({
+      query: ilmsActualSubmissionDate,
+      values: [],
+    });
 
     let ilmsContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 4  group by EBELN`;
-    let ilmsContractualSubmissionDateArr = await query({ query: ilmsContractualSubmissionDate, values: [] });
+    let ilmsContractualSubmissionDateArr = await query({
+      query: ilmsContractualSubmissionDate,
+      values: [],
+    });
     // ILMS
 
     const modifiedPOData = await poDataModify(poArr);
@@ -561,55 +580,100 @@ const poList = async (req, res) => {
 
         ////////////// SD /////////////////
         const SDVGObj = {};
-        const SdbgActualSubmission = await SdbgActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
+        const SdbgActualSubmission = await SdbgActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
         // console.log('SdbgActualSubmission----------');
         // console.log(SdbgActualSubmission);
-        const SdbgContractualSubmission = await SdbgContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-        const SdgbLast = SdgbLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission ?  SdbgContractualSubmission.contractual_submission_date : null;
-        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission ?  SdbgActualSubmission.actualSubmissionDate : null;
-        SDVGObj.SdLastStatus = SdgbLast ?  SdgbLast.status : null;
+        const SdbgContractualSubmission =
+          await SdbgContractualSubmissionDateArr.find(
+            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          );
+        const SdgbLast = SdgbLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission
+          ? SdbgContractualSubmission.contractual_submission_date
+          : null;
+        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission
+          ? SdbgActualSubmission.actualSubmissionDate
+          : null;
+        SDVGObj.SdLastStatus = SdgbLast ? SdgbLast.status : null;
         obj.SD = SDVGObj;
         ////////////// SD /////////////////
 
-         ////////////// DRAWING /////////////////
-         const DrawingObj = {};
-         const DrawingActualSubmission = await DrawingActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const DrawingContractualSubmission = await DrawingContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const DrawingLast = DrawingLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         DrawingObj.DrawingContractualSubmissionDate = DrawingContractualSubmission ?  DrawingContractualSubmission.contractual_submission_date : null;
-         DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission ?  DrawingActualSubmission.actualSubmissionDate : null;
-         DrawingObj.DrawingLastStatus = DrawingLast ?  DrawingLast.status : null;
         ////////////// DRAWING /////////////////
-         obj.Drawing = DrawingObj;
+        const DrawingObj = {};
+        const DrawingActualSubmission =
+          await DrawingActualSubmissionDateArr.find(
+            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          );
+        const DrawingContractualSubmission =
+          await DrawingContractualSubmissionDateArr.find(
+            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          );
+        const DrawingLast = DrawingLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        DrawingObj.DrawingContractualSubmissionDate =
+          DrawingContractualSubmission
+            ? DrawingContractualSubmission.contractual_submission_date
+            : null;
+        DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission
+          ? DrawingActualSubmission.actualSubmissionDate
+          : null;
+        DrawingObj.DrawingLastStatus = DrawingLast ? DrawingLast.status : null;
+        ////////////// DRAWING /////////////////
+        obj.Drawing = DrawingObj;
 
-         
-         ////////////// QAP /////////////////
-         const qapObj = {};
-         const qapActualSubmission = await qapActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const qapContractualSubmission = await qapContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const qapLast = qapLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         qapObj.qapContractualSubmissionDate = qapContractualSubmission ?  qapContractualSubmission.contractual_submission_date : null;
-         qapObj.qapActualSubmissionDate = qapActualSubmission ?  qapActualSubmission.actualSubmissionDate : null;
-         qapObj.qapLastStatus = qapLast ?  qapLast.status : null;
         ////////////// QAP /////////////////
-         obj.QAP = qapObj;
+        const qapObj = {};
+        const qapActualSubmission = await qapActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const qapContractualSubmission =
+          await qapContractualSubmissionDateArr.find(
+            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          );
+        const qapLast = qapLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        qapObj.qapContractualSubmissionDate = qapContractualSubmission
+          ? qapContractualSubmission.contractual_submission_date
+          : null;
+        qapObj.qapActualSubmissionDate = qapActualSubmission
+          ? qapActualSubmission.actualSubmissionDate
+          : null;
+        qapObj.qapLastStatus = qapLast ? qapLast.status : null;
+        ////////////// QAP /////////////////
+        obj.QAP = qapObj;
 
-         ////////////// ILMS /////////////////
-         const ilmsObj = {};
-         const ilmsActualSubmission = await ilmsActualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const ilmsContractualSubmission = await ilmsContractualSubmissionDateArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         const ilmsLast = ilmsLastStatusArr.find(({ purchasing_doc_no }) => purchasing_doc_no == item.poNb);
-         ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission ?  ilmsContractualSubmission.contractual_submission_date : null;
-         ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission ?  ilmsActualSubmission.actualSubmissionDate : null;
-         ilmsObj.ilmsLastStatus = ilmsLast ?  ilmsLast.status : null;
+        ////////////// ILMS /////////////////
+        const ilmsObj = {};
+        const ilmsActualSubmission = await ilmsActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const ilmsContractualSubmission =
+          await ilmsContractualSubmissionDateArr.find(
+            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          );
+        const ilmsLast = ilmsLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission
+          ? ilmsContractualSubmission.contractual_submission_date
+          : null;
+        ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission
+          ? ilmsActualSubmission.actualSubmissionDate
+          : null;
+        ilmsObj.ilmsLastStatus = ilmsLast ? ilmsLast.status : null;
         ////////////// ILMS /////////////////
         obj.ILMS = ilmsObj;
 
-        //// DO 
-       // const DOObj = {};
+        //// DO
+        // const DOObj = {};
         const DOObj = await doArr.find(({ EBELN }) => EBELN == item.poNb);
-       // DOObj.doData = doInfo ? doInfo : null;
+        // DOObj.doData = doInfo ? doInfo : null;
         obj.DO = DOObj ? DOObj : null;
         resultArr.push(obj);
       })
@@ -621,9 +685,6 @@ const poList = async (req, res) => {
   }
 };
 
-
-
-
 const doDetails = async (str) => {
   const doQry = `SELECT t1.PERNR,t1.CNAME,t2.ERNAM,t2.EBELN
         FROM 
@@ -633,12 +694,10 @@ const doDetails = async (str) => {
         ON 
             (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN IN(${str})`;
 
-    const doArr = await query({ query: doQry, values: [] });
+  const doArr = await query({ query: doQry, values: [] });
 
-    return doArr;
+  return doArr;
 };
-
-
 
 const poListByEcko = (vendorCode = "") => {
   let sufx;
