@@ -41,6 +41,7 @@ const { deptLogEntry } = require("../../log/deptActivities");
 const submitQAP = async (req, res) => {
   try {
     const tokenData = { ...req.tokenData };
+    console.log("tokenData", tokenData);
     let fileData = {};
     if (req.file) {
       fileData = {
@@ -65,18 +66,55 @@ const submitQAP = async (req, res) => {
       UPDATED,
     ]);
 
-    if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
-      // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
-      // const isDel = handleFileDeletion(directory, req.file.filename);
+    if (
+      !payload.purchasing_doc_no ||
+      !payload.remarks ||
+      payload.remarks.trim() === "" ||
+      !payload.status ||
+      payload.status.trim() === ""
+    ) {
       return resSend(res, false, 200, "Remarks is mandotory!", null, null);
     }
-    // if ((tokenData.user_type === USER_TYPE_VENDOR && activity_type === RE_SUBMITTED) || tokenData.department_id === USER_TYPE_GRSE_QAP) {
-    //     if (!payload.assigned_from || !payload.assigned_to) {
-    //         return resSend(res, false, 400, `Please send assign from and assign to.`, null, null);
-    //     }
-    // }
 
     let message = ``;
+
+    // Check if already accepted/rejected/approved and if GRSE
+    if (tokenData?.user_type !== 1) {
+      const GET_LATEST_QA = await get_latest_QA_with_reference(
+        payload.purchasing_doc_no,
+        payload.reference_no
+      );
+
+      if (
+        GET_LATEST_QA[0].status == APPROVED &&
+        GET_LATEST_QA[0].status == REJECTED
+      ) {
+        return resSend(
+          res,
+          false,
+          200,
+          `The QA is already ${GET_LATEST_QA[0].status}.`,
+          null,
+          null
+        );
+      }
+    }
+
+    // if (
+    //   tokenData.internal_role_id == ASSIGNER &&
+    //   GET_LATEST_QA[0].status == ASSIGNED &&
+    //   obj.status == ASSIGNED &&
+    //   GET_LATEST_QA[0].assigned_to == payload.assigned_to
+    // ) {
+    //   return resSend(
+    //     res,
+    //     true,
+    //     200,
+    //     `This po is already ${ASSIGNED} this person.`,
+    //     null,
+    //     null
+    //   );
+    // }
 
     ///////// CHECK DEPERTMENT /////////////////
     if (
@@ -97,10 +135,10 @@ const submitQAP = async (req, res) => {
               query: removeOldAssignee,
               values: [purchasing_doc_no, 1],
             });
-            payload.is_assign = 1;
             // message = `This QAP has already ${ASSIGNED}`;
             // return resSend(res, true, 200, message, null, null);
           }
+          payload.is_assign = 1;
         } else {
           message = `You don't have permission!`;
           return resSend(res, true, 200, message, null, null);
@@ -169,26 +207,27 @@ const submitQAP = async (req, res) => {
           null
         );
 
-      // if (activity_type == ASSIGNED) {
-      //   payload.vendor_code = qapDetails.data.vendor_code;
-      //   const details = await getNameAndEmail(
-      //     qapDetails.data.vendor_code,
-      //     payload.assigned_from,
-      //     payload.assigned_to,
-      //     payload.is_assign
-      //   );
-      //   if (details.success) {
-      //     payload = { ...payload, ...details.data };
-      //   }
-      //   console.log(payload);
-      // } else {
-      //   payload.vendor_code = qapDetails.data.vendor_code;
-      //   payload.assigned_to = qapDetails.data.assigned_to;
-      //   payload.assigned_from = qapDetails.data.assigned_from;
-      //   payload.created_by_name = qapDetails.data.created_by_name;
+      if (activity_type == ASSIGNED) {
+        payload.vendor_code = qapDetails.data.vendor_code;
+        payload.action_type = "ASSIGNED to QA Staff";
+        const details = await getNameAndEmail(
+          qapDetails.data.vendor_code,
+          payload.assigned_from,
+          payload.assigned_to,
+          payload.is_assign
+        );
+        if (details.success) {
+          payload = { ...payload, ...details.data };
+        }
+        console.log(payload);
+      } else {
+        payload.vendor_code = qapDetails.data.vendor_code;
+        payload.assigned_to = qapDetails.data.assigned_to;
+        payload.assigned_from = qapDetails.data.assigned_from;
+        payload.created_by_name = qapDetails.data.created_by_name;
 
-      //   payload = { ...payload, ...qapDetails.data };
-      // }
+        payload = { ...payload, ...qapDetails.data };
+      }
     }
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
@@ -272,7 +311,7 @@ const submitQAP = async (req, res) => {
     const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
     const response = await query({ query: q, values: val });
 
-    if (insertObj.status === APPROVED || insertObj.status === ACCEPTED) {
+    if (insertObj.status === APPROVED) {
       const actual_subminission = await setActualSubmissionDate(
         insertObj,
         3,
@@ -901,6 +940,22 @@ async function deleteQapSave(req, res) {
     resSend(res, false, 500, "Internal server error", err, null);
   }
 }
+
+const get_latest_QA_with_reference = async (
+  purchasing_doc_no,
+  reference_no
+) => {
+  const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission  WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY qap_submission.created_at DESC LIMIT 1`;
+
+  const result = await query({
+    query: GET_LATEST_QA_query,
+    values: [reference_no, purchasing_doc_no],
+  });
+
+  console.log(result);
+
+  return result;
+};
 
 module.exports = {
   submitQAP,
