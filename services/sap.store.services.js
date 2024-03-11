@@ -32,11 +32,11 @@ const gateEntryHeaderPayload = async (obj) => {
 };
 
 const gateEntryDataPayload = async (payload) => {
-  if (!payload || !Array.isArray(payload) || !obj.length) {
+  if (!payload || !Array.isArray(payload) || !payload.length) {
     throw new Error("Please send valid payload");
   }
-  const pl = obj.map((obj) => ({
-    C_PKEY: `${obj.ENTRY_NO}-${obj.EBELN}-${EBELP}-${obj.W_YEAR}`,
+  const pl = payload.map((obj) => ({
+    C_PKEY: `${obj.ENTRY_NO}-${obj.EBELN}-${obj.EBELP}-${obj.W_YEAR}`,
     ENTRY_NO: obj.ENTRY_NO,
     EBELN: obj.EBELN,
     EBELP: obj.EBELP,
@@ -83,7 +83,7 @@ const gateEntryDataPayload = async (payload) => {
     UNUSER: obj.UNUSER || null,
     ZTCODE: obj.ZTCODE || null,
     UTYPE: obj.UTYPE || null,
-    MIGOSTSER: obj.MIGOSTSER || null,
+    MIGOSTAT: obj.MIGOSTAT || null,
     GUTYPE: obj.GUTYPE || null,
     HOLDID: obj.HOLDID || null,
     PRCH_QTY: obj.PRCH_QTY || null,
