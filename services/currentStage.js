@@ -24,21 +24,21 @@ const currentStageHandler = async (id) => {
     if (res[0].count > 0) {
       let r = "";
       if (item === "sdbg") {
-        r = "SDBG has been submitted";
+        r = "SDBG";
       } else if (item === "drawing") {
-        r = "Drawing has been submitted";
+        r = "Drawing";
       } else if (item === "qap_submission") {
-        r = "QAP has been submitted";
+        r = "QAP";
       } else if (item === "ilms") {
-        r = "ILMS has been submitted";
+        r = "ILMS";
       } else if (item === "inspection_call_letter") {
-        r = "Inspection call letter has been submitted";
+        r = "Inspection call letter";
       } else if (item === "shipping_documents") {
-        r = "Shipping documents has been submitted";
+        r = "Shipping documents";
       } else if (item === "icgrn") {
-        r = "ICGRN has been submitted";
+        r = "ICGRN";
       } else if (item === "wdc") {
-        r = "WDC has been submitted";
+        r = "WDC";
       } else {
         r = item;
       }
