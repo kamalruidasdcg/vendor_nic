@@ -1,8 +1,8 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_GRSE_HR } = require("../../lib/constant");
-const { HR } = require("../../lib/tableName");
+const { INSERT, USER_TYPE_VENDOR } = require("../../lib/constant");
+const { VENDOR_ACTIVITIES } = require("../../lib/tableName");
 const { SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -12,9 +12,9 @@ const { getFilteredData, updatTableData, insertTableData } = require("../genralC
 
 
 
-const hrComplianceUpload = async (req, res) => {
+const vendorActivities = async (req, res) => {
 
-  // return  resSend(res, true, 200, "file hrupleeoaded!", `req`, null);
+ // return  resSend(res, true, 200, "file vendor acc!", `req`, null);
     try {
 
         // const lastParam = req.path.split("/").pop();
@@ -30,13 +30,12 @@ const hrComplianceUpload = async (req, res) => {
         }
         const tokenData = { ...req.tokenData };
 
-        const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
 
         const payload = {
             ...req.body,
             created_at: getEpochTime(),
             created_by_id: tokenData.vendor_code,
-            updated_by: "GRSE HR",
+            updated_by: "VENDOR",
             ...fileData,
         };
         console.log("payload", payload);
@@ -48,23 +47,23 @@ const hrComplianceUpload = async (req, res) => {
 
         }
 
-        if(tokenData.department_id != USER_TYPE_GRSE_HR) {
-            return resSend(res, false, 200, "Only HR can upload!", null, null);
+        if(tokenData.department_id != USER_TYPE_VENDOR) {
+            return resSend(res, false, 200, "Only VENDOR can upload!", null, null);
         }
 
         let insertObj = payload; //inspectionCallLetterPayload(payload);
 
         //console.log("insertObj", insertObj);
-        const { q, val } = generateQuery(INSERT, HR, insertObj);
+        const { q, val } = generateQuery(INSERT, VENDOR_ACTIVITIES, insertObj);
         const response = await query({ query: q, values: val });
 
         if (response.affectedRows) {
 
             // await handleEmail();
 
-            resSend(res, true, 200, "HR Compliance Uploaded successfully !", null, null);
+           return  resSend(res, true, 200, "vendor Activities Uploaded successfully !", null, null);
         } else {
-            resSend(res, false, 400, "No data inserted", response, null);
+          return  resSend(res, false, 400, "No data inserted", response, null);
         }
 
 
@@ -80,7 +79,7 @@ const hrComplianceUpload = async (req, res) => {
     }
 }
 
-const complianceUploadedList = async (req, res) => {
+const list = async (req, res) => {
 
     try {
 
@@ -91,25 +90,20 @@ const complianceUploadedList = async (req, res) => {
 
         const get_query =
             `SELECT *
-            FROM   ${HR_DEPT} 
+            FROM   ${VENDOR_ACTIVITIES} 
             WHERE  ( 1 = 1
                      AND purchasing_doc_no = ? ) ORDER BY created_at DESC`;
         const result = await query({ query: get_query, values: [req.query.poNo] })
 
-        resSend(res, true, 200, "HR Compliance Uploaded List fetched", result, "");
+       return resSend(res, true, 200, "VENDOR ACTIVITIES List fetched", result, "");
 
     } catch (err) {
         console.log("data not fetched", err);
-        resSend(res, false, 500, "Internal server error", null, "");
+        return resSend(res, false, 500, "Internal server error", null, "");
     }
-   // return resSend(res, true, 200, "oded!", `req.hrquery.dd`, null);
+    
+ // return resSend(res, true, 200, "oded!", `vendor acc`, null);
 
-}
-
-const getIclData = async (purchasing_doc_no, drawingStatus) => {
-    const isIclcknowledge = `SELECT purchasing_doc_no FROM ${INSPECTIONCALLLETTER} WHERE purchasing_doc_no = ? AND status = ?`;
-    const acknowledgeResult = await query({ query: isIclcknowledge, values: [purchasing_doc_no, drawingStatus] });
-    return acknowledgeResult;
 }
 
 
@@ -117,4 +111,4 @@ async function handleEmail() {
     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
 }
 
-module.exports = { hrComplianceUpload, complianceUploadedList }
+module.exports = { vendorActivities, list }
