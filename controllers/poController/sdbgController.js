@@ -50,7 +50,6 @@ const { Console } = require("console");
 
 // add new post
 const submitSDBG = async (req, res) => {
-  // return resSend(res, false, 200, "No data inserted", req.body, null);
   try {
     // Handle Image Upload
     let fileData = {};
@@ -118,7 +117,7 @@ const submitSDBG = async (req, res) => {
         if (GET_LATEST_SDBG[0].status == APPROVED) {
           return resSend(
             res,
-            true,
+            false,
             200,
             `The SDBG is already ${APPROVED}.`,
             null,
@@ -416,6 +415,14 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         status: obj.status,
         created_at: getEpochTime(),
         created_by: tokenData.vendor_code,
+        
+        extension_date1: obj.extension_date1 ? obj.extension_date1 : 0,
+        extension_date2: obj.extension_date2 ? obj.extension_date2 : 0,
+        extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
+        extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
+        release_date: obj.release_date ? obj.release_date : 0,
+        demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : 0,
+        entension_letter_date: obj.entension_letter_date ? obj.entension_letter_date : 0,
       };
 
       //   console.log("insertPayload", insertPayload);
@@ -431,6 +438,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       //     dbResult[0].po_count > 0
       //       ? generateQuery(UPDATE, SDBG_ENTRY, insertPayload, whereCondition)
       //       : generateQuery(INSERT, SDBG_ENTRY, insertPayload);
+      console.log(insertPayload);
       let { q, val } = generateQuery(INSERT, SDBG_ENTRY, insertPayload);
 
       let sdbgEntryQuery = await query({ query: q, values: val });
@@ -493,15 +501,11 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 const sdbgUpdateByFinance = async (req, res) => {
   const tokenData = { ...req.tokenData };
   const { ...obj } = req.body;
-  // console.log(tokenData);
-  // return;
-  // resSend(res, true, 200, "SDBG assign to staff successfully!", tokenData, null);
+  
   try {
     if (
       !obj.purchasing_doc_no ||
       obj.purchasing_doc_no == "" ||
-      !obj.reference_no ||
-      obj.reference_no == "" ||
       !obj.remarks ||
       obj.remarks == "" ||
       !obj.status ||
@@ -509,7 +513,7 @@ const sdbgUpdateByFinance = async (req, res) => {
     ) {
       return resSend(
         res,
-        true,
+        false,
         200,
         "please send a valid payload!",
         null,
@@ -521,9 +525,8 @@ const sdbgUpdateByFinance = async (req, res) => {
       return resSend(res, true, 200, "please login as finance!", null, null);
     }
 
-    const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(
+    const GET_LATEST_SDBG = await get_latest_sdbg(
       obj.purchasing_doc_no,
-      obj.reference_no
     );
 
     if (
@@ -557,9 +560,7 @@ const sdbgUpdateByFinance = async (req, res) => {
       );
     }
 
-    //         console.log(tokenData.internal_role_id);
-    //         console.log(GET_LATEST_SDBG[0].assigned_to);
-    // return;
+
     const check_it_forward_to_finance = `SELECT COUNT(reference_no) AS ref_no FROM ${SDBG} WHERE reference_no = ? AND purchasing_doc_no = ? AND status = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
     const result = await query({
