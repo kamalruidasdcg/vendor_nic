@@ -1,5 +1,5 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS, QAVE } = require('../../lib/tableName');
+const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS, QAVE_TABLE } = require('../../lib/tableName');
 const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
@@ -20,7 +20,7 @@ const qals = async (req, res) => {
         try {
 
             console.log("req.body", req.body);
-            const { QAVE_LINE_ITEMS, ...payload } = tempPayload;
+            const { QAVE, ...payload } = tempPayload;
 
             if (!payload || !payload.PRUEFLOS) {
                 return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
@@ -30,9 +30,9 @@ const qals = async (req, res) => {
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, "PRUEFLOS");
             const response = await promiseConnection.execute(qalsInsertQuery);
 
-            if (QAVE_LINE_ITEMS && Array.isArray(QAVE_LINE_ITEMS) && QAVE_LINE_ITEMS?.length) {
-                const qavePayload = await qavePayloadFn(QAVE_LINE_ITEMS);
-                const qaveInsertQuery = await generateQueryForMultipleData(qavePayload, QAVE, "c_pkey");
+            if (QAVE &&  typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
+                const qavePayload = await qavePayloadFn(QAVE);
+                const qaveInsertQuery = await generateQueryForMultipleData(qavePayload, QAVE_TABLE, "c_pkey");
                 const resp = await promiseConnection.execute(qaveInsertQuery);
             }
 

@@ -14,5 +14,8 @@ router.post("/advise", [dynamicallyUpload.single("file")], (req, res) => {
 router.post("/ztfi_bil_deface", [], (req, res) => {
     paymentController.ztfi_bil_deface(req, res);
 });
+router.post("/ztfi_bil_deface_report", [], (req, res) => {
+    paymentController.ztfi_bil_deface_report(req, res);
+});
 
 module.exports = router;

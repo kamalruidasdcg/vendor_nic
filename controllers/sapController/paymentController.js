@@ -149,4 +149,74 @@ const ztfi_bil_deface = async (req, res) => {
         responseSend(res, "0", 500, "Internal server errorR", err, null);
     }
 }
-module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface }
+const ztfi_bil_deface_report = async (req, res) => {
+
+    try {
+        if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+        }
+
+        const payload = req.body;
+        console.log('payload zdeface', payload);
+        
+        let zdefaceInsertQuery =
+            `SELECT 
+            deface.zregnum         AS btn,
+            deface.zregdate                AS btnDate,
+            deface.zpono                   AS purchesing_doc_no,
+            deface.zvendor                 AS vendor_code,
+            deface.zbscval_m_s             AS matValueText,
+            deface.zntsupp_s               AS matValue,
+            deface.znetvalue_s             AS netValue,
+            deface.zcst_vat_txt            AS taxesAndDutiesText,
+            deface.zcst_vat_s              AS taxesAndDutiesValue,
+            deface.zadd_othrchrg_txt       AS totalValWithTaxDutyText,
+            deface.zadd_othrchrg_s         AS totalValWithTaxDutyValue,
+            deface.ztotalb_s               AS totalValWithTaxDutyTextValue,
+            deface.zles_retntn_txt         AS pbg,
+            deface.zles_retntn_s           AS bpgValue,
+            deface.zles_sd_txt             AS sdText,
+            deface.zles_sd_s               AS sdValue,
+            deface.zles_othr_txt           AS otherText,
+            deface.zles_othr_s             AS otherValue,
+            deface.zles_gross_ret          AS totalRetentions,
+            deface.zles_inctax_txt         AS incomeTexTDSText,
+            deface.zles_inctax_s           AS incomeTexTDSValue,
+            deface.zles_wrkcontax_txt      AS gstTdsText,
+            deface.zles_wrkcontax_s        AS gstTdsValue,
+            deface.zles_cstofcon_paint_txt AS costOfConPaintText,
+            deface.zles_cstofcon_paint_s   AS costOfConPaintValue,
+            deface.zles_ld_txt             AS ldText,
+            deface.zles_ld_s               AS ldValue,
+            deface.zles_penalty_txt        AS penaltyText,
+            deface.zles_penalty_s          AS penaltyValue,
+            deface.zles_intsd_txt          AS interestChargeText,
+            deface.zles_intsd_s            AS interestChargeValue,
+            deface.zles_othrded_txt        AS otherDeductionText,
+            deface.zles_othrded_s          AS otherDeductionValue,
+            deface.zles_gross_ded          AS totalDeduction,
+            deface.znet_pymnt1_s           AS netPayment
+        FROM   
+            ztfi_bil_deface AS deface 
+        WHERE  1 = 1`;
+
+         const val = []
+
+         if (payload.ZREGNUM) {
+            zdefaceInsertQuery = zdefaceInsertQuery.concat( " AND deface.ZREGNUM = ?");
+            val.push(payload.ZREGNUM)
+        }
+
+        const response = await query({ query: zdefaceInsertQuery, values: val });
+        console.log("response", response);
+        if (response) {
+            responseSend(res, "S", 200, "Data inserted successfully", response, null);
+
+        }
+        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+    } catch (err) {
+        console.log("Error", err);
+        responseSend(res, "0", 500, "Internal server errorR", err, null);
+    }
+}
+module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface, ztfi_bil_deface_report }

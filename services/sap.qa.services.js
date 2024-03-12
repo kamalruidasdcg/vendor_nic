@@ -256,11 +256,12 @@ const qalsPayloadArray = async (payload) => {
   }));
   return pl;
 };
-const qavePayloadFn = async (payload) => {
-  if (!payload || !Array.isArray(payload) || !payload.length) {
-    throw new Error("Please send valid payload");
-  }
-  const pl = payload.map((obj) => ({
+const qavePayloadFn = async (obj) => {
+  // if (!payload || !Array.isArray(payload) || !payload.length) {
+  //   throw new Error("Please send valid payload");
+  // }
+  // const pl = payload.map((obj) => (
+    const pl = {
     c_pkey: `${obj.PRUEFLOS}-${obj.KZART}-${obj.ZAEHLER}`,
     prueflos: obj.prueflos || obj.PRUEFLOS || null,
     kzart: obj.kzart || obj.KZART || null,
@@ -278,15 +279,16 @@ const qavePayloadFn = async (payload) => {
     qkennzahl: obj.qkennzahl || obj.QKENNZAHL || null,
     ltextkz: obj.ltextkz || obj.LTEXTKZ || null,
     vname: obj.vname || obj.VNAME || null,
-    vdatum: obj.vdatum || obj.VDATUM || null,
-    vezeiterf: obj.vezeiterf || obj.VEZEITERF || null,
+    vdatum: formatDate(obj.vdatum) || formatDate(obj.VDATUM) || null,
+    vezeiterf: formatTime(obj.vezeiterf) || formatTime(obj.VEZEITERF) || null,
     vaename: obj.vaename || obj.VAENAME || null,
-    vaedatum: obj.vaedatum || obj.VAEDATUM || null,
-    vezeitaen: obj.vezeitaen || obj.VEZEITAEN || null,
+    vaedatum: formatDate(obj.vaedatum) || formatDate(obj.VAEDATUM) || null,
+    vezeitaen: formatTime(obj.vezeitaen) || formatTime(obj.VEZEITAEN) || null,
     stafo: obj.stafo || obj.STAFO || null,
     teillos: obj.teillos || obj.TEILLOS || null,
     vorglfnr: obj.vorglfnr || obj.VORGLFNR || null,
-  }));
+  }
+  // ));
   return pl;
 };
 
