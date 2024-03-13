@@ -134,6 +134,7 @@ const qapPayload = (payload, status) => {
 
 const wdcPayload = (payload) => {
   const payloadObj = {
+    reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
     vendor_code: payload.vendor_code,
     file_name: payload.fileName ? payload.fileName : null,
@@ -143,7 +144,6 @@ const wdcPayload = (payload) => {
     updated_by: payload.updated_by,
     created_at: payload.created_at ? payload.created_at : getEpochTime(),
     created_by_id: payload.created_by_id,
-    wdc_ref_no: payload.wdc_ref_no ? payload.wdc_ref_no : null,
     wdc_date: payload.wdc_date ? payload.wdc_date : null,
     po_line_iten_no: payload.po_line_iten_no ? payload.po_line_iten_no : null,
     job_location: payload.job_location ? payload.job_location : null,
@@ -185,6 +185,23 @@ const shippingDocumentsPayload = (payload, status) => {
   return payloadObj;
 };
 const inspectionCallLetterPayload = (payload) => {
+  const payloadObj = {
+    purchasing_doc_no: payload.purchasing_doc_no,
+    file_name: payload.fileName ? payload.fileName : null,
+    file_path: payload.filePath ? payload.filePath : null,
+    file_type_id: payload.file_type_id,
+    file_type_name: payload.file_type_name,
+    remarks: payload.remarks ? payload.remarks : null,
+    updated_by: payload.updated_by,
+    vendor_code: payload.vendor_code ? payload.vendor_code : null,
+    created_at: payload.created_at,
+    created_by_id: payload.created_by_id,
+  };
+
+  return payloadObj;
+};
+
+const inspectionReleaseNotePayload = (payload) => {
   const payloadObj = {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
@@ -351,16 +368,17 @@ const get_latest_activity = async (
   reference_no
 ) => {
   try {
-    const ilms_query = `SELECT file_name,file_path,vendor_code,created_at,status FROM ${table_name} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY created_at DESC LIMIT 1`;
+    const get_query = `SELECT * FROM ${table_name} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY created_at DESC LIMIT 1`;
     const result = await query({
-      query: ilms_query,
+      query: get_query,
       values: [reference_no, purchasing_doc_no],
     });
     //console.log("__get_latest_activity__");
-    console.log(result[0]);
-    return result[0];
-  } catch (error) {
-    console.log("error into get_latest_activity function :"`${error}`);
+   // console.log(result);
+   // console.log("__get_latest_activity_22_");
+      return result[0];
+    } catch (error) {
+      console.log("error into get_latest_activity function :"`${error}`);
   }
 };
 
@@ -374,6 +392,7 @@ module.exports = {
   shippingDocumentsPayload,
   poDataModify,
   inspectionCallLetterPayload,
+  inspectionReleaseNotePayload,
   insertActualSubmission,
   setActualSubmissionDate,
   create_reference_no,

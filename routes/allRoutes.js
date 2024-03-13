@@ -34,6 +34,8 @@ const ilmsRoutes = require("./ilmsRoutes");
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
 const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
+const inspectionReleaseNoteRoutes = require("./inspectionReleaseNoteRoutes");
+
 const hrRoutes = require("./hrRoutes");
 const vendorActivitiesRoutes = require("./vendorActivitiesRoutes");
 
@@ -118,6 +120,8 @@ router.use(poPrefix + "/ilms", ilmsRoutes);
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
+router.use(poPrefix + "/inspectionReleaseNote", inspectionReleaseNoteRoutes);
+
 router.use(poPrefix + "/hr", hrRoutes);
 router.use(poPrefix + "/vendor", vendorActivitiesRoutes);
 
