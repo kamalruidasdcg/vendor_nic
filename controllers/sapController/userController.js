@@ -128,7 +128,7 @@ const reservationList = async (req, res) => {
 
         if (req.body.RSNUM) {
             q = q.concat(" AND rkpf.RSNUM = ?");
-            val.push(req.body.MBLNR);
+            val.push(req.body.RSNUM);
         }
 
 

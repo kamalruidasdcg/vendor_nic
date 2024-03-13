@@ -10,7 +10,7 @@ router.post("/reservation", [], (req, res) => {
 //     controller.reservationList(req, res);
 // });
 
-router.get("/reservation", [basicAuthVerification], (req, res) => {
+router.post("/reservationReport", [], (req, res) => {
     controller.reservationList(req, res);
 });
 
