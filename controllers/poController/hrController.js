@@ -1,9 +1,9 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
-const { INSPECTIONCALLLETTER } = require("../../lib/tableName");
-const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
+const { INSERT, USER_TYPE_GRSE_HR } = require("../../lib/constant");
+const { HR } = require("../../lib/tableName");
+const { SUBMITTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { inspectionCallLetterPayload } = require("../../services/po.services");
@@ -11,20 +11,21 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 
 
-const inspectionCallLetter = async (req, res) => {
 
-    // resSend(res, true, 200, "file upleeoaded!", req.body, null);
+const hrComplianceUpload = async (req, res) => {
+
+  // return  resSend(res, true, 200, "file hrupleeoaded!", `req`, null);
     try {
- 
+
         // const lastParam = req.path.split("/").pop();
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
             fileData = {
-                fileName: req.file.filename,
-                filePath: req.file.path,
-                fileType: req.file.mimetype,
-                fileSize: req.file.size,
+                file_name: req.file.filename,
+                file_path: req.file.path,
+                // fileType: req.file.mimetype,
+                // fileSize: req.file.size,
             };
         }
         const tokenData = { ...req.tokenData };
@@ -33,14 +34,13 @@ const inspectionCallLetter = async (req, res) => {
 
         const payload = {
             ...req.body,
-            vendor_code: tokenData.vendor_code,
             created_at: getEpochTime(),
             created_by_id: tokenData.vendor_code,
-            updated_by: by,
+            updated_by: "GRSE HR",
             ...fileData,
         };
         console.log("payload", payload);
-        if (!payload.purchasing_doc_no) {
+        if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
 
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
@@ -48,28 +48,21 @@ const inspectionCallLetter = async (req, res) => {
 
         }
 
+        if(tokenData.department_id != USER_TYPE_GRSE_HR) {
+            return resSend(res, false, 200, "Only HR can upload!", null, null);
+        }
 
-        // if (payload.status === PENDING) {
-        //     insertObj = inspectionCallLetterPayload(payload, PENDING);
-        // } else if (payload.status === RE_SUBMITTED) {
-        //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
-        // } else if (payload.status === APPROVED) {
-        //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
-        // }
-        // insertObj = inspectionCallLetterPayload(payload, PENDING);
+        let insertObj = payload; //inspectionCallLetterPayload(payload);
 
-
-        let insertObj = inspectionCallLetterPayload(payload);
-
-        console.log("insertObj", insertObj);
-        const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
+        //console.log("insertObj", insertObj);
+        const { q, val } = generateQuery(INSERT, HR, insertObj);
         const response = await query({ query: q, values: val });
 
         if (response.affectedRows) {
 
             // await handleEmail();
 
-            resSend(res, true, 200, "Ispection call letter inserted successfully !", null, null);
+            resSend(res, true, 200, "HR Compliance Uploaded successfully !", null, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
@@ -87,7 +80,7 @@ const inspectionCallLetter = async (req, res) => {
     }
 }
 
-const List = async (req, res) => {
+const complianceUploadedList = async (req, res) => {
 
     try {
 
@@ -96,20 +89,20 @@ const List = async (req, res) => {
             return resSend(res, false, 400, "Please send poNo", null, "");
         }
 
-        const insp_call_query =
-            `SELECT call_ltr.*
-            FROM   inspection_call_letter AS call_ltr
+        const get_query =
+            `SELECT *
+            FROM   ${HR_DEPT} 
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? )`;
-        const result = await query({ query: insp_call_query, values: [req.query.poNo] })
+                     AND purchasing_doc_no = ? ) ORDER BY created_at DESC`;
+        const result = await query({ query: get_query, values: [req.query.poNo] })
 
-        resSend(res, true, 200, "Inspection call letter fetched", result, "");
+        resSend(res, true, 200, "HR Compliance Uploaded List fetched", result, "");
 
     } catch (err) {
         console.log("data not fetched", err);
         resSend(res, false, 500, "Internal server error", null, "");
     }
-    // resSend(res, true, 200, "oded!", req.query.dd, null);
+   // return resSend(res, true, 200, "oded!", `req.hrquery.dd`, null);
 
 }
 
@@ -124,4 +117,4 @@ async function handleEmail() {
     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
 }
 
-module.exports = { inspectionCallLetter, List }
+module.exports = { hrComplianceUpload, complianceUploadedList }

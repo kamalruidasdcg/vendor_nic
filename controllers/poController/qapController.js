@@ -41,7 +41,6 @@ const { deptLogEntry } = require("../../log/deptActivities");
 const submitQAP = async (req, res) => {
   try {
     const tokenData = { ...req.tokenData };
-    console.log("tokenData", tokenData);
     let fileData = {};
     if (req.file) {
       fileData = {
@@ -81,10 +80,8 @@ const submitQAP = async (req, res) => {
     // Check if already accepted/rejected/approved and if GRSE
     if (tokenData?.user_type !== 1) {
       const GET_LATEST_QA = await get_latest_QA_with_reference(
-        payload.purchasing_doc_no,
-        payload.reference_no
+        payload.purchasing_doc_no
       );
-
       if (
         GET_LATEST_QA[0].status == APPROVED &&
         GET_LATEST_QA[0].status == REJECTED
@@ -121,6 +118,7 @@ const submitQAP = async (req, res) => {
       tokenData.department_id &&
       tokenData.department_id === USER_TYPE_GRSE_QAP
     ) {
+
       ///////// CHECK ROLE IS ASSIGNER /////////////////
       if (activity_type === ASSIGNED) {
         if (tokenData.internal_role_id === ASSIGNER) {
@@ -213,13 +211,11 @@ const submitQAP = async (req, res) => {
         const details = await getNameAndEmail(
           qapDetails.data.vendor_code,
           payload.assigned_from,
-          payload.assigned_to,
-          payload.is_assign
+          payload.assigned_to
         );
         if (details.success) {
           payload = { ...payload, ...details.data };
         }
-        console.log(payload);
       } else {
         payload.vendor_code = qapDetails.data.vendor_code;
         payload.assigned_to = qapDetails.data.assigned_to;
@@ -942,14 +938,13 @@ async function deleteQapSave(req, res) {
 }
 
 const get_latest_QA_with_reference = async (
-  purchasing_doc_no,
-  reference_no
+  purchasing_doc_no
 ) => {
-  const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission  WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY qap_submission.created_at DESC LIMIT 1`;
+  const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission  WHERE purchasing_doc_no = ? ORDER BY qap_submission.created_at DESC LIMIT 1`;
 
   const result = await query({
     query: GET_LATEST_QA_query,
-    values: [reference_no, purchasing_doc_no],
+    values: [purchasing_doc_no],
   });
 
   console.log(result);

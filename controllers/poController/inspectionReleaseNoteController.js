@@ -2,20 +2,20 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
-const { INSPECTIONCALLLETTER } = require("../../lib/tableName");
+const { INSPECTIONRELEASENOTE } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
-const { inspectionCallLetterPayload } = require("../../services/po.services");
+const { inspectionReleaseNotePayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 
 
-const inspectionCallLetter = async (req, res) => {
+const inspectionReleaseNote = async (req, res) => {
 
     // resSend(res, true, 200, "file upleeoaded!", req.body, null);
     try {
- 
+
         // const lastParam = req.path.split("/").pop();
         // Handle Image Upload
         let fileData = {};
@@ -59,17 +59,18 @@ const inspectionCallLetter = async (req, res) => {
         // insertObj = inspectionCallLetterPayload(payload, PENDING);
 
 
-        let insertObj = inspectionCallLetterPayload(payload);
+        let insertObj = inspectionReleaseNotePayload(payload);
+Console.LOG();
 
         console.log("insertObj", insertObj);
-        const { q, val } = generateQuery(INSERT, INSPECTIONCALLLETTER, insertObj);
+        const { q, val } = generateQuery(INSERT, INSPECTIONRELEASENOTE, insertObj);
         const response = await query({ query: q, values: val });
 
         if (response.affectedRows) {
 
             // await handleEmail();
 
-            resSend(res, true, 200, "Ispection call letter inserted successfully !", null, null);
+            resSend(res, true, 200, "Ispection Release Note inserted successfully !", null, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
@@ -87,7 +88,7 @@ const inspectionCallLetter = async (req, res) => {
     }
 }
 
-const List = async (req, res) => {
+const list = async (req, res) => {
 
     try {
 
@@ -97,13 +98,13 @@ const List = async (req, res) => {
         }
 
         const insp_call_query =
-            `SELECT call_ltr.*
-            FROM   inspection_call_letter AS call_ltr
+            `SELECT *
+            FROM   ${INSPECTIONRELEASENOTE}
             WHERE  ( 1 = 1
                      AND purchasing_doc_no = ? )`;
         const result = await query({ query: insp_call_query, values: [req.query.poNo] })
 
-        resSend(res, true, 200, "Inspection call letter fetched", result, "");
+        resSend(res, true, 200, "Inspection Release Note fetched", result, "");
 
     } catch (err) {
         console.log("data not fetched", err);
@@ -124,4 +125,4 @@ async function handleEmail() {
     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
 }
 
-module.exports = { inspectionCallLetter, List }
+module.exports = { inspectionReleaseNote, list }
