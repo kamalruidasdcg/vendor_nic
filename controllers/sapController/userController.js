@@ -82,10 +82,6 @@ const reservationList = async (req, res) => {
 
     try {
 
-        // if (!req.body) {
-        //     return resSend(res, false, 400, "Please send body", null, "");
-        // }
-
         console.log(req.body);
 
         let q =
@@ -107,6 +103,7 @@ const reservationList = async (req, res) => {
         resb.RSSTA as reservationStatus,
         resb.KZEAR as reservationFinalIssue,
         resb.MATNR as materialNubmer,
+        makt.MAKTX as materialDescription,
         resb.WERKS as plant,
         resb.LGORT as storageLocation,
         resb.CHARG as batchNumber,
@@ -122,20 +119,18 @@ const reservationList = async (req, res) => {
 	FROM rkpf as rkpf 
 	LEFT JOIN resb AS resb
     	ON(rkpf.RSNUM = resb.RSNUM)
+    LEFT JOIN makt as makt
+        ON(makt.MATNR = resb.MATNR)
     WHERE 1 = 1 `;
 
         let val = []
 
         if (req.body.RSNUM) {
             q = q.concat(" AND rkpf.RSNUM = ?");
-            val.push(req.body.MBLNR);
+            val.push(req.body.RSNUM);
         }
 
-
         console.log("q", q, val);
-
-
-
         const result = await query({ query: q, values: val });
 
         let response = {

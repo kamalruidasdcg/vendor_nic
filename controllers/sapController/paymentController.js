@@ -152,10 +152,7 @@ const ztfi_bil_deface = async (req, res) => {
 const ztfi_bil_deface_report = async (req, res) => {
 
     try {
-        if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
-            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
-        }
-
+       
         const payload = req.body;
         console.log('payload zdeface', payload);
         
