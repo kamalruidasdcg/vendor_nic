@@ -68,17 +68,33 @@ const qalsReport = async (req, res) => {
             //     responseSend(res, "0", 400, "Please send a valid payload.", null, null);
             // }
 
-            
+
 
             let icgrnGetQuery =
-                ` SELECT * 
+                `SELECT 
+                qals.EBELN as purchasing_doc_no,
+                qals.EBELP as purchasing_doc_no_item,
+                qals.LIFNR as suppplier,
+                qals.MATNR as material,
+                qals.PAENDTERM as endDate,
+                qals.PAENDZEIT as endTime,
+                qals.PS_PSP_PNR as wbs_element,
+                qals.BWART as momentType,
+                qals.MENGENEINH as baseUnit,
+                qals.LMENGE01 as unrestrictedUseStock,
+                qals.LMENGEIST as supplyQuantity
                 FROM qals WHERE 1 = 1`;
             if (req.body.PRUEFLOS) {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND PRUEFLOS = ${req.body.PRUEFLOS}`)
             }
+            if (req.body.MBLNR) {
+                icgrnGetQuery = icgrnGetQuery.concat(` AND MBLNR = ${req.body.MBLNR}`)
+            }
+            if (req.body.EBELN) {
+                icgrnGetQuery = icgrnGetQuery.concat(` AND EBELN = ${req.body.EBELN}`)
+            }
             const response = await promiseConnection.execute(icgrnGetQuery);
-
-            // .execute(ekkoTableInsert["q"], ekkoTableInsert["val"])
+            
             responseSend(res, "S", 200, "Data fetch successfully", response, null);
         } catch (err) {
             console.log("data not inserted", err);
