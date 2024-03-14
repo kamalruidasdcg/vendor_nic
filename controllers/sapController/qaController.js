@@ -50,7 +50,7 @@ const qals = async (req, res) => {
 
 };
 
-const qalsList = async (req, res) => {
+const qalsReport = async (req, res) => {
     console.log("qalssss");
     try {
         const promiseConnection = await connection();
@@ -68,11 +68,7 @@ const qalsList = async (req, res) => {
             //     responseSend(res, "0", 400, "Please send a valid payload.", null, null);
             // }
 
-            // const payloadObj = await qalsPayload(payload);
-            // const { q, val } = generateQuery(INSERT, QALS, payloadObj);
-            // const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, "PRUEFLOS");
-
-            // const response = await promiseConnection.query(q, [val]);
+            
 
             let icgrnGetQuery =
                 ` SELECT * 
@@ -98,4 +94,4 @@ const qalsList = async (req, res) => {
 
 
 
-module.exports = { qals, qalsList }
+module.exports = { qals, qalsReport }

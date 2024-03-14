@@ -6,8 +6,8 @@ router.post("/qals", [], (req, res) => {
     controller.qals(req, res);
 });
 
-router.post("/icgrn/list", [], (req, res) => {
-    controller.qalsList(req, res);
+router.post("/icgrn/report", [], (req, res) => {
+    controller.qalsReport(req, res);
 });
 
 
