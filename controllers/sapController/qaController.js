@@ -94,8 +94,12 @@ const qalsReport = async (req, res) => {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND EBELN = ${req.body.EBELN}`)
             }
             const response = await promiseConnection.execute(icgrnGetQuery);
+
+            if(response && response.length) {
+
+                responseSend(res, "S", 200, "Data fetch successfully", response[0], null);
+            }
             
-            responseSend(res, "S", 200, "Data fetch successfully", response, null);
         } catch (err) {
             console.log("data not inserted", err);
             responseSend(res, "F", 500, "Internal server errorR", err, null);
