@@ -171,7 +171,7 @@ const ztfi_bil_deface_report = async (req, res) => {
             deface.zadd_othrchrg_txt       AS anyOtherPaybleText,
             deface.zadd_othrchrg_s         AS anyOtherPaybleValue,
             deface.ztotala_s               AS grossValue,
-            deface.zadd_othrcharg_1_s      AS adjustmentOfAdvance,
+            deface.ZADD_OTHRCHRG_1_S      AS adjustmentOfAdvance,
             deface.zles_retntn_txt         AS pbgText,
             deface.zles_retntn_s           AS pbgValue,
             deface.zles_sd_txt             AS sdText,
