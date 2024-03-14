@@ -1,82 +1,77 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_HR } = require("../../lib/constant");
-const { HRCOMPLIANCE } = require("../../lib/tableName");
-const {SUBMITTED, APPROVED, REJECTED,} = require("../../lib/status");
-  const fileDetails = require("../../lib/filePath");
+const { INSERT, USER_TYPE_GRSE_HR } = require("../../lib/constant");
+const { HR } = require("../../lib/tableName");
+const { SUBMITTED } = require("../../lib/status");
+const fileDetails = require("../../lib/filePath");
 const path = require('path');
-
-const { hrCompliancePayload, create_reference_no, get_latest_activity } = require("../../services/po.services");
-
+const { inspectionCallLetterPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
-const { Verify } = require("crypto");
-const { VENDOR } = require("../../lib/depertmentMaster");
 
 
-exports.hrComplianceUpload = async (req, res) => {
 
-    // return resSend(res, true, 200, "file wupleeoaded!", 'req.body', null);
+const hrComplianceUpload = async (req, res) => {
+
+  // return  resSend(res, true, 200, "file hrupleeoaded!", `req`, null);
     try {
 
-        const tokenData = { ...req.tokenData };
-        const { ...obj } = req.body;
-
-        if (!obj.purchasing_doc_no || !obj.status || !obj.remarks) {
-            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-            // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", res, null);
-        }
-
-        //  deper
-        if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_GRSE_HR) {
-            return resSend(res, true, 200, "you are not authorised!", res, null);
-        }
-        //console.log(obj);
-
+        // const lastParam = req.path.split("/").pop();
+        // Handle Image Upload
         let fileData = {};
         if (req.file) {
             fileData = {
-                fileName: req.file.filename,
-                filePath: req.file.path,
+                file_name: req.file.filename,
+                file_path: req.file.path,
+                // fileType: req.file.mimetype,
+                // fileSize: req.file.size,
             };
         }
-        //console.log(fileData);
-        let payload = { created_by_id: tokenData.vendor_code };
-      
-        if (tokenData.department_id == USER_TYPE_GRSE_HR) {
-            if (!obj.reference_no || obj.reference_no == '') {
-                return resSend(res, true, 200, "please send reference_no!", null, null);
-            }
-            let last_data = await get_latest_activity(HRCOMPLIANCE, obj.purchasing_doc_no, obj.reference_no);
-            delete last_data.id;
-            // console.log(last_data);
-            // return;
-            if(last_data.status == APPROVED || last_data.status == REJECTED) {
-                return resSend(res, false, 200, `this HR Compliance already ${last_data.status}!`, null, null);
-            }
-            payload = { ...last_data, ...fileData, ...obj, updated_by: "GRSE HR", created_by_id: tokenData.vendor_code, created_at: getEpochTime() };
-        } else {
-            console.log(payload);
+        const tokenData = { ...req.tokenData };
 
-            let reference_no = await create_reference_no("HR", tokenData.vendor_code);
-            // console.log(payload);
-            // return;
-            payload = {...fileData, ...obj, reference_no : reference_no, vendor_code:tokenData.vendor_code, updated_by: "VENDOR", created_by_id: tokenData.vendor_code, created_at: getEpochTime(),  };
+        const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
+
+        const payload = {
+            ...req.body,
+            created_at: getEpochTime(),
+            created_by_id: tokenData.vendor_code,
+            updated_by: "GRSE HR",
+            ...fileData,
+        };
+        console.log("payload", payload);
+        if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
+
+            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+            // const isDel = handleFileDeletion(directory, req.file.filename);
+            return resSend(res, false, 400, "Please send valid payload", null, null);
 
         }
-                   
-        const insertObj = hrCompliancePayload(payload);
 
-        const { q, val } = generateQuery(INSERT, HRCOMPLIANCE, insertObj);
+        if(tokenData.department_id != USER_TYPE_GRSE_HR) {
+            return resSend(res, false, 200, "Only HR can upload!", null, null);
+        }
+
+        let insertObj = payload; //inspectionCallLetterPayload(payload);
+
+        //console.log("insertObj", insertObj);
+        const { q, val } = generateQuery(INSERT, HR, insertObj);
         const response = await query({ query: q, values: val });
 
         if (response.affectedRows) {
-           return resSend(res, true, 200, `HR Compliance ${payload.status}!`, fileData, null);
+
+            // await handleEmail();
+
+            resSend(res, true, 200, "HR Compliance Uploaded successfully !", null, null);
         } else {
-            return resSend(res, false, 400, "No data inserted", response, null);
+            resSend(res, false, 400, "No data inserted", response, null);
         }
+
+
+        // }
+        // else {
+        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        // }
 
     } catch (error) {
         console.log("po add api", error)
@@ -85,15 +80,41 @@ exports.hrComplianceUpload = async (req, res) => {
     }
 }
 
-exports.complianceUploadedList = async (req, res) => {
+const complianceUploadedList = async (req, res) => {
 
-    req.query.$tableName = HRCOMPLIANCE;
-    req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
     try {
-        getFilteredData(req, res);
+
+
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send poNo", null, "");
+        }
+
+        const get_query =
+            `SELECT *
+            FROM   ${HR_DEPT} 
+            WHERE  ( 1 = 1
+                     AND purchasing_doc_no = ? ) ORDER BY created_at DESC`;
+        const result = await query({ query: get_query, values: [req.query.poNo] })
+
+        resSend(res, true, 200, "HR Compliance Uploaded List fetched", result, "");
+
     } catch (err) {
         console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, "");
     }
-    // resSend(res, true, 200, "oded!", req.query.dd, null);
+   // return resSend(res, true, 200, "oded!", `req.hrquery.dd`, null);
 
 }
+
+const getIclData = async (purchasing_doc_no, drawingStatus) => {
+    const isIclcknowledge = `SELECT purchasing_doc_no FROM ${INSPECTIONCALLLETTER} WHERE purchasing_doc_no = ? AND status = ?`;
+    const acknowledgeResult = await query({ query: isIclcknowledge, values: [purchasing_doc_no, drawingStatus] });
+    return acknowledgeResult;
+}
+
+
+async function handleEmail() {
+    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+}
+
+module.exports = { hrComplianceUpload, complianceUploadedList }
