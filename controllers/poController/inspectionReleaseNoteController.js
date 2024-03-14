@@ -60,7 +60,6 @@ const inspectionReleaseNote = async (req, res) => {
 
 
         let insertObj = inspectionReleaseNotePayload(payload);
-Console.LOG();
 
         console.log("insertObj", insertObj);
         const { q, val } = generateQuery(INSERT, INSPECTIONRELEASENOTE, insertObj);
