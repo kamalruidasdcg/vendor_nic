@@ -6,7 +6,7 @@ const { dynamicallyUpload } = require("../lib/fileUpload");
 const { veifyAccessToken, } = require("../services/jwt.services");
 
 
-router.post("/", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
+router.post("/submitIRN", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
     inspectionReleaseNoteController.inspectionReleaseNote(req, res);
 });
 

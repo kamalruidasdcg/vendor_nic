@@ -87,7 +87,7 @@ const sdbgPayload = (payload, status) => {
  * @returns Object
  */
 const drawingPayload = (payload, status) => {
-  console.log("((((((((((((((((");
+  //console.log("((((((((((((((((");
   const payloadObj = {
     reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
@@ -132,6 +132,23 @@ const qapPayload = (payload, status) => {
   return payloadObj;
 };
 
+const hrCompliancePayload = (payload) => {
+  const payloadObj = {
+    reference_no: payload.reference_no,
+    purchasing_doc_no: payload.purchasing_doc_no,
+    file_name: payload.fileName || null,
+    file_path: payload.filePath || null,
+    remarks: payload.remarks || null,
+    status: payload.status,
+    action_type: payload.action_type || null,
+    updated_by: payload.updated_by,
+    vendor_code: payload.vendor_code || null,
+    created_at: payload.created_at || getEpochTime(),
+    created_by_id: payload.created_by_id,
+  };
+
+  return payloadObj;
+};
 const wdcPayload = (payload) => {
   const payloadObj = {
     reference_no: payload.reference_no,
@@ -189,8 +206,7 @@ const inspectionCallLetterPayload = (payload) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
-    file_type_id: payload.file_type_id,
-    file_type_name: payload.file_type_name,
+    action_type: payload.action_type ? payload.action_type : null,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
@@ -206,8 +222,7 @@ const inspectionReleaseNotePayload = (payload) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
-    file_type_id: payload.file_type_id,
-    file_type_name: payload.file_type_name,
+    action_type: payload.action_type ? payload.action_type : null,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
@@ -397,4 +412,5 @@ module.exports = {
   setActualSubmissionDate,
   create_reference_no,
   get_latest_activity,
+  hrCompliancePayload,
 };
