@@ -91,9 +91,9 @@ const complianceUploadedList = async (req, res) => {
 
         const get_query =
             `SELECT *
-            FROM   ${HR_DEPT} 
+            FROM   ${HR} 
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? ) ORDER BY created_at DESC`;
+                     AND purchasing_doc_no = ? ) ORDER BY created_at ASC`;
         const result = await query({ query: get_query, values: [req.query.poNo] })
 
         resSend(res, true, 200, "HR Compliance Uploaded List fetched", result, "");
