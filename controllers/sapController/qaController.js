@@ -30,7 +30,7 @@ const qals = async (req, res) => {
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, "PRUEFLOS");
             const response = await promiseConnection.execute(qalsInsertQuery);
 
-            if (QAVE &&  typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
+            if (QAVE && typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
                 const qavePayload = await qavePayloadFn(QAVE);
                 const qaveInsertQuery = await generateQueryForMultipleData(qavePayload, QAVE_TABLE, "c_pkey");
                 const resp = await promiseConnection.execute(qaveInsertQuery);
@@ -74,16 +74,31 @@ const qalsReport = async (req, res) => {
                 `SELECT 
                 qals.EBELN as purchasing_doc_no,
                 qals.EBELP as purchasing_doc_no_item,
+                qals.MBLNR as docNo,
+                qals.BUDAT as docdate,
                 qals.LIFNR as suppplier,
+                vendor_table.LAND1 as vendorCountry,
+                vendor_table.NAME1 as vendorName,
+                vendor_table.ORT01 as vendorCity,
+                vendor_table.ORT02 as vendorDistrict,
+                vendor_table.PFACH as vendorPinCode,
+                qals.MATNR AS materialNumber,
+                qals.KTEXTMAT as materialDesc,
                 qals.MATNR as material,
                 qals.PAENDTERM as endDate,
                 qals.PAENDZEIT as endTime,
-                qals.PS_PSP_PNR as wbs_element,
+                qals.PS_PSP_PNR as wbsElement,
                 qals.BWART as momentType,
                 qals.MENGENEINH as baseUnit,
+                qals.LMENGE01 as acceptedQty,
+                qals.LMENGE07 as rejectedQty,
                 qals.LMENGE01 as unrestrictedUseStock,
-                qals.LMENGEIST as supplyQuantity
-                FROM qals WHERE 1 = 1`;
+                qals.LMENGEIST as supplyQuantity,
+                qals.LTEXTKZ as remarks
+                FROM qals as qals 
+                LEFT JOIN lfa1 as vendor_table
+                	ON( qals.LIFNR = vendor_table.LIFNR)
+                WHERE 1 = 1`;
             if (req.body.PRUEFLOS) {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND PRUEFLOS = ${req.body.PRUEFLOS}`)
             }
@@ -95,13 +110,31 @@ const qalsReport = async (req, res) => {
             }
             const response = await promiseConnection.execute(icgrnGetQuery);
 
-            if(response && response.length) {
+            if (response && response.length) {
 
-                responseSend(res, "S", 200, "Data fetch successfully", response[0], null);
+                const resp = response[0][0] || {};
+
+                const obj = {
+                    purchasing_doc_no: resp.purchasing_doc_no,
+                    purchasing_doc_no_item: resp.purchasing_doc_no_item,
+                    docNo: resp.docNo,
+                    docdate: resp.docdate,
+                    suppplier: resp.suppplier,
+                    vendorCountry: resp.vendorCountry,
+                    vendorName: resp.vendorName,
+                    vendorCity: resp.vendorCity,
+                    vendorDistrict: resp.vendorDistrict,
+                    vendorPinCode: resp.vendorPinCode,
+                    lineItems: response[0]
+
+                }
+                responseSend(res, "S", 200, "Data fetch successfully", obj, null);
             }
-            
+
         } catch (err) {
             console.log("data not inserted", err);
+
+
             responseSend(res, "F", 500, "Internal server errorR", err, null);
         } finally {
             await promiseConnection.end();
