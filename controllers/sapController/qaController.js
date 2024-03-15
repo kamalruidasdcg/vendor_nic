@@ -95,21 +95,24 @@ const qalsReport = async (req, res) => {
                 qals.LMENGE07 as rejectedQty,
                 qals.LMENGE01 as unrestrictedUseStock,
                 qals.LMENGEIST as supplyQuantity,
-                qals.LTEXTKZ as remarks
+                qals.LTEXTKZ as remarks,
+                qave.vcode as udCode
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)
                 LEFT JOIN ekko as ekko
                 	ON( qals.EBELN = ekko.EBELN)
+                LEFT JOIN qave as qave
+                	ON( qals.PRUEFLOS = qave.prueflos)
                 WHERE 1 = 1`;
             if (req.body.PRUEFLOS) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND PRUEFLOS = ${req.body.PRUEFLOS}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.PRUEFLOS}`)
             }
             if (req.body.MBLNR) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND MBLNR = ${req.body.MBLNR}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.MBLNR = ${req.body.MBLNR}`)
             }
             if (req.body.EBELN) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND EBELN = ${req.body.EBELN}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = ${req.body.EBELN}`)
             }
             const response = await promiseConnection.execute(icgrnGetQuery);
 
