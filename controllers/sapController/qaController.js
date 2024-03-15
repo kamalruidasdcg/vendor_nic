@@ -74,6 +74,7 @@ const qalsReport = async (req, res) => {
                 `SELECT 
                 qals.EBELN as purchasing_doc_no,
                 qals.EBELP as purchasing_doc_no_item,
+                ekko.AEDAT as purchasing_doc_date,
                 qals.MBLNR as docNo,
                 qals.BUDAT as docdate,
                 qals.LIFNR as suppplier,
@@ -98,6 +99,8 @@ const qalsReport = async (req, res) => {
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)
+                LEFT JOIN ekko as ekko
+                	ON( qals.EBELN = ekko.EBELN)
                 WHERE 1 = 1`;
             if (req.body.PRUEFLOS) {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND PRUEFLOS = ${req.body.PRUEFLOS}`)
@@ -117,6 +120,7 @@ const qalsReport = async (req, res) => {
                 const obj = {
                     purchasing_doc_no: resp.purchasing_doc_no,
                     purchasing_doc_no_item: resp.purchasing_doc_no_item,
+                    purchasing_doc_date: resp.purchasing_doc_date,
                     docNo: resp.docNo,
                     docdate: resp.docdate,
                     suppplier: resp.suppplier,
