@@ -115,9 +115,8 @@ async function submitToSapServer(data) {
         let payload = { ...data };
         const wdc_payload =
         {
-            "slno": "1",
             "ebeln": payload.purchasing_doc_no,
-            "ebelp": payload.purchasing_doc_no_item,
+            "ebelp": payload.po_line_iten_no,
             "wdc": payload.reference_no,
         }
 
