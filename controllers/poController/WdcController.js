@@ -25,15 +25,15 @@ exports.wdc = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const { ...obj } = req.body;
 
-        if (!obj.purchasing_doc_no || !obj.status || !obj.remarks) {
+        if (!obj.purchasing_doc_no || !obj.status) {
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", res, null);
+            return resSend(res, false, 200, "Please send valid payload", null, null);
         }
 
         //  deper
         if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
-            return resSend(res, true, 200, "you are not authorised!", res, null);
+            return resSend(res, false, 200, "You are not authorised!", null, null);
         }
         //console.log(obj);
 
@@ -48,17 +48,24 @@ exports.wdc = async (req, res) => {
         let payload = { created_by_id: tokenData.vendor_code };
       
         if (tokenData.department_id == USER_TYPE_PPNC_DEPARTMENT) {
-            if (!obj.reference_no || obj.reference_no == '') {
-                return resSend(res, true, 200, "please send reference_no!", res, null);
+            if (!obj || obj.reference_no == '') {
+                return resSend(res, false, 200, "please send reference_no!", null, null);
             }
             let last_data = await get_latest_activity(WDC, obj.purchasing_doc_no, obj.reference_no);
-            delete last_data.id;
-            // console.log(last_data);
-            // return;
-            if(last_data.status == APPROVED || last_data.status == REJECTED) {
-                return resSend(res, false, 200, `this WDC already ${last_data.status}!`, null, null);
+            if(last_data) {
+
+                delete last_data.id;
+                // console.log(last_data);
+                // return;
+                if(last_data.status == APPROVED || last_data.status == REJECTED) {
+                    return resSend(res, false, 200, `this WDC is already ${last_data.status}!`, null, null);
+                }
+                payload = { ...last_data, ...fileData, ...obj, updated_by: "GRSE", created_by_id: tokenData.vendor_code, created_at: getEpochTime() };
+
+            } else {
+                return resSend(res, false, 200, `No record found with this reference_no!`, fileData, null);
             }
-            payload = { ...last_data, ...fileData, ...obj, updated_by: "GRSE", created_by_id: tokenData.vendor_code, created_at: getEpochTime() };
+
         } else {
             console.log(payload);
 
@@ -81,7 +88,7 @@ exports.wdc = async (req, res) => {
         }
 
     } catch (error) {
-        console.log("po add api", error)
+        console.log("WDC api", error)
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
