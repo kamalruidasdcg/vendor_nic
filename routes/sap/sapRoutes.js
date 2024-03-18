@@ -7,6 +7,8 @@ const materialRoutes =  require("./materialRoutes");
 const wbsRoutes =  require("./wbsElementRoutes");
 const qaRoutes =  require("./qaRoutes");
 const masterDataRoutes =  require("./masterDataRoutes");
+const storeRoutes =  require("./storeRoutes");
+const userRoutes =  require("./userRoutes");
 
 /**
  * SAP API START 
@@ -22,7 +24,9 @@ router.use("/wbs", wbsRoutes);
 router.use("/test", sapTestRoutes);
 router.use("/material", materialRoutes);
 router.use("/mdata", masterDataRoutes);
+router.use("/store",storeRoutes );
 router.use("/qa", qaRoutes);
+router.use("/user", userRoutes);
 
 // router.post("/po", [], (req, res) => {
 //     dataInsert.insertPOData(req, res);

@@ -1,50 +1,135 @@
+const http = require('http');
+require("dotenv").config();
+
+/**
+ * makeHttpRequest function to call external api from node backend
+ * @param {String} url 
+ * @param {String} method 
+ * @param {JSON} postData 
+ * @returns Promise
+ */
+
+function makeHttpRequest(url, method = 'GET', postData = null) {
+  return new Promise((resolve, reject) => {
+    // Parse the URL
+    const urlParts = new URL(url);
+
+    // Define the options for the HTTP request
+    const Username = process.env.SAP_API_AUTH_USERNAME || "dcg1";
+    const Password = process.env.SAP_API_AUTH_PASSWORD || "data#100";
+    const credential = Username + ":" + Password;
+    const base64Credentials = Buffer.from(credential).toString('base64');
+    console.log(base64Credentials, "base64Credentials");
 
 
-const https = require('https');
+    const options = {
+      hostname: urlParts.hostname,
+      port: urlParts.port,
+      path: urlParts.pathname,
+      method: method.toUpperCase(),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + base64Credentials
+      },
+      'maxRedirects': 5
+    };
 
-const externalBackendURL = 'http://grsebld1dev:8000/sap/bc/zobps_out_api'; // Replace with your actual external backend URL
+    // Add postData to the request if provided
+    if (method.toUpperCase() === 'POST' && postData !== null) {
+      const postDataString = JSON.stringify(postData);
+      options.headers['Content-Length'] = Buffer.byteLength(postDataString);
+    }
 
-const payload = {
-    "ZBTNO": "varchar(11)",
-    "ERDAT": "date 8",
-    "ERZET": "time 6",
-    "ERNAM": "archar(12",
-    "LAEDA": "date 8",
-    "AENAM": "	varchar(12)",
-    "LIFNR": "varchar(10)",
-    "ZVBNO": "varchar(40)",
-    "EBELN": "varchar(10)",
-    "DPERNR1": "int(8)",
-    "ZRMK1": "varchar(140)",
+    // Make the HTTP request
+    const req = http.request(options, (res) => {
+      let data = '';
+
+      // A chunk of data has been received.
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      // The whole response has been received.
+      res.on('end', () => {
+        resolve(data);
+      });
+    });
+
+    // Handle errors
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    // If it's a POST request, write the postData to the request
+    if (method.toUpperCase() === 'POST' && postData !== null) {
+      req.write(JSON.stringify(postData));
+    }
+
+    // End the request
+    req.end();
+  });
 }
 
-const postData = JSON.stringify(dataToSend);
 
-const options = {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    // Add any additional headers if required by your external backend
-  },
-};
+module.exports = { makeHttpRequest }
 
-const req = https.request(externalBackendURL, options, (res) => {
-  let responseData = '';
 
-  res.on('data', (chunk) => {
-    responseData += chunk;
-  });
+// Example usage with async/await
+// async function fetchData() {
+//   try {
+//     const postUrl = "http://10.181.1.31:8010/sap/bc/zoBPS_WDC"
 
-  res.on('end', () => {
-    console.log('Data successfully sent to external backend:', responseData);
-    // Handle success or additional logic here
-  });
-});
+//     const wdc_payload =
+//     {
+//       "ebeln": "898991",
+//       "ebelp": 20,
+//       "slno": "1",
+//       "wdc": "d/wdc"
+//     }
 
-req.on('error', (error) => {
-  console.error('Error sending data to external backend:', error.message);
-  // Handle error or additional error logic here
-});
 
-req.write(postData);
-req.end();
+//     console.log("postUrl", postUrl);
+//     console.log("wdc_payload", wdc_payload);
+
+//     const postResponse = await makeHttpRequest(postUrl, 'POST', wdc_payload);
+//     console.log('POST Response from the server:', postResponse);
+//   } catch (error) {
+//     console.error('Error making the request:', error.message);
+//   }
+// }
+
+// // Call the async function
+// fetchData();
+
+
+
+// Example usage with async/await
+async function btnSaveToSap() {
+  try {
+    const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+
+    const btn_payload =
+    {
+      ZBTNO: "20240318501",
+      ERDAT: "20240318",
+      ERZET: "",
+      ERNAM: "600233",
+      LAEDA: "20240318",
+      AENAM: "NAME",
+      LIFNR: "50000437",
+      ZVBNO: "",
+      EBELN: "4000234569",
+      DPERNR1: "",
+      ZRMK1: "REMARKS",
+    }
+
+
+    console.log("postUrl", postUrl);
+    console.log("wdc_payload", btn_payload);
+
+    const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
+    console.log('POST Response from the server:', postResponse);
+  } catch (error) {
+    console.error('Error making the request:', error.message);
+  }
+}

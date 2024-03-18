@@ -8,14 +8,14 @@ const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { inspectionCallLetterPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
-const { getFilteredData, updatTableData, insertTableData } = require("../../controllers/genralControlles");
+const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 
 
 const inspectionCallLetter = async (req, res) => {
 
     // resSend(res, true, 200, "file upleeoaded!", req.body, null);
     try {
-
+ 
         // const lastParam = req.path.split("/").pop();
         // Handle Image Upload
         let fileData = {};

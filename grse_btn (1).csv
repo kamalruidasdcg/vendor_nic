@@ -1,0 +1,1787 @@
+"id","purchasing_doc_no","milestoneId","milestoneText","actualSubmissionDate","created_at","created_by_id"
+"1","7800000047","2","ACTUAL DRAWING SUBMISSION DATE","1708757077577","1708757092818","600400"
+"ADDRNUMBER","PERSNUMBER","DATE_FROM","CONSNUMBER","FLGDEFAULT","FLG_NOUSE","HOME_FLAG","SMTP_ADDR","SMTP_SRCH","DFT_RECEIV","R3_USER","ENCODE","TNEF","VALID_FROM","VALID_TO"
+"42033","50000437","2023-01-01","1",NULL,NULL,NULL,"kamal.ruidas@datacoresystems.co.in","mainak.dutta16@gmail",,,,,"2023-01-01","2030-01-01"
+"65373","50005041","2023-01-01","1","X",NULL,"X","mainak.dutta@datacoresystems.co.in","mainak.dutta","X",,,,"2023-01-01","2030-01-01"
+"42033","50007545","2023-01-01","2",NULL,NULL,NULL,"mrinmoy.ghosh102@gmail.com","mrinmoy.ghosh102@gma",,,,,"2023-01-01","2030-01-01"
+"id","event_name","status","email_to","email_subject","email_cc","email_bcc","email_body","email_send_on","created_by","created_on","modified_by","modified_on","attachemnt_path"
+"id","user_type","department_id","internal_role_id","username","password","name","vendor_code","datetime","last_login_time"
+"1","5","12","3","admin","admin@213","Mrinmoy Ghosh","600233","2023-09-12 10:25:51",NULL
+"2","1","1","1","vendor","1234","Vendor1","50007545","2023-10-12 15:55:23",NULL
+"3","1","0","0","vendor2","1234","Vendor2","50000435","2023-10-12 15:56:56",NULL
+"4","3","3","2","600231","1234","grse qap staff","600231","2023-10-12 15:57:39",NULL
+"5","4","3","1","600229","1234","grse qap assigner","600229","2023-10-12 15:58:16",NULL
+"6","6","13","4","super_admin","0000","Kamal Ruidas","600230","2023-09-12 10:25:51",NULL
+"7","2","3","2","600947","1234","grse qap staff","600947","2023-10-12 15:58:16",NULL
+"8","2","3","2","600948","1234","grse qap staff","600948","2023-10-12 15:58:16",NULL
+"9","2","3","2","600232","1234","grse qap staff","600232","2023-10-12 15:58:16",NULL
+"10","2","3","2","600233","1234","grse qap staff","600233","2023-10-12 15:58:16",NULL
+"11","2","3","2","600949","1234","grse qap staff","600949","2023-10-12 15:58:16",NULL
+"12","2","3","2","600951","1234","grse qap staff","600951","2023-10-12 15:58:16",NULL
+"13","2","3","2","600953","1234","grse qap staff","600953","2023-10-12 15:58:16",NULL
+"14","2","3","2","600950","1234","grse qap staff","600950","2023-10-12 15:58:16",NULL
+"15","2","3","2","600252","1234","grse qap staff","600252","2023-10-12 15:58:16",NULL
+"16","0","14",NULL,"PPC user","1234","ppc_user","600100","2024-01-15 14:08:08",NULL
+"18","0","15","1","grse_FINANCE_ASSIGNER","1234","grse_FINANCE_ASSIGNER","600200","2024-01-23 16:44:53",NULL
+"19","0","16","0","RIC","1234","grse_RIC","600300","2024-01-23 16:44:53",NULL
+"20","0","15","2","grse_FINANCE_STAFF","1234","grse_FINANCE_STAFF","600201","2024-01-23 16:44:53",NULL
+"21","0","17","1","Po dealing officer","1234","Po dealing officer","493834","2024-01-23 16:44:53",NULL
+"22","2","2","1","CDO(drawing officer)","1234","CDO(drawing officer)","600400","2024-01-23 16:44:53",NULL
+"23","0","15","2","grse_FINANCE_STAFF","1234","grse_FINANCE_STAFF","600202","2024-01-23 16:44:53",NULL
+"24","0","15","2","grse_FINANCE_STAFF","1234","grse_FINANCE_STAFF","600203","2024-01-23 16:44:53",NULL
+"id","po","vendor_id","invoice","bill_date","bill_submitted","remarks","file_name"
+"56","210000006","00000105","afsaf","2023-09-13 18:30:00","abhinit96@gmail.com","afdsvsadfsdgv","1694683104557-grsc.jpg"
+"57","123","00006007","fdsa","0000-00-00 00:00:00","fdsaf","Mrinmoy","1694494082388-user.jpg"
+"58","210000007","00006007","dfdsfdsf","2023-09-13 18:30:00","mrinmoyghosh102@gmail.com","fdsvsdvsdv","1694683519215-images.png"
+"59","210000006","00000105","sdfadsaf","2023-09-13 18:30:00","mrinmoyghosh102@gmail.com","dfcadsfvds","1694683529526-images.png"
+"60","123","00006007","fdsa","0000-00-00 00:00:00","fdsaf","Mrinmoy","1694494082388-user.jpg"
+"61","210000006","00000105","test","2023-09-13 18:30:00","mrinmoyghosh102@gmail.com","efwf","1694683577254-images.png"
+"62","123","00006007","fdsa","0000-00-00 00:00:00","fdsaf","Mrinmoy","1694494082388-user.jpg"
+"63","123","00006007","fdsa","0000-00-00 00:00:00","fdsaf","Mrinmoy","1694494082388-user.jpg"
+"64","210000006","00000105","INV001","2023-09-13 18:30:00","aabhinit96@gmail.com","TEST1","1694684134354-images.png"
+"65","210000006","00000105","INV0ICE2345","2023-09-13 18:30:00","aabhinit96@gmail.com","ABHINKIT","null"
+"66","210000006","00000105","ABHINI234678","2023-09-13 18:30:00","aabhinit96@gmail.com","RWST","null"
+"67","210000006","00000105","ABHINI234456789","2023-09-13 18:30:00","aabhinit96@gmail.com","swqdwqd","1694685873751-images.png"
+"68","210000006","00000105","cvcxf","2023-09-13 18:30:00","aabhinit96@gmail.com","vbxbxb","1694685879280-images.png"
+"69","210000006","00000105","ABHINI234zdfvds","2023-09-13 18:30:00","aabhinit96@gmail.com","fgttyyyy","1694686066056-images.png"
+"70","210000006","00000105","ABHINI234456789","2023-09-14 18:30:00","aabhinit96@gmail.com","test1test1test1test1","1694754979532-images.png"
+"71","210000006","00000105","INVOICE0909","2023-09-14 18:30:00","aabhinit96@gmail.com","WEDAR","1694758395582-grsc.jpg"
+"72","210000006","00000105","xxxxx","2023-09-14 18:30:00","aabhinit96@gmail.com","xfds","1694768578586-images.png"
+"73","123","undefined","fdsa","0000-00-00 00:00:00","fdsaf","Mrinmoy","undefined"
+"74","210000006","00000105","bk","2023-09-14 18:30:00","aabhinit96@gmail.com","fesrgsrgsdv","undefined"
+"75","210000006","00000105","sdasfasdf","2023-09-14 18:30:00","aabhinit96@gmail.com","fesdfsdfsf","undefined"
+"76","210000006","00000105","sdasfasdf","2023-09-14 18:30:00","aabhinit96@gmail.com","fesdfsdfsf","undefined"
+"77","210000006","00000105","abhinit123456","2023-09-14 18:30:00","aabhinit96@gmail.com","dfdvd abhinitrttttt","1694781797265-images.png"
+"78","210000006","00000105","abhinitanand","2023-09-14 18:30:00","aabhinit96@gmail.com","kolkata","1694781916351-images.png"
+"79","210000006","00000105","tetinghhhhhhh","2023-09-17 18:30:00","aabhinit96@gmail.com","treeeeeee","1695013678848-images.png"
+"80","210000006","00000105","gk","2023-09-17 18:30:00","aabhinit96@gmail.com","retryutfdfdfg","1695013765166-grsc.jpg"
+"81","210000006","00000105","INVICE9009","2023-09-19 18:30:00","aabhinit96@gmail.com","REFEFEWFEF","1695015396700-grsc.jpg"
+"82","210000006","00000105","INVOICE7777","2023-09-17 18:30:00","aabhinit96@gmail.com","EDEFEF","1695015638160-images.png"
+"83","210000006","00000105","abhinit0101","2023-09-17 18:30:00","aabhinit96@gmail.com","3rewfwfwf","1695015936385-images.png"
+"84","210000006","00000105","testing1233445555556","2023-09-17 18:30:00","aabhinit96@gmail.com","ty67","1695019996428-images.png"
+"85","210000006","00000105","bk1","2023-09-17 18:30:00","aabhinit96@gmail.com","er","1695020730970-grsc.jpg"
+"86","210000006","00000105","WDWEFWEFWEF","2023-09-17 18:30:00","aabhinit96@gmail.com","TYOPP","1695032719058-images.png"
+"87","210000006","00000105","CDCDCDC","2023-09-17 18:30:00","aabhinit96@gmail.com",,"1695032997845-images.png"
+"88","210000006","00000105","ABHINI234","2023-09-18 18:30:00","aabhinit96@gmail.com","recod","1695105182795-abhi.png"
+"89","210000006","00000105","free","2023-09-19 18:30:00","aabhinit96@gmail.com","wfwf","1695210670268-abhi.png"
+"90","210000006","00000105","bk12","2023-09-19 18:30:00","aabhinit96@gmail.com","2qe3rwrt","1695210884205-abhi.png"
+"91","210000006","00000105","rttttt","2023-09-20 18:30:00","aabhinit96@gmail.com","today","1695277061510-abhi.png"
+"92","210000006","00000105","INVOICE60009","2023-09-20 18:30:00","aabhinit96@gmail.com","kkkkkkkkkkkk","1695278021712-abhi.png"
+"93","210000006","00000105","dfwfg","2023-09-20 18:30:00","aabhinit96@gmail.com","gggggggggggg","undefined"
+"94","210000006","00000105","ABC","2023-09-20 18:30:00","aabhinit96@gmail.com","DSD","1695292722734-abhi.png"
+"95","7800000040","50007545","afdfsgdrgesrg","2023-09-25 18:30:00","aabhinit96@gmail.com","grfgergerg","1695723989731-abhi.png"
+"96","7800000040","50007545","frrrrrrrrrrrrrr","2023-09-26 18:30:00","aabhinit96@gmail.com","dsadsadasdasdadadad","1695791365926-abhi.png"
+"id","user_id","vendor_code","depertment","action","dept_table_id","remarks","purchasing_doc_no","created_at","created_by_id"
+"7","50007545","50007545","3","PENDING","10","QAP uploaded . . ","4800001795","1704105973","50007545"
+"8","600229","50007545","1","ASSIGNED","1","sdbg assingned","4800001795","1704537973","600229"
+"9","600231","50007545","3","REJECTED","12","QAP  REJECTED","4800001795","1702987058141","600231"
+"10","50007545","50007545","3","RE_SUBMITTED","13","QAP uploaded . . ","4800001795","1702987787360","50007545"
+"11","50007545","50007545","3","RE_SUBMITTED","14","QAP uploaded . . ","4800001795","1702987790056","50007545"
+"12","50007545","50007545","3","RE_SUBMITTED","15","QAP uploaded . . ","4800001795","1702987791069","50007545"
+"13","50007545","50007545","3","RE_SUBMITTED","16","QAP uploaded . . ","4800001795","1702987791845","50007545"
+"14","50007545","50007545","3","RE_SUBMITTED","17","QAP uploaded . . ","4800001795","1702987792569","50007545"
+"15","600231","50007545","3","ACCEPTED","18","QAP ACCEPTED . . . . ","4800001795","1702988034657","600231"
+"16","600231","50007545","3","APPROVED","19","QAP  APPROVED .......","4800001795","1702988098157","600231"
+"17","50007545","50007545","3","PENDING","20","QAP uploaded . . ","4800001795","1703053565425","50007545"
+"18","50007545","50007545","3","PENDING","24","QAP uploaded . . ","4800001795","1703054719006","50007545"
+"19","50007545","50007545","3","RE_SUBMITTED","25","QAP uploaded . . ","4800001795","1703054735094","50007545"
+"20","50007545","50007545","3","RE_SUBMITTED","26","QAP uploaded . . ","4800001795","1703056033021","50007545"
+"21","50007545","50007545","3","PENDING","27","QAP uploaded . . ","4800001795","1703056044279","50007545"
+"22","50007545","50007545","3","PENDING","28","QAP uploaded . . ","4800001795","1703057319647","50007545"
+"23","50007545","50007545","3","PENDING","29","QAP uploaded . . ","4800001795","1703057344803","50007545"
+"24","50007545","50007545","3","PENDING","30","QAP uploaded . . ","4800001795","1703057390217","50007545"
+"25","50007545","50007545","3","RE_SUBMITTED","31","QAP uploaded . . ","4800001795","1703057483988","50007545"
+"26","50007545","50007545","3","PENDING","32","QAP uploaded . . ","4800001795","1703064235003","50007545"
+"27","50007545","50007545","3","PENDING","33","QAP uploaded . . ","4800001795","1703064364255","50007545"
+"28","50007545","50007545","3","PENDING","34","QAP uploaded . . ","4800001795","1703064496500","50007545"
+"29","50007545","50007545","3","PENDING","35","QAP uploaded . . ","4800001795","1703065452796","50007545"
+"30","50007545","50007545","3","PENDING","4","QAP uploaded . . ","4800001795","1703132525947","50007545"
+"31","600229","50007545","3","ASSIGNED","5","QAP ASSIGN ","4800001795","1703132550336","600229"
+"32","600229","50007545","3","ASSIGNED","6","QAP ASSIGN ","4800001795","1703132618912","600229"
+"33","600229","50007545","3","ASSIGNED","7","QAP ASSIGN ","4800001795","1703133868612","600229"
+"34","600229","50007545","3","ASSIGNED","8","QAP ASSIGN ","4800001795","1703134836244","600229"
+"35","600231","50007545","3","REJECTED","9","QAP  REJECTED","4800001795","1703135338176","600231"
+"36","50007545","50007545","3","RE_SUBMITTED","11","QAP uploaded . . ","4800001795","1703135469587","50007545"
+"37","600229","50007545","3","ASSIGNED","12","QAP ASSIGN ","4800001795","1703135706322","600229"
+"38","600229","50007545","3","ACCEPTED","13","QAP ACCEPTED . . . . ","4800001795","1703135719932","600229"
+"39","600229","50007545","3","APPROVED","14","QAP  APPROVED .......","4800001795","1703135744897","600229"
+"40","50007545","50007545","3","PENDING","15","QAP uploaded . . ","4800001795","1703143894338","50007545"
+"41","50000435","50005041","3","PENDING","16","Vendor upload sdbg","4765476434","1704272766110","50000435"
+"42","50000435","50005041","3","PENDING","17","Vendor upload sdbg","4765476434","1704273023796","50000435"
+"43","50007545","50007545","3","PENDING","18","QAP uploaded . . ","4800001795","1704450933032","50007545"
+"id","name"
+"1","SDBG"
+"2","DRAWING"
+"3","QAP"
+"5","STORE"
+"6","USER"
+"7","OTH"
+"8","NCM"
+"9","PAYMENT_RECOMMENDATION"
+"10","VENDOR"
+"11","PAYMENT_VOUCHER"
+"12","ADMIN"
+"13","SUPER_ADMIN"
+"14","PPC"
+"15","FINANCE"
+"16","RIC"
+"17","PURCHASE"
+"id","purchasing_doc_no","file_name","vendor_code","file_path","remarks","status","actionTypeId","actionType","updated_by","created_at","created_by_id"
+"1","7800000047","1708757077569-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50005041","uploads\submitDrawing\1708757077569-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","REMARKS 1","PENDING",NULL,NULL,"VENDOR","1708757077577","50005041"
+"2","7800000047","1708757092806-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50005041","uploads\submitDrawing\1708757092806-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","REMARKS 1","APPROVED",NULL,NULL,"GRSE","1708757092818","600400"
+"EBELN","EBELP","GJAHR","BELNR"
+"7800000040","10","2022","5000231739"
+"7800000040","10","2022","5000231739"
+"7800000040","10","2022","5000231740"
+"7800000040","10","2022","5000231741"
+"7800000040","10","2022","5000231742"
+"EBELN","EBELP","ETENR","EINDT"
+"2100010812","10","1","2014-03-14"
+"2100010812","20","1","2014-03-15"
+"4700013227","10","1","2015-07-24"
+"4700013553","10","1","2016-07-04"
+"4700013553","15","1","2016-04-30"
+"4700013553","20","1","2016-04-30"
+"4700013553","30","1","2016-04-30"
+"4700013553","40","1","2016-04-30"
+"4700013553","50","1","2016-04-30"
+"4700016027","10","1","2016-04-29"
+"4800001795","10","1","2013-04-15"
+"4800003580","10","1","2014-03-22"
+"4800003580","20","1","2014-04-15"
+"EBELN","BUKRS","BSTYP","BSART","LOEKZ","AEDAT","ERNAM","LIFNR","EKORG","EKGRP"
+"10000002","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000003","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000004","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000005","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000006","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000007","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000008","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000009","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000010","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"1000001009","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"1000001010","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000011","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000012","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000013","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"10000014","5788","S","ABCD","W","2024-11-07","34567656787","50000437","1234","123"
+"1234512354","5788","S","ABCD","W","2023-11-07","34567656787","1234567890","1234","123"
+"1314141141","5788","S","ABCD","W","2024-11-07","600950","600950","6060","123"
+"4700013227","GRSE","F","ZDM",NULL,"2015-02-12","ERPDM","50005041","GRSE","ERP"
+"4700013553","GRSE","F","ZDM",NULL,"2015-03-27","ERPDM","50005041","GRSE","ERP"
+"4700016027","GRSE","F","ZDM",NULL,"2016-01-29","487412","50005041","GRSE","ERP"
+"4800001795","GRSE","F","ZDM",NULL,"2012-11-28","ERPDM1","50005041","GRSE","ERP"
+"4800003580","GRSE","F","ZDM",NULL,"2014-03-18","ERPDM1","50005041","GRSE","ERP"
+"4800004078","GRSE","F","ZDM",NULL,"2014-06-25","ERPDM1","50005041","GRSE","ERP"
+"4800005422","GRSE","F","ZDM",NULL,"2015-03-19","ERPDM1","50005041","GRSE","ERP"
+"4800007095","GRSE","F","ZDM",NULL,"2015-09-11","600230","50005041","GRSE","ERP"
+"4800008195","GRSE","F","ZDM",NULL,"2016-03-31","487412","50005041","GRSE","ERP"
+"4800011669","GRSE","F","ZDM",NULL,"2017-05-15","487412","50005041","GRSE","ERP"
+"4800011727","GRSE","F","ZDM",NULL,"2017-05-22","600229","50005041","GRSE","ERP"
+"4800011728","GRSE","F","ZDM",NULL,"2017-05-22","600229","50005041","GRSE","ERP"
+"4800011745","GRSE","F","ZDM",NULL,"2017-05-24","600229","50005041","GRSE","ERP"
+"4800013770","GRSE","F","ZDM",NULL,"2017-12-04","600229","50005041","GRSE","ERP"
+"4800019411","GRSE","F","ZDM",NULL,"2020-06-12","493916","50005041","GRSE","ERP"
+"4800022399","GRSE","F","ZDM",NULL,"2022-04-23","493916","50005041","GRSE","DP3"
+"4800022835","GRSE","F","ZDM",NULL,"2022-09-13","491646","50005041","GRSE","DP3"
+"7800000040","GRSE","F","ZGSR",NULL,"0000-00-00","493834","50007545","GRSE","DP3"
+"7800000041","GRSE","F","ZGSR",NULL,"0000-00-00","493834","50007545","GRSE","DP3"
+"7800000047","GRSE","F","ZDM",NULL,"2022-06-28","485838","50005041","GRSE","DP3"
+"8989898960","5788","S","ABCD","W","2024-11-07","34567656787","1234567890","1234","123"
+"8989898989","5788","S","ABCD","W","2024-11-07","34567656787","1234567890","1234","123"
+"QQ00013227","5788","S","ABCD","W","2023-11-07","34567656787","1234567890","1234","123"
+"EBELN","EBELP","LOEKZ","STATU","AEDAT","TXZ01","MATNR","BUKRS","WERKS","LGORT","MATKL","KTMNG","MENGE","MEINS","NETPR","NETWR","MWSKZ"
+"2100010812","10",,,"07.03.2014","IncomeTax Rectification in SAP Payroll",,"GRSE","100",,"SE57","1","0","AU","0","0",
+"2100010812","20",,,"07.03.2014","Modification of ZINC prog in SAP Payroll",,"GRSE","100",,"SE57","1","0","AU","0","0",
+"4700013227","10",,,"04.08.2015","Impl. of Asset Mgmt as per Co Act 13","9200MAT","GRSE","100",,"SE74","0","1","AU","1,200,000.0","1,200,000.00","SG"
+"4700013553","10",,,"22.03.2016","1. Project Systems & Production Planning","SER08205","GRSE","100",,"SE74","0","1","AU","1,813,063.0","1,813,063.00","SU"
+"4700013553","15",,,"12.01.2017","1. Project Systems & Production Planning","9200SPARE-28","GRSE","100",,"SE74","0","1","AU","1,557,165.0","1,557,165.00","TV"
+"4700013553","20",,,"22.03.2016","2. Workflows","SER08205","GRSE","100",,"SE74","0","1","AU","204,218.00","204,218.00","SU"
+"4700013553","30",,,"22.03.2016","3. ABAP Reports","SER08205","GRSE","100",,"SE74","0","1","AU","81,690.00","81,690.00","4S"
+"4700013553","40",,,"12.01.2017","4. Testing","SER08206","GRSE","100",,"SE74","0","1","AU","163,376.00","163,376.00","TV"
+"4700013553","50",,,"12.01.2017","5. Commissioning the system","SER08206","GRSE","100",,"SE74","0","1","AU","81,688.00","81,688.00","TV"
+"4700013553","60",,,"20.06.2019","6. Warranty Support","SER08206","GRSE","100",,"SE74","0","1","AU","490,076.00","490,076.00","TV"
+"4700013553","70",,,"12.01.2017","7. Training","SER08206","GRSE","100",,"SE74","0","1","AU","81,687.00","81,687.00","TV"
+"4700013553","80",,,"12.01.2017","8. Documentation","SER08206","GRSE","100",,"SE74","0","1","LS","147,037.00","147,037.00","TV"
+"4700016027","10",,,"26.07.2019","Inclusion of QA functions in Projects",,"GRSE","100",,"SE74","0","1","AU","1,440,000.0","1,440,000.00","12"
+"4800001795","10",,,"30.11.2012","SAP SYSTEM AUDIT & RELATED ACTIVITIES","9200MAT","GRSE","100",,"SE57","0","1","AU","4,004,984.0","4,004,984.00","SG"
+"4800003580","10",,,"18.03.2014","IncomeTax Rectification in SAP Payroll",,"GRSE","100",,"SE57","0","1","AU","302,100.00","302,100.00","SG"
+"4800003580","20",,,"18.03.2014","Modification of ZINC prog in SAP Payroll",,"GRSE","100",,"SE57","0","1","AU","127,200.00","127,200.00","SG"
+"4800004078","10",,,"25.06.2014","Implementing revised Perks inSAP-Payroll",,"GRSE","100",,"SE57","0","1","AU","2,190,000.0","2,190,000.00","SG"
+"4800005422","10",,,"19.03.2015","Impl. of Wage Revision in SAP Payroll",,"GRSE","100",,"SE57","0","1","AU","2,265,000.0","2,265,000.00","SG"
+"4800007095","10",,,"06.03.2018","Reporting for Senior Management of GRSE",,"GRSE","100",,"SE57","0","1","AU","3,333,000.0","3,333,000.00","SU"
+"4800008195","10",,,"11.01.2018","Sales through Stock transfer etc.",,"GRSE","100",,"SE57","0","1","AU","863,016.00","863,016.00","TV"
+"4800008195","20",,,"11.01.2018","Reverse Charge Service tax process",,"GRSE","100",,"SE57","0","1","AU","154,361.00","154,361.00","TV"
+"4800008195","30",,,"11.01.2018","TDS reconciliation",,"GRSE","100",,"SE57","0","1","AU","210,492.00","210,492.00","TV"
+"4800008195","40",,,"11.01.2018","Improvement of sales of B & D Spare",,"GRSE","100",,"SE57","0","1","AU","526,229.00","526,229.00","12"
+"4800008195","50",,,"11.01.2018","Customized reports required by SLP",,"GRSE","100",,"SE57","0","1","AU","1,059,475.0","1,059,475.00","12"
+"4800008195","60",,,"11.01.2018","Improvement in Salary & Wages & PF",,"GRSE","100",,"SE57","0","1","AU","280,656.00","280,656.00","TV"
+"4800008195","70","L",,"31.10.2018","General Requirements of Finance",,"GRSE","100",,"SE57","0","1","AU","420,984.00","420,984.00","4S"
+"4800008195","80",,,"26.09.2018","Purchase Order Release",,"GRSE","100",,"SE57","0","1","AU","554,295.00","554,295.00","12"
+"4800008195","90","L",,"31.10.2018","Inclusion of PWD rate in civil contracts",,"GRSE","100",,"SE57","0","1","AU","70,164.00","70,164.00","4S"
+"4800008195","100",,,"10.02.2018","Documentation",,"GRSE","100",,"SE57","0","1","AU","70,164.00","70,164.00","12"
+"4800008195","110",,,"10.02.2018","Training",,"GRSE","100",,"SE57","0","1","AU","70,164.00","70,164.00","12"
+"4800008195","120",,,"10.02.2018","Impl of BB Prod facilities at DEP Ranchi",,"GRSE","100",,"SE57","0","1","AU","1,430,000.0","1,430,000.00","12"
+"4800011669","10",,,"29.03.2018","Implementation of Tax INN for GRSE",,"GRSE","100",,"SE57","0","1","AU","2,409,420.0","2,409,420.00","12"
+"4800011669","20",,,"29.03.2018","Implementation of GST for GRSE",,"GRSE","100",,"SE57","0","1","AU","1,938,406.0","1,938,406.00","12"
+"4800011727","10",,,"19.02.2018","Amendments in PF Trust Rules in SAP",,"GRSE","100",,"SE57","0","1","AU","800,000.00","800,000.00","12"
+"4800011728","10",,,"02.11.2018","Resolutions to HCM Audit Gaps",,"GRSE","100",,"SE57","0","1","AU","2,950,000.0","2,950,000.00","TV"
+"4800011745","10",,,"04.10.2017","Emp Attendance Reporting in Dashboard",,"GRSE","100",,"SE57","0","1","AU","291,000.00","291,000.00","12"
+"4800013770","10",,,"04.12.2017","AMC of BI/BO Dashboard/Reports",,"GRSE","100",,"SE57","0","1","AU","1,100,000.0","1,100,000.00","12"
+"4800019411","10",,,"12.06.2020","Devl & Impl of Proc Accelerator System",,"GRSE","100",,"SE57","0","1","AU","9,000,000.0","9,000,000.00","12"
+"4800022399","10",,,"23.04.2022","REGULARISATION OF SUPPLEMENTARY PO",,"GRSE","100",,"SE57","0","1","AU","350,000.00","350,000.00","12"
+"4800022835","10",,,"14.09.2022","PROJECT WIP PROCESS",,"GRSE","100",,"SE57","0","1","AU","211,864.40","211,864.40","12"
+"7800000040","10",,,"18.11.2022","Technical Service for ERP Q1",,"GRSE","100",,"SE57","0","1","AU","1,436,475.0","1,436,475.00","12"
+"7800000047","10",,,"29.06.2022","Implementation of Wage revision in SAP",,"GRSE","100",,"SE74","0","1","AU","1,800,000.0","1,800,000.00","12"
+"7800000047","20",,,"02.01.2023","WageRevision forOA(non-ranchi)&RanchiEmp",,"GRSE","100",,"SE57","0","1","AU","1,000,000.0","1,000,000.00","12"
+"1234512354","10023","W","1","07.03.2014","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1234512354","88","W","1","20.06.2019","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"QQ00013227","10023","W","1","07.03.2014","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"QQ00013227","88","W","1","20.06.2019","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1234512354","10023","W","1","07.03.2014","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1234512354","88","W","1","20.06.2019","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1234512354","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1234512354","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1234512354","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1234512354","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000001","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000001","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000002","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000002","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000003","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000003","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000004","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000004","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000005","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000005","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000006","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000006","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000007","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000007","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000008","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000008","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000009","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000009","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000010","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000010","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000011","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000011","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000012","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000012","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1234512354","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1234512354","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"10000013","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"10000013","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1000001009","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1000001009","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"1000001010","10023","W","1","2014-07-23","IncomeTax Rectification in SAP Payroll",NULL,"GRSE","100",NULL,"SE57","1244","232131","AU","0","0","TV"
+"1000001010","88","W","1","2019-06-20","6. Warranty Support",NULL,"GRSE","100",NULL,"SE74","0","1","AU","9000,3222","124,456,900","SG"
+"id","event","sender","subject","body","status","message","created_at","creatd_by_name","created_by_id"
+"id","dept_name","dept_id","internal_role_id","sub_dept_name","sub_dept_id","emp_id","privilege_id"
+"1","QAP","3","2","hull","1","600229","5"
+"2","QAP","3","2","electrical","2","600947","5"
+"3","QAP","3","2","hull","1","600231","5"
+"4","QAP","3","2","electrical","2","600948","5"
+"5","QAP","3","2","hull","1","600232","5"
+"7","QAP","3","2","machinery","3","600233","5"
+"8","QAP","3","2","electrical","2","600949","5"
+"9","QAP","3","2","plumbing","4","600951","5"
+"10","QAP","3","2","plumbing","4","600953","5"
+"11","QAP","3","2","plumbing","4","600950","5"
+"12","QAP","3","2","machinery","3","600252","5"
+"13","FINANCE","15","2",,,"600201","0"
+"14","FINANCE","15","2",,,"600202","0"
+"15","FINANCE","15","2",,,"600203","5"
+"LBLNI","EBELN","EBELP"
+"1000127607","7800000040","10"
+"id","purchasing_doc_no","vendor_code","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"1","4700013229","50000437",,"1702463200499-sample.pdf","uploads\gateentry\1702463200499-sample.pdf",NULL,,,"1702463200503","A RAJA BANERJEE","600231"
+"2","8989898989","50000437",,"1704264556295-sample.pdf","uploads\gateentry\1704264556295-sample.pdf",NULL,,,"1704264556296","A RAJA BANERJEE","600231"
+"3","8989898989","50000437",,"1704265634708-sample.pdf","uploads\gateentry\1704265634708-sample.pdf",NULL,,,"1704265634710","A RAJA BANERJEE","600231"
+"id","purchasing_doc_no","vendor_code","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"1","4700013229","50000437",,"1702463128903-sample.pdf","uploads\grn\1702463128903-sample.pdf",NULL,,,"1702463128911","A RAJA BANERJEE","600231"
+"2","4700013229","50000437",,"1704264462977-sample.pdf","uploads\grn\1704264462977-sample.pdf",NULL,,,"1704264462979","A RAJA BANERJEE","600231"
+"3","4700013229","50000437",,"1704265637863-sample.pdf","uploads\grn\1704265637863-sample.pdf",NULL,,,"1704265637871","A RAJA BANERJEE","600231"
+"4","4700013229","50000437",,"1706515684131-setup ftp server in Linux server.pdf","uploads\grn\1706515684131-setup ftp server in Linux server.pdf",NULL,,,"1706515684142","A RAJA BANERJEE","600231"
+"5","4700013229","50000437",,"1706516032727-setup ftp server in Linux server.pdf","uploads\grn\1706516032727-setup ftp server in Linux server.pdf",NULL,,,"1706516032743","A RAJA BANERJEE","600231"
+"MANNO","NAME1","NAME2","EMAIL"
+"6317","SYAMAL","DUTTA","DUTTA.SYAMALKUMAR@GRSE.CO.IN"
+"6369","AMIYA","BHATTACHARYA","BHATTACHARYA.AK@GRSE.CO.IN"
+"id","purchasing_doc_no","vendor_code","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"1","2100010812","V1","Gate In Entry","1699252952506-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699252952506-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","remarkssss","SUBMITTED","VENDOR","1699252952514","KAMAL RUIDAS","kamal.sspur@gmai.com"
+"2","7800000040","V1","Goods Receipt","1699253015741-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699253015741-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","Uploading Drawing","SUBMITTED","VENDOR","1699253015750","XYZ Pvt. Ltd.","XYZ@gmai.com"
+"3","4700013227","V1","ICGRN Report","1699253037637-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699253037637-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","remarkssss","SUBMITTED","VENDOR","1699253037643","KAMAL RUIDAS","kamal.sspur@gmai.com"
+"4","34567876556","23114","Gate In Entry","1699598638506-sample.pdf","uploads\drawing\1699598638506-sample.pdf","accepted","SUBMITTED","GRSE","1699598638509","Abhinit ","6380"
+"5","4700013229","50000437",,"1702463162497-sample.pdf","uploads\icgrn\1702463162497-sample.pdf",NULL,,,"1702463162504","A RAJA BANERJEE","600231"
+"6","8989898989","50000437",,"1704264415313-sample.pdf","uploads\icgrn\1704264415313-sample.pdf",NULL,,,"1704264415316","A RAJA BANERJEE","600231"
+"7","8989898989","50000437",,"1704265641516-sample.pdf","uploads\icgrn\1704265641516-sample.pdf",NULL,,,"1704265641518","A RAJA BANERJEE","600231"
+"id","purchasing_doc_no","file_name","file_path","remarks","status","vendor_code","type","created_at","created_by_id","updated_by"
+"id","purchasing_doc_no","file_name","file_type_id","file_type_name","vendor_code","file_path","remarks","updated_by","created_at","created_by_id"
+"1","4700013227","1700647390698-t.c.pdf","0",,"09383HAL","uploads\inspectionCallLetter\1700647390698-t.c.pdf","BAHAMAS MISSILE DRAWING4","VENDOR","1700647390969","09383HAL"
+"8","47654764345","1704276529024-eket.pdf","0",,"50005041","uploads\inspectionCallLetter\1704276529024-eket.pdf","Vendor upload sdbg","GRSE","1704276529126","6804"
+"9","13141411411","1706505366118-setup ftp server in Linux server.pdf","1",,"600232","uploads\1706505366118-setup ftp server in Linux server.pdf","new","GRSE","1706505366130","600232"
+"10","13141411411","1706505450498-setup ftp server in Linux server.pdf","1",,"600232","uploads\1706505450498-setup ftp server in Linux server.pdf","new","GRSE","1706505450510","600232"
+"11","13141411411","1706505783390-setup ftp server in Linux server.pdf","1",,"600232","uploads\1706505783390-setup ftp server in Linux server.pdf","new","GRSE","1706505783396","600232"
+"12","13141411411","1706506059315-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706506059315-setup ftp server in Linux server.pdf","new","GRSE","1706506059320","600232"
+"13","13141411411","1706506095850-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706506095850-setup ftp server in Linux server.pdf","new","GRSE","1706506095851","600232"
+"14","13141411411","1706517824595-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706517824595-setup ftp server in Linux server.pdf","new","GRSE","1706517824602","600232"
+"15","13141411411","1706524822832-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706524822832-setup ftp server in Linux server.pdf","new","GRSE","1706524822841","600232"
+"16","13141411411","1706594417130-setup ftp server in Linux server.pdf","1","my file","600232","uploads\inspectionCallLetter\1706594417130-setup ftp server in Linux server.pdf","new","GRSE","1706594417135","600232"
+"17","13141411411",NULL,"1","my file","600232",NULL,"new","GRSE","1706679523511","600232"
+"18","13141411411",NULL,"1","my file","600252",NULL,"new","GRSE","1708756554370","600252"
+"id","name"
+"1","File type 1"
+"2","File type 2"
+"3","File type 3"
+"4","File type 4"
+"id","name"
+"1","ASSIGNER"
+"2","STAFF"
+"3","ADMIN"
+"4","SUPER_ADMIN"
+"5","GENERAL"
+"LIFNR","LAND1","NAME1","ORT01","ORT02","PFACH","REGIO","KTOKK","LOEVM_X","SPRAS","STCD1","TELFX","STCD3","ZZVENVALDT"
+"50000437","IN","TATA STEEL LTD","KOLKATA",NULL,NULL,"25","DOMV",NULL,"EN","AAAFA1890Q","033 2282 1687","24AAAFA1890Q1Z9","0000-00-00"
+"50005041","IN","PriceWaterhouseCoopers Pvt Ltd","KOLKATA",NULL,NULL,"25","DOMV",NULL,"EN","AABCP9181H",NULL,"19AABCP9181H1Z1","0000-00-00"
+"50007545","IN","DCG DATA -CORE SYSTEMS (INDIA) PRIV","KOLKATA",NULL,NULL,"25","DOMV",NULL,"EN","AAFCD4828F",NULL,"19AAFCD4828F1ZL","0000-00-00"
+"50007560","900","dcg","ddd","jjdjd","kkkk","jjj","jeje","y","uuuu","876545678","9876789876","6677882","2024-02-24"
+"50007561","900","dcg","ddd","jjdjd","kkkk","jjj","jeje","y","uuuu","876545678","9876789876","6677882","2024-02-24"
+"600229","IN","naskar sir","KOLKATA",NULL,NULL,"25","DOMV",NULL,"EN","AAFCD4828F",NULL,"19AAFCD4828F1ZL","0000-00-00"
+"id","MATNR","SPRAS","MAKTX","MAKTG"
+"1","1000001009","5","S","ABCD"
+"2","1000001009","5","S","ABCD"
+"3","1000001009","5","S","ABCD"
+"4","1000001009","5","S","ABCD"
+"5","1000001009","5","S","ABCD"
+"7","XXXXX","5","S","ABCD"
+"MATNR","MTART"
+"9200MAT","ZDIN"
+"9200SPARE-28","ZDIN"
+"9200SPARE18","ZDIN"
+"SER08205","ZDIN"
+"SER08206","ZDIN"
+"000000015114117149","ZROH"
+"000000015128076737","ZROH"
+"XXXXX","ZDIN"
+"MBLNR","MJAHR","VGART","BLART","BLAUM","BLDAT","BUDAT","CPUDT","CPUTM","AEDAT","USNAM","TCODE","XBLNR","BKTXT","FRATH","FRBNR","WEVER","XABLN","AWSYS","BLA2D","TCODE2","BFWMS","EXNUM","SPE_BUDAT_UHR","SPE_BUDAT_ZONE","LE_VBELN","SPE_LOGSYS","SPE_MDNUM_EWM","GTS_CUSREF_NO","FLS_RSTO","MSR_ACTIVE","KNUMV"
+"1000001009",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-11-07",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"1000001010",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-11-07",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"id","purchasing_doc_no","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_id"
+"1","2233445","1",NULL,NULL,"new","SUBMIT","GRSE","1706868184785","493834"
+"2","2233445","1",NULL,NULL,"new","SUBMIT","GRSE","1706868301442","493834"
+"3","2233445","1",NULL,NULL,"new","SUBMIT","GRSE","1706868454093","493834"
+"4","2233445","1","1706868465313-Flow chart- Service PO (1).pdf","uploads\mrs\1706868465313-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706868465319","493834"
+"5","2233445","1","1706871008838-Flow chart- Service PO (1).pdf","uploads\mrs\1706871008838-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706871008840","493834"
+"MBLNR","MJAHR","ZEILE","LINE_ID","PARENT_ID","LINE_DEPTH","MAA_URZEI","BWART","XAUTO","MATNR","WERKS","LGORT","CHARG","INSMK","ZUSCH","ZUSTD","SOBKZ","LIFNR","KUNNR","KDAUF","KDPOS","KDEIN","PLPLA","SHKZG","WAERS","DMBTR","BNBTR","BUALT","SHKUM","DMBUM","BWTAR","MENGE","MEINS","ERFMG","ERFME","BPMNG","BPRME","EBELN","EBELP","LFBJA","LFBNR","LFPOS","SJAHR","SMBLN","SMBLP","ELIKZ","SGTXT","EQUNR","WEMPF","ABLAD","GSBER","KOKRS","PARGB","PARBU","KOSTL","PROJN","AUFNR","ANLN1","ANLN2","XSKST","XSAUF","XSPRO","XSERG","GJAHR","XRUEM","XRUEJ","BUKRS","BELNR","BUZEI","BELUM","BUZUM","RSNUM","RSPOS","KZEAR","PBAMG","KZSTR","UMMAT","UMWRK","UMLGO","UMCHA","UMZST","UMZUS","UMBAR","UMSOK","KZBEW","KZVBR","KZZUG","WEUNB","PALAN","LGNUM","LGTYP","LGPLA","BESTQ","BWLVS","TBNUM","TBPOS","XBLVS","VSCHN","NSCHN","DYPLA","UBNUM","TBPRI","TANUM","WEANZ","GRUND","EVERS","EVERE","IMKEY","KSTRG","PAOBJNR","PRCTR","PS_PSP_PNR","NPLNR","AUFPL","APLZL","AUFPS","VPTNR","FIPOS","SAKTO","BSTMG","BSTME","XWSBR","EMLIF","EXBWR","VKWRT","AKTNR","ZEKKN","VFDAT","CUOBJ_CH","EXVKW","PPRCTR","RSART","GEBER","FISTL","MATBF","UMMAB","BUSTM","BUSTW","MENGU","WERTU","LBKUM","SALK3","VPRSV","FKBER","DABRBZ","VKWRA","DABRZ","XBEAU","LSMNG","LSMEH","KZBWS","QINSPST","URZEI","J_1BEXBASE","MWSKZ","TXJCD","EMATN","J_1AGIRUPD","VKMWS","HSDAT","BERKZ","MAT_KDAUF","MAT_KDPOS","MAT_PSPNR","XWOFF","BEMOT","PRZNR","LLIEF","LSTAR","XOBEW","GRANT_NBR","ZUSTD_T156M","SPE_GTS_STOCK_TY","KBLNR","KBLPOS","XMACC","VGART_MKPF","BUDAT_MKPF","CPUDT_MKPF","CPUTM_MKPF","USNAM_MKPF","XBLNR_MKPF","TCODE2_MKPF","VBELN_IM","VBELP_IM","SGT_SCAT","SGT_UMSCAT","SGT_RCAT","DISUB_OWNER","FSH_SEASON_YEAR","FSH_SEASON","FSH_COLLECTION","FSH_THEME","FSH_UMSEA_YR","FSH_UMSEA","FSH_UMCOLL","FSH_UMTHEME","SGT_CHINT","FSH_DEALLOC_QTY","OINAVNW","OICONDCOD","CONDI","WRF_CHARSTC1","WRF_CHARSTC2","WRF_CHARSTC3"
+"1000001009",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"50000437",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"5788",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"1000001010",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"50000437",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"5788",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"auth_id","username","password","name","email","vendor_code","datetime","refreshToken"
+"1","admin","admin@213","Mrinmoy Ghosh","mrinmoygh081@gmail.com","00000105","2023-09-12 10:25:51",
+"2","kamalruidas","kamal","Kamal Ruidas","kamalruidas@gmail.com","50007545","2023-10-05 11:33:46","5678987654567898qwe765567.76545678gfdfghj.oiuytdfghjkjhvc876545678.6r6"
+"3","u1","password","name1","kamalruidas@gmail.com","23443242424","2023-10-09 10:25:27","5678987654567898qwe765567.76545678gfdfghj.oiuytdfghjkjhvc876545678.6r6"
+"zbtno","created_by_id","created_by_name","bill_submit_date","bill_submit_to_email","bill_submit_to_name","bill_submit_time","created_at","file_name","file_path","invoice_no","purchasing_doc_no","remarks","vendor_code","vendor_email","vendor_name"
+"20231221006","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155584999-ZFI_BGM_1.pdf","uploads\invoice\1703155584999-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50000435","mrinmoygh081@gmail.com","DCG"
+"20231221007","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155625899-ZFI_BGM_1.pdf","uploads\invoice\1703155625899-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50000435","mrinmoygh081@gmail.com","DCG"
+"20231221008","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155626996-ZFI_BGM_1.pdf","uploads\invoice\1703155626996-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50000435","mrinmoygh081@gmail.com","DCG"
+"20231221009","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155627975-ZFI_BGM_1.pdf","uploads\invoice\1703155627975-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50000435","mrinmoygh081@gmail.com","DCG"
+"20231221010","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155659136-ZFI_BGM_1.pdf","uploads\invoice\1703155659136-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221011","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155660202-ZFI_BGM_1.pdf","uploads\invoice\1703155660202-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221012","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","0","1703155661225-ZFI_BGM_1.pdf","uploads\invoice\1703155661225-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221013","KB","6804","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","1703156604503","1703156604487-ZFI_BGM_1.pdf","uploads\invoice\1703156604487-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221014","6804","KB","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","1703157024317","1703157024270-ZFI_BGM_1.pdf","uploads\invoice\1703157024270-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221015","6804","KB","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","1703157051558","1703157051511-ZFI_BGM_1.pdf","uploads\invoice\1703157051511-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221016","6804","KB","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","1703157215590","1703157215544-ZFI_BGM_1.pdf","uploads\invoice\1703157215544-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20231221017","6804","KB","2023-09-27","kamal.ruidas@gmail.com","kamal ruidas","11:20:34","1703158032509","1703158032453-ZFI_BGM_1.pdf","uploads\invoice\1703158032453-ZFI_BGM_1.pdf","123232344","8765678987","new gengrated bill","50007545","mrinmoygh081@gmail.com","DCG"
+"20240103003","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1704273977157","1704273977151-sample.pdf","uploads\invoice\1704273977151-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240103004","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1704273989966","1704273989959-sample.pdf","uploads\invoice\1704273989959-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125001","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161370995","1706161370967-sample.pdf","uploads\invoice\1706161370967-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125502","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161533337","1706161533164-sample.pdf","uploads\invoice\1706161533164-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125503","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161538244","1706161538228-sample.pdf","uploads\invoice\1706161538228-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125504","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161545195","1706161545172-sample.pdf","uploads\invoice\1706161545172-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125505","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161546879","1706161546864-sample.pdf","uploads\invoice\1706161546864-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125506","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161548016","1706161548006-sample.pdf","uploads\invoice\1706161548006-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125507","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161548985","1706161548973-sample.pdf","uploads\invoice\1706161548973-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125508","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161549905","1706161549877-sample.pdf","uploads\invoice\1706161549877-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125509","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161550882","1706161550870-sample.pdf","uploads\invoice\1706161550870-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125510","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161551845","1706161551832-sample.pdf","uploads\invoice\1706161551832-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125511","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161552731","1706161552720-sample.pdf","uploads\invoice\1706161552720-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125512","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161553664","1706161553644-sample.pdf","uploads\invoice\1706161553644-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125513","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161554420","1706161554409-sample.pdf","uploads\invoice\1706161554409-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125514","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161555242","1706161555232-sample.pdf","uploads\invoice\1706161555232-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125515","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161556040","1706161556028-sample.pdf","uploads\invoice\1706161556028-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125516","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161566071","1706161566050-sample.pdf","uploads\invoice\1706161566050-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125517","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161567406","1706161567398-sample.pdf","uploads\invoice\1706161567398-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125518","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161568204","1706161568193-sample.pdf","uploads\invoice\1706161568193-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125519","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161568846","1706161568828-sample.pdf","uploads\invoice\1706161568828-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240125520","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1706161569761","1706161569738-sample.pdf","uploads\invoice\1706161569738-sample.pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"20240219502","6804","KB","2023-09-27","kamal.ruidas@gmail.com","dbc","00:00:00","1708322133179","1708322133168-Flow chart- Service PO (1).pdf","uploads\invoice\1708322133168-Flow chart- Service PO (1).pdf","123232344","8765678987","new bill registration","50007545","mrinmoygh081@gmail.com","DCG"
+"sl_no","venor_code","contactors_name","po_no","MAIN","FOJ","RBD","COL_61P","TU","TTC","G_HOUSE","BELUR","NSSY","IHQ_DELHI","WAGES_PAID_UPTO","PF_DEPOSIT_UPTO","ESI_DEPISIT_UPTO","REMARKS","created_at","created_by_name","created_by_id","status","updated_at","updated_by_name","updated_by_id"
+"92","v0909899","contactors_name 1","121310","121","233","245","67876","87878","878987","78787","8787","87678987","878987",NULL,NULL,NULL,"REMARKS _1","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"93",NULL,"contactors_name 2","121311","122","234","246","67877","87879","878987","78787","8788","87678988","878988",NULL,NULL,NULL,"REMARKS _2","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"94",NULL,"contactors_name 3","121312","123","235","247","67878","87880","878987","78788","8789","87678989","878989",NULL,NULL,NULL,"REMARKS _3","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"95",NULL,"contactors_name 4","121313","124","236","248","67879","87881","878987","78789","8790","87678990","878990",NULL,NULL,NULL,"REMARKS _4","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"96",NULL,"contactors_name 5","121314","125","237","249","67880","87882","878987","78790","8791","87678991","878991",NULL,NULL,NULL,"REMARKS _5","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"97",NULL,"contactors_name 6","121315","126","238","250","67881","87883","878987","78791","8792","87678992","878992",NULL,NULL,NULL,"REMARKS _6","2023-10-11 17:01:48","kamal","2456789","1","2023-10-11 17:01:48",NULL,NULL
+"98",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL
+"99",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL
+"100",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL
+"101",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL
+"102",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL,NULL,"2024-02-19 14:22:52",NULL,NULL
+"103",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL
+"104",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL
+"105",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL
+"106",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL
+"107",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL,NULL,"2024-02-19 14:23:25",NULL,NULL
+"108",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL
+"109",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL
+"110",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL
+"111",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL
+"112",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL,NULL,"2024-02-19 14:24:13",NULL,NULL
+"id","purchasing_doc_no","file_name","file_path","remarks","status","isLocked","updated_by","bank_name","transaction_id","vendor_code","assigned_from","assigned_to","created_at","created_by_name","created_by_id","updated_by_name","updated_by_id","updated_at"
+"1","4800007095","1705483912454-pa0105.pdf","uploads\sdbg\1705483912454-pa0105.pdf","REMARKS REMARKS REMARKS REMARKS REMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKS","PENDING","0","VENDOR","Axis Bank","476547643456789","50005041",,,"1705483912458","MAINAK DUTTA","50007545",,,"0"
+"2","4800007095","1705484034609-pa0105.pdf","uploads\sdbg\1705484034609-pa0105.pdf","REMARKS REMARKS REMARKS REMARKS REMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKSREMARKS REMARKS","PENDING","0","VENDOR","Axis Bank","476547643456789","50005041",,,"1705484034612","MAINAK DUTTA","50007545",,,"0"
+"PERNR","SUBTY","OBJPS","SPRPS","ENDDA","BEGDA","SEQNR","AEDTM","UNAME","MASSN","MASSG","STAT1","STAT2","STAT3"
+"485838",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","485838","ZJ","2",NULL,"3","1"
+"600229",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","601621","ZP","2",NULL,"3","1"
+"600231",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","601621","ZP","2",NULL,"3","1"
+"600232",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600233",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","601621","ZP","2",NULL,"3","1"
+"600252",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","601621","ZP","2",NULL,"3","1"
+"600947",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600948",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600949",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600950",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600951",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"600953",NULL,NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","474862","ZJ","2",NULL,"3","1"
+"PERNR","SUBTY","OBJPS","SPRPS","ENDDA","BEGDA","SEQNR","AEDTM","UNAME","BUKRS","WERKS","PERSG","PERSK","VDSK1","GSBER","BTRTL","ABKRS","KOSTL","ORGEH","PLANS"
+"485838","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","485838","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600229","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600231","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600232","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","474862","GRSE","GRSE","D","ZA","GRSM","NA","GRSM","GK","1011172","50000508","50039060"
+"600233","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600252","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600947","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","474862","GRSE","GRSE","D","ZA","GRSM","NA","GRSM","GK","1011172","50000508","50039060"
+"600948","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","474862","GRSE","GRSE","D","ZA","GRSM","NA","GRSM","GK","1011172","50000508","50039060"
+"600949","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","474862","GRSE","GRSE","D","ZA","GRSM","NA","GRSM","GK","1011172","50000508","50039060"
+"600950","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600951","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"600953","0030","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","GRSE","GRSE","D","ZA","GRSE0001011170","NA","GRSM","GK","1011170","50000444","50036678"
+"PERNR","SUBTY","OBJPS","SPRPS","ENDDA","BEGDA","SEQNR","AEDTM","UNAME","CNAME","GESCH","GBDAT","NATIO"
+"60020","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","TAPAS PAL","1","0000-00-00","IN"
+"485838","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","485838","ABHINIT PAL","1","0000-00-00","IN"
+"493834","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","493834","Naskar Sir","1","0000-00-00","IN"
+"600201","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","Rabi Teja","1","0000-00-00","IN"
+"600202","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","Mohit Kumar","1","0000-00-00","IN"
+"600203","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","Amit Sha","1","0000-00-00","IN"
+"600229","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","HRAHRISOA1","RAJENDRA BANERJEE","1","0000-00-00","IN"
+"600230",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"KAMAL RUIDAS",NULL,NULL,NULL
+"600231","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","HRAHRISOA1","A RAJA BANERJEE","1","0000-00-00","IN"
+"600232",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"ABHINIT ANAND",NULL,NULL,NULL
+"600233","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","MRINMOY GHOSH","1","0000-00-00","IN"
+"600947","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","TAMAL SEN","1","0000-00-00","IN"
+"600948","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","HRAHRISOA1","JUNIOR PC ROY","1","0000-00-00","IN"
+"600949",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"SR MRINMOY GHOSH",NULL,NULL,NULL
+"600950","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","HRAHRISOA1","OM PRAKASH GHOSH","1","0000-00-00","IN"
+"600951",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"ABHINIT RAJ",NULL,NULL,NULL
+"600952","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","MR. MRINMOY GHOSH","1","0000-00-00","IN"
+"600953","NA","NA","N","0000-00-00","0000-00-00","0","0000-00-00","601621","TAPAS PAL","1","0000-00-00","IN"
+"PERNR","SUBTY","OBJPS","SPRPS","ENDDA","BEGDA","SEQNR","AEDTM","UNAME","USRTY","USRID","USRID_LONG"
+"600229","0030",NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","ERPDM1","10",NULL,"BANERJEE.RAJENDRA@GRSE.CO.IN"
+"600229","0010",NULL,NULL,"0000-00-00","0000-00-00",NULL,"0000-00-00","601621","CEIL","8584014353",NULL
+"600230","0030",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"kamal.ruidas@datacoresystems.co.in"
+"600231","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"arajabanerjee@gmail.com"
+"600232","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"aabhnitandand@gmail.com"
+"600233","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"mrinmoyghosh102@gmail.com"
+"600947","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"tamalsen@gmail.com"
+"600948","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"juniorpcroy@gmail.com"
+"600949","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"srmrinoy@gmail.com"
+"600950","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"omprakash@gmail.com"
+"600951","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"aabhnitanand@gmail.com"
+"600952","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"mrinmoyghosh102@gmail.com"
+"600953","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"tapaspal_tapaspal@gmail.com"
+"600201","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"finance1@gmail.com"
+"600202","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"finance2@gmail.com"
+"600203","0030",NULL,NULL,NULL,NULL,NULL,NULL,"ERPDM1","10",NULL,"finance3@gmail.com"
+"485838","0030",NULL,NULL,NULL,NULL,NULL,NULL,"485838","4858",NULL,"aabhinit@gmail.com"
+"493834","0030","NA","N","2024-02-29",NULL,NULL,NULL,NULL,NULL,NULL,"kamal.ruidas@datacoresystems.co.in"
+"id","purchasing_doc_no","vendor_code","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"1","2100010812","V1","Gate In Entry","1699252952506-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699252952506-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","remarkssss","SUBMITTED","VENDOR","1699252952514","KAMAL RUIDAS","kamal.sspur@gmai.com"
+"2","7800000040","V1","Goods Receipt","1699253015741-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699253015741-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","Uploading Drawing","SUBMITTED","VENDOR","1699253015750","XYZ Pvt. Ltd.","XYZ@gmai.com"
+"3","4700013227","V1","ICGRN Report","1699253037637-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\drawing\1699253037637-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","remarkssss","SUBMITTED","VENDOR","1699253037643","KAMAL RUIDAS","kamal.sspur@gmai.com"
+"4","34567876556","23114","Gate In Entry","1699598638506-sample.pdf","uploads\drawing\1699598638506-sample.pdf","accepted","SUBMITTED","GRSE","1699598638509","Abhinit ","6380"
+"id","purchasing_doc_no","file_name","file_path","vendor_code","created_at","created_by_name","created_by_id"
+"1","4700013229","1702452502399-sample.pdf","uploads\voucher\1702452502399-sample.pdf","50000437","1702452502411","A RAJA BANERJEE","600231"
+"2","4700013229","1702457236213-sample.pdf","uploads\voucher\1702457236213-sample.pdf","50000437","1702457236222","A RAJA BANERJEE","600231"
+"3","4700013229","1702457315327-sample.pdf","uploads\voucher\1702457315327-sample.pdf","50000437","1702457315337","A RAJA BANERJEE","600231"
+"4","4700013229","1702459490239-sample.pdf","uploads\advises\1702459490239-sample.pdf","50000437","1702459490246","A RAJA BANERJEE","600231"
+"5","4700013229","1702459542937-sample.pdf","uploads\advise\1702459542937-sample.pdf","50000437","1702459542945","A RAJA BANERJEE","600231"
+"6","4700013229","1704264105136-ZFI_BGM_1.pdf","uploads\advise\1704264105136-ZFI_BGM_1.pdf","50000437","1704264105150","A RAJA BANERJEE","600231"
+"7","8989898989","1704264176341-ZFI_BGM_1.pdf","uploads\advise\1704264176341-ZFI_BGM_1.pdf","50000437","1704264176349","A RAJA BANERJEE","600231"
+"8","8989898989","1704265879330-ZFI_BGM_1.pdf","uploads\advise\1704265879330-ZFI_BGM_1.pdf","50000437","1704265879334","A RAJA BANERJEE","600231"
+"id","purchasing_doc_no","file_name","file_path","vendor_code","created_at","created_by_name","created_by_id"
+"1","4700013229","1702459455473-sample.pdf","uploads\voucher\1702459455473-sample.pdf","50000437","1702459455492","A RAJA BANERJEE","600231"
+"2","4700013229","1702462957946-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","uploads\voucher\1702462957946-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50000437","1702462957970","A RAJA BANERJEE","600231"
+"3","4700013229","1704264275690-mseg.html","uploads\voucher\1704264275690-mseg.html","50000437","1704264275695","A RAJA BANERJEE","600231"
+"4","8989898989","1704264302878-Milestones Activities and Gaps.pdf","uploads\voucher\1704264302878-Milestones Activities and Gaps.pdf","50000437","1704264302880","A RAJA BANERJEE","600231"
+"5","8989898989","1704265630874-Milestones Activities and Gaps.pdf","uploads\voucher\1704265630874-Milestones Activities and Gaps.pdf","50000437","1704265630876","A RAJA BANERJEE","600231"
+"id","user_id","dept_id","internal_role_id","screen_name","activity_type","activity_status"
+"1","600229","3","1","qap","UPDATE","1"
+"2","600231","3","2","qap","ACCEPT","1"
+"3","600229","3","1","qap","ASSIGN","1"
+"4","600231","3","2","qap","REJECT","1"
+"5","600231","3","2","qap","APPROVE","1"
+"6","600230","3","1","ALL_ACCESS","SUPER_ADMIN","1"
+"id","purchasing_doc_no","vendor_code","file_name","file_path","remarks","status","updated_by","created_at","created_by_id"
+"1","2233445","121313134","1706871027402-Flow chart- Service PO (1).pdf","uploads\pf\1706871027402-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706871027407","493834"
+"2","2233445","121313134","1706871216924-Flow chart- Service PO (1).pdf","uploads\pf\1706871216924-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706871216929","493834"
+"3","2233445","121313134","1706871219644-Flow chart- Service PO (1).pdf","uploads\pf\1706871219644-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706871219651","493834"
+"4","2233445","121313134","1706871235176-Flow chart- Service PO (1).pdf","uploads\pf\1706871235176-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706871235179","493834"
+"id","name","department_id","internal_role_id","sdbg","drawing","qap","inspectionCallLetter","shippingDocuments","gateEntry","grn","icgrn","wdc","bpgCopy","checkList","billRegistration","paymentVoucher"
+"1","sdbg assigner","1","1","W","R","R","R","R","R","R","R","R","R","R","R","R"
+"2","sdbg staff","1","2","W","R","R","R","R","R","R","R","R","R","R","R","R"
+"3","drawing general","2","3","R","W","R","R","R","R","R","R","R","R","R","R","R"
+"4","qap assigner","3","1","R","R","W","R","R","R","R","R","R","R","R","R","R"
+"5","qap staff","3","2","R","R","W","R","R","R","R","R","R","R","R","R","R"
+"6","Inspection Call Letter","3","1","R","R","R","W","R","R","R","R","R","R","R","R","R"
+"7","shippingDocuments","3","1","R","R","R","R","W","R","R","R","R","R","R","R","R"
+"8","Gate Entry","3","1","R","R","R","R","R","W","R","R","R","R","R","R","R"
+"PRUEFLOS","WERK","ART","HERKUNFT","OBJNR","OBTYP","STSMA","QMATAUTH","STAT11","INSMK","STAT01","STAT02","STAT04","STAT06","STAT07","STAT08","STAT09","STAT10","STAT14","STAT16","STAT18","STAT19","STAT20","STAT21","STAT22","STAT23","STAT24","STAT25","STAT29","STAT26","STAT27","STAT28","STAT31","STAT34","STAT35","STAT45","STAT46","STAT47","STAT48","STAT49","STAT50","KZSKIPLOT","DYN","HPZ","EIN","ANZSN","KZDYNERF","DYNHEAD","STPRVER","EXTNUM","STAFO","STAT30","QINFSTATUS","ENSTEHDAT","ENTSTEZEIT","ERSTELLER","ERSTELDAT","ERSTELZEIT","AENDERER","AENDERDAT","AENDERZEIT","PASTRTERM","PASTRZEIT","PAENDTERM","PAENDZEIT","PLNTY","PLNNR","PPLVERW","PLNAL","ZAEHL","ZKRIZ","STAT15","SLWBEZ","STAT13","PPKZTLZU","ZAEHL1","PRBNAVERF","PRBNAVV","STAT12","SELMATNR","SELREVLV","SELWERK","SELLIFNR","STAT17","SELHERST","SELKUNNR","SELPPLVERW","GUELTIGAB","AUFNR","AUFPL","CUOBJ","CUOBJ_CH","VERID","SA_AUFNR","KUNNR","LIFNR","HERSTELLER","EMATNR","MATNR","REVLV","XCHPF","CHARG","LAGORTCHRG","ZEUGNISBIS","VFDAT","LICHN","SOBKZ","PS_PSP_PNR","KDAUF","KDPOS","EKORG","EBELN","EBELP","ETENR","BLART","MJAHR","MBLNR","ZEILE","BUDAT","BWART","WERKVORG","LAGORTVORG","LGNUM","LGTYP","LGPLA","LS_KDAUF","LS_KDPOS","LS_VBELN","LS_POSNR","LS_ABRVW","LS_ROUTE","LS_LLAND","LS_KUNAG","LS_VKORG","LS_KDMAT","SPRACHE","KTEXTLOS","LTEXTKZ","KTEXTMAT","ZUSMKZAEHL","OFFENNLZMK","OFFEN_LZMK","LOSMENGE","MENGENEINH","ANZGEB","GEBEH","LVS_STIKZ","LVS_STIMG","GESSTICHPR","EINHPROBE","DYNREGEL","STAT44","PRSTUFE","PRSCHAERFE","LMENGE01","LMENGE02","LMENGE03","LMENGE04","LMENGE05","LMENGE06","MATNRNEU","CHARGNEU","LMENGE07","LMENGE08","LMENGE09","LMENGEZUB","LMENGELZ","LMENGEPR","LMENGEZER","LMENGEIST","LMENGESCH","LTEXTKZBB","ANTEIL","QKZVERF","STAT03","QPMATLOS","AUFNR_CO","KZVBR","KNTTP","PSTYP","STAT05","KOSTL","AUFPS","ANLN1","ANLN2","KONT_PSPNR","NPLNR","APLZL","KONT_KDAUF","KONT_KDPOS","IMKEY","DABRZ","KSTRG","PAOBJNR","PRCTR","GSBER","KONTO","KOKRS","BUKRS","SERNP","LOS_REF","PROJECT","ZZ_PO","ZZ_OTHERS","ZZ_WRKCNTR","BEARBSTATU","STAT32","STAT33","STAT36","STAT37","STAT38","STAT39","STAT40","STAT41","STAT42","STAT43","MENGU","KZPZADR","KZPRADR","ZUSCH","ZUSTD","KZERSTLIEF","KZERSTMUST","ADDON_DUMMY","WARPL","WAPOS","ABNUM","STRAT","TRIALID","RESPONSIBLE","INSP_DOC_NUMBER","LOG_SYSTEM","GESSTICHPR_EXT","EINHPROBE_EXT","PRIO_PUNKTE","SIGN_TYPE_RR","SIGN_TYPE_UD","SIGN_TYPE_SM","SIGNSTRAT_RR","SIGNSTRAT_UD","SIGNSTRAT_SM","GATE_ENTRY_NO"
+"1000001009",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"50000437",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1234",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"5788",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"1000001010",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"50000437",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1234",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"5788",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"id","purchasing_doc_no","file_name","vendor_code","assigned_from","assigned_to","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"4","7800000040","1703132525937-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545",NULL,NULL,"uploads\qap\1703132525937-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP uploaded . . ","PENDING","VENDOR","1703132525947","DCG DATA -CORE SYSTEMS (INDIA) PRIV","50007545"
+"8","4800001795",NULL,"50007545","600229","600231",NULL,"QAP ASSIGN ","ASSIGNED --ISSUE","GRSE","1703134836244","KAMAL RUIDAS","600229"
+"9","4800001795",NULL,"50007545","600229","600231",NULL,"QAP  REJECTED","REJECTED","GRSE","1703135338176","KAMAL RUIDAS","600231"
+"10","4800001795","1703135400202-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545","600229","600231","uploads\qap\1703135400202-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP uploaded . . ","RE_SUBMITTED","VENDOR","1703135400210","DCG DATA -CORE SYSTEMS (INDIA) PRIV","50007545"
+"11","4800001795","1703135469577-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545","600229","600231","uploads\qap\1703135469577-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP uploaded . . ","RE_SUBMITTED","VENDOR","1703135469587","DCG DATA -CORE SYSTEMS (INDIA) PRIV","50007545"
+"12","4800001795",NULL,"50007545","600229","600231",NULL,"QAP ASSIGN ","ASSIGNED","GRSE","1703135706322","KAMAL RUIDAS","600229"
+"13","4800001795",NULL,"50007545","600229","600231",NULL,"QAP ACCEPTED . . . . ","ACCEPTED","GRSE","1703135719932","KAMAL RUIDAS","600229"
+"14","4800001795","1703135744890-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545","600229","600231","uploads\qap\1703135744890-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP  APPROVED .......","APPROVED","GRSE","1703135744897","KAMAL RUIDAS","600229"
+"15","4800001795","1703143894329-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545",NULL,NULL,"uploads\qap\1703143894329-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP uploaded . . ","PENDING","VENDOR","1703143894338","DCG DATA -CORE SYSTEMS (INDIA) PRIV","50007545"
+"16","47654764345",NULL,"50005041",NULL,NULL,NULL,"Vendor upload sdbg","PENDING","VENDOR","1704272766110","KAMAL RUIDAS","50000435"
+"17","47654764345","1704273023793-sample.pdf","50005041",NULL,NULL,"uploads\qap\1704273023793-sample.pdf","Vendor upload sdbg","PENDING","VENDOR","1704273023796","KAMAL RUIDAS","50000435"
+"18","4800001795","1704450933023-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","50007545",NULL,NULL,"uploads\qap\1704450933023-Holiday List 2023_Data Core & AILABS Kolkata (sans ITeS).pdf","QAP uploaded . . ","PENDING","VENDOR","1704450933032","DCG DATA -CORE SYSTEMS (INDIA) PRIV","50007545"
+"id","purchasing_doc_no","file_name","file_path","remarks","status","actionTypeId","actionType","vendor_code","assigned_from","assigned_to","created_at","created_by_name","created_by_id","updated_by"
+"1","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707463959784",NULL,"50007545","VENDOR"
+"2","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707464270562",NULL,"50007545","VENDOR"
+"3","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707464341896",NULL,"50007545","VENDOR"
+"4","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707819781329",NULL,"50007545","VENDOR"
+"5","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707819878704",NULL,"50007545","VENDOR"
+"6","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820275284",NULL,"50007545","VENDOR"
+"7","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820385084",NULL,"50007545","VENDOR"
+"8","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820425495",NULL,"50007545","VENDOR"
+"9","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820535765",NULL,"50007545","VENDOR"
+"10","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820570575",NULL,"50007545","VENDOR"
+"11","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820675588",NULL,"50007545","VENDOR"
+"12","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820932262",NULL,"50007545","VENDOR"
+"13","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820936524",NULL,"50007545","VENDOR"
+"14","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820947403",NULL,"50007545","VENDOR"
+"15","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820950186",NULL,"50007545","VENDOR"
+"16","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820952392",NULL,"50007545","VENDOR"
+"17","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820953724",NULL,"50007545","VENDOR"
+"18","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820977168",NULL,"50007545","VENDOR"
+"19","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820981324",NULL,"50007545","VENDOR"
+"20","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820983800",NULL,"50007545","VENDOR"
+"21","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820985627",NULL,"50007545","VENDOR"
+"22","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820986983",NULL,"50007545","VENDOR"
+"23","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707820988491",NULL,"50007545","VENDOR"
+"24","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821001725",NULL,"50007545","VENDOR"
+"25","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821003913",NULL,"50007545","VENDOR"
+"26","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821005417",NULL,"50007545","VENDOR"
+"27","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821006679",NULL,"50007545","VENDOR"
+"28","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821007767",NULL,"50007545","VENDOR"
+"29","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821008895",NULL,"50007545","VENDOR"
+"30","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821010657",NULL,"50007545","VENDOR"
+"31","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1707821012862",NULL,"50007545","VENDOR"
+"32","7800000040",NULL,NULL,"sdbg submited please check","PENDING",NULL,NULL,"50007545",NULL,NULL,"1708598098301",NULL,"50007545","VENDOR"
+"id","sdbg_id","purchasing_doc_no","file_name","file_path","remarks","status","status_updated_at","status_updated_by_name","status_updated_by_id","created_at","created_by_name","created_by_id","create_at_datetime","updated_at_datetime"
+"id","purchasing_doc_no","bank_name","branch_name","ifsc_code","bank_addr1","bank_addr2","bank_addr3","bank_city","bank_pin_code","bg_no","bg_date","bg_ammount","department","po_date","yard_no","validity_date","claim_priod","check_list_reference","check_list_date","bg_type","vendor_name","vendor_address1","vendor_address2","vendor_address3","vendor_city","vendor_pin_code","extension_date1","extension_date2","extension_date3","extension_date4","extension_date5","extension_date6","release_date","demand_notice_date","entension_letter_date","status","created_at","created_by"
+"id","purchasing_doc_no","file_name","file_path","created_at","updated_at","created_by_name","created_by_id"
+"id","purchasing_doc_no","file_name","file_type_id","file_type_name","vendor_code","file_path","remarks","updated_by","created_at","created_by_id"
+"1","4700013227","a.pdf","1",,"500012","uploads/shippingDocs","new","VENDOR","1697106743","622009"
+"2","13141411411","1706525062753-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706525062753-setup ftp server in Linux server.pdf","new","GRSE","1706525062760","600232"
+"3","13141411411","1706525565309-setup ftp server in Linux server.pdf","1",,"600232","uploads\inspectionCallLetter\1706525565309-setup ftp server in Linux server.pdf","new","GRSE","1706525565315","600232"
+"4","13141411411","1706525619079-setup ftp server in Linux server.pdf","1",,"600232","uploads\shippingDocuments\1706525619079-setup ftp server in Linux server.pdf","new","GRSE","1706525619086","600232"
+"5","13141411411","1706525623733-setup ftp server in Linux server.pdf","1",,"600232","uploads\shippingDocuments\1706525623733-setup ftp server in Linux server.pdf","new","GRSE","1706525623735","600232"
+"6","13141411411","1706594631522-setup ftp server in Linux server.pdf","1","my","600232","uploads\shippingDocuments\1706594631522-setup ftp server in Linux server.pdf","new","GRSE","1706594631525","600232"
+"id","name"
+"1","Hull"
+"2","Electrical"
+"3","Machinery"
+"4","Plumbing"
+"id","file_name","file_path","file_type","created_at","created_by_id","purchasing_doc_no"
+"1","8765678900.pdf","uploads\tncminutes\8765678900.pdf","application/pdf","1706177473483","50007545","8765678900"
+"2","8765678900.pdf","uploads\tncminutes\8765678900.pdf","application/pdf","1706178440432","50007545","8765678900"
+"3","8765678900.pdf","uploads\tncminutes\8765678900.pdf","application/pdf","1706178444776","50007545","8765678900"
+"4","8765678900.pdf","uploads\tncminutes\8765678900.pdf","application/pdf","1706178507219","50007545","8765678900"
+"5","8765678900.pdf","uploads\tncminutes\8765678900.pdf","application/pdf","1706178593666","50007545","8765678900"
+"6","131414.pdf","uploads\tncminutes\131414.pdf","application/pdf","1706608408649","600229","131414"
+"7","4800005422.pdf","uploads\tncminutes\4800005422.pdf","application/pdf","1706612829100","ERPDM1","4800005422"
+"id","event_name","email_to","email_subject","email_cc","email_bcc","email_body","email_send_on","created_by","created_on","modified_by","modified_on","attachemnt_path"
+"1",NULL,"krds@email.com","test","you_cc@email.com","you_bcc@email.com","This is testing email","2024-02-07 11:08:04","6804","2024-02-07",NULL,NULL,"d:/grse/obps/backend/api/v1/ping.pdf"
+"2","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:07:55 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:07:55","50007545","2024-02-13",NULL,NULL,NULL
+"3","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:12:12 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:12:12","50007545","2024-02-13",NULL,NULL,NULL
+"4","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:12:16 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:12:16","50007545","2024-02-13",NULL,NULL,NULL
+"5","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:12:57 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:12:57","50007545","2024-02-13",NULL,NULL,NULL
+"6","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:01 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:01","50007545","2024-02-13",NULL,NULL,NULL
+"7","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:03 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:03","50007545","2024-02-13",NULL,NULL,NULL
+"8","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:05 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:05","50007545","2024-02-13",NULL,NULL,NULL
+"9","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:06 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:06","50007545","2024-02-13",NULL,NULL,NULL
+"10","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:08 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:08","50007545","2024-02-13",NULL,NULL,NULL
+"11","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:21 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:21","50007545","2024-02-13",NULL,NULL,NULL
+"12","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:23 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:23","50007545","2024-02-13",NULL,NULL,NULL
+"13","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:25 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:25","50007545","2024-02-13",NULL,NULL,NULL
+"14","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:26 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:26","50007545","2024-02-13",NULL,NULL,NULL
+"15","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:27 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:27","50007545","2024-02-13",NULL,NULL,NULL
+"16","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:28 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:28","50007545","2024-02-13",NULL,NULL,NULL
+"17","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:30 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:30","50007545","2024-02-13",NULL,NULL,NULL
+"18","SDBG_SUBMIT_BY_VENDOR","kamal.ruidas@datacoresystems.co.in","New SDBG Submitted by Vendor",NULL,NULL,"
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset=""utf-8"">
+            <title>E-Mail OBPS Project</title>
+            <style>
+              .container {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                background-color: #f4f4f4;
+              }
+              .email {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+              }
+              .email-header {
+                background-color: #333;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+              }
+              .email-body {
+                padding: 20px;
+              }
+              .email-footer {
+                padding: 20px;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class=""container"">
+              <div class=""email"">
+                <div class=""email-body"">
+                  <p>Dear DCG DATA -CORE SYSTEMS (INDIA) PRIV, <br>
+        Below are the details pertinent to submission of SDBG for the PO - 7800000040.
+        <br>
+        <br>
+        By : Naskar Sir <br>
+        Remarks: sdbg submited please check<br>
+        Date : Tue Feb 13 2024 16:13:32 GMT+0530 (India Standard Time) <br>
+        </p>
+                </div>
+                <div class=""email-footer"">
+                  <p>Don't reply to this mail.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      ","2024-02-13 16:13:32","50007545","2024-02-13",NULL,NULL,NULL
+"id","department_id","internal_role_id","privilege_id","emp_id","name","created_at","updated_at"
+"1","12","3","0","admin","Mrinmoy Ghosh","2023-09-12 10:25:51",NULL
+"2","1","6","0","vendor","Vendor1","2023-10-12 15:55:23",NULL
+"3","0","6","0","vendor2","Vendor2","2023-10-12 15:56:56",NULL
+"4","3","2","0","600231","grse qap staff","2023-10-12 15:57:39",NULL
+"5","3","1","0","600229","grse qap assigner","2023-10-12 15:58:16",NULL
+"6","13","4","0","super_admin","Kamal Ruidas","2023-09-12 10:25:51",NULL
+"7","3","2","0","600947","grse qap staff","2023-10-12 15:58:16",NULL
+"8","3","2","0","600948","grse qap staff","2023-10-12 15:58:16",NULL
+"9","3","2","0","600232","grse qap staff","2023-10-12 15:58:16",NULL
+"10","3","2","0","600233","grse qap staff","2023-10-12 15:58:16",NULL
+"11","3","2","0","600949","grse qap staff","2023-10-12 15:58:16",NULL
+"12","3","2","0","600951","grse qap staff","2023-10-12 15:58:16",NULL
+"13","3","2","0","600953","grse qap staff","2023-10-12 15:58:16",NULL
+"14","3","2","0","600950","grse qap staff","2023-10-12 15:58:16",NULL
+"15","3","2","0","600252","grse qap staff","2023-10-12 15:58:16",NULL
+"16","14","3","0","600100","ppc_user","2024-01-15 14:08:08",NULL
+"18","15","1","1","600200","grse_FINANCE_ASSIGNER","2024-01-23 16:44:53",NULL
+"19","16","0","0","600300","grse_RIC","2024-01-23 16:44:53",NULL
+"20","15","2","1","600201","grse_FINANCE_STAFF","2024-01-23 16:44:53",NULL
+"21","17","1","0","493834","Po dealing officer","2024-01-23 16:44:53",NULL
+"22","2","1","0","600400","CDO(drawing officer)","2024-01-23 16:44:53",NULL
+"id","user_type_id","ven_bill_submit","ven_bill_show","ven_bill_edit","ven_bill_received","ven_bill_certified","ven_bill_forward"
+"1","1","1","1","1","0","0","0"
+"2","2","0","0","0","1","1","1"
+"3","3","0","0","0","1","1","1"
+"4","4","0","0","0","1","1","1"
+"5","5","1","1","1","1","1","1"
+"id","user_type","created_at","updated_at"
+"1","VENDOR","1697106743","1697106743"
+"2","GRSE_DEPARTMENT","1697106743","1697106743"
+"3","GRSE_BANKING","1697106743","1697106743"
+"4","GRSE_FINANCE","1697106743","1697106743"
+"5","ADMIN","1697192466","1697192466"
+"6","SUPER_ADMIN","1697192466","1697192466"
+"wbs_id","project_code","purchasing_doc_no"
+"W1","P1","4700013227"
+"W1","P1","4800008195"
+"W2","P2","4700016027"
+"W2","P2","4800011669"
+"W1","P1","7800000040"
+"EBELN","EBELP","WBS_ELEMENT","NETWORK"
+"1000001009","10","wbejdkdkkdk","ABCD"
+"1000001009","10","wbejdkdkkdk","ABCD"
+"1000001009","10","wbejdkdkkdk","ABCD"
+"id","purchasing_doc_no","file_name","vendor_code","file_path","remarks","status","updated_by","created_at","created_by_name","created_by_id"
+"1","8765678900",NULL,"DATA CORE",NULL,"REMARKS","PENDING","VENDOR","1704274898750","KAMAL RUIDAS","kamal.ruidas@datacoresystems.co.in"
+"id","purchasing_doc_no","document_type","file_name","file_path","remarks","status","updated_by","created_at","created_by_id"
+"1","2233445","1","1706867143873-Flow chart- Service PO (1).pdf","uploads\wmc\1706867143873-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706867143939","493834"
+"2","2233445","1","1706867725693-Flow chart- Service PO (1).pdf","uploads\wmc\1706867725693-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706867725698","493834"
+"3","2233445","1","1706867726733-Flow chart- Service PO (1).pdf","uploads\wmc\1706867726733-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706867726738","493834"
+"4","2233445","1","1706867727642-Flow chart- Service PO (1).pdf","uploads\wmc\1706867727642-Flow chart- Service PO (1).pdf","new","SUBMIT","GRSE","1706867727645","493834"
+"MANDT","ZBTNO","RERDAT","RERZET","RERNAM","RLAEDA","RCTIME","RAENAM","LIFNR","ZVBNO","VEN_BILL_DATE","EBELN","DPERNR1","DRERDAT1","DRERZET1","DRERNAM1","DPERNR2","DRERDAT2","DRERZET2","DRERNAM2","DAERDAT","DAERZET","DAERNAM","DALAEDA","DAAENAM","DEERDAT","DEERZET","DEERNAM","DELAEDA","DEAENAM","DFERDAT","DFERZET","DFERNAM","DFLAEDA","DFAENAM","ZRMK1","DSTATUS","FPERNR1","ZRMK2","FPERNR2","ZDCOMMENT","ZRMK3","ZRMK4","ZFCOMMENT","FSTATUS","BSTATUS","UNITNO","COMNO","FRERDAT","FRERZET","FRERNAM","FRLAEDA","FRAENAM","FAERDAT","FAERZET","FAERNAM","FALAEDA","FAAENAM","FEERDAT","FEERZET","FEERNAM","FELAEDA","FEAENAM","FPERDAT","FPERZET","FPERNAM","FPLAEDA","FPAENAM","BPERDAT","BPERZET","BPERNAM","BPLAEDA","BPAENAM","HOLD","ALERT_GM","ALERT_DIR","ALERT_AGM_DGM"
+"NAA","20230920001","2023-09-28","13:23:49","DCG1",NULL,"08:45:00",NULL,"50007545","BILL-INV_001","0000-00-00","7800000040","600947","0000-00-00","10:33:03","DCG1","600947","0000-00-00","10:29:23","600229",NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,"0000-00-00","10:37:29","DCG1",NULL,NULL,NULL,"2","600947"," hjashjas",NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1",NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"NA","20230920002","0000-00-00","13:23:15","DCG1",NULL,"00:00:00",NULL,"50007545","BILL-INV_002","0000-00-00","7800000040","600229",NULL,"00:00:00",NULL,NULL,NULL,"00:00:00",NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1",NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"NA","20230925001","0000-00-00","11:40:35","DCG1",NULL,"00:00:00",NULL,"50007545","BILL-INV_003","0000-00-00","7800000040","600229",NULL,"00:00:00",NULL,NULL,NULL,"00:00:00",NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1",NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,"00:00:00",NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,,"0000-00-00",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927001",NULL,NULL,"Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927001",NULL,NULL,"Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927001",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927001","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927002","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927002","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927007","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927008","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927009","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927009","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927011","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927011","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927013","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927013","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927015","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927016","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927017","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927018","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927019","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927020","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927021","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927022","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927023","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927024","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927025","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230927026","2023-09-27","00:00:00","Mrinmoy Ghos",NULL,NULL,NULL,"50007545","bksingh","2023-09-26","7800000040","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"trycatch","1",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20230929001","2023-09-29","16:53:34","Mrinmoy Ghos",NULL,NULL,NULL,"50007545","234543212345t","2023-09-13","7800000040","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"ee","2",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231123001","2023-11-23","11:30:11","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231123002","2023-11-23","11:30:55","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221001","2023-12-21","15:11:07","Mrinmoy Ghos",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221002","2023-12-21","15:58:39","DCG",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221003","2023-12-21","16:01:56","DCG",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221004","2023-12-21","16:02:43","DCG",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221005","2023-12-21","16:14:53","DCG",NULL,NULL,NULL,"50007523","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221006","2023-12-21","16:16:25","DCG",NULL,NULL,NULL,"50000435","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221007","2023-12-21","16:17:05","DCG",NULL,NULL,NULL,"50000435","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221008","2023-12-21","16:17:07","DCG",NULL,NULL,NULL,"50000435","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221009","2023-12-21","16:17:07","DCG",NULL,NULL,NULL,"50000435","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221010","2023-12-21","16:17:39","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221011","2023-12-21","16:17:40","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221012","2023-12-21","16:17:41","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221013","2023-12-21","16:33:24","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221014","2023-12-21","16:40:24","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221015","2023-12-21","16:40:51","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221016","2023-12-21","16:43:35","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20231221017","2023-12-21","16:57:12","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new gengrated bill",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240103001","2024-01-03","14:52:36",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240103002","2024-01-03","14:55:51","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240103003","2024-01-03","14:56:17","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240103004","2024-01-03","14:56:29","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125001","2024-01-25","11:12:51","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125502","2024-01-25","11:15:33","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125503","2024-01-25","11:15:38","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125504","2024-01-25","11:15:45","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125505","2024-01-25","11:15:46","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125506","2024-01-25","11:15:48","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125507","2024-01-25","11:15:49","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125508","2024-01-25","11:15:49","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125509","2024-01-25","11:15:50","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125510","2024-01-25","11:15:51","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125511","2024-01-25","11:15:52","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125512","2024-01-25","11:15:53","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125513","2024-01-25","11:15:54","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125514","2024-01-25","11:15:55","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125515","2024-01-25","11:15:56","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125516","2024-01-25","11:16:06","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125517","2024-01-25","11:16:07","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125518","2024-01-25","11:16:08","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125519","2024-01-25","11:16:08","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240125520","2024-01-25","11:16:09","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240219501","2024-02-19","11:24:30","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+NULL,"20240219502","2024-02-19","11:25:33","DCG",NULL,NULL,NULL,"50007545","123232344","2023-09-27","8765678987","0",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"new bill registration",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"SRNO","MANNO"
+"SRNO","MANNO"
+"ZBTNO","ZGRNO","VGABE","EBELN","EBELP","MBLNR","MJAHR","LBLNI","AUGBL","OTHER"
+"20230929001","AB","X","89293","883","003","883","9983","7839","3993"
+"20230929001","AB","X","89293","883","003","883","9983","7839","3993"
+"20230929001","AB","X","89293","883","003","883","9983","7839","3993"
+"20230929001","AB","X","89293","883","003","883","9983","7839","3993"
+"5000231739",,,"7800000040","10",,"0","1000127607",,
+"ZBTNO","ZGRNO","ZIVNO","BELNR","GJAHR","AUGBL"
+"MANTD","ZBTNO","SRNO","MANNO","ZSECTION","RMK","ERDAT","ERZET","ERNAM","DRETSEQ","ALERT_STATUS"
+"NA","20230920001","1","600229","1",NULL,"0000-00-00","13:23:49","DCG1",NULL,NULL
+"NA","20230920001","2","600229","2",NULL,"0000-00-00","13:25:44","DCG1",NULL,NULL
+"NA","20230920001","3","600229","2",NULL,"0000-00-00","10:28:08","DCG1",NULL,NULL
+"NA","20230920001","4","600947","2",NULL,"0000-00-00","10:28:51","DCG1",NULL,NULL
+NULL,"20230920001","N","0","1","REMARKS","2023-10-03","15:32:21","LOGIN USER N","1","O"
+NULL,"20230920001","N/","0","1","REMARKS","2023-10-03","15:30:14","LOGIN USER N","1","O"
+NULL,"20230920001",,"0","1","REMARKS","2023-10-03","15:36:46","LOGIN USER N","1","O"
+NULL,"20230920001",,"0","1","REMARKS","2023-10-03","15:36:47","LOGIN USER N","1","O"
+NULL,"20230920001",,"0","1","REMARKS","2023-10-03","15:38:40","LOGIN USER N","1","O"
+NULL,"20230920001",,"0","1","REMARKS","2023-10-03","15:40:26","LOGIN USER N","1","O"
+NULL,"20230920001",,"0","1","REMARKS","2023-10-03","15:40:43","LOGIN USER N","1","O"
+"id","FILE_NO","BANKERS_NAME","BANKERS_BRANCH","BANKERS_ADD1","BANKERS_ADD2","BANKERS_ADD3","BANKERS_CITY","B_PIN_CODE","BANK_GU_NO","BG_DATE","BG_AMOUNT","PO_NUMBER","DEPARTMENT","PO_DATE","YARD_NO","VALIDITY_DATE","CLAIM_PERIOD","CHECKLIST_REF","CHECKLIST_DATE","BG_TYPE","VENDOR_NAME","VENDOR_ADD1","VENDOR_ADD2","VENDOR_ADD3","VENDOR_CITY","V_PIN_CODE","CONFIRMATION","EXTENTION_DATE1","EXTENTION_DATE2","EXTENTION_DATE3","EXTENTION_DATE4","EXTENTION_DATE5","EXTENTION_DATE6","RELEASE_DATE","DEM_NOTICE_DATE","EXT_LETTER_DATE"
+"1","dfd","fvdg",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"2","sdfvb","sdsfdfg",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"3","csdxz","sfcds",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"4","payload.FI","payload.BANKERS_NAME",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"5","payload.FI","payload.BANKERS_NAME",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"6","payload.FI","payload.BANKERS_NAME",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"7","payload.FI","payload.BANKERS_NAME",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"8","111111","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"9","22222","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"10","111111","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"11","22222","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"12","111111","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"13","22222","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"14","111111","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"15","22222","AXIS BANK",NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+"16","111111","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"17","22222","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"18","111111","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"19","22222","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"20","111111","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"21","22222","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"22","111111","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"23","22222","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"24","111111","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"25","22222","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"26","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"27","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"28","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"29","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"30","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"31","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"32","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"33","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"34","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"35","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"36","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"37","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"38","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"39","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"40","33333","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"41","44444","AXIS BANK","KOLKATA","KOLKATA","KOLAKATA",NULL,"KOL","700001","8765434567890987","2023-12-21","1133999999999","40839293","QAP","2023-12-01",NULL,"2023-12-31","2023-12-10",NULL,NULL,"YYY","DCG DATA CORE SYSTEMS INDIA PRIVATE LIMI","KOLKATA","SALT LAKE","SECTOR 2","KOLkAKAT","700232","Y","2023-12-31",NULL,NULL,NULL,NULL,NULL,"2024-01-31",NULL,"2023-12-21"
+"MANDT","MID","MTEXT"
+"ENTRY_NO","W_YEAR","ENTRY_DATE","ENTRY_TIME","CHALAN_NO","CHALAN_DATE","DELIV_NO","DELIV_DATE","TRANS_NO","TRAN_NAME","VEH_REG_NO","LR_NO","LR_DATE","WEIGH_BRDG_NO","GATE_NO","TC_GC","DFT_COPY","EXIT_IND","EXIT_DATE","EXIT_TIME","CANC_IND","ENTRY_DATE_IN","ENTRY_TIME_IN","USER_ID","Z_EXIT","BLOCK","SERNO","CONSIGN_NO","CONSIGN_DATE","TRAINENTRY","TRUCK_TYPE","GROSS_WT","TIER_WT","NET_WT","MINES","GRADE","EXITCOMP","ENTRCOMP","CANCCOMP","ZPCNO","ZRMKS","MINLOAD","GRWTDT","GRWTTM","GRWTCOMP","TAWTDT","TAWTTM","TAWTCOMP","ZEXITSECU","SECUEXDT","SECUEXTM","SECUEXCOMP","ZCONTACTNO","ZCONNAME","ZWAYBLNO","ZWAYBLDT","ZTRIND","ZTRDESC","ZACTLDQTY","INVNO","INVDAT","EXNUM","EXDAT","ZWAYBAMT","USERNAME","VBELN","REMARKS","TMPWET","TMPDAT","TMPTIM","TMPTRTER","TMPUNAME","INIWET","INIUNAME","INIDAT","INITIM","INITRTER","AUTO","WERKS","EXITUNAME","INIKNO","TMPKNO","INIUTYPE","TMPUTYPE","AUTOUSER","AUTODATE","AUTOTIME","FREIGHT","GATEREM","WBREM","STORE","NETFLG","MINESINDT","MINESOUTDT","MTYPE","RSTNO","DFORM","TYPE","ZFCQ","ZAQTY","ZFR_ENTRY_USER","TKNUM","INBND_STATUS","TRANSPORT","DISPNAME","SQTY","SDECISSION","TR_KANTA_SLIP","CHALLAN_WT","GATE_NAME","GATE_DATE","GATE_TIME","HELPER_NAME","HELPER_NO","D_LICENCE","OUT_TPM_NO","OUT_TPM_DATE","OUT_TPM_TIME","OUT_TPM_USER","TARE_BRDG_NO","OUTBOUND","OUT_TARE_USER","OUT_TARE_DATE","OUT_TARE_TIME","ZMBLNR","TANK_TYPE","TOTAL_SEAL","CONTAINER_NO","GROSS_USER","GROSS_DATE","GROSS_TIME","SEAL_DETAILS","INT_TRANSFER","INT_TRANSFER2","DRIVER_LICE_EXP_DT","CLEAN_TRUCK","LOGISTICS_USER","LOGISTICS_DATE","LOGISTICS_TIME","QUALITY_USER","QUALITY_DATE","QUALITY_TIME","PACKAGE_WEIGHT","RETURN_INV_NO","REMARKS1","PACKAGING_QTY","PACKAGING_MODE","GE_TYPE","ALLOW_SLIP","LOAD_EMPTY","ZREMARKS","CAP","DED_AMT","TRANS_NO_EXT","TRAN_NAME_EXT","LGORT","REPORT_TO","EMAIL","QFORM_NO","QFORM_DT","REASON_ENTRY","DISP_ADV","DISP_ADV_DT","DLV_CHALLAN","DLV_CHALLAN_DT","TRANS_PO_NO","DIR_SUP_FLAG","TRANS_GSTIN"
+"MANDT","EBELN","MID","MTEXT","PLAN_DATE","MO"
+"0","10000002","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000002","2","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000002","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000003","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000003","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000004","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000004","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000005","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000005","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000006","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000006","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000007","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000007","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000008","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000008","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000009","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000009","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000010","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000010","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","1000001009","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","1000001009","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","1000001010","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","1000001010","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000011","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000011","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000012","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000012","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","10000013","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","10000013","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","7800000040","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-02-07 16:13:26","M"
+"0","7800000040","2","CONTRACTUAL drawingSUBMISSION DATE","2024-02-07 16:41:04","M"
+"0","7800000040","3","CONTRACTUAL QAP SUBMISSION DATE","2024-02-07 16:13:32","M"
+"0","8989898960","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","8989898960","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"
+"0","8989898989","1","CONTRACTUAL SDBG SUBMISSION DATE","2024-11-02 00:00:00","M"
+"0","8989898989","3","CONTRACTUAL QAP SUBMISSION DATE","2024-11-03 00:00:00","M"

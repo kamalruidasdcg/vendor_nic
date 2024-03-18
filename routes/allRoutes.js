@@ -28,13 +28,22 @@ const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
-const wdcRoutes = require("./wdcRoutes");
+const wdcRoutes = require("./WdcRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
+const demandeManagementRoutes = require("./demandeManagementRoutes");
 
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
 const inspectionCallLetterRoutes = require("./inspectionCallLetterRoutes");
+const inspectionReleaseNoteRoutes = require("./inspectionReleaseNoteRoutes");
+
+const hrRoutes = require("./hrRoutes");
+const vendorActivitiesRoutes = require("./vendorActivitiesRoutes");
+
+
+
 const MrsRoutes = require("./MrsRoutes");
+const MirRoutes = require("./MirRoutes");
 
 const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
@@ -112,7 +121,15 @@ router.use(poPrefix + "/ilms", ilmsRoutes);
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
+router.use(poPrefix + "/inspectionReleaseNote", inspectionReleaseNoteRoutes);
+
+//demandeManagement
+router.use(poPrefix + "/demandeManagement", demandeManagementRoutes);
+router.use(poPrefix + "/hr", hrRoutes);
+router.use(poPrefix + "/vendor", vendorActivitiesRoutes);
+
 router.use(poPrefix + "/Mrs", MrsRoutes);
+router.use(poPrefix + "/Mir", MirRoutes);
 
 router.use(poPrefix + "/shippingDocuments", shippingDocumentsRoutes);
 router.use(poPrefix + "/material", materialRoutes);
@@ -208,6 +225,20 @@ router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file
 router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
   qapController.list(req, res);
 });
+
+// QAP SAVE getQapSave deleteQapSave
+router.post(poPrefix + "/insertQapSave", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
+  qapController.insertQapSave(req, res);
+});
+
+router.get(poPrefix + "/deleteQapSave", [veifyAccessToken], (req, res) => {
+  qapController.deleteQapSave(req, res);
+});
+
+router.get(poPrefix + "/getQapSave", [veifyAccessToken], (req, res) => {
+  qapController.getQapSave(req, res);
+})
+
 
 //internalDepartmentList
 router.get(poPrefix + "/internalDepartmentList", [], (req, res) => {
