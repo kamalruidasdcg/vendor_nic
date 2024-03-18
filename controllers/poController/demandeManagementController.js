@@ -1,7 +1,7 @@
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT } = require("../../lib/constant");
+const { INSERT, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
 const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
@@ -13,78 +13,71 @@ const { getFilteredData, updatTableData, insertTableData } = require("../genralC
 
 const insert = async (req, res) => {
 
-    return resSend(res, true, 200, "inserted!", req.body, null);
-    // try {
+   // return resSend(res, true, 200, "inserted!", req.body, null);
 
-    //     // const lastParam = req.path.split("/").pop();
-    //     // Handle Image Upload
-    //     let fileData = {};
-    //     if (req.file) {
-    //         fileData = {
-    //             fileName: req.file.filename,
-    //             filePath: req.file.path,
-    //             fileType: req.file.mimetype,
-    //             fileSize: req.file.size,
-    //         };
-    //     }
-    //     const tokenData = { ...req.tokenData };
+    try {
 
-    //     const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
+  
+        const tokenData = { ...req.tokenData };
+        const obj = { ...req.body};
 
-    //     const payload = {
-    //         ...req.body,
-    //         vendor_code: tokenData.vendor_code,
-    //         created_at: getEpochTime(),
-    //         created_by_id: tokenData.vendor_code,
-    //         updated_by: by,
-    //         ...fileData,
-    //     };
-    //     console.log("payload", payload);
-    //     if (!payload.purchasing_doc_no) {
+        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.request_amount) {
 
-    //         // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-    //         // const isDel = handleFileDeletion(directory, req.file.filename);
-    //         return resSend(res, false, 400, "Please send valid payload", null, null);
+            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+            // const isDel = handleFileDeletion(directory, req.file.filename);
+            return resSend(res, false, 400, "Please send valid payload", null, null);
 
-    //     }
+        }
 
+        if (tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
+            return resSend(res, false, 400, "Please login as PPNC depertment!", null, null);
+        }
 
-    //     // if (payload.status === PENDING) {
-    //     //     insertObj = inspectionCallLetterPayload(payload, PENDING);
-    //     // } else if (payload.status === RE_SUBMITTED) {
-    //     //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
-    //     // } else if (payload.status === APPROVED) {
-    //     //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
-    //     // }
-    //     // insertObj = inspectionCallLetterPayload(payload, PENDING);
+        const payload = {
+            ...obj,
+            created_at: getEpochTime(),
+        };
+
+        console.log("payload", payload);
+        
+
+//return;
+        // if (payload.status === PENDING) {
+        //     insertObj = inspectionCallLetterPayload(payload, PENDING);
+        // } else if (payload.status === RE_SUBMITTED) {
+        //     // insertObj = inspectionCallLetterPayload(payload, RE_SUBMITTED);
+        // } else if (payload.status === APPROVED) {
+        //     insertObj = inspectionCallLetterPayload(payload, APPROVED);
+        // }
+        // insertObj = inspectionCallLetterPayload(payload, PENDING);
 
 
-    //     let insertObj = inspectionReleaseNotePayload(payload);
+        let insertObj = inspectionReleaseNotePayload(payload);
 
-    //     console.log("insertObj", insertObj);
-    //     const { q, val } = generateQuery(INSERT, INSPECTIONRELEASENOTE, insertObj);
-    //     const response = await query({ query: q, values: val });
+        console.log("insertObj", insertObj);
+        const { q, val } = generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
+        const response = await query({ query: q, values: val });
 
-    //     if (response.affectedRows) {
+        if (response.affectedRows) {
 
-    //         // await handleEmail();
+            // await handleEmail();
 
-    //         resSend(res, true, 200, "Ispection Release Note inserted successfully !", null, null);
-    //     } else {
-    //         resSend(res, false, 400, "No data inserted", response, null);
-    //     }
+            resSend(res, false, 200, "DEMAND MANAGEMENT inserted successfully !", null, null);
+        } else {
+            resSend(res, false, 400, "No data inserted", response, null);
+        }
 
 
-    //     // }
-    //     // else {
-    //     //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
-    //     // }
+        // }
+        // else {
+        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        // }
 
-    // } catch (error) {
-    //     console.log("po add api", error)
+    } catch (error) {
+        console.log("po add api", error)
 
-    //     return resSend(res, false, 500, "internal server error", [], null);
-    // }
+        return resSend(res, false, 500, "internal server error", [], null);
+    }
 }
 
 const list = async (req, res) => {
@@ -95,12 +88,23 @@ const list = async (req, res) => {
         if (!req.query.poNo) {
             return resSend(res, false, 400, "Please send poNo", null, "");
         }
+//req.query.poNo
+        const insp_call_query =`WITH available_amount AS (
+            SELECT EBELN, EBELP, SUM(MENGE) AS total_amount
+            FROM mseg
+            GROUP BY EBELP
+        ),
+        request_amount AS (
+            SELECT purchasing_doc_no, line_item_no, SUM(request_amount) AS total_request_amount
+            FROM demande_management
+            GROUP BY line_item_no
+        )
+        SELECT ua.purchasing_doc_no, ua.line_item_no, aa.total_amount, ua.total_request_amount,tq.KTMNG AS total_target_amount
+        FROM available_amount AS aa
+        LEFT JOIN ekpo AS tq ON (aa.EBELN = tq.EBELN and aa.EBELP = tq.EBELP)
+        JOIN request_amount AS ua ON (aa.EBELN = ua.purchasing_doc_no and aa.EBELP = ua.line_item_no) WHERE aa.EBELN = ?
+        GROUP BY aa.EBELP;`;
 
-        const insp_call_query =
-            `SELECT *
-            FROM   ${DEMAND_MANAGEMENT}
-            WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? )`;
         const result = await query({ query: insp_call_query, values: [req.query.poNo] })
 
         resSend(res, true, 200, "Demande Management Data fetched", result, "");
