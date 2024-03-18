@@ -2,7 +2,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
-const { INSPECTIONRELEASENOTE } = require("../../lib/tableName");
+const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -89,27 +89,27 @@ const insert = async (req, res) => {
 
 const list = async (req, res) => {
 
-    // try {
+    try {
 
 
-    //     if (!req.query.poNo) {
-    //         return resSend(res, false, 400, "Please send poNo", null, "");
-    //     }
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send poNo", null, "");
+        }
 
-    //     const insp_call_query =
-    //         `SELECT *
-    //         FROM   ${INSPECTIONRELEASENOTE}
-    //         WHERE  ( 1 = 1
-    //                  AND purchasing_doc_no = ? )`;
-    //     const result = await query({ query: insp_call_query, values: [req.query.poNo] })
+        const insp_call_query =
+            `SELECT *
+            FROM   ${DEMAND_MANAGEMENT}
+            WHERE  ( 1 = 1
+                     AND purchasing_doc_no = ? )`;
+        const result = await query({ query: insp_call_query, values: [req.query.poNo] })
 
-    //     resSend(res, true, 200, "Inspection Release Note fetched", result, "");
+        resSend(res, true, 200, "Demande Management Data fetched", result, "");
 
-    // } catch (err) {
-    //     console.log("data not fetched", err);
-    //     resSend(res, false, 500, "Internal server error", null, "");
-    // }
-    return resSend(res, true, 200, "oded!", `list`, null);
+    } catch (err) {
+        console.log("data not fetched", err);
+        resSend(res, false, 500, "Internal server error", null, "");
+    }
+  //  return resSend(res, true, 200, "oded!", `list`, null);
 
 }
 
