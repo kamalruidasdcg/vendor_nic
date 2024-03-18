@@ -19,6 +19,9 @@ router.post("/mrs", [veifyAccessToken], [dynamicallyUpload.single("file")], (req
 router.get("/mrs/list", [], [veifyAccessToken], (req, res) => {
   controller.mrsList(req, res);
 });
+router.post("/issue/list", [], (req, res) => {
+  controller.materialIssue(req, res);
+});
 
 
 module.exports = router;

@@ -1,13 +1,13 @@
 
-const { resSend } = require("../../lib/resSend");
+const { resSend, responseSend } = require("../../lib/resSend");
 const { getFilteredData } = require("../genralControlles");
 const { INSERT } = require("../../lib/constant");
-const { getEpochTime, generateQuery } = require("../../lib/utils");
+const { getEpochTime, generateQuery, generateQueryArray, generateQueryForMultipleData } = require("../../lib/utils");
 const { query } = require("../../config/dbConfig");
 const { wbsPayload } = require("../../services/sap.wbs.services");
 const { WBS_ELEMENT } = require("../../lib/tableName");
 
-const addWBSElement = async (req, res) => {
+const addWBSElementb = async (req, res) => {
 
     try {
         let payload;
@@ -37,6 +37,31 @@ const addWBSElement = async (req, res) => {
 
         return resSend(res, false, 500, "internal server error", [], null);
     }
+}
+
+
+
+const addWBSElement = async (req, res) => {
+
+    //    http://10.13.1.38:4001/api/v1/po/qap
+    console.log("req.body)", req.body);
+    console.log("req.body)", req.body);
+    try {
+        if (!req.body) {
+            responseSend(res, "0", 400, "Please send a valid payload.gg", null, null);
+        }
+        const payload = [...req.body];
+        const payloadObj = await wbsPayload(payload);
+        console.log("payloadObj", payloadObj);
+        const wbsInsertQuery = await generateQueryForMultipleData(payloadObj, WBS_ELEMENT, "C_PKEY");
+        const response = await query({ query: wbsInsertQuery, values: [] });
+        console.log("response", response);
+        responseSend(res, "1", 200, "Data inserted successfully", response, null);
+    } catch (err) {
+        console.log("data not fetched", err);
+        responseSend(res, "0", 500, "Internal server error", null, null);
+    }
+
 }
 
 

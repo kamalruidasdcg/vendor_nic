@@ -28,7 +28,7 @@ const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
-const wdcRoutes = require("./wdcRoutes");
+const wdcRoutes = require("./WdcRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
 const demandeManagementRoutes = require("./demandeManagementRoutes");
 
