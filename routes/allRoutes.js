@@ -30,6 +30,7 @@ const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
 const wdcRoutes = require("./WdcRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
+const demandeManagementRoutes = require("./demandeManagementRoutes");
 
 const dashboardRoutes = require("./dashboardRoutes");
 const downloadRoutes = require("./downloadRoutes");
@@ -122,6 +123,8 @@ router.use(poPrefix + "/download", downloadRoutes);
 router.use(poPrefix + "/inspectionCallLetter", inspectionCallLetterRoutes);
 router.use(poPrefix + "/inspectionReleaseNote", inspectionReleaseNoteRoutes);
 
+//demandeManagement
+router.use(poPrefix + "/demandeManagement", demandeManagementRoutes);
 router.use(poPrefix + "/hr", hrRoutes);
 router.use(poPrefix + "/vendor", vendorActivitiesRoutes);
 
