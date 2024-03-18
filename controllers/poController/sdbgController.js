@@ -47,6 +47,8 @@ const {
   SDBG_SUBMIT_BY_GRSE,
 } = require("../../lib/event");
 const { Console } = require("console");
+const { makeHttpRequest } = require("../../config/sapServerConfig");
+const { zfi_bgm_1_Payload } = require("../../services/sap.services");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -784,6 +786,24 @@ async function handelEmail(payload) {
     await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
   }
 }
+
+
+async function sendBgToSap(payload) {
+
+    try {
+        const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
+        const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
+        console.log("postUrl", postUrl);
+        console.log("wdc_payload -->", );
+        let payload = { ...payload };
+        let modified = await zfi_bgm_1_Payload(payload);
+        const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
+        console.log('POST Response from the server:', postResponse);
+    } catch (error) {
+        console.error('Error making the request:', error.message);
+    }
+}
+
 
 module.exports = {
   submitSDBG,

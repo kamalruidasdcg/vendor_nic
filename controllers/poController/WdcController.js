@@ -14,6 +14,8 @@ const { getFilteredData, updatTableData, insertTableData } = require("../genralC
 const { Verify } = require("crypto");
 const { VENDOR } = require("../../lib/depertmentMaster");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
+require("dotenv").config();
+
 
 exports.wdc = async (req, res) => {
 

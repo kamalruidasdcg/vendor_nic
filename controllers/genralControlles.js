@@ -6,12 +6,9 @@ const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
 const { validatePayload } = require("./validatePayload");
 
-
-
-  
   const getFilteredData = async (req, res) => {
   
-    console.warn("General get filtered data [API]  . . . . . . . . .");
+    console.warn(`Gen get api ${new Date().getTime()}`);
     try {
   
       const { $tableName } = req.query;
@@ -26,27 +23,26 @@ const { validatePayload } = require("./validatePayload");
       if (req.query.$select) {
         select = req.query.$select
       }
-
+      // EXAMPLE --- > 
+      // localhost:4001/api/v1/getFilteredData?$tableName=qap_submission&$filter={"purchasing_doc_no":7800000040,  "id": 4}&$search={"vendor_code": "50007545", "status": "PENDING"}
       // START QUERIES
-      let q = `SELECT ${select} FROM ${$tableName}`
-
+      let q = `SELECT ${select} FROM ${$tableName} WHERE 1 = 1 `
 
       // IF USER SEND SHOW FILTERED ITEMS 
       if (req.query.$filter) {
         const flt = JSON.parse(req.query.$filter);
-        const key1 = Object.keys(flt)[0];
-        q = q.concat(` WHERE ${key1} = "${flt[key1]}"`)
+        Object.keys(flt).forEach((key) => {
+          q = q.concat(` AND ${key} = "${flt[key]}"`)
+        })
       }
 
        // IF USER SEND SHOW FILTERED ITEMS 
       if (req.query.$search) {
         const search = JSON.parse(req.query.$search);
-        const key1 = Object.keys(search)[0];
-  
-        q.includes('WHERE') === true ? q = q.concat(` AND ${key1} LIKE "%${search[key1]}%"`) : q = q.concat(` WHERE ${key1} LIKE "%${search[key1]}%"`);
-  
-        // q = q.concat(` WHERE ${key1} LIKE "%${search[key1]}%"`)
-  
+    
+      Object.keys(search).forEach((key) => {
+          q = q.concat(` AND ${key} LIKE "%${search[key]}%"`)
+        })  
       }
   
       const result = await query({

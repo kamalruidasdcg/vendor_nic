@@ -163,7 +163,100 @@ const mrsList = async (req, res) => {
 
 }
 
+const materialIssue = async (req, res) => {
+
+    try {
+
+        // if (!req.body) {
+        //     return resSend(res, false, 400, "Please send body", null, "");
+        // }
+
+        console.log(req.body);
+
+
+        let q =
+            `SELECT 
+                    mseg.MBLNR as issueNo,
+                    mseg.MATNR as materialNumber,
+                    makt.MAKTX as materialDescription,
+                    mseg.MEINS as unit,
+                    mseg.BWART as batchNo,
+                    mseg.ERFMG as issueQty,
+                    mseg.BPMNG as BPMNG,
+                    mkpf.BUDAT as issuDate,
+                    mseg.EBELN as purchasing_doc_no,
+                    mseg.EBELP as poItemNumber,
+                    mseg.RSNUM as reservationNo,
+                    mseg.LIFNR as vendor_code,
+                    mseg.MENGE as requiredQty,
+                    mseg.KOSTL as costCenter
+                FROM mseg AS mseg
+                	LEFT JOIN mkpf AS mkpf
+                    	ON( mseg.MBLNR = mkpf.MBLNR)
+                     LEFT JOIN makt AS makt
+                    	ON( mseg.MATNR = makt.MATNR) 
+                        WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201') )`
+
+
+        let val = []
+
+        if (req.body.MBLNR) {
+            q = q.concat(" AND mseg.MBLNR = ? ");
+            val.push(req.body.MBLNR);
+        }
+        if (req.body.MJAHR) {
+            q = q.concat(" AND mseg.MJAHR = ? ");
+            val.push(req.body.MJAHR);
+        }
+
+        console.log("q", q, val);
 
 
 
-module.exports = { wmcInsert, wmcList, mrsInsert, mrsList };
+        const result = await query({ query: q, values: val });
+
+        let response = {
+            issueNo: null,
+            issuDate: null,
+            reservationNo: null,
+            lineItem: result
+        }
+
+        console.log("result", result);
+        // {
+        //     issueNo: '1000001014',
+        //     materialNumber: null,
+        //     materialDescription: null,
+        //     unit: null,
+        //     batchNo: null,
+        //     issueQty: null,
+        //     BPMNG: null,
+        //     issuDate: null,
+        //     purchasing_doc_no: null,
+        //     poItemNumber: null,
+        //     reserationNo: null,
+        //     vendor_code: '50000437',
+        //     requiredQty: null
+        //   }
+
+        if (result.length > 0) {
+            response.issueNo = result[0].issueNo;
+            response.issuDate = result[0].issuDate || null;
+            response.reservationNo = result[0].reservationNo || null;
+
+            resSend(res, true, 200, "Data fetched successfully", response, null);
+        } else {
+            resSend(res, false, 200, "No Record Found", response, null);
+        }
+
+
+    } catch (error) {
+        return resSend(res, false, 500, "internal server error", error, null);
+    }
+
+
+}
+
+
+
+module.exports = { wmcInsert, wmcList, mrsInsert, mrsList, materialIssue };
