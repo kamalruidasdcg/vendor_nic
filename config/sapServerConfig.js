@@ -78,7 +78,7 @@ module.exports = { makeHttpRequest }
 // async function fetchData() {
 //   try {
 //     const postUrl = "http://10.181.1.31:8010/sap/bc/zoBPS_WDC"
-  
+
 //     const wdc_payload =
 //     {
 //       "ebeln": "898991",
@@ -87,7 +87,7 @@ module.exports = { makeHttpRequest }
 //       "wdc": "d/wdc"
 //     }
 
-    
+
 //     console.log("postUrl", postUrl);
 //     console.log("wdc_payload", wdc_payload);
 
@@ -100,3 +100,36 @@ module.exports = { makeHttpRequest }
 
 // // Call the async function
 // fetchData();
+
+
+
+// Example usage with async/await
+async function btnSaveToSap() {
+  try {
+    const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+
+    const btn_payload =
+    {
+      ZBTNO: "20240318501",
+      ERDAT: "20240318",
+      ERZET: "",
+      ERNAM: "600233",
+      LAEDA: "20240318",
+      AENAM: "NAME",
+      LIFNR: "50000437",
+      ZVBNO: "",
+      EBELN: "4000234569",
+      DPERNR1: "",
+      ZRMK1: "REMARKS",
+    }
+
+
+    console.log("postUrl", postUrl);
+    console.log("wdc_payload", btn_payload);
+
+    const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
+    console.log('POST Response from the server:', postResponse);
+  } catch (error) {
+    console.error('Error making the request:', error.message);
+  }
+}
