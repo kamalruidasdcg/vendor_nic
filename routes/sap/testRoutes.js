@@ -7,6 +7,7 @@ const { responseSend } = require("../../lib/resSend");
 const { EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { msegPayload } = require("../../services/sap.material.services");
+const { connectAndQuery } = require("../../config/pgDbConfig");
 
 
 
@@ -151,6 +152,29 @@ router.post("/table", [], async (req, res) => {
     } catch (error) {
         responseSend(res, "0", 400, "Error in database conn!!", error, null);
     }
+
+});
+
+router.post("/pg", [], async (req, res) => {
+
+
+
+        try {
+
+            const obj = req.body;
+
+            const result = await connectAndQuery('SELECT * FROM adr6', []);
+            console.log('result', result);
+
+            responseSend(res, "1", 200, "data insert succeed with mail trigere", result, null);
+
+        } catch (error) {
+            responseSend(res, "0", 502, "Data insert failed !!", error, null);
+        }
+        finally {
+        
+            console.log("Connection End" + "--->" + "connection release");
+        }
 
 });
 
