@@ -68,10 +68,15 @@ const qalsReport = async (req, res) => {
             //     responseSend(res, "0", 400, "Please send a valid payload.", null, null);
             // }
 
+            if(!req.body.docNo) {
+                return resSend(res, false, 200, "plese send docNo", [], null);
+            }
+
 
 
             let icgrnGetQuery =
                 `SELECT 
+                qals.PRUEFLOS as inspectionLotNumber,
                 qals.EBELN as purchasing_doc_no,
                 qals.EBELP as purchasing_doc_no_item,
                 ekko.AEDAT as purchasing_doc_date,
@@ -105,16 +110,18 @@ const qalsReport = async (req, res) => {
                 LEFT JOIN qave as qave
                 	ON( qals.PRUEFLOS = qave.prueflos)
                 WHERE 1 = 1`;
-            if (req.body.PRUEFLOS) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.PRUEFLOS}`)
+            if (req.body.inspectionLotNumber) {
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.inspectionLotNumber}`)
             }
-            if (req.body.MBLNR) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.MBLNR = ${req.body.MBLNR}`)
+            if (req.body.docNo) {
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.MBLNR = ${req.body.docNo}`)
             }
-            if (req.body.EBELN) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = ${req.body.EBELN}`)
+            if (req.body.purchasing_doc_no) {
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = ${req.body.purchasing_doc_no}`)
             }
             const response = await promiseConnection.execute(icgrnGetQuery);
+
+            console.log("icgrnGetQuery", icgrnGetQuery);
 
             if (response && response.length) {
 
