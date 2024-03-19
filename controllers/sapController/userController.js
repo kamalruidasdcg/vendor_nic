@@ -125,10 +125,21 @@ const reservationList = async (req, res) => {
 
         let val = []
 
-        if (req.body.RSNUM) {
+        // if (req.body.RSNUM) {
+        //     q = q.concat(" AND rkpf.RSNUM = ?");
+        //     val.push(req.body.RSNUM);
+        // }
+
+        if (req.body.reservationNumber) {
             q = q.concat(" AND rkpf.RSNUM = ?");
-            val.push(req.body.RSNUM);
+            val.push(req.body.reservationNumber);
         }
+        if (req.body.reservationDate) {
+            q = q.concat(" AND rkpf.RSDAT = ?");
+            val.push(req.body.reservationDate);
+        }
+
+        
 
         console.log("q", q, val);
         const result = await query({ query: q, values: val });
