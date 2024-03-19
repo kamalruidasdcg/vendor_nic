@@ -130,6 +130,10 @@ const reservationList = async (req, res) => {
         //     val.push(req.body.RSNUM);
         // }
 
+        if(!req.body.reservationNumber) {
+            return resSend(res, false, 200, "plese send reservationNumber", [], null);
+        }
+
         if (req.body.reservationNumber) {
             q = q.concat(" AND rkpf.RSNUM = ?");
             val.push(req.body.reservationNumber);
