@@ -384,6 +384,14 @@ const create_btn_no = async (type) => {
   } catch (error) {
     console.log("error into create btn :"`${error}`);
   }
+  // try {
+  //   let date = new Date().toLocaleDateString().replace(/\//g, "");
+  //   let randomFourDigit = Math.floor(1000 + Math.random() * 9000);
+  //   const reference_no = `${type}-${date}${randomFourDigit}`;
+  //   return reference_no;
+  // } catch (error) {
+  //   console.log("error into create btn :"`${error}`);
+  // }
 };
 
 const get_latest_activity = async (

@@ -1,21 +1,27 @@
 const express = require("express");
 const router = express.Router();
-const { uploadBTNs } = require("../lib/fileUpload");
-const { veifyAccessToken } = require("../services/jwt.services");
-const { fetchAllBTNs, submitBTN } = require("../controllers/btnControllers");
+const {
+  fetchAllBTNs,
+  submitBTN,
+  fetchBTNByNum,
+  getImpDates,
+} = require("../controllers/btnControllers");
+const { btnmw } = require("../services/btnmw");
 
 router.get("/", [], (req, res) => {
   fetchAllBTNs(req, res);
 });
-router.post(
-  "/BillsMaterialHybrid",
-  uploadBTNs.fields([
-    { name: "e_invoice_filename", maxCount: 1 },
-    { name: "c_sdbg_filename", maxCount: 1 },
-  ]),
-  (req, res) => {
-    submitBTN(req, res);
-  }
-);
+router.get("/getImpDates", [], (req, res) => {
+  getImpDates(req, res);
+});
+
+router.get("/btn_num", [], (req, res) => {
+  fetchBTNByNum(req, res);
+});
+
+const upload = btnmw();
+router.post("/BillsMaterialHybrid", upload, (req, res) => {
+  submitBTN(req, res);
+});
 
 module.exports = router;

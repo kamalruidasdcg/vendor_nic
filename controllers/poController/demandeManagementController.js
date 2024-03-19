@@ -108,10 +108,10 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        // const demande_query = `SELECT  SUM(aa.MENGE) AS total_amount,ab.KTMNG AS target_amount,SUM(ac.request_amount) AS total_requested_amount
-        // FROM mseg AS aa
-        // LEFT JOIN demande_management AS ac ON (aa.EBELN = ac.purchasing_doc_no AND aa.EBELP = ac.line_item_no)
-        // LEFT JOIN ekpo AS ab ON (aa.EBELN = ab.EBELN AND aa.EBELP = ab.EBELP)
+        // const demande_query = `SELECT  SUM(a1.MENGE) AS total_amount,SUM(a2.request_amount) AS total_requested_amount,a3.KTMNG AS target_amount
+        // FROM ekpo AS a3
+        // LEFT JOIN demande_management AS a2 ON (a3.EBELN = a2.purchasing_doc_no AND a3.EBELP = a2.line_item_no)
+        // LEFT JOIN mseg a1 ON (a1.EBELN = a3.EBELN AND a1.EBELP = a3.EBELP)
         // WHERE aa.EBELN = ? AND  aa.EBELP = ?`;
 
         // const demande_query = `SELECT  SUM(ab.MENGE) AS total_amount,aa.KTMNG AS target_amount,SUM(ac.request_amount) AS total_requested_amount
@@ -123,14 +123,16 @@ const getRestAmount = async (req, res) => {
 
 const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
 const total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-//console.log("total_amount_result :" + total_amount_result[0].total_amount);
+console.log("total_amount_result :" + total_amount_result[0].total_amount);
 const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
 const target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-//console.log("target_amount :" + target_amount_result[0].target_amount);
+console.log("target_amount :" + target_amount_result[0].target_amount);
 const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = ? AND line_item_no = ?`;
 const total_requested_amount_result = await query({ query: total_requested_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-//console.log("total_requested_amount_result :" + total_requested_amount_result[0].total_requested_amount);
+console.log("total_requested_amount_result :" + total_requested_amount_result[0].total_requested_amount);
       
+
+
         const rest_amount = parseInt(target_amount_result[0].target_amount) - (parseInt(total_amount_result[0].total_amount) + parseInt(total_requested_amount_result[0].total_requested_amount));
         // console.log(rest_amount);
         //   return;
