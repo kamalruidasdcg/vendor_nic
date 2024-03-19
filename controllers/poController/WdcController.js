@@ -83,7 +83,11 @@ exports.wdc = async (req, res) => {
 
         if (response.affectedRows) {
             if (payload.status === APPROVED) {
-                await submitToSapServer(payload);
+                try {
+                    await submitToSapServer(payload);
+                } catch (error) {
+                    console.warn("WDC save in sap faild, please refer to wdcContorller submitToSapServer fn");
+                }
             }
             return resSend(res, true, 200, `WDC ${payload.status}!`, fileData, null);
         } else {
