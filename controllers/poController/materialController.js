@@ -177,6 +177,7 @@ const materialIssue = async (req, res) => {
         let q =
             `SELECT 
                     mseg.MBLNR as issueNo,
+                    mseg.MJAHR as issueYear,
                     mseg.MATNR as materialNumber,
                     makt.MAKTX as materialDescription,
                     mseg.MEINS as unit,
@@ -198,15 +199,19 @@ const materialIssue = async (req, res) => {
                         WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201') )`
 
 
-        let val = []
 
-        if (req.body.MBLNR) {
-            q = q.concat(" AND mseg.MBLNR = ? ");
-            val.push(req.body.MBLNR);
+        if(!req.body.issueNo) {
+            return resSend(res, false, 200, "plese send Issue No", [], null);
         }
-        if (req.body.MJAHR) {
+        let val = [];
+
+        if (req.body.issueNo) {
+            q = q.concat(" AND mseg.MBLNR = ? ");
+            val.push(req.body.issueNo);
+        }
+        if (req.body.issueYear) {
             q = q.concat(" AND mseg.MJAHR = ? ");
-            val.push(req.body.MJAHR);
+            val.push(req.body.issueYear);
         }
 
         console.log("q", q, val);
@@ -222,7 +227,7 @@ const materialIssue = async (req, res) => {
             lineItem: result
         }
 
-        console.log("result", result);
+        // console.log("result", result);
         // {
         //     issueNo: '1000001014',
         //     materialNumber: null,
