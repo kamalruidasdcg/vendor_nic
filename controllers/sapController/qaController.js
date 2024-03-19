@@ -32,7 +32,7 @@ const qals = async (req, res) => {
 
             if (QAVE && typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
                 const qavePayload = await qavePayloadFn(QAVE);
-                const qaveInsertQuery = await generateQueryForMultipleData(qavePayload, QAVE_TABLE, "c_pkey");
+                const qaveInsertQuery = await generateInsertUpdateQuery(qavePayload, QAVE_TABLE, "c_pkey");
                 const resp = await promiseConnection.execute(qaveInsertQuery);
             }
 
