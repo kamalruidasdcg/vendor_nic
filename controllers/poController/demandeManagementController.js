@@ -46,7 +46,7 @@ const insert = async (req, res) => {
 
             // await handleEmail();
 
-            resSend(res, false, 200, "DEMAND MANAGEMENT inserted successfully !", null, null);
+            resSend(res, true, 200, "DEMAND MANAGEMENT inserted successfully !", null, null);
         } else {
             resSend(res, false, 400, "No data inserted", response, null);
         }
