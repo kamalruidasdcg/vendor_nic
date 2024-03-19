@@ -155,6 +155,10 @@ const ztfi_bil_deface_report = async (req, res) => {
        
         const payload = req.body;
         console.log('payload zdeface', payload);
+
+        if(!req.body.btn) {
+            return resSend(res, false, 200, "plese send btn", [], null);
+        }
         
         let zdefaceInsertQuery =
             `SELECT 
@@ -199,11 +203,13 @@ const ztfi_bil_deface_report = async (req, res) => {
             ztfi_bil_deface AS deface 
         WHERE  1 = 1`;
 
-         const val = []
+         const val = [];
 
-         if (payload.ZREGNUM) {
+
+
+         if (payload.btn) {
             zdefaceInsertQuery = zdefaceInsertQuery.concat( " AND deface.ZREGNUM = ?");
-            val.push(payload.ZREGNUM)
+            val.push(payload.btn)
         }
 
         const response = await query({ query: zdefaceInsertQuery, values: val });
