@@ -1,8 +1,8 @@
 // const { query,  } = require("../config/dbConfig");
 const { connection } = require("../../config/dbConfig");
-const {  TRUE } = require("../../lib/constant");
-const { responseSend } = require("../../lib/resSend");
-const {  GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
+const { TRUE } = require("../../lib/constant");
+const { responseSend, resSend } = require("../../lib/resSend");
+const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
 const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 
@@ -23,14 +23,14 @@ const insertGateEntryData = async (req, res) => {
 
         console.log("payload", req.body);
 
-        const {GE_LINE_ITEMS, ...obj } = payload;
+        const { GE_LINE_ITEMS, ...obj } = payload;
 
         console.log("GE_LINE_ITEMS", GE_LINE_ITEMS);
         console.log("obj", obj);
 
         try {
 
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR  ) {
+            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR) {
                 return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
@@ -55,7 +55,7 @@ const insertGateEntryData = async (req, res) => {
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, "C_PKEY");
                     const response = await promiseConnection.execute(insert_zpo_milestone_table)
 
-                
+
                 } catch (error) {
                     console.log("error, zpo milestone", error);
                 }
@@ -86,7 +86,92 @@ const insertGateEntryData = async (req, res) => {
     }
 };
 
-module.exports = { insertGateEntryData };
+
+const storeActionList = async (req, res) => {
+    try {
+        const promiseConnection = await connection();
+        let transactionSuccessful = false;
+        try {
+
+            const query = `
+SELECT 
+    docNo,
+    NULL as btn,
+    NULL as dateTime,
+    NULL as updatedBy,
+    NULL as issueNo,
+    NULL as issueYear,
+    NULL as reservationNumber,
+    NULL as reservationDate,
+    'icgrn_report' as documentType
+FROM
+    (SELECT DISTINCT MBLNR as docNo FROM qals) AS qals
+UNION ALL
+SELECT 
+    NULL as docNo,
+    btn,
+    NULL as dateTime,
+    NULL as updatedBy,
+    NULL as issueNo,
+    NULL as issueYear,
+    NULL as reservationNumber,
+    NULL as reservationDate,
+    'ztfi_bil_deface' as documentType
+FROM
+    (SELECT DISTINCT ZREGNUM as btn FROM ztfi_bil_deface) AS ztfi_bil_deface
+UNION ALL
+SELECT 
+    NULL as docNo,
+    NULL as btn,
+    NULL as dateTime,
+    NULL as updatedBy,
+    issueNo,
+    issueYear,
+    NULL as reservationNumber,
+    NULL as reservationDate,
+    'goods_issue_slip' as documentType
+FROM
+    (SELECT MBLNR as issueNo, MJAHR as issueYear FROM mseg GROUP BY MBLNR, MJAHR) AS mseg
+UNION ALL
+SELECT 
+    NULL as docNo,
+    NULL as btn,
+    NULL as dateTime,
+    NULL as updatedBy,
+    NULL as issueNo,
+    NULL as issueYear,
+    reservationNumber,
+    reservationDate,
+    'reservation_report' as documentType
+FROM
+    (SELECT RSNUM as reservationNumber, RSDAT as reservationDate FROM rkpf GROUP BY RSNUM, RSDAT) AS rkpf`
+            const [results] = await promiseConnection.execute(query);
+
+            console.log(query, results);
+
+            transactionSuccessful = true;
+
+            if (transactionSuccessful === TRUE && results) {
+                resSend(res, true, 200, "data fetch success", results, null)
+            } else {
+                responseSend(res, false, 200, "no data found", [], null);
+            }
+
+        } catch (error) {
+            responseSend(res, "0", 502, "data fetch failed !!", error, null);
+        }
+        finally {
+            const connEnd = await promiseConnection.end();
+            console.log("Connection End" + "--->" + "connection release");
+        }
+    } catch (error) {
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    }
+};
+
+
+
+module.exports = { insertGateEntryData, storeActionList };
 //     EBELN: "7777777777",
 //     BUKRS: "5788",
 //     BSTYP: "S",
