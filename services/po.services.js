@@ -153,6 +153,7 @@ const wdcPayload = (payload) => {
   const payloadObj = {
     reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
+    action_type: payload.action_type,
     vendor_code: payload.vendor_code,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,

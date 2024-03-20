@@ -21,7 +21,7 @@ const insert = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
-        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.request_amount) {
+        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.action_type) {
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
             return resSend(res, false, 400, "Please send valid payload", null, null);
