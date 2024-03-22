@@ -2,9 +2,9 @@
 const { resSend, responseSend } = require("../../lib/resSend");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { PAYMENT_ADVICE2, PAYMENT_VOUCHER } = require('../../lib/tableName');
-const { paymentPayload, ztfi_bil_defacePayload } = require("../../services/sap.payment.services");
+const { paymentPayload, ztfi_bil_defacePayload, paymentAviceHeaderPayload, paymentAviceLineItemsPayload } = require("../../services/sap.payment.services");
 const { INSERT } = require("../../lib/constant");
-const { getEpochTime, generateQuery, generateInsertUpdateQuery } = require("../../lib/utils");
+const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { query } = require("../../config/dbConfig");
 
 
@@ -149,17 +149,56 @@ const ztfi_bil_deface = async (req, res) => {
         responseSend(res, "0", 500, "Internal server errorR", err, null);
     }
 }
+const newPaymentAdvice = async (req, res) => {
+
+    try {
+        if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+        }
+
+        const payload = req.body;
+        console.log('payload payment advice', payload);
+        if (!payload) {
+            return responseSend(res, "F", 400, "Invalid payload.", null, null);
+        }
+
+        const { ZFI_PYMT_ADVCE_FINAL, ...obj } = payload;
+
+        const payloadObj = await paymentAviceHeaderPayload(obj);
+        const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", "id");
+
+        const response1 = await query({ query: paymentAviceHeaderQuery, values: [] });
+
+        const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
+        const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", "id");
+        const response2 = await query({ query: paymentAviceLineItemsQuery, values: [] });
+
+        console.log("response", response1, response1);
+        if (response1.affectedRows && response2.affectedRows) {
+            responseSend(res, "S", 200, "Data inserted successfully", { response1, response2 }, null);
+
+        } else {
+            // resSend(res, false, 400, "No data inserted", response, null);
+            responseSend(res, "F", 400, "Data inserted failed", { response1, response2 }, null);
+
+        }
+        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+    } catch (err) {
+        console.log("data not inserted", err);
+        responseSend(res, "0", 500, "Internal server errorR", err, null);
+    }
+}
 const ztfi_bil_deface_report = async (req, res) => {
 
     try {
-       
+
         const payload = req.body;
         console.log('payload zdeface', payload);
 
-        if(!req.body.btn) {
+        if (!req.body.btn) {
             return resSend(res, false, 200, "plese send btn", [], null);
         }
-        
+
         let zdefaceInsertQuery =
             `SELECT 
             deface.zregnum         AS btn,
@@ -203,12 +242,12 @@ const ztfi_bil_deface_report = async (req, res) => {
             ztfi_bil_deface AS deface 
         WHERE  1 = 1`;
 
-         const val = [];
+        const val = [];
 
 
 
-         if (payload.btn) {
-            zdefaceInsertQuery = zdefaceInsertQuery.concat( " AND deface.ZREGNUM = ?");
+        if (payload.btn) {
+            zdefaceInsertQuery = zdefaceInsertQuery.concat(" AND deface.ZREGNUM = ?");
             val.push(payload.btn)
         }
 
@@ -224,4 +263,5 @@ const ztfi_bil_deface_report = async (req, res) => {
         responseSend(res, "0", 500, "Internal server errorR", err, null);
     }
 }
-module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface, ztfi_bil_deface_report }
+
+module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface, ztfi_bil_deface_report, newPaymentAdvice }

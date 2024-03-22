@@ -8,8 +8,8 @@ router.post("/voucher", [dynamicallyUpload.single("file")], (req, res) => {
     paymentController.addPaymentVoucher(req, res);
 });
 
-router.post("/advise", [dynamicallyUpload.single("file")], (req, res) => {
-    paymentController.addPaymentAdvise(req, res);
+router.post("/advise", async (req, res) => {
+    paymentController.newPaymentAdvice(req, res);
 });
 router.post("/ztfi_bil_deface", [], (req, res) => {
     paymentController.ztfi_bil_deface(req, res);
