@@ -103,33 +103,54 @@ module.exports = { makeHttpRequest }
 
 
 
-// Example usage with async/await
-async function btnSaveToSap() {
-  try {
-    const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+// Example BTN SAVE INTO SAP
+// // CALL THIS FUNCTION IN BTN CONTROLLER AS PER CONDITION 
 
-    const btn_payload =
-    {
-      ZBTNO: "20240318501",
-      ERDAT: "20240318",
-      ERZET: "",
-      ERNAM: "600233",
-      LAEDA: "20240318",
-      AENAM: "NAME",
-      LIFNR: "50000437",
-      ZVBNO: "",
-      EBELN: "4000234569",
-      DPERNR1: "",
-      ZRMK1: "REMARKS",
-    }
+// async function btnSaveToSap() {
+//   try {
+//     const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+
+//     const btn_payload =
+//     {
+//       ZBTNO: "20240318501",
+//       ERDAT: "20240318",
+//       ERZET: "",
+//       ERNAM: "600233",
+//       LAEDA: "20240318",
+//       AENAM: "NAME",
+//       LIFNR: "50000437",
+//       ZVBNO: "",
+//       EBELN: "4000234569",
+//       DPERNR1: "",
+//       ZRMK1: "REMARKS",
+//     }
 
 
-    console.log("postUrl", postUrl);
-    console.log("wdc_payload", btn_payload);
+//     console.log("postUrl", postUrl);
+//     console.log("wdc_payload", btn_payload);
 
-    const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
-    console.log('POST Response from the server:', postResponse);
-  } catch (error) {
-    console.error('Error making the request:', error.message);
-  }
-}
+//     const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
+//     console.log('POST Response from the server:', postResponse);
+//   } catch (error) {
+//     console.error('Error making the request:', error.message);
+//   }
+// }
+
+// Example SDBG SAVE INTO SAP 
+// CALL THIS FUNCTION IN SDBG CONTROLLER AS PER CONDITION
+
+// async function sendBgToSap(payload) {
+//   try {
+//       const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
+//       const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
+//       console.log("postUrl", postUrl);
+//       console.log("wdc_payload -->", );
+//       let payload = { ...payload };
+//       let modified = await zfi_bgm_1_Payload(payload);
+//       const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
+//       console.log('POST Response from the server:', postResponse);
+//   } catch (error) {
+//       console.error('Error making the request:', error.message);
+//   }
+// }
+
