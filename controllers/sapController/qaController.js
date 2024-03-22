@@ -101,7 +101,8 @@ const qalsReport = async (req, res) => {
                 qals.LMENGE01 as unrestrictedUseStock,
                 qals.LMENGEIST as supplyQuantity,
                 qals.LTEXTKZ as remarks,
-                qave.vcode as udCode
+                qave.vcode as udCode,
+                qave.VDATUM as inspDate
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)

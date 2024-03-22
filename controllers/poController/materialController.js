@@ -177,6 +177,7 @@ const materialIssue = async (req, res) => {
         let q =
             `SELECT 
                     mseg.MBLNR as issueNo,
+                    mseg.WERKS as plantName,
                     mseg.MJAHR as issueYear,
                     mseg.MATNR as materialNumber,
                     makt.MAKTX as materialDescription,
@@ -196,7 +197,7 @@ const materialIssue = async (req, res) => {
                     	ON( mseg.MBLNR = mkpf.MBLNR)
                      LEFT JOIN makt AS makt
                     	ON( mseg.MATNR = makt.MATNR) 
-                        WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201') )`
+                        WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201', '101', '321', '222', '202', '102', '122') )`
 
 
 
@@ -223,6 +224,7 @@ const materialIssue = async (req, res) => {
         let response = {
             issueNo: null,
             issuDate: null,
+            plantName: null,
             reservationNo: null,
             lineItem: result
         }
@@ -247,6 +249,7 @@ const materialIssue = async (req, res) => {
         if (result.length > 0) {
             response.issueNo = result[0].issueNo;
             response.issuDate = result[0].issuDate || null;
+            response.plantName = result[0].plantName;
             response.reservationNo = result[0].reservationNo || null;
 
             resSend(res, true, 200, "Data fetched successfully", response, null);

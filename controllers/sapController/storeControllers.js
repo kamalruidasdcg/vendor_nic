@@ -93,58 +93,78 @@ const storeActionList = async (req, res) => {
         let transactionSuccessful = false;
         try {
 
-            const query = `
-SELECT 
-    docNo,
-    NULL as btn,
-    NULL as dateTime,
-    NULL as updatedBy,
-    NULL as issueNo,
-    NULL as issueYear,
-    NULL as reservationNumber,
-    NULL as reservationDate,
-    'icgrn_report' as documentType
-FROM
-    (SELECT DISTINCT MBLNR as docNo FROM qals) AS qals
-UNION ALL
-SELECT 
-    NULL as docNo,
-    btn,
-    NULL as dateTime,
-    NULL as updatedBy,
-    NULL as issueNo,
-    NULL as issueYear,
-    NULL as reservationNumber,
-    NULL as reservationDate,
-    'ztfi_bil_deface' as documentType
-FROM
-    (SELECT DISTINCT ZREGNUM as btn FROM ztfi_bil_deface) AS ztfi_bil_deface
-UNION ALL
-SELECT 
-    NULL as docNo,
-    NULL as btn,
-    NULL as dateTime,
-    NULL as updatedBy,
-    issueNo,
-    issueYear,
-    NULL as reservationNumber,
-    NULL as reservationDate,
-    'goods_issue_slip' as documentType
-FROM
-    (SELECT MBLNR as issueNo, MJAHR as issueYear FROM mseg GROUP BY MBLNR, MJAHR) AS mseg
-UNION ALL
-SELECT 
-    NULL as docNo,
-    NULL as btn,
-    NULL as dateTime,
-    NULL as updatedBy,
-    NULL as issueNo,
-    NULL as issueYear,
-    reservationNumber,
-    reservationDate,
-    'reservation_report' as documentType
-FROM
-    (SELECT RSNUM as reservationNumber, RSDAT as reservationDate FROM rkpf GROUP BY RSNUM, RSDAT) AS rkpf`
+            const query =
+                `(SELECT docno,
+                NULL           AS btn,
+                NULL           AS issueNo,
+                NULL           AS issueYear,
+                NULL           AS reservationNumber,
+                NULL           AS reservationDate,
+                updatedBy,
+                dateTime,
+                'icgrn_report' AS documentType
+         FROM   (SELECT DISTINCT mblnr      AS docNo,
+                                 ersteldat  AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   qals AS q
+                        LEFT JOIN pa0002 AS USER
+                               ON ( q.aenderer = USER.pernr )) AS qals)
+        UNION ALL
+        (SELECT NULL              AS docNo,
+                btn,
+                NULL              AS issueNo,
+                NULL              AS issueYear,
+                NULL              AS reservationNumber,
+                NULL              AS reservationDate,
+                updatedBy,
+                dateTime,
+                'ztfi_bil_deface' AS documentType
+         FROM   (SELECT DISTINCT zregnum    AS btn,
+                                 zcreatedon AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   ztfi_bil_deface AS zb
+                        LEFT JOIN pa0002 AS USER
+                               ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
+        UNION ALL
+        (SELECT NULL               AS docNo,
+                NULL               AS btn,
+                issueno,
+                issueyear,
+                NULL               AS reservationNumber,
+                NULL               AS reservationDate,
+                updatedBy,
+                dateTime,
+                'goods_issue_slip' AS documentType
+         FROM   (SELECT mblnr      AS issueNo,
+                        mjahr      AS issueYear,
+                        USER.cname AS updatedBy,
+                        budat_mkpf AS dateTime
+                 FROM   mseg AS ms
+                        LEFT JOIN pa0002 AS USER
+                               ON ( ms.usnam_mkpf = USER.pernr )
+                 GROUP  BY ms.mblnr,
+                           ms.mjahr) AS mseg)
+        UNION ALL
+        SELECT NULL                 AS docNo,
+               NULL                 AS btn,
+               NULL                 AS issueNo,
+               NULL                 AS issueYear,
+               reservationnumber,
+               reservationdate,
+               updatedBy,
+               dateTime,
+               'reservation_report' AS documentType
+        FROM   (SELECT rsnum      AS reservationNumber,
+                       rsdat      AS reservationDate,
+                       rsdat      AS dateTime,
+                       USER.cname AS updatedBy
+                FROM   rkpf AS rk
+                       LEFT JOIN pa0002 AS USER
+                              ON ( rk.usnam = USER.pernr )
+                GROUP  BY rk.rsnum,
+                          rk.rsdat) AS rkpf; 
+
+            `
             const [results] = await promiseConnection.execute(query);
 
             console.log(query, results);
