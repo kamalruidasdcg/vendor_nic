@@ -7,6 +7,8 @@ const { INSERT } = require("../../lib/constant");
 const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { query } = require("../../config/dbConfig");
 
+const path = require('path');
+const fs = require('fs');
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -264,4 +266,59 @@ const ztfi_bil_deface_report = async (req, res) => {
     }
 }
 
-module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface, ztfi_bil_deface_report, newPaymentAdvice }
+
+const adviceDownload = async (req, res) => {
+    try {
+
+        // if (!req.query.poNo) {
+        //     return resSend(res, false, 400, "Please send PO number", null, null);
+        // }
+        let file = {}
+        try {
+
+            file = await POfileFilter(req.query.poNo);
+
+            if (file.success && file?.data?.length) {
+                const fileName = file.data;
+                console.log(fileName)
+                const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'paymentadvice');
+                // const file_path = path.join('sapuploads', 'paymentadvice', `${fileName}`)
+                const response = [{ full_file_path: directoryPath, file_name: fileName }];
+
+                // res.download(directoryPath, (err) => {
+                //     if (err)     
+                //     return resSend(res, false, 404, "file not found", err, null)
+                // });
+
+                if (!fileName) {
+                    return resSend(res, false, 404, "file not found", err, null)
+                }
+                resSend(res, true, 200, "File fetched successfully", response, null);
+            } else {
+                resSend(res, true, 200, file.msg, file.data, null);
+            }
+        } catch (error) {
+            return resSend(res, false, 500, "GET FILE ERROR", error, null);
+        }
+
+    } catch (error) {
+        console.log("download po api error", error);
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
+    }
+}
+
+
+const POfileFilter = async (id) => {
+    try {
+
+        const directoryPath = path.join(__dirname, '..', '..','sapuploads', 'paymentadvice');
+        const files = await fs.promises.readdir(directoryPath); // Use promise-based readdir for async handling
+        return { success: true, msg: "file fetched", data: files }; // Return the array of most recent files
+
+    } catch (err) {
+        return { success: false, msg: err.message, data: null }; // Return an empty array on error
+    }
+};
+
+
+module.exports = { addPaymentVoucher, addPaymentAdvise, ztfi_bil_deface, ztfi_bil_deface_report, newPaymentAdvice, adviceDownload }

@@ -17,5 +17,8 @@ router.post("/ztfi_bil_deface", [], (req, res) => {
 router.post("/ztfi_bil_deface_report", [], (req, res) => {
     paymentController.ztfi_bil_deface_report(req, res);
 });
+router.post("/advise/report", [], (req, res) => {
+    paymentController.adviceDownload(req, res);
+});
 
 module.exports = router;
