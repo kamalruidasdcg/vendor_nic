@@ -97,7 +97,12 @@ exports.wdc = async (req, res) => {
 
         if (response.affectedRows) {
             if (payload.status === APPROVED) {
-                await submitToSapServer(payload);
+                try {
+                    payload = { ...payload, slno: response.insertId };
+                    await submitToSapServer(payload);
+                } catch (error) {
+                    console.warn("WDC save in sap faild, please refer to wdcContorller submitToSapServer fn");
+                }
             }
             return resSend(res, true, 200, `${obj.action_type} ${payload.status}!`, fileData, null);
         } else {
@@ -135,12 +140,14 @@ async function submitToSapServer(data) {
         let payload = { ...data };
         const wdc_payload =
         {
+            "slno": payload.slno,
             "ebeln": payload.purchasing_doc_no,
             "ebelp": payload.po_line_iten_no,
             "wdc": payload.reference_no,
         }
- 
-        const postResponse = await makeHttpRequest (postUrl, 'POST', wdc_payload);
+        console.log("wdc_payload", wdc_payload);
+
+        const postResponse = await makeHttpRequest(postUrl, 'POST', wdc_payload);
         console.log('POST Response from the server:', postResponse);
     } catch (error) {
         console.error('Error making the request:', error.message);
