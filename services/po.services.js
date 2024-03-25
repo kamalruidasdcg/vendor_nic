@@ -369,6 +369,31 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
   return false;
 }
 
+const setActualSubmissionDateSdbg = async (payload, tokenData) => {
+ // return 1;
+
+    const payloadObj = {
+      purchasing_doc_no: payload.purchasing_doc_no,
+      milestoneId: 1,
+      milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
+      actualSubmissionDate: payload.created_at,
+      created_at: getEpochTime(),
+      created_by_id: tokenData.vendor_code,
+    };
+   // console.log("payload");
+    const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
+    const response = await query({ query: q, values: val });
+        console.log(23456);
+        console.log(response);
+        if(response.affectedRows) {
+            return true;
+        } else {
+          return false;
+        }
+
+}
+
+
 const create_reference_no = async (type, vendor_code) => {
   try {
     const reference_no = `${type}-${getEpochTime()}-${vendor_code.slice(-4)}`;
@@ -428,6 +453,7 @@ module.exports = {
   inspectionReleaseNotePayload,
   insertActualSubmission,
   setActualSubmissionDate,
+  setActualSubmissionDateSdbg,
   create_reference_no,
   get_latest_activity,
   hrCompliancePayload,
