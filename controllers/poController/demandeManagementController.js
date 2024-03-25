@@ -3,7 +3,7 @@ const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
 const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
-const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, STATUS_REQUEST, STATUS_RECEIVED } = require("../../lib/status");
+const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, SUBMITTED, STATUS_RECEIVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { create_reference_no } = require("../../services/po.services");
@@ -31,7 +31,7 @@ const insert = async (req, res) => {
             return resSend(res, false, 200, "Please login as PPNC depertment!", null, null);
         }
 
-        if (obj.status != STATUS_REQUEST && obj.status != STATUS_RECEIVED) {
+        if (obj.status != SUBMITTED && obj.status != STATUS_RECEIVED) {
             // console.log();
             return resSend(res, false, 200, "Please send a valid action type!", null, null);
         }
@@ -54,7 +54,7 @@ let payload = {
 };
 let whereCondition;
 
-        if(obj.status == STATUS_REQUEST) {
+        if(obj.status == SUBMITTED) {
             
             if(!obj.action_type || obj.action_type == "") {
                 return resSend(res, false, 200, "please send a valid request_amount!", null, null);
