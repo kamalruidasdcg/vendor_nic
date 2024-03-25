@@ -21,19 +21,19 @@ const insert = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
-        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.action_type) {
+        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", null, null);
+            return resSend(res, false, 200, "Please send valid payload", null, null);
         }
 
         if (tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
-            return resSend(res, false, 400, "Please login as PPNC depertment!", null, null);
+            return resSend(res, false, 200, "Please login as PPNC depertment!", null, null);
         }
 
-        if (obj.action_type != STATUS_REQUEST && obj.action_type != STATUS_RECEIVED) {
+        if (obj.status != STATUS_REQUEST && obj.status != STATUS_RECEIVED) {
             // console.log();
-            return resSend(res, false, 400, "Please send a valid action type!", null, null);
+            return resSend(res, false, 200, "Please send a valid action type!", null, null);
         }
 
 
@@ -49,17 +49,22 @@ const insert = async (req, res) => {
 //         const response = await query({ query: q, values: val });
 let payload = {
    
-    action_type : obj.action_type
+    status : obj.status
 
 };
 let whereCondition;
 
-        if(obj.action_type == STATUS_REQUEST) {
+        if(obj.status == STATUS_REQUEST) {
+            
+            if(!obj.action_type || obj.action_type == "") {
+                return resSend(res, false, 200, "please send a valid request_amount!", null, null);
+            }
             if(!obj.request_amount || obj.request_amount < 0) {
-                return resSend(res, false, 400, "please send a valid request_amount!", null, null);
+                return resSend(res, false, 200, "please send a valid request_amount!", null, null);
             }
             let reference_no = await create_reference_no("DM", tokenData.vendor_code);
 
+            payload.action_type = obj.action_type,
             payload.purchasing_doc_no = obj.purchasing_doc_no,
             payload.line_item_no = obj.line_item_no,
             payload.reference_no = reference_no;
@@ -71,13 +76,13 @@ let whereCondition;
             payload.created_remarks = obj.created_remarks;
             payload.created_by = tokenData.vendor_code;
 
-        } else if(obj.action_type == STATUS_RECEIVED) {
+        } else if(obj.status == STATUS_RECEIVED) {
             
             if(!obj.reference_no || obj.reference_no == "") {
-                return resSend(res, false, 400, "please send reference_no!", null, null);
+                return resSend(res, false, 200, "please send reference_no!", null, null);
             }
             if(!obj.recived_quantity || obj.recived_quantity < 0) {
-                return resSend(res, false, 400, "please send a valid recived_quantity!", null, null);
+                return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
             }
            // payload.reference_no = obj.reference_no;
             payload.recived_quantity = obj.recived_quantity;
@@ -88,7 +93,7 @@ let whereCondition;
             whereCondition = `reference_no='${obj.reference_no}'`;
         }
       let { q, val } =
-      obj.action_type == STATUS_RECEIVED
+      obj.status == STATUS_RECEIVED
             ? generateQuery(UPDATE, DEMAND_MANAGEMENT, payload, whereCondition)
             : generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
 
@@ -101,7 +106,7 @@ let whereCondition;
 
             // await handleEmail();
 
-          return  resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.action_type} successfully !`, null, null);
+          return  resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.status} successfully !`, null, null);
         } else {
             return resSend(res, false, 400, "something went wrong!", response, null);
         }
@@ -186,7 +191,7 @@ let target_amount_result = await query({ query: target_amount_query, values: [re
 target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
 console.log("target_amount :" + target_amount_result);
 
-const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND action_type != 'RECEIVED'`;
+const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status != 'RECEIVED'`;
 let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
 total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
 console.log("total_requested_amount_result :" + total_requested_amount_result);

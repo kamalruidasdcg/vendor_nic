@@ -104,7 +104,7 @@ exports.wdc = async (req, res) => {
             if (payload.status === APPROVED) {
                 await submitToSapServer(payload);
             }
-            return resSend(res, true, 200, `the file has ${payload.status}!`, fileData, null);
+            return resSend(res, true, 200, `Thie file is ${payload.status}!`, fileData, null);
         } else {
             return resSend(res, false, 400, "No data inserted", response, null);
         }
