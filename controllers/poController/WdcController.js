@@ -69,7 +69,7 @@ exports.wdc = async (req, res) => {
                 // console.log(last_data);
                 // return;
                 if (last_data.status == APPROVED || last_data.status == REJECTED) {
-                    return resSend(res, false, 200, `this ${obj.action_type} is already ${last_data.status}!`, null, null);
+                    return resSend(res, false, 200, `this file is already ${last_data.status}!`, null, null);
                 }
                 if(obj.status == APPROVED) {
                     if (!obj.entry_by_production || obj.entry_by_production == '' || !obj.stage_datiels || obj.stage_datiels == '' || !obj.actual_payable_amount || obj.actual_payable_amount == '') {
@@ -104,7 +104,7 @@ exports.wdc = async (req, res) => {
             if (payload.status === APPROVED) {
                 await submitToSapServer(payload);
             }
-            return resSend(res, true, 200, `${obj.action_type} ${payload.status}!`, fileData, null);
+            return resSend(res, true, 200, `the file ${payload.status}!`, fileData, null);
         } else {
             return resSend(res, false, 400, "No data inserted", response, null);
         }
