@@ -40,7 +40,7 @@ const inspectionReleaseNoteRoutes = require("./inspectionReleaseNoteRoutes");
 const hrRoutes = require("./hrRoutes");
 const vendorActivitiesRoutes = require("./vendorActivitiesRoutes");
 
-
+const btnRoutes = require("./btnRoutes");
 
 const MrsRoutes = require("./MrsRoutes");
 const MirRoutes = require("./MirRoutes");
@@ -133,6 +133,9 @@ router.use(poPrefix + "/Mir", MirRoutes);
 
 router.use(poPrefix + "/shippingDocuments", shippingDocumentsRoutes);
 router.use(poPrefix + "/material", materialRoutes);
+
+// BTNs
+router.use(poPrefix + "/btn", btnRoutes);
 
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);

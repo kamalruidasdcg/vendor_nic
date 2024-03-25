@@ -153,6 +153,7 @@ const wdcPayload = (payload) => {
   const payloadObj = {
     reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
+    action_type: payload.action_type,
     vendor_code: payload.vendor_code,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
@@ -377,6 +378,23 @@ const create_reference_no = async (type, vendor_code) => {
   }
 };
 
+const create_btn_no = async (type) => {
+  try {
+    const reference_no = `${type}-${getEpochTime()}`;
+    return reference_no;
+  } catch (error) {
+    console.log("error into create btn :"`${error}`);
+  }
+  // try {
+  //   let date = new Date().toLocaleDateString().replace(/\//g, "");
+  //   let randomFourDigit = Math.floor(1000 + Math.random() * 9000);
+  //   const reference_no = `${type}-${date}${randomFourDigit}`;
+  //   return reference_no;
+  // } catch (error) {
+  //   console.log("error into create btn :"`${error}`);
+  // }
+};
+
 const get_latest_activity = async (
   table_name,
   purchasing_doc_no,
@@ -389,11 +407,11 @@ const get_latest_activity = async (
       values: [reference_no, purchasing_doc_no],
     });
     //console.log("__get_latest_activity__");
-   // console.log(result);
-   // console.log("__get_latest_activity_22_");
-      return result[0];
-    } catch (error) {
-      console.log("error into get_latest_activity function :"`${error}`);
+    // console.log(result);
+    // console.log("__get_latest_activity_22_");
+    return result[0];
+  } catch (error) {
+    console.log("error into get_latest_activity function :"`${error}`);
   }
 };
 
@@ -413,4 +431,5 @@ module.exports = {
   create_reference_no,
   get_latest_activity,
   hrCompliancePayload,
+  create_btn_no,
 };
