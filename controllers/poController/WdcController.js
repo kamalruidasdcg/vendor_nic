@@ -25,7 +25,7 @@ exports.wdc = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const { ...obj } = req.body;
 
-        if (!obj.purchasing_doc_no || !obj.status) {
+        if (!obj.purchasing_doc_no || !obj.status || !obj.action_type) {
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
             return resSend(res, false, 200, "Please send valid payload", null, null);
@@ -36,6 +36,12 @@ exports.wdc = async (req, res) => {
             return resSend(res, false, 200, "You are not authorised!", null, null);
         }
         //console.log(obj);
+        if (tokenData.user_type == USER_TYPE_VENDOR) {
+            if (!obj.status || obj.status !== SUBMITTED) {
+                return resSend(res, false, 200, "VENDOR ONLY CAN SUBMIT!", null, null);
+            }
+        }
+
 
         let fileData = {};
         if (req.file) {
@@ -58,7 +64,12 @@ exports.wdc = async (req, res) => {
                 // console.log(last_data);
                 // return;
                 if (last_data.status == APPROVED || last_data.status == REJECTED) {
-                    return resSend(res, false, 200, `this WDC is already ${last_data.status}!`, null, null);
+                    return resSend(res, false, 200, `this ${obj.action_type} is already ${last_data.status}!`, null, null);
+                }
+                if(obj.status == APPROVED) {
+                    if (!obj.entry_by_production || obj.entry_by_production == '' || !obj.stage_datiels || obj.stage_datiels == '' || !obj.actual_payable_amount || obj.actual_payable_amount == '') {
+                        return resSend(res, false, 200, "please send required fields to APPROVED this WDC!", null, null);
+                    }
                 }
                 payload = { ...last_data, ...fileData, ...obj, updated_by: "GRSE", created_by_id: tokenData.vendor_code, created_at: getEpochTime() };
 
@@ -69,9 +80,12 @@ exports.wdc = async (req, res) => {
         } else {
             console.log(payload);
 
-            let reference_no = await create_reference_no("WDC", tokenData.vendor_code);
+            let reference_no = await create_reference_no(obj.action_type, tokenData.vendor_code);
             // console.log(payload);
             // return;
+            obj.entry_by_production = "";
+            obj.stage_datiels = "";
+            obj.actual_payable_amount = 0;
             payload = { ...fileData, ...obj, reference_no: reference_no, vendor_code: tokenData.vendor_code, updated_by: "VENDOR", created_by_id: tokenData.vendor_code, created_at: getEpochTime(), };
 
         }
@@ -90,7 +104,7 @@ exports.wdc = async (req, res) => {
                     console.warn("WDC save in sap faild, please refer to wdcContorller submitToSapServer fn");
                 }
             }
-            return resSend(res, true, 200, `WDC ${payload.status}!`, fileData, null);
+            return resSend(res, true, 200, `${obj.action_type} ${payload.status}!`, fileData, null);
         } else {
             return resSend(res, false, 400, "No data inserted", response, null);
         }

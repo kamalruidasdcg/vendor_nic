@@ -14,8 +14,8 @@ router.get("/list", [veifyAccessToken], (req, res) => {
     demandeManagementController.list(req, res);
 });
 
-router.get("/getActualQuantity", [veifyAccessToken], (req, res) => {
-    demandeManagementController.getActualQuantity(req, res);
+router.get("/getRestAmount", [veifyAccessToken], (req, res) => {
+    demandeManagementController.getRestAmount(req, res);
 });
 
 module.exports = router;
