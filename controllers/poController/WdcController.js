@@ -25,7 +25,7 @@ exports.wdc = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const { ...obj } = req.body;
 
-        if (!obj.purchasing_doc_no || !obj.status || !obj.action_type) {
+        if (!obj.purchasing_doc_no || !obj.status) {
             // const directory = path.join(__dirname, '..', 'uploads', lastParam);
             // const isDel = handleFileDeletion(directory, req.file.filename);
             return resSend(res, false, 200, "Please send valid payload", null, null);
@@ -37,6 +37,11 @@ exports.wdc = async (req, res) => {
         }
         //console.log(obj);
         if (tokenData.user_type == USER_TYPE_VENDOR) {
+           
+            if (!obj.action_type || obj.action_type == "") {
+                return resSend(res, false, 200, "action_type required!", null, null);
+            }
+
             if (!obj.status || obj.status !== SUBMITTED) {
                 return resSend(res, false, 200, "VENDOR ONLY CAN SUBMIT!", null, null);
             }
