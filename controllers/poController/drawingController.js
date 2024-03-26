@@ -159,7 +159,7 @@ const submitDrawing = async (req, res) => {
           res,
           true,
           200,
-          `vendor can not ${tokenData.status}!`,
+          `vendor can not ${payload.status}!`,
           null,
           null
         );

@@ -6,7 +6,7 @@ const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, SUBMITTED, STATUS_RECEIVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
-const { create_reference_no } = require("../../services/po.services");
+const { create_reference_no, get_latest_activity } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 
@@ -36,45 +36,19 @@ const insert = async (req, res) => {
             return resSend(res, false, 200, "Please send a valid action type!", null, null);
         }
 
-
-//         const payload = {
-//             ...obj,
-//             created_at: getEpochTime(),
-//             updated_by : tokenData.vendor_code
-//         };
-
-//         console.log("payload..", payload);
-// //return;
-//         const { q, val } = generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
-//         const response = await query({ query: q, values: val });
-let payload = {
-   
-    status : obj.status
-
-};
-let whereCondition;
+        let payload;
 
         if(obj.status == SUBMITTED) {
             
             if(!obj.action_type || obj.action_type == "") {
-                return resSend(res, false, 200, "please send a valid request_amount!", null, null);
+                return resSend(res, false, 200, "please send a valid action_type!", null, null);
             }
             if(!obj.request_amount || obj.request_amount < 0) {
                 return resSend(res, false, 200, "please send a valid request_amount!", null, null);
             }
             let reference_no = await create_reference_no("DM", tokenData.vendor_code);
 
-            payload.action_type = obj.action_type,
-            payload.purchasing_doc_no = obj.purchasing_doc_no,
-            payload.line_item_no = obj.line_item_no,
-            payload.reference_no = reference_no;
-            payload.request_amount = obj.request_amount;
-            payload.delivery_date = obj.delivery_date;
-            payload.created_remarks = obj.created_remarks;
-
-            payload.created_at = getEpochTime();
-            payload.created_remarks = obj.created_remarks;
-            payload.created_by = tokenData.vendor_code;
+            payload = {...obj,reference_no:reference_no,created_at:getEpochTime(),created_by_id : tokenData.vendor_code,remarks:obj.remarks};
 
         } else if(obj.status == STATUS_RECEIVED) {
             
@@ -84,29 +58,36 @@ let whereCondition;
             if(!obj.recived_quantity || obj.recived_quantity < 0) {
                 return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
             }
-           // payload.reference_no = obj.reference_no;
-            payload.recived_quantity = obj.recived_quantity;
-            payload.updated_remarks = obj.updated_remarks;
-            payload.updated_at = getEpochTime();
-            payload.updated_by = tokenData.vendor_code;
 
-            whereCondition = `reference_no='${obj.reference_no}'`;
+            let last_data = await get_latest_activity(DEMAND_MANAGEMENT, obj.purchasing_doc_no, obj.reference_no);
+            if (last_data) {
+                delete last_data.id;
+                payload = {...last_data, status: obj.status, recived_quantity:obj.recived_quantity,remarks:obj.remarks,created_at : getEpochTime(),created_by_id : tokenData.vendor_code};         
+
+            } else {
+                return resSend(res, false, 200, `No record found with this reference_no!`, fileData, null);
+            }
         }
-      let { q, val } =
-      obj.status == STATUS_RECEIVED
-            ? generateQuery(UPDATE, DEMAND_MANAGEMENT, payload, whereCondition)
-            : generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
 
-            const response = await query({ query: q, values: val });
-        // console.log("payload_00________________");
-        // console.log(q);
-        // return;
+        console.log(payload);
+      // return;
+    //   let { q, val } =
+    //   obj.status == STATUS_RECEIVED
+    //         ? generateQuery(UPDATE, DEMAND_MANAGEMENT, payload, whereCondition)
+    //         : generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
 
+    //         const response = await query({ query: q, values: val });
+    //     // console.log("payload_00________________");
+    //     // console.log(q);
+    //     // return;
+
+    let { q, val } = generateQuery(INSERT, DEMAND_MANAGEMENT, payload);
+    const response = await query({ query: q, values: val });
         if (response.affectedRows) {
 
             // await handleEmail();
 
-          return  resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.status} successfully !`, null, null);
+          return  resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.status} successfully !`, response, null);
         } else {
             return resSend(res, false, 400, "something went wrong!", response, null);
         }
@@ -191,19 +172,19 @@ let target_amount_result = await query({ query: target_amount_query, values: [re
 target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
 console.log("target_amount :" + target_amount_result);
 
-const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status != 'RECEIVED'`;
-let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
-total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
-console.log("total_requested_amount_result :" + total_requested_amount_result);
+// const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
+// let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
+// total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
+// console.log("total_requested_amount_result :" + total_requested_amount_result);
       
-const total_recived_amount_from_dm_table_query = `SELECT SUM(recived_quantity) AS total_recived_amount_from_dm_table from demande_management WHERE recived_quantity != ? AND purchasing_doc_no = ? AND line_item_no = ?`;
-let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [0, req.query.po_no, req.query.line_item_no] });
+const total_recived_amount_from_dm_table_query = `SELECT SUM(recived_quantity) AS total_recived_amount_from_dm_table from demande_management WHERE purchasing_doc_no = ? AND line_item_no = ? AND status = ?  `;
+let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, req.query.line_item_no, STATUS_RECEIVED] });
 total_recived_amount_from_dm_table_result = (total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table == null) ? 0 : total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table;
 console.log("total_recived_amount_from_dm_table_result :" + total_recived_amount_from_dm_table_result);
 
 
 //return;
-        const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(total_requested_amount_result) + parseInt(total_recived_amount_from_dm_table_result));
+        const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(total_recived_amount_from_dm_table_result));
         // console.log(rest_amount);
         //   return;
         if (rest_amount) {
