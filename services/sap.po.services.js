@@ -67,7 +67,7 @@ const archivePoLineItemsPayload = async (payload) => {
     cuky_new: obj.cuky_new || obj.CUKY_NEW || "",
     value_new: obj.value_new || obj.VALUE_NEW || "",
     value_old: obj.value_old || obj.VALUE_OLD || "",
-    _dataaging: obj._dataaging || obj._DATAAGING || null,
+    _dataaging: formatDate(obj._dataaging) || formatDate(obj._DATAAGING),
   }));
   return pl;
 };
