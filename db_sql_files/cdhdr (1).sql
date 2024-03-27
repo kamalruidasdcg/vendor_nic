@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 27, 2024 at 11:37 AM
+-- Generation Time: Mar 27, 2024 at 11:54 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -28,6 +28,7 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `cdhdr` (
+  `C_PKEY` text NOT NULL,
   `objectclas` varchar(15) DEFAULT NULL COMMENT 'Object class',
   `objectid` varchar(90) DEFAULT NULL COMMENT 'Object Value',
   `changenr` varchar(10) DEFAULT NULL COMMENT 'Change Number of Document',

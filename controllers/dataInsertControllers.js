@@ -219,7 +219,7 @@ const archivePo = async (req, res) => {
         console.log("CDPOS", CDPOS);
 
         try {
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.OBJECTCLAS) {
+            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.objectclas) {
                 return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
@@ -227,7 +227,7 @@ const archivePo = async (req, res) => {
             try {
                 insertPayload = await archivePoHeaderPayload(obj)
                 console.log('insertPayload', insertPayload);
-                const cdhdrTableInsert = await generateInsertUpdateQuery(insertPayload, EKKO, "EBELN");
+                const cdhdrTableInsert = await generateInsertUpdateQuery(insertPayload, 'cdhdr', "C_PKEY");
                 const [results] = await promiseConnection.execute(cdhdrTableInsert);
                 console.log("results 1", results);
             } catch (error) {
@@ -239,7 +239,7 @@ const archivePo = async (req, res) => {
                 try {
                     const cdposTablePayload = await archivePoLineItemsPayload(CDPOS);
                     console.log('cdposTablePayload', cdposTablePayload);
-                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "zpo_milestone", "C_PKEY");
+                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "C_PKEY");
                     const [results] = await promiseConnection.execute(insert_cdpos_table);
                     console.log("results 2", results);
 
