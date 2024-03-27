@@ -13,5 +13,8 @@ router.get("/latestDocFile", [], (req, res) => {
     downloadController.downloadLatest(req, res);
 });
 
+router.get("/getPoFileList", [], (req, res) => {
+    downloadController.getPoFileList(req, res);
+});
 
 module.exports = router;
