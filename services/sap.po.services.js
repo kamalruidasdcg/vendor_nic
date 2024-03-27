@@ -52,7 +52,7 @@ const archivePoLineItemsPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}`,
+    C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}-${obj.TABNAME}-${obj.TABKEY }`,
     objectclas: obj.objectclas || obj.OBJECTCLAS || "",
     objectid: obj.objectid || obj.OBJECTID || "",
     changenr: obj.changenr || obj.CHANGENR || "",
@@ -74,7 +74,8 @@ const archivePoLineItemsPayload = async (payload) => {
 
 const archivePoHeaderPayload = async (obj) => {
   return {
-    objectclas: obj.objectclas,
+    C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}`,
+    objectclas: obj.objectclas || obj.OBJECTCLAS ,
     objectid: obj.objectid || obj.OBJECTID || "",
     changenr: obj.changenr || obj.CHANGENR || "",
     username: obj.username || obj.USERNAME || "",
