@@ -1,4 +1,4 @@
-const { getEpochTime, formatDate, formatTime } = require("../lib/utils");
+// const { getEpochTime, formatDate, formatTime } = require("../lib/utils");
 
 /*
  * Modify lifnrPayload payload object to insert data
@@ -15,9 +15,9 @@ const lfa1Payload = async (payload) => {
     NAME1: obj.NAME1 || "",
     STCD1: obj.STCD1 || "",
     STCD3: obj.STCD3 || "",
-    ORT01: obj.ORT01 || "",
-    ORT02: obj.ORT02 || "",
-    PFACH: obj.PFACH || "",
+    // ORT01: obj.ORT01 || "",
+    // ORT02: obj.ORT02 || "",
+    // PFACH: obj.PFACH || "",
     EMAIL: obj.EMAIL || "",
     PHONE: obj.PHONE || "",
     TELF2: obj.TELF2 || "",
