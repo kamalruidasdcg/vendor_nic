@@ -72,8 +72,11 @@ const archivePoLineItemsPayload = async (payload) => {
   return pl;
 };
 
-const archivePoHeaderPayload = async (obj) => {
-  return {
+const archivePoHeaderPayload = async (payload) => {
+  if (!payload || !Array.isArray(payload) || !payload.length) {
+    throw new Error("Please send valid payload");
+  }
+  const pl = payload.map((obj) => ({
     C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}`,
     objectclas: obj.objectclas || obj.OBJECTCLAS ,
     objectid: obj.objectid || obj.OBJECTID || "",
@@ -89,7 +92,9 @@ const archivePoHeaderPayload = async (obj) => {
     langu: obj.langu || obj.LANGU || "",
     version: obj.version || obj.VERSION || "",
     _dataaging: formatDate(obj._dataaging) || formatDate(obj._DATAAGING),
-  };
+  }));
+
+  return pl;
 };
 
 module.exports = { zpo_milestonePayload, ekpoTablePayload, archivePoLineItemsPayload, archivePoHeaderPayload };
