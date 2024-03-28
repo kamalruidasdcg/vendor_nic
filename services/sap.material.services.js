@@ -28,7 +28,7 @@ const msegPayload = async (payload) => {
     LGORT: obj.LGORT || null,
     CHARG: obj.CHARG || null,
     INSMK: obj.INSMK || null,
-    ZUSCH: obj.ZUSCH || null,
+    // ZUSCH: obj.ZUSCH || null,
     // ZUSTD: obj.ZUSTD || null,
     SOBKZ: obj.SOBKZ || null,
     LIFNR: obj.LIFNR || null,
