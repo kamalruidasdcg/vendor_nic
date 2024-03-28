@@ -321,7 +321,7 @@ const submitQAP = async (req, res) => {
           tokenData,
           SUBMITTED
         );
-        // console.log("actual_subminission", actual_subminission);
+        console.log("actual_subminission", actual_subminission);
       }
     }
 
