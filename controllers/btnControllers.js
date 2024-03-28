@@ -26,7 +26,7 @@ const fetchAllBTNs = async (req, res) => {
     );
   }
 
-  let btnQ = `SELECT * FROM btn WHERE po = ?`;
+  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ?`;
 
   let result = await query({
     query: btnQ,
@@ -50,7 +50,7 @@ const fetchBTNByNum = async (req, res) => {
     );
   }
 
-  let btnQ = `SELECT * FROM btn WHERE po = ? and btn_num = ?`;
+  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? and btn_num = ?`;
 
   let result = await query({
     query: btnQ,
@@ -96,6 +96,7 @@ const getImpDates = async (req, res) => {
       query: a_sdbg_date_q,
       values: [id],
     });
+    console.log(a_dates);
     checkTypeArr(a_dates) &&
       a_dates.forEach((item) => {
         if (item.MTEXT === A_SDBG_DATE) {
@@ -141,9 +142,8 @@ const getImpDates = async (req, res) => {
 };
 
 const submitBTN = async (req, res) => {
-  console.log("helllo");
   let {
-    po,
+    purchasing_doc_no,
     invoice_no,
     invoice_value,
     e_invoice_no,
@@ -164,10 +164,13 @@ const submitBTN = async (req, res) => {
     ld_contractual_date,
   } = req.body;
   let payloadFiles = req.files;
-  console.log("Invoice number", invoice_no);
-
   // Check required fields
-  if (!po || !po.trim() === "" || !invoice_no || !invoice_no.trim() === "") {
+  if (
+    !purchasing_doc_no ||
+    !purchasing_doc_no.trim() === "" ||
+    !invoice_no ||
+    !invoice_no.trim() === ""
+  ) {
     return resSend(res, false, 200, "Invoice Number is missing!", null, null);
   }
 
@@ -177,7 +180,6 @@ const submitBTN = async (req, res) => {
     query: check_invoice_q,
     values: [invoice_no],
   });
-  console.log(check_invoice);
   if (checkTypeArr(check_invoice) && check_invoice.count > 0) {
     return resSend(
       res,
@@ -228,11 +230,12 @@ const submitBTN = async (req, res) => {
     : null;
 
   // generate btn num
-  const btn_num = await create_btn_no("btn");
+  const btn_num = await create_btn_no("BTN");
   const icgrn_total = icgrn_no_1 + icgrn_no_2 + icgrn_no_3 + icgrn_no_4;
 
   // MATH Calculation
-  let net_claim_amount = invoice_value + debit_note - credit_note;
+  let net_claim_amount =
+    parseInt(invoice_value) + parseInt(debit_note) - parseInt(credit_note);
 
   // GET Contractual Dates from other Table
   let c_sdbg_date;
@@ -242,9 +245,8 @@ const submitBTN = async (req, res) => {
   let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
   let c_dates = await query({
     query: c_sdbg_date_q,
-    values: [po],
+    values: [purchasing_doc_no],
   });
-  console.log(c_dates);
   c_dates.forEach((item) => {
     if (item.MTEXT === C_SDBG_DATE) {
       c_sdbg_date = item.PLAN_DATE;
@@ -265,8 +267,9 @@ const submitBTN = async (req, res) => {
   let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
   let a_dates = await query({
     query: a_sdbg_date_q,
-    values: [po],
+    values: [purchasing_doc_no],
   });
+  console.log(a_dates);
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
       a_sdbg_date = item.PLAN_DATE;
@@ -282,7 +285,7 @@ const submitBTN = async (req, res) => {
   // INSERT Data into btn table
   let btnQ = `INSERT INTO btn SET 
     btn_num = '${btn_num}', 
-    po = '${po}', 
+    purchasing_doc_no = '${purchasing_doc_no}', 
     invoice_no = '${invoice_no ? invoice_no : null}', 
     invoice_value='${invoice_value ? invoice_value : null}',
     invoice_filename ='${invoice_filename ? invoice_filename : null}',
@@ -323,8 +326,6 @@ const submitBTN = async (req, res) => {
     ld_gate_entry_date='${ld_gate_entry_date ? ld_gate_entry_date : null}',
     ld_contractual_date='${ld_contractual_date ? ld_contractual_date : null}'
   `;
-
-  console.log(btnQ);
 
   let result = await query({
     query: btnQ,

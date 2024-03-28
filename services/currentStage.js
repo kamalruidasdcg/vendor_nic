@@ -12,6 +12,7 @@ const currentStageHandler = async (id) => {
     "shipping_documents",
     "icgrn",
     "wdc",
+    "btn",
   ];
   let finalStage = "Not Started";
   let stage = "Not Started";
@@ -39,6 +40,10 @@ const currentStageHandler = async (id) => {
         r = "ICGRN";
       } else if (item === "wdc") {
         r = "WDC";
+        finalStage = r;
+      } else if (item === "btn") {
+        r = "WDC";
+        finalStage = r;
       } else {
         r = item;
       }

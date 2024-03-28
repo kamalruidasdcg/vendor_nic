@@ -3,6 +3,7 @@ const {
   sdbgPayload,
   sdbgPayloadVendor,
   setActualSubmissionDate,
+  setActualSubmissionDateSdbg,
   create_reference_no,
 } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
@@ -16,6 +17,9 @@ const {
   ASSIGNER,
   STAFF,
   USER_TYPE_GRSE_FINANCE,
+  ACTION_SDBG,
+  ACTION_DD,
+  ACTION_IB,
 } = require("../../lib/constant");
 const {
   EKKO,
@@ -23,6 +27,7 @@ const {
   SDBG_ENTRY,
   SDBG,
   VENDOR_MASTER_LFA1,
+  ACTUAL_SUBMISSION_DB,
 } = require("../../lib/tableName");
 const { FINANCE, VENDOR } = require("../../lib/depertmentMaster");
 const {
@@ -417,7 +422,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         status: obj.status,
         created_at: getEpochTime(),
         created_by: tokenData.vendor_code,
-        
+
         extension_date1: obj.extension_date1 ? obj.extension_date1 : 0,
         extension_date2: obj.extension_date2 ? obj.extension_date2 : 0,
         extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
@@ -503,7 +508,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 const sdbgUpdateByFinance = async (req, res) => {
   const tokenData = { ...req.tokenData };
   const { ...obj } = req.body;
-  
+
   try {
     if (
       !obj.purchasing_doc_no ||
@@ -527,8 +532,9 @@ const sdbgUpdateByFinance = async (req, res) => {
       return resSend(res, true, 200, "please login as finance!", null, null);
     }
 
-    const GET_LATEST_SDBG = await get_latest_sdbg(
+    const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(
       obj.purchasing_doc_no,
+      obj.reference_no
     );
 
     if (
@@ -587,22 +593,33 @@ const sdbgUpdateByFinance = async (req, res) => {
     let sdbgDataResult = GET_LATEST_SDBG[0]; // sdbgResult[0];
     // console.log("sdbgDataResult");
     // console.log(sdbgDataResult);
+    // return;
+    let q = `SELECT count(actualSubmissionDate) as count FROM ${ACTUAL_SUBMISSION_DB} WHERE purchasing_doc_no = ? AND milestoneId = ?`;
+    let count_res = await query({ query: q, values: [obj.purchasing_doc_no, 1], });
+    console.log(count_res);
+    if (count_res[0].count > 0) {
+      return resSend(res, false, 201, "actualSubmissionDate already preasent in the table!!", null, null);
+    }
+
     const insertPayloadForSdbg = {
       reference_no: obj.reference_no,
       purchasing_doc_no: obj.purchasing_doc_no,
       ...sdbgDataResult,
       remarks: obj.remarks,
       status: obj.status,
+      action_type: `SDBG ${obj.status}`,
       assigned_from:
         tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
       assigned_to:
-        tokenData.internal_role_id == ASSIGNER ? null : obj.assigned_to,
-      last_assigned: 1,
+        tokenData.internal_role_id == STAFF ? null : (obj.assigned_to) ? obj.assigned_to : null,
+      last_assigned: (obj.assigned_to) ? 1 : 0,
       created_at: getEpochTime(),
       created_by_name: "finance dept",
       created_by_id: tokenData.vendor_code,
       updated_by: "GRSE",
     };
+    // console.log(insertPayloadForSdbg);
+    // return;
     let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
     console.log(insertsdbg_q);
     let sdbgQuery = await query({
@@ -612,28 +629,33 @@ const sdbgUpdateByFinance = async (req, res) => {
     console.log(sdbgQuery);
 
     //   UPDATE ${SDBG} SET last_assigned = 0 WHERE reference_no = ? AND AND purchasing_doc_no = ? AND assigned_to != ?;
+    if (obj.assigned_to) {
+      const update_assign_to = `UPDATE ${SDBG} SET last_assigned = 0 WHERE reference_no = ? AND purchasing_doc_no = ? AND assigned_to != ?`;
+      let update_assign_touery = await query({
+        query: update_assign_to,
+        values: [obj.reference_no, obj.purchasing_doc_no, obj.assigned_to],
+      });
+      console.log(update_assign_touery);
+    }
 
-    const update_assign_to = `UPDATE ${SDBG} SET last_assigned = 0 WHERE reference_no = ? AND purchasing_doc_no = ? AND assigned_to != ?`;
-    let update_assign_touery = await query({
-      query: update_assign_to,
-      values: [obj.reference_no, obj.purchasing_doc_no, obj.assigned_to],
-    });
-    console.log(update_assign_touery);
+
     console.log("ACCEPTED1");
-    if (insertPayloadForSdbg.status === APPROVED) {
+    if (insertPayloadForSdbg.status === APPROVED
+      && (insertPayloadForSdbg.action_type == ACTION_SDBG
+        || insertPayloadForSdbg.action_type == ACTION_IB
+        || insertPayloadForSdbg.action_type == ACTION_DD)) {
       console.log("ACCEPTED2");
-      const actual_subminission = await setActualSubmissionDate(
-        insertPayloadForSdbg,
-        1,
-        tokenData,
-        PENDING
-      );
-      console.log("actual_subminission", actual_subminission);
+      const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
+      console.log("actual_subminission----", actual_subminission);
+      if (actual_subminission === false) {
+        return resSend(res, false, 200, `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `, null, null);
+      }
+
     }
     console.log("ACCEPTED3");
-    resSend(res, true, 200, `This po is ${obj.status}.`, sdbgQuery, null);
+    return resSend(res, true, 200, `This po is ${obj.status}.`, sdbgQuery, null);
   } catch (error) {
-    resSend(res, false, 400, "somthing went wrong!", error, null);
+    return resSend(res, false, 400, "somthing went wrong!", error, null);
   }
 };
 
@@ -721,9 +743,8 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${
-                  payload.purchasing_doc_no
-                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
+      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -790,18 +811,18 @@ async function handelEmail(payload) {
 
 async function sendBgToSap(payload) {
 
-    try {
-        const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
-        const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
-        console.log("postUrl", postUrl);
-        console.log("wdc_payload -->", );
-        let payload = { ...payload };
-        let modified = await zfi_bgm_1_Payload(payload);
-        const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
-        console.log('POST Response from the server:', postResponse);
-    } catch (error) {
-        console.error('Error making the request:', error.message);
-    }
+  try {
+    const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
+    const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
+    console.log("postUrl", postUrl);
+    console.log("wdc_payload -->",);
+    let payload = { ...payload };
+    let modified = await zfi_bgm_1_Payload(payload);
+    const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
+    console.log('POST Response from the server:', postResponse);
+  } catch (error) {
+    console.error('Error making the request:', error.message);
+  }
 }
 
 

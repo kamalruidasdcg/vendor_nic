@@ -4,7 +4,7 @@ const { query } = require("../../config/dbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { QAP, RIC } = require("../../lib/depertmentMaster");
-const { POfileFilter } = require("../../lib/fetchFileDirectory");
+const { POfileFilter, POfileFilterOrderBy } = require("../../lib/fetchFileDirectory");
 
 
 
@@ -140,6 +140,43 @@ const downloadLatest = async (req, res) => {
     }
 }
 
+const getPoFileList = async (req, res) => {
+    try {
 
+        if (!req.query.poNo) {
+            return resSend(res, false, 400, "Please send PO number", null, null);
+        }
+        let files = {}
+        try {
 
-module.exports = { download, tncdownload, downloadLatest }
+            files = await POfileFilterOrderBy(req.query.poNo);
+
+            if (files.success && files?.data?.length) {
+
+                const resustFiles = files.data.map(file => {
+                   
+                    const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${file}`);
+                    const file_path = path.join('sapuploads', 'po', `${file}`);
+                    let fileInfo = {};
+                    fileInfo.FullFilePath = directoryPath;
+                    fileInfo.filePath = file_path;
+                    fileInfo.fileName = file;
+
+                    return fileInfo; //filteredFilesById;
+                  });
+
+                resSend(res, true, 200, "File fetched successfully", resustFiles, null);
+            } else {
+                resSend(res, true, 200, files.msg, files.data, null);
+            }
+        } catch (error) {
+            return resSend(res, false, 500, "GET FILE ERROR", error, null);
+        }
+
+    } catch (error) {
+        console.log("download po api error", error);
+        return resSend(res, false, 500, "INTERNL SERVER ERROR", {}, null);
+    }
+}
+
+module.exports = { download, tncdownload, downloadLatest, getPoFileList }

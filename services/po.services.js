@@ -339,11 +339,12 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
 
   const st = status || SUBMITTED;
 
-  const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND vendor_code = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
+  const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
   const result = await query({
     query: getlatestData,
-    values: [payload.purchasing_doc_no, payload.vendor_code, st],
+    values: [payload.purchasing_doc_no, st],
   });
+  console.log(result);
 
   const mtext = {
     1: "ACTUAL SDBG SUBMISSION DATE",
@@ -364,10 +365,34 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
     console.log("payload");
     const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
     const response = await query({ query: q, values: val });
+    console.log("response", response);
     return true;
   }
   return false;
 }
+
+const setActualSubmissionDateSdbg = async (payload, tokenData) => {
+  // return 1;
+
+  const payloadObj = {
+    purchasing_doc_no: payload.purchasing_doc_no,
+    milestoneId: 1,
+    milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
+    actualSubmissionDate: payload.created_at,
+    created_at: getEpochTime(),
+    created_by_id: tokenData.vendor_code,
+  };
+  // console.log("payload");
+  const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
+  const response = await query({ query: q, values: val });
+  console.log(23456);
+  console.log(response);
+  if (response.affectedRows) {
+    return true;
+  } else {
+    return false;
+  }
+};
 
 const create_reference_no = async (type, vendor_code) => {
   try {
@@ -379,20 +404,24 @@ const create_reference_no = async (type, vendor_code) => {
 };
 
 const create_btn_no = async (type) => {
-  try {
-    const reference_no = `${type}-${getEpochTime()}`;
-    return reference_no;
-  } catch (error) {
-    console.log("error into create btn :"`${error}`);
-  }
   // try {
-  //   let date = new Date().toLocaleDateString().replace(/\//g, "");
-  //   let randomFourDigit = Math.floor(1000 + Math.random() * 9000);
-  //   const reference_no = `${type}-${date}${randomFourDigit}`;
+  //   const reference_no = `${type}-${getEpochTime()}`;
   //   return reference_no;
   // } catch (error) {
   //   console.log("error into create btn :"`${error}`);
   // }
+  try {
+    let date = new Date();
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, "0");
+    let day = String(date.getDate()).padStart(2, "0");
+
+    let randomFourDigit = Math.floor(100 + Math.random() * 900);
+    const reference_no = `${type}${year}${month}${day}${randomFourDigit}`;
+    return reference_no;
+  } catch (error) {
+    console.log("error into create btn :"`${error}`);
+  }
 };
 
 const get_latest_activity = async (
@@ -428,6 +457,7 @@ module.exports = {
   inspectionReleaseNotePayload,
   insertActualSubmission,
   setActualSubmissionDate,
+  setActualSubmissionDateSdbg,
   create_reference_no,
   get_latest_activity,
   hrCompliancePayload,
