@@ -7,7 +7,7 @@ const { generateQuery, formatDate, generateInsertUpdateQuery, generateQueryForMu
 // const mysql = require("mysql2/promise");
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
-const { ekpoTablePayload, zpo_milestonePayload } = require("../services/sap.po.services");
+const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archivePoLineItemsPayload } = require("../services/sap.po.services");
 
 // require("dotenv").config();
 
@@ -154,11 +154,11 @@ const insertPOData = async (req, res) => {
 async function sendMail(data) {
     const q =
         `SELECT v_add.smtp_addr AS vendor_email,
-                v.name1         AS vendor_name
-        FROM   adr6 AS v_add
-                LEFT JOIN lfa1 AS v
-                  ON v.lifnr = v_add.persnumber
-        WHERE  v_add.persnumber = ? ;`;
+    v.name1         AS vendor_name
+    FROM   adr6 AS v_add
+    LEFT JOIN lfa1 AS v
+    ON v.lifnr = v_add.persnumber
+    WHERE  v_add.persnumber = ? ;`;
     const result = await query({ query: q, values: [data.LIFNR] });
     // const result = [
     //     {
@@ -201,8 +201,78 @@ async function sendMail(data) {
 // }
 
 
+const archivePo = async (req, res) => {
+    let insertPayload = {};
+    let payload = {};
 
-module.exports = { insertPOData };
+    try {
+        const promiseConnection = await connection();
+        let transactionSuccessful = false;
+        if (Array.isArray(req.body)) {
+            payload = req.body.length > 0 ? req.body[0] : null;
+        } else if (typeof req.body === 'object' && req.body !== null) {
+            payload = req.body;
+        }
+
+        const cdhdr_table_data = payload.CDHDR_HEADER || payload.cdhdr_header;
+        const cdpos_table_data = payload.CDPOS_LINE_ITEM || payload.cdpos_line_item;
+        console.log("cdhdr_table_data", cdhdr_table_data);
+        console.log("CDPOS", cdpos_table_data);
+
+        try {
+
+            await promiseConnection.beginTransaction();
+            if (cdhdr_table_data?.length)  {
+                try {
+                    insertPayload = await archivePoHeaderPayload(cdpos_table_data)
+                    console.log('insertPayload', insertPayload);
+                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', "C_PKEY");
+                    const [results] = await promiseConnection.execute(cdhdrTableInsert);
+                    console.log("results 1", results);
+                } catch (error) {
+                    return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                }
+            }
+
+            if (cdhdr_table_data?.length) {
+
+                try {
+                    const cdposTablePayload = await archivePoLineItemsPayload(cdhdr_table_data);
+                    console.log('cdposTablePayload', cdposTablePayload);
+                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "C_PKEY");
+                    const [results] = await promiseConnection.execute(insert_cdpos_table);
+                    console.log("results 2", results);
+
+                } catch (error) {
+                    console.log("error, zpo milestone", error);
+                }
+            }
+
+            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+            transactionSuccessful = true;
+
+
+            if (transactionSuccessful === TRUE) {
+                responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
+            }
+
+        } catch (error) {
+            responseSend(res, "F", 502, "Data insert failed !!", error, null);
+        }
+        finally {
+            if (!transactionSuccessful) {
+                console.log("Connection End" + "--->" + "connection release");
+                await promiseConnection.rollback();
+            }
+            const connEnd = await promiseConnection.end();
+            console.log("Connection End" + "--->" + "connection release archive po");
+        }
+    } catch (error) {
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    }
+};
+
+module.exports = { insertPOData, archivePo };
 
 
 

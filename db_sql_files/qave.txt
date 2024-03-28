@@ -1,0 +1,7 @@
+ALTER TABLE `qave`
+  DROP `vbewertung`,
+  DROP `dbewertung`,
+  DROP `qkennzahl`,
+  DROP `stafo`,
+  DROP `teillos`,
+  DROP `vorglfnr`;

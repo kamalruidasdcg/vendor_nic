@@ -1,8 +1,8 @@
 // const { query,  } = require("../config/dbConfig");
 const { connection } = require("../../config/dbConfig");
-const {  TRUE } = require("../../lib/constant");
-const { responseSend } = require("../../lib/resSend");
-const {  GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
+const { TRUE } = require("../../lib/constant");
+const { responseSend, resSend } = require("../../lib/resSend");
+const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
 const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 
@@ -23,14 +23,14 @@ const insertGateEntryData = async (req, res) => {
 
         console.log("payload", req.body);
 
-        const {GE_LINE_ITEMS, ...obj } = payload;
+        const { GE_LINE_ITEMS, ...obj } = payload;
 
         console.log("GE_LINE_ITEMS", GE_LINE_ITEMS);
         console.log("obj", obj);
 
         try {
 
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR  ) {
+            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR) {
                 return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
@@ -55,7 +55,7 @@ const insertGateEntryData = async (req, res) => {
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, "C_PKEY");
                     const response = await promiseConnection.execute(insert_zpo_milestone_table)
 
-                
+
                 } catch (error) {
                     console.log("error, zpo milestone", error);
                 }
@@ -86,7 +86,112 @@ const insertGateEntryData = async (req, res) => {
     }
 };
 
-module.exports = { insertGateEntryData };
+
+const storeActionList = async (req, res) => {
+    try {
+        const promiseConnection = await connection();
+        let transactionSuccessful = false;
+        try {
+
+            const query =
+                `(SELECT docno,
+                NULL           AS btn,
+                NULL           AS issueNo,
+                NULL           AS issueYear,
+                NULL           AS reservationNumber,
+                NULL           AS reservationDate,
+                updatedBy,
+                dateTime,
+                'icgrn_report' AS documentType
+         FROM   (SELECT DISTINCT mblnr      AS docNo,
+                                 ersteldat  AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   qals AS q
+                        LEFT JOIN pa0002 AS USER
+                               ON ( q.aenderer = USER.pernr )) AS qals)
+        UNION ALL
+        (SELECT NULL              AS docNo,
+                btn,
+                NULL              AS issueNo,
+                NULL              AS issueYear,
+                NULL              AS reservationNumber,
+                NULL              AS reservationDate,
+                updatedBy,
+                dateTime,
+                'ztfi_bil_deface' AS documentType
+         FROM   (SELECT DISTINCT zregnum    AS btn,
+                                 zcreatedon AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   ztfi_bil_deface AS zb
+                        LEFT JOIN pa0002 AS USER
+                               ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
+        UNION ALL
+        (SELECT NULL               AS docNo,
+                NULL               AS btn,
+                issueno,
+                issueyear,
+                NULL               AS reservationNumber,
+                NULL               AS reservationDate,
+                updatedBy,
+                dateTime,
+                'goods_issue_slip' AS documentType
+         FROM   (SELECT mblnr      AS issueNo,
+                        mjahr      AS issueYear,
+                        USER.cname AS updatedBy,
+                        budat_mkpf AS dateTime
+                 FROM   mseg AS ms
+                        LEFT JOIN pa0002 AS USER
+                               ON ( ms.usnam_mkpf = USER.pernr )
+                 GROUP  BY ms.mblnr,
+                           ms.mjahr) AS mseg)
+        UNION ALL
+        SELECT NULL                 AS docNo,
+               NULL                 AS btn,
+               NULL                 AS issueNo,
+               NULL                 AS issueYear,
+               reservationnumber,
+               reservationdate,
+               updatedBy,
+               dateTime,
+               'reservation_report' AS documentType
+        FROM   (SELECT rsnum      AS reservationNumber,
+                       rsdat      AS reservationDate,
+                       rsdat      AS dateTime,
+                       USER.cname AS updatedBy
+                FROM   rkpf AS rk
+                       LEFT JOIN pa0002 AS USER
+                              ON ( rk.usnam = USER.pernr )
+                GROUP  BY rk.rsnum,
+                          rk.rsdat) AS rkpf; 
+
+            `
+            const [results] = await promiseConnection.execute(query);
+
+            console.log(query, results);
+
+            transactionSuccessful = true;
+
+            if (transactionSuccessful === TRUE && results) {
+                resSend(res, true, 200, "data fetch success", results, null)
+            } else {
+                responseSend(res, false, 200, "no data found", [], null);
+            }
+
+        } catch (error) {
+            responseSend(res, "0", 502, "data fetch failed !!", error, null);
+        }
+        finally {
+            const connEnd = await promiseConnection.end();
+            console.log("Connection End" + "--->" + "connection release");
+        }
+    } catch (error) {
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    }
+};
+
+
+
+module.exports = { insertGateEntryData, storeActionList };
 //     EBELN: "7777777777",
 //     BUKRS: "5788",
 //     BSTYP: "S",

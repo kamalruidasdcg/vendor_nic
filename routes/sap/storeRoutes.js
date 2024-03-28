@@ -7,5 +7,11 @@ router.post("/gateentry", (req, res) => {
 });
 
 
+router.get("/storeActionList", (req, res) => {
+    controller.storeActionList(req, res);
+});
+
+
+
 
 module.exports = router;
