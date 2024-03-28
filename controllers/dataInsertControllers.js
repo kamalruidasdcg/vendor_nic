@@ -214,30 +214,30 @@ const archivePo = async (req, res) => {
             payload = req.body;
         }
 
-        const { CDPOS, ...obj } = payload;
-        console.log("payload", req.body);
-        console.log("CDPOS", CDPOS);
+        const cdhdr_table_data = payload.CDHDR_HEADER || payload.cdhdr_header;
+        const cdpos_table_data = payload.CDPOS_LINE_ITEM || payload.cdpos_line_item;
+        console.log("cdhdr_table_data", cdhdr_table_data);
+        console.log("CDPOS", cdpos_table_data);
 
         try {
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.objectclas) {
-                return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
-            }
 
             await promiseConnection.beginTransaction();
-            try {
-                insertPayload = await archivePoHeaderPayload(obj)
-                console.log('insertPayload', insertPayload);
-                const cdhdrTableInsert = await generateInsertUpdateQuery(insertPayload, 'cdhdr', "C_PKEY");
-                const [results] = await promiseConnection.execute(cdhdrTableInsert);
-                console.log("results 1", results);
-            } catch (error) {
-                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+            if (cdhdr_table_data?.length)  {
+                try {
+                    insertPayload = await archivePoHeaderPayload(cdpos_table_data)
+                    console.log('insertPayload', insertPayload);
+                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', "C_PKEY");
+                    const [results] = await promiseConnection.execute(cdhdrTableInsert);
+                    console.log("results 1", results);
+                } catch (error) {
+                    return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                }
             }
 
-            if (CDPOS?.length) {
+            if (cdhdr_table_data?.length) {
 
                 try {
-                    const cdposTablePayload = await archivePoLineItemsPayload(CDPOS);
+                    const cdposTablePayload = await archivePoLineItemsPayload(cdhdr_table_data);
                     console.log('cdposTablePayload', cdposTablePayload);
                     const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "C_PKEY");
                     const [results] = await promiseConnection.execute(insert_cdpos_table);
@@ -253,7 +253,6 @@ const archivePo = async (req, res) => {
 
 
             if (transactionSuccessful === TRUE) {
-
                 responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
             }
 
