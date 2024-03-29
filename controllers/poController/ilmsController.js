@@ -35,19 +35,19 @@ const submitILMS = async (req, res) => {
         let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
 
         if (!payload.purchasing_doc_no || !payload.type) {
-            return resSend(res, false, 400, "Please send valid payload", null, null);
+            return resSend(res, false, 200, "Please send valid payload", null, null);
         }
 
         // 2 for drawind depertment//
         if (tokenData.department_id == 2) {
             if (!payload.reference_no || payload.reference_no == "") {
-                return resSend(res, false, 400, "Please send valid reference_no", null, null);
+                return resSend(res, false, 200, "Please send valid reference_no", null, null);
             }
 
             const GET_LATEST_ILMS = await get_latest_activity(ILMS, payload.purchasing_doc_no, payload.reference_no);
 
             if (GET_LATEST_ILMS.status === APPROVED || GET_LATEST_ILMS.status === ACCEPTED || GET_LATEST_ILMS.status === ACKNOWLEDGED) {
-                return resSend(res, true, 200, `this ILMS already ${GET_LATEST_ILMS.status}`, null, null);
+                return resSend(res, false, 200, `this ILMS already ${GET_LATEST_ILMS.status}`, null, null);
             }
 // console.log(GET_LATEST_ILMS);
 // return;
@@ -129,7 +129,7 @@ const submitILMS = async (req, res) => {
 
             return resSend(res, true, 200, `ILMS ${payload.status}!`, fileData, null);
         } else {
-            return resSend(res, false, 400, "No data inserted", response, null);
+            return resSend(res, false, 200, "No data inserted", response, null);
         }
     } catch (error) {
         console.log("ILMS Submission api", error);

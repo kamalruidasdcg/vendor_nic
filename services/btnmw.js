@@ -30,7 +30,6 @@ exports.btnmw = () => {
     { name: "invoice_filename", maxCount: 1 },
     { name: "e_invoice_filename", maxCount: 1 },
     { name: "debit_credit_filename", maxCount: 1 },
-    { name: "c_sdbg_filename", maxCount: 1 },
     { name: "get_entry_filename", maxCount: 1 },
     { name: "demand_raise_filename", maxCount: 1 },
     { name: "pbg_filename", maxCount: 1 },

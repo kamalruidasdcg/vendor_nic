@@ -12,6 +12,8 @@ exports.zfi_bgm_1_Payload = async (obj) => {
     // if (!payload.data && !payload.data.length) {
     //     throw new Error("Please send valid payload");
     // }
+
+    return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
     const pl = 
         {
             "FILE_NO": getEpochTime(),

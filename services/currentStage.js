@@ -10,7 +10,9 @@ const currentStageHandler = async (id) => {
     "ilms",
     "inspection_call_letter",
     "shipping_documents",
-    "icgrn",
+    "store_icgrn",
+    "store_grn",
+    "store_gate",
     "wdc",
     "btn",
   ];
@@ -22,7 +24,8 @@ const currentStageHandler = async (id) => {
       query: q,
       values: [id],
     });
-    if (res[0].count > 0) {
+    console.log(res);
+    if (res[0]?.count > 0) {
       let r = "";
       if (item === "sdbg") {
         r = "SDBG";
@@ -36,8 +39,12 @@ const currentStageHandler = async (id) => {
         r = "Inspection call letter";
       } else if (item === "shipping_documents") {
         r = "Shipping documents";
-      } else if (item === "icgrn") {
-        r = "ICGRN";
+      } else if (
+        item === "store_icgrn" ||
+        item === "store_grn" ||
+        item === "store_gate"
+      ) {
+        r = "STORE";
       } else if (item === "wdc") {
         r = "WDC";
         finalStage = r;

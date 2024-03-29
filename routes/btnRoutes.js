@@ -4,15 +4,15 @@ const {
   fetchAllBTNs,
   submitBTN,
   fetchBTNByNum,
-  getImpDates,
+  getBTNData,
 } = require("../controllers/btnControllers");
 const { btnmw } = require("../services/btnmw");
 
 router.get("/", [], (req, res) => {
   fetchAllBTNs(req, res);
 });
-router.get("/getImpDates", [], (req, res) => {
-  getImpDates(req, res);
+router.get("/getBTNData", [], (req, res) => {
+  getBTNData(req, res);
 });
 
 router.get("/btn_num", [], (req, res) => {
