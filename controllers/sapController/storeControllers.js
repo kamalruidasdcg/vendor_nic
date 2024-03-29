@@ -23,9 +23,9 @@ const insertGateEntryData = async (req, res) => {
 
         console.log("payload", req.body);
 
-        const { GE_LINE_ITEMS, ...obj } = payload;
+        const { ITEM_TAB, ...obj } = payload;
 
-        console.log("GE_LINE_ITEMS", GE_LINE_ITEMS);
+        console.log("GE_LINE_ITEMS", ITEM_TAB);
         console.log("obj", obj);
 
         try {
@@ -46,10 +46,10 @@ const insertGateEntryData = async (req, res) => {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
-            if (GE_LINE_ITEMS && GE_LINE_ITEMS?.length) {
+            if (ITEM_TAB && ITEM_TAB?.length) {
 
                 try {
-                    const zmilestonePayload = await gateEntryDataPayload(GE_LINE_ITEMS);
+                    const zmilestonePayload = await gateEntryDataPayload(ITEM_TAB);
                     console.log('ekpopayload', zmilestonePayload);
                     // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, "C_PKEY");
