@@ -117,7 +117,7 @@ const submitSDBG = async (req, res) => {
           null
         );
       }
-
+      console.log("HEllo World!");
       // const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
 
       // if (GET_LATEST_SDBG.length > 0) {
