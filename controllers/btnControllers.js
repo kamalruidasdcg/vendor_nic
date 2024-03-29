@@ -10,7 +10,13 @@ const {
   A_ILMS_DATE,
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
+const { APPROVED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
+const {
+  getSDBGApprovedFiles,
+  getGRNs,
+  getICGRNs,
+} = require("../utils/btnUtils");
 const { checkTypeArr } = require("../utils/smallFun");
 
 const fetchAllBTNs = async (req, res) => {
@@ -60,7 +66,7 @@ const fetchBTNByNum = async (req, res) => {
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
 
-const getImpDates = async (req, res) => {
+const getBTNData = async (req, res) => {
   try {
     const { id } = req.query;
     // GET Contractual Dates from other Table
@@ -96,7 +102,6 @@ const getImpDates = async (req, res) => {
       query: a_sdbg_date_q,
       values: [id],
     });
-    console.log(a_dates);
     checkTypeArr(a_dates) &&
       a_dates.forEach((item) => {
         if (item.MTEXT === A_SDBG_DATE) {
@@ -119,6 +124,26 @@ const getImpDates = async (req, res) => {
       a_qap_date,
       a_ilms_date,
     };
+
+    // GET Approved SDBG by PO Number
+    let sdbg_filename_result = await getSDBGApprovedFiles(id);
+
+    if (checkTypeArr(sdbg_filename_result)) {
+      obj = { ...obj, sdbg_filename: sdbg_filename_result };
+    }
+
+    // GET GRN Number by PO Number
+    let grn_nos = await getGRNs(id);
+    if (checkTypeArr(grn_nos)) {
+      obj = { ...obj, grn_nos };
+    }
+
+    // GET GRN Number by PO Number
+    let icgrn_nos = await getICGRNs(id);
+    console.log(icgrn_nos);
+    if (icgrn_nos) {
+      obj = { ...obj, icgrn_nos };
+    }
 
     resSend(
       res,
@@ -208,10 +233,11 @@ const submitBTN = async (req, res) => {
         payloadFiles["debit_credit_filename"][0]?.filename)
     : null;
 
-  let c_sdbg_filename;
-  payloadFiles["c_sdbg_filename"]
-    ? (c_sdbg_filename = payloadFiles["c_sdbg_filename"][0]?.filename)
-    : null;
+  // GET Approved SDBG by PO Number
+  let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
+
+  // GET GRN Number by PO Number
+  let grn_nos = await getGRNs(purchasing_doc_no);
 
   let get_entry_filename;
   payloadFiles["get_entry_filename"]
@@ -269,7 +295,6 @@ const submitBTN = async (req, res) => {
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
   });
-  console.log(a_dates);
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
       a_sdbg_date = item.PLAN_DATE;
@@ -298,7 +323,9 @@ const submitBTN = async (req, res) => {
     }',
     net_claim_amount='${net_claim_amount ? net_claim_amount : null}',
     c_sdbg_date='${c_sdbg_date ? c_sdbg_date : null}',
-    c_sdbg_filename='${c_sdbg_filename ? c_sdbg_filename : null}',
+    c_sdbg_filename='${
+      sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : null
+    }',
     a_sdbg_date='${a_sdbg_date ? a_sdbg_date : null}',
     demand_raise_filename='${
       demand_raise_filename ? demand_raise_filename : null
@@ -353,4 +380,4 @@ const submitBTN = async (req, res) => {
   }
 };
 
-module.exports = { fetchAllBTNs, getImpDates, submitBTN, fetchBTNByNum };
+module.exports = { fetchAllBTNs, getBTNData, submitBTN, fetchBTNByNum };

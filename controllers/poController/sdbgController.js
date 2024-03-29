@@ -248,13 +248,13 @@ const getSdbgEntry = async (req, res) => {
     if (!req.query.poNo) {
       return resSend(res, true, 200, "Please send PO Number.", null, null);
     }
-    const { poNo } = req.query;
+    const { poNo, reference_no } = req.query;
     let Query = `SELECT t1.*,t2.reference_no FROM sdbg_entry AS t1
                             LEFT JOIN 
                                     sdbg AS t2 
                                 ON 
-                            t2.purchasing_doc_no= t1.purchasing_doc_no 
-                        WHERE t1.purchasing_doc_no = '${poNo}'`;
+                            t2.reference_no= t1.reference_no 
+                        WHERE t1.purchasing_doc_no = '${poNo}' AND t2.reference_no = '${reference_no}'`;
 
     const dealingOfficer = await checkIsDealingOfficer(
       poNo,
@@ -396,10 +396,10 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       let obj = poDateRes[0];
       other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
     }
-
     if (obj.status != REJECTED) {
       const insertPayload = {
         ...other_details,
+        reference_no:obj.reference_no,
         purchasing_doc_no: obj.purchasing_doc_no,
         bank_name: obj.bank_name ? obj.bank_name : null,
         branch_name: obj.branch_name ? obj.branch_name : null,
@@ -445,7 +445,8 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       //     dbResult[0].po_count > 0
       //       ? generateQuery(UPDATE, SDBG_ENTRY, insertPayload, whereCondition)
       //       : generateQuery(INSERT, SDBG_ENTRY, insertPayload);
-      console.log(insertPayload);
+      // console.log(insertPayload);
+      // return;
       let { q, val } = generateQuery(INSERT, SDBG_ENTRY, insertPayload);
 
       let sdbgEntryQuery = await query({ query: q, values: val });
@@ -638,15 +639,24 @@ const sdbgUpdateByFinance = async (req, res) => {
       console.log(update_assign_touery);
     }
 
-
+    console.log(sdbgDataResult);
     console.log("ACCEPTED1");
-    if (insertPayloadForSdbg.status === APPROVED
-      && (insertPayloadForSdbg.action_type == ACTION_SDBG
-        || insertPayloadForSdbg.action_type == ACTION_IB
-        || insertPayloadForSdbg.action_type == ACTION_DD)) {
+    console.log(insertPayloadForSdbg);
+    //return;
+    if (insertPayloadForSdbg.status == APPROVED
+      && (sdbgDataResult.action_type == ACTION_SDBG
+        || sdbgDataResult.action_type == ACTION_IB
+        || sdbgDataResult.action_type == ACTION_DD)) {
       console.log("ACCEPTED2");
+      //return;
       const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
       console.log("actual_subminission----", actual_subminission);
+      try {
+        await sendBgToSap(insertPayloadForSdbg);
+      } catch(error) {
+        console.error(error);
+      }
+      
       if (actual_subminission === false) {
         return resSend(res, false, 200, `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `, null, null);
       }
@@ -816,7 +826,7 @@ async function sendBgToSap(payload) {
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
     console.log("wdc_payload -->",);
-    let payload = { ...payload };
+    
     let modified = await zfi_bgm_1_Payload(payload);
     const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
     console.log('POST Response from the server:', postResponse);
