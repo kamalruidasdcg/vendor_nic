@@ -44,6 +44,7 @@ const ekpoTablePayload = async (payload, poNo) => {
     NETPR: obj.NETPR || null,
     NETWR: obj.NETWR || null,
     MWSKZ: obj.MWSKZ || null,
+    EINDT: formatDate(obj.EINDT)
   }));
   return pl;
 };
@@ -52,7 +53,7 @@ const archivePoLineItemsPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}-${obj.TABNAME}-${obj.TABKEY }`,
+    // C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}-${obj.TABNAME}-${obj.TABKEY }`,
     objectclas: obj.objectclas || obj.OBJECTCLAS || "",
     objectid: obj.objectid || obj.OBJECTID || "",
     changenr: obj.changenr || obj.CHANGENR || "",
@@ -77,7 +78,7 @@ const archivePoHeaderPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}`,
+    // C_PKEY: `${obj.OBJECTCLAS}-${obj.OBJECTID}-${obj.CHANGENR}`,
     objectclas: obj.objectclas || obj.OBJECTCLAS ,
     objectid: obj.objectid || obj.OBJECTID || "",
     changenr: obj.changenr || obj.CHANGENR || "",

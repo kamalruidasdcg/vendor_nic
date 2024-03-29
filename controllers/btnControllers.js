@@ -104,6 +104,7 @@ const getBTNData = async (req, res) => {
       query: a_sdbg_date_q,
       values: [id],
     });
+    console.log(a_dates);
     checkTypeArr(a_dates) &&
       a_dates.forEach((item) => {
         if (item.MTEXT === A_SDBG_DATE) {
@@ -311,6 +312,7 @@ const submitBTN = async (req, res) => {
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
   });
+  console.log(a_dates);
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
       a_sdbg_date = item.PLAN_DATE;
