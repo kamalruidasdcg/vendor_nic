@@ -90,7 +90,8 @@ router.post("/createTable", async (req, res) => {
 
 
   try {
-    const succ = await createTable();
+
+    const succ = await createTable(req.body);
     console.log(succ);
     res.status(200).json({ success: true, data: { queryData: req.query, api: succ }, message: "ping pong" })
   } catch (error) {
