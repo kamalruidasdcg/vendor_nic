@@ -118,20 +118,20 @@ const submitSDBG = async (req, res) => {
         );
       }
 
-      const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
+      // const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
 
-      if (GET_LATEST_SDBG.length > 0) {
-        if (GET_LATEST_SDBG[0].status == APPROVED) {
-          return resSend(
-            res,
-            false,
-            200,
-            `The SDBG is already ${APPROVED}.`,
-            null,
-            null
-          );
-        }
-      }
+      // if (GET_LATEST_SDBG.length > 0) {
+      //   if (GET_LATEST_SDBG[0].status == APPROVED) {
+      //     return resSend(
+      //       res,
+      //       false,
+      //       200,
+      //       `The SDBG is already ${APPROVED}.`,
+      //       null,
+      //       null
+      //     );
+      //   }
+      // }
 
       const { q, val } = generateQuery(INSERT, SDBG, payload);
       const response = await query({ query: q, values: val });
@@ -342,31 +342,31 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       obj.reference_no
     ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
-    // if (GET_LATEST_SDBG.length > 0) {
-    //   if (GET_LATEST_SDBG[0].status == ACCEPTED) {
-    //     return resSend(
-    //       res,
-    //       false,
-    //       200,
-    //       `The BG is already approved.`,
-    //       null,
-    //       null
-    //     );
-    //   }
-    //   if (
-    //     GET_LATEST_SDBG[0].status == REJECTED ||
-    //     GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE
-    //   ) {
-    //     return resSend(
-    //       res,
-    //       false,
-    //       200,
-    //       `The BG is already ${GET_LATEST_SDBG[0].status}.`,
-    //       null,
-    //       null
-    //     );
-    //   }
-    // }
+    if (GET_LATEST_SDBG.length > 0) {
+      if (GET_LATEST_SDBG[0].status == ACCEPTED) {
+        return resSend(
+          res,
+          false,
+          200,
+          `The BG is already approved.`,
+          null,
+          null
+        );
+      }
+      if (
+        GET_LATEST_SDBG[0].status == REJECTED ||
+        GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE
+      ) {
+        return resSend(
+          res,
+          false,
+          200,
+          `The BG is already ${GET_LATEST_SDBG[0].status}.`,
+          null,
+          null
+        );
+      }
+    }
 
     // GET Vendor Info
     let vendor_code = GET_LATEST_SDBG[0]?.vendor_code;
@@ -399,7 +399,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
     if (obj.status != REJECTED) {
       const insertPayload = {
         ...other_details,
-        reference_no:obj.reference_no,
+        reference_no: obj.reference_no,
         purchasing_doc_no: obj.purchasing_doc_no,
         bank_name: obj.bank_name ? obj.bank_name : null,
         branch_name: obj.branch_name ? obj.branch_name : null,
@@ -429,7 +429,9 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
         release_date: obj.release_date ? obj.release_date : 0,
         demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : 0,
-        entension_letter_date: obj.entension_letter_date ? obj.entension_letter_date : 0,
+        entension_letter_date: obj.entension_letter_date
+          ? obj.entension_letter_date
+          : 0,
       };
 
       //   console.log("insertPayload", insertPayload);
@@ -569,7 +571,6 @@ const sdbgUpdateByFinance = async (req, res) => {
       );
     }
 
-
     const check_it_forward_to_finance = `SELECT COUNT(reference_no) AS ref_no FROM ${SDBG} WHERE reference_no = ? AND purchasing_doc_no = ? AND status = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
     const result = await query({
@@ -596,10 +597,20 @@ const sdbgUpdateByFinance = async (req, res) => {
     // console.log(sdbgDataResult);
     // return;
     let q = `SELECT count(actualSubmissionDate) as count FROM ${ACTUAL_SUBMISSION_DB} WHERE purchasing_doc_no = ? AND milestoneId = ?`;
-    let count_res = await query({ query: q, values: [obj.purchasing_doc_no, 1], });
+    let count_res = await query({
+      query: q,
+      values: [obj.purchasing_doc_no, 1],
+    });
     console.log(count_res);
     if (count_res[0].count > 0) {
-      return resSend(res, false, 201, "actualSubmissionDate already preasent in the table!!", null, null);
+      return resSend(
+        res,
+        false,
+        201,
+        "actualSubmissionDate already preasent in the table!!",
+        null,
+        null
+      );
     }
 
     const insertPayloadForSdbg = {
@@ -612,8 +623,12 @@ const sdbgUpdateByFinance = async (req, res) => {
       assigned_from:
         tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
       assigned_to:
-        tokenData.internal_role_id == STAFF ? null : (obj.assigned_to) ? obj.assigned_to : null,
-      last_assigned: (obj.assigned_to) ? 1 : 0,
+        tokenData.internal_role_id == STAFF
+          ? null
+          : obj.assigned_to
+          ? obj.assigned_to
+          : null,
+      last_assigned: obj.assigned_to ? 1 : 0,
       created_at: getEpochTime(),
       created_by_name: "finance dept",
       created_by_id: tokenData.vendor_code,
@@ -643,27 +658,45 @@ const sdbgUpdateByFinance = async (req, res) => {
     console.log("ACCEPTED1");
     console.log(insertPayloadForSdbg);
     //return;
-    if (insertPayloadForSdbg.status == APPROVED
-      && (sdbgDataResult.action_type == ACTION_SDBG
-        || sdbgDataResult.action_type == ACTION_IB
-        || sdbgDataResult.action_type == ACTION_DD)) {
+    if (
+      insertPayloadForSdbg.status == APPROVED &&
+      (sdbgDataResult.action_type == ACTION_SDBG ||
+        sdbgDataResult.action_type == ACTION_IB ||
+        sdbgDataResult.action_type == ACTION_DD)
+    ) {
       console.log("ACCEPTED2");
       //return;
-      const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
+      const actual_subminission = await setActualSubmissionDateSdbg(
+        insertPayloadForSdbg,
+        tokenData
+      );
       console.log("actual_subminission----", actual_subminission);
       try {
         await sendBgToSap(insertPayloadForSdbg);
-      } catch(error) {
+      } catch (error) {
         console.error(error);
       }
-      
-      if (actual_subminission === false) {
-        return resSend(res, false, 200, `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `, null, null);
-      }
 
+      if (actual_subminission === false) {
+        return resSend(
+          res,
+          false,
+          200,
+          `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `,
+          null,
+          null
+        );
+      }
     }
     console.log("ACCEPTED3");
-    return resSend(res, true, 200, `This po is ${obj.status}.`, sdbgQuery, null);
+    return resSend(
+      res,
+      true,
+      200,
+      `This po is ${obj.status}.`,
+      sdbgQuery,
+      null
+    );
   } catch (error) {
     return resSend(res, false, 400, "somthing went wrong!", error, null);
   }
@@ -753,8 +786,9 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
-      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${
+                  payload.purchasing_doc_no
+                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -818,23 +852,20 @@ async function handelEmail(payload) {
   }
 }
 
-
 async function sendBgToSap(payload) {
-
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
-    console.log("wdc_payload -->",);
-    
+    console.log("wdc_payload -->");
+
     let modified = await zfi_bgm_1_Payload(payload);
-    const postResponse = await makeHttpRequest(postUrl, 'POST', modified);
-    console.log('POST Response from the server:', postResponse);
+    const postResponse = await makeHttpRequest(postUrl, "POST", modified);
+    console.log("POST Response from the server:", postResponse);
   } catch (error) {
-    console.error('Error making the request:', error.message);
+    console.error("Error making the request:", error.message);
   }
 }
-
 
 module.exports = {
   submitSDBG,
