@@ -7,6 +7,7 @@ const {
   QAP_SUBMISSION,
   DRAWING,
   SDBG,
+  SDBG_ENTRY,
   ACTUAL_SUBMISSION_DB,
 } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
@@ -374,23 +375,32 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
 const setActualSubmissionDateSdbg = async (payload, tokenData) => {
   // return 1;
 
-  const payloadObj = {
-    purchasing_doc_no: payload.purchasing_doc_no,
-    milestoneId: 1,
-    milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
-    actualSubmissionDate: payload.created_at,
-    created_at: getEpochTime(),
-    created_by_id: tokenData.vendor_code,
-  };
-  // console.log("payload");
-  const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
-  const response = await query({ query: q, values: val });
-  console.log(23456);
-  console.log(response);
-  if (response.affectedRows) {
-    return true;
+  const select_bg_date_query = `SELECT bg_date FROM ${SDBG_ENTRY} WHERE reference_no = ? AND purchasing_doc_no = ?`;
+  const select_bg_date = await query({
+    query: select_bg_date_query,
+    values: [payload.reference_no, payload.purchasing_doc_no],
+  });
+  if (!select_bg_date[0].bg_date) {
+    console.log("ERROR IN BG DATE");
   } else {
-    return false;
+    const payloadObj = {
+      purchasing_doc_no: payload.purchasing_doc_no,
+      milestoneId: 1,
+      milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
+      actualSubmissionDate: select_bg_date[0].bg_date,
+      created_at: getEpochTime(),
+      created_by_id: tokenData.vendor_code,
+    };
+    // console.log("payload");
+    const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
+    const response = await query({ query: q, values: val });
+    console.log(23456);
+    console.log(response);
+    if (response.affectedRows) {
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 
