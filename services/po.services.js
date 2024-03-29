@@ -387,7 +387,7 @@ const setActualSubmissionDateSdbg = async (payload, tokenData) => {
       purchasing_doc_no: payload.purchasing_doc_no,
       milestoneId: 1,
       milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
-      actualSubmissionDate: select_bg_date[0].bg_date,
+      actualSubmissionDate: parseInt(select_bg_date[0].bg_date)*1000,
       created_at: getEpochTime(),
       created_by_id: tokenData.vendor_code,
     };
