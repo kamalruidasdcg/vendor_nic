@@ -342,31 +342,31 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
       obj.reference_no
     ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
 
-    if (GET_LATEST_SDBG.length > 0) {
-      if (GET_LATEST_SDBG[0].status == ACCEPTED) {
-        return resSend(
-          res,
-          false,
-          200,
-          `The BG is already approved.`,
-          null,
-          null
-        );
-      }
-      if (
-        GET_LATEST_SDBG[0].status == REJECTED ||
-        GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE
-      ) {
-        return resSend(
-          res,
-          false,
-          200,
-          `The BG is already ${GET_LATEST_SDBG[0].status}.`,
-          null,
-          null
-        );
-      }
-    }
+    // if (GET_LATEST_SDBG.length > 0) {
+    //   if (GET_LATEST_SDBG[0].status == ACCEPTED) {
+    //     return resSend(
+    //       res,
+    //       false,
+    //       200,
+    //       `The BG is already approved.`,
+    //       null,
+    //       null
+    //     );
+    //   }
+    //   if (
+    //     GET_LATEST_SDBG[0].status == REJECTED ||
+    //     GET_LATEST_SDBG[0].status == FORWARD_TO_FINANCE
+    //   ) {
+    //     return resSend(
+    //       res,
+    //       false,
+    //       200,
+    //       `The BG is already ${GET_LATEST_SDBG[0].status}.`,
+    //       null,
+    //       null
+    //     );
+    //   }
+    // }
 
     // GET Vendor Info
     let vendor_code = GET_LATEST_SDBG[0]?.vendor_code;
