@@ -111,7 +111,7 @@ const msegPayload = async (payload) => {
     // TBNUM: obj.TBNUM || null,
     // TBPOS: obj.TBPOS || null,
     // XBLVS: obj.XBLVS || null,
-    VSCHN: obj.VSCHN || null,
+    // VSCHN: obj.VSCHN || null,
     NSCHN: obj.NSCHN || null,
     DYPLA: obj.DYPLA || null,
     UBNUM: obj.UBNUM || null,
