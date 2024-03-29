@@ -1,13 +1,24 @@
 const { query } = require("../config/dbConfig");
+const { ACTION_SDBG, ACTION_PBG } = require("../lib/constant");
 const { APPROVED } = require("../lib/status");
 const { checkTypeArr } = require("./smallFun");
 
 exports.getSDBGApprovedFiles = async (po) => {
   // GET Approved SDBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ?`;
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
   let result = await query({
     query: q,
-    values: [po, APPROVED],
+    values: [po, APPROVED, ACTION_SDBG],
+  });
+  return result;
+};
+
+exports.getPBGApprovedFiles = async (po) => {
+  // GET Approved PBG by PO Number
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
+  let result = await query({
+    query: q,
+    values: [po, APPROVED, ACTION_PBG],
   });
   return result;
 };

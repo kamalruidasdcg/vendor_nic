@@ -17,6 +17,7 @@ const {
   getGRNs,
   getICGRNs,
   getGateEntry,
+  getPBGApprovedFiles,
 } = require("../utils/btnUtils");
 const { checkTypeArr } = require("../utils/smallFun");
 
@@ -150,6 +151,14 @@ const getBTNData = async (req, res) => {
     let icgrn_nos = await getICGRNs(id);
     if (icgrn_nos) {
       obj = { ...obj, icgrn_nos };
+    }
+
+    // GET Approved SDBG by PO Number
+    let pbg_filename_result = await getPBGApprovedFiles(id);
+    console.log(pbg_filename_result);
+
+    if (checkTypeArr(pbg_filename_result)) {
+      obj = { ...obj, pbg_filename: pbg_filename_result };
     }
 
     resSend(
