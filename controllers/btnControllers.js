@@ -16,6 +16,7 @@ const {
   getSDBGApprovedFiles,
   getGRNs,
   getICGRNs,
+  getGateEntry,
 } = require("../utils/btnUtils");
 const { checkTypeArr } = require("../utils/smallFun");
 
@@ -114,6 +115,7 @@ const getBTNData = async (req, res) => {
           a_ilms_date = item.PLAN_DATE;
         }
       });
+
     let obj = {
       c_sdbg_date,
       c_drawing_date,
@@ -132,6 +134,12 @@ const getBTNData = async (req, res) => {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
 
+    // GET gate by PO Number
+    let gate_entry = await getGateEntry(id);
+    if (gate_entry) {
+      obj = { ...obj, gate_entry };
+    }
+
     // GET GRN Number by PO Number
     let grn_nos = await getGRNs(id);
     if (checkTypeArr(grn_nos)) {
@@ -140,7 +148,6 @@ const getBTNData = async (req, res) => {
 
     // GET GRN Number by PO Number
     let icgrn_nos = await getICGRNs(id);
-    console.log(icgrn_nos);
     if (icgrn_nos) {
       obj = { ...obj, icgrn_nos };
     }
