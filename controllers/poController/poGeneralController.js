@@ -234,7 +234,7 @@ const details = async (req, res) => {
             mat.MENGE AS material_quantity, 
             mat.MATNR AS material_code,
             mat.MEINS AS material_unit,
-            mat.EINTD AS contractual_delivery_date
+            mat.EINDT AS contractual_delivery_date,
             materialLineItems.EINDT as contractual_delivery_date2, 
             materialMaster.*, 
             mat_desc.MAKTX as mat_description
