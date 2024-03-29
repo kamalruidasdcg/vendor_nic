@@ -44,6 +44,7 @@ const ekpoTablePayload = async (payload, poNo) => {
     NETPR: obj.NETPR || null,
     NETWR: obj.NETWR || null,
     MWSKZ: obj.MWSKZ || null,
+    EINDT: formatDate(obj.EINDT)
   }));
   return pl;
 };
