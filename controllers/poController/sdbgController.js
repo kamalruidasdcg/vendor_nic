@@ -399,7 +399,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
     if (obj.status != REJECTED) {
       const insertPayload = {
         ...other_details,
-        reference_no: obj.reference_no,
+        reference_no:obj.reference_no,
         purchasing_doc_no: obj.purchasing_doc_no,
         bank_name: obj.bank_name ? obj.bank_name : null,
         branch_name: obj.branch_name ? obj.branch_name : null,
@@ -658,23 +658,29 @@ const sdbgUpdateByFinance = async (req, res) => {
     console.log("ACCEPTED1");
     console.log(insertPayloadForSdbg);
     //return;
-    if (
-      insertPayloadForSdbg.status == APPROVED &&
-      (sdbgDataResult.action_type == ACTION_SDBG ||
-        sdbgDataResult.action_type == ACTION_IB ||
-        sdbgDataResult.action_type == ACTION_DD)
-    ) {
+    if (insertPayloadForSdbg.status == APPROVED
+      && (sdbgDataResult.action_type == ACTION_SDBG
+        || sdbgDataResult.action_type == ACTION_IB
+        || sdbgDataResult.action_type == ACTION_DD)) {
       console.log("ACCEPTED2");
-      //return;
-      const actual_subminission = await setActualSubmissionDateSdbg(
-        insertPayloadForSdbg,
-        tokenData
-      );
-      console.log("actual_subminission----", actual_subminission);
+      // const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
+      const actual_subminission = await setActualSubmissionDate(insertPayloadForSdbg, 1, tokenData, SUBMITTED);
       try {
-        await sendBgToSap(insertPayloadForSdbg);
-      } catch (error) {
+
+        const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = ? AND reference_no = ?`;
+        let get_sdbg_entry_data = await query({
+          query: get_sdbg_entry_query,
+          values: [obj.purchasing_doc_no, obj.reference_no],
+        });
+
+
+        await sendBgToSap(get_sdbg_entry_data[0]);
+      } catch(error) {
         console.error(error);
+      }
+      
+      if (actual_subminission === false) {
+        return resSend(res, false, 200, `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `, null, null);
       }
 
       if (actual_subminission === false) {
@@ -856,8 +862,8 @@ async function sendBgToSap(payload) {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
-    console.log("wdc_payload -->");
-
+    console.log("wdc_payload -->",);
+    
     let modified = await zfi_bgm_1_Payload(payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);

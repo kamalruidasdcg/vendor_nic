@@ -55,7 +55,7 @@ const details = async (req, res) => {
     const tokenData = { ...req.tokenData };
 
     if (!queryParams.id || queryParams.id === "0") {
-      return resSend(res, false, 400, "Please provided PO NO.", [], null);
+      return resSend(res, false, 200, "Please provided PO NO.", [], null);
     }
 
     let q = `
@@ -218,6 +218,7 @@ const details = async (req, res) => {
     if (timeline.length) {
       timelineData = joinArrays(timeline, curret_data);
     }
+    console.log(timelineData)
 
     // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
