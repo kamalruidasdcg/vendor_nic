@@ -235,6 +235,7 @@ const details = async (req, res) => {
             mat.MATNR AS material_code,
             mat.MEINS AS material_unit,
             mat.EINDT AS contractual_delivery_date,
+            mat.LOEKZ AS isDeleted, 
             materialLineItems.EINDT as contractual_delivery_date2, 
             materialMaster.*, 
             mat_desc.MAKTX as mat_description
@@ -251,6 +252,8 @@ const details = async (req, res) => {
       query: materialQuery,
       values: [queryParams.id],
     });
+
+    materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
 
     const isMaterialTypePO = poTypeCheck(materialResult);
 
