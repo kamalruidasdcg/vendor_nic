@@ -532,14 +532,27 @@ const sdbgUpdateByFinance = async (req, res) => {
     }
 
     if (tokenData.department_id != FINANCE) {
-      return resSend(res, true, 200, "please login as finance!", null, null);
+      return resSend(res, false, 200, "please login as finance!", null, null);
     }
 
+    if(tokenData.internal_role_id == STAFF) {
+        const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${SDBG} WHERE reference_no = ? AND purchasing_doc_no = ? AND assigned_to = ? AND last_assigned = ?`;
+        const check_assign_to_query = await query({
+          query: check_assign_to_str,
+          values: [obj.reference_no, obj.purchasing_doc_no, tokenData.vendor_code, 1],
+        });
+        let check_assign_to_result = check_assign_to_query[0].assign_count;
+
+        console.log(check_assign_to_result);
+        if(check_assign_to_result != 1) {
+          return resSend(res, false, 200, "This PO is not assign to you!", null, null);
+        }
+    }
     const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(
       obj.purchasing_doc_no,
       obj.reference_no
     );
-
+   
     if (
       GET_LATEST_SDBG[0].status == APPROVED ||
       GET_LATEST_SDBG[0].status == REJECTED ||
@@ -865,6 +878,7 @@ async function sendBgToSap(payload) {
     console.log("wdc_payload -->",);
     
     let modified = await zfi_bgm_1_Payload(payload);
+  
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {

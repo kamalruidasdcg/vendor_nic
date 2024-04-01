@@ -1,4 +1,4 @@
-const { getEpochTime, formatDate, formatTime } = require("../lib/utils");
+const { getEpochTime, getYyyyMmDd, formatDate, formatTime } = require("../lib/utils");
 
 
 /**
@@ -16,7 +16,7 @@ exports.zfi_bgm_1_Payload = async (obj) => {
    // return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
     const pl = 
         {
-            "FILE_NO": "00-SD_FILE",
+            "FILE_NO": "FILE-"+obj.purchasing_doc_no.slice(-5),
             "REF_NO": obj.reference_no || "",
             "BANKERS_NAME": obj.bank_name || "",
             "BANKERS_BRANCH": obj.branch_name || "",
@@ -26,16 +26,16 @@ exports.zfi_bgm_1_Payload = async (obj) => {
             "BANKERS_CITY": obj.bank_city || "",
             "B_PIN_CODE": obj.bank_pin_code || "",
             "BANK_GU_NO": obj.bg_no || "",
-            "BG_DATE": obj.bg_date || "",
+            "BG_DATE": obj.bg_date ? getYyyyMmDd(obj.bg_date) : "",
             "BG_AMOUNT": obj.bg_ammount || "",
             "PO_NUMBER": obj.purchasing_doc_no || "",
             "DEPARTMENT": obj.department || "",
-            "PO_DATE": obj.po_date || "",
+            "PO_DATE": obj.po_date ? getYyyyMmDd(obj.po_date) : "",
             "YARD_NO": obj.yard_no || 0,
-            "VALIDITY_DATE": obj.validity_date || "",
+            "VALIDITY_DATE": obj.validity_date ? getYyyyMmDd(obj.validity_date) : "",
             "CLAIM_PERIOD": obj.claim_priod || "",
             "CHECKLIST_REF": obj.reference_no || "",
-            "CHECKLIST_DATE": obj.check_list_date || "",
+            "CHECKLIST_DATE": obj.check_list_date ? getYyyyMmDd(obj.check_list_date) : "",
             "BG_TYPE": obj.bg_type || "",
             "VENDOR_NAME": obj.vendor_name || "",
             "VENDOR_ADD1": obj.vendor_address1 || "",
@@ -44,15 +44,15 @@ exports.zfi_bgm_1_Payload = async (obj) => {
             "VENDOR_CITY": obj.vendor_city || "",
             "V_PIN_CODE": obj.vendor_pin_code || 0,
             "CONFIRMATION": obj.confirmation || "yes",
-            "EXTENTION_DATE1": obj.extension_date1 || "",
-            "EXTENTION_DATE2": obj.extension_date2 || "",
-            "EXTENTION_DATE3": obj.extension_date3 || "",
-            "EXTENTION_DATE4": obj.extension_date4 || "",
-            "EXTENTION_DATE5": obj.extension_date5 || "",
-            "EXTENTION_DATE6": obj.extension_date6 || "",
-            "RELEASE_DATE": obj.release_date || "",
-            "DEM_NOTICE_DATE": obj.demand_notice_date || "",
-            "EXT_LETTER_DATE": obj.entension_letter_date || "",
+            "EXTENTION_DATE1": obj.extension_date1 ? getYyyyMmDd(obj.extension_date1) : "",
+            "EXTENTION_DATE2": obj.extension_date2 ? getYyyyMmDd(obj.extension_date2) : "",
+            "EXTENTION_DATE3": obj.extension_date3 ? getYyyyMmDd(obj.extension_date3) : "",
+            "EXTENTION_DATE4": obj.extension_date4 ? getYyyyMmDd(obj.extension_date4) : "",
+            "EXTENTION_DATE5": obj.extension_date5 ? getYyyyMmDd(obj.extension_date5) : "",
+            "EXTENTION_DATE6": obj.extension_date6 ? getYyyyMmDd(obj.extension_date6) : "",
+            "RELEASE_DATE": obj.release_date ? getYyyyMmDd(obj.release_date) : "",
+            "DEM_NOTICE_DATE": obj.release_date ? getYyyyMmDd(obj.demand_notice_date) : "",
+            "EXT_LETTER_DATE": obj.release_date ? getYyyyMmDd(obj.entension_letter_date) : "",
         };
            
     return pl;
