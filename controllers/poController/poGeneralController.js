@@ -246,12 +246,14 @@ const details = async (req, res) => {
                     ON (materialMaster.MATNR = mat.MATNR)
                 LEFT JOIN makt AS mat_desc
                     ON mat_desc.MATNR = mat.MATNR
-            WHERE mat.EBELN = ?`;
+            WHERE (mat.loekz != "L" AND mat.EBELN = ?)`;
 
     let materialResult = await query({
       query: materialQuery,
       values: [queryParams.id],
     });
+
+    console.log(materialQuery, queryParams.id );
 
     const isMaterialTypePO = poTypeCheck(materialResult);
 

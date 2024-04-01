@@ -7,12 +7,11 @@ const cron = require('node-cron');
 const PORT = process.env.PORT || 4001;
 const HOST_NAME = process.env.HOST_NAME || "10.12.1.148";
 // Settings
+
 app.use(express.json());
 app.use(cors("*"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
-
-
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
@@ -22,6 +21,7 @@ const dataInsert = require("./routes/sap/dataInsert")
 const sapRoutes = require("./routes/sap/sapRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES } = require("./lib/constant");
+const { apiLog } = require("./services/api.services");
 
 
 // const task = cron.schedule('*/1 * * * *', () => {
@@ -31,7 +31,7 @@ const { YES } = require("./lib/constant");
 //   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
 // });
 
-
+app.use(apiLog);
 
 // use routes
 app.use("/api/v1", allRoutes);
