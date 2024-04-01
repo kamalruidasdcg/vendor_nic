@@ -878,7 +878,9 @@ async function sendBgToSap(payload) {
     console.log("wdc_payload -->",);
     
     let modified = await zfi_bgm_1_Payload(payload);
-  
+    // console.log('___________modified');
+    // console.log(modified);
+    // console.log('modified_________');
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
