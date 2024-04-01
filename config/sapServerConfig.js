@@ -16,7 +16,7 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
 
     // Define the options for the HTTP request
     const Username = process.env.SAP_API_AUTH_USERNAME || "dcg1";
-    const Password = process.env.SAP_API_AUTH_PASSWORD || "data#100";
+    const Password = process.env.SAP_API_AUTH_PASSWORD || "test#100";
     const credential = Username + ":" + Password;
     const base64Credentials = Buffer.from(credential).toString('base64');
     console.log(base64Credentials, "base64Credentials");

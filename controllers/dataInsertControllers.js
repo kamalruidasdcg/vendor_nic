@@ -219,14 +219,17 @@ const archivePo = async (req, res) => {
         console.log("cdhdr_table_data", cdhdr_table_data);
         console.log("CDPOS", cdpos_table_data);
 
+    
+
         try {
 
             await promiseConnection.beginTransaction();
             if (cdhdr_table_data?.length)  {
                 try {
-                    insertPayload = await archivePoHeaderPayload(cdpos_table_data)
+                    insertPayload = await archivePoHeaderPayload(cdhdr_table_data)
                     console.log('insertPayload', insertPayload);
-                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', "C_PKEY");
+                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', "id");
+                    console.log("cdhdrTableInsert", cdhdrTableInsert);
                     const [results] = await promiseConnection.execute(cdhdrTableInsert);
                     console.log("results 1", results);
                 } catch (error) {
@@ -234,12 +237,13 @@ const archivePo = async (req, res) => {
                 }
             }
 
-            if (cdhdr_table_data?.length) {
+            if (cdpos_table_data?.length) {
 
                 try {
-                    const cdposTablePayload = await archivePoLineItemsPayload(cdhdr_table_data);
+                    const cdposTablePayload = await archivePoLineItemsPayload(cdpos_table_data);
                     console.log('cdposTablePayload', cdposTablePayload);
-                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "C_PKEY");
+                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "id");
+                    console.log(insert_cdpos_table, "insert_cdpos_table");
                     const [results] = await promiseConnection.execute(insert_cdpos_table);
                     console.log("results 2", results);
 

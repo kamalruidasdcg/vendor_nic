@@ -9,14 +9,15 @@ const { getEpochTime, formatDate, formatTime } = require("../lib/utils");
  */
 
 exports.zfi_bgm_1_Payload = async (obj) => {
-    // if (!payload.data && !payload.data.length) {
+    // if (!obj.data && !obj.length) {
     //     throw new Error("Please send valid payload");
     // }
 
-    return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
+   // return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
     const pl = 
         {
-            "FILE_NO": getEpochTime(),
+            "FILE_NO": "00-SD_FILE",
+            "REF_NO": obj.reference_no || "",
             "BANKERS_NAME": obj.bank_name || "",
             "BANKERS_BRANCH": obj.branch_name || "",
             "BANKERS_ADD1": obj.bank_addr1 || "",
@@ -53,6 +54,7 @@ exports.zfi_bgm_1_Payload = async (obj) => {
             "DEM_NOTICE_DATE": obj.demand_notice_date || "",
             "EXT_LETTER_DATE": obj.entension_letter_date || "",
         };
+           
     return pl;
 }
 exports.ztfi_bil_defacePayload = async (payload) => {
