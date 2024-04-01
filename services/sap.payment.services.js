@@ -141,12 +141,11 @@ const paymentAviceHeaderPayload = async (obj) => {
     throw new Error("Please send valid payload");
   }
   const pl = {
-    id:null,
     zlsch: obj.zlsch || obj.ZLSCH || "",
-    bldat: formatDate(obj.bldat) || formatDate(obj.BLDAT),
+    bldat: formatDate(obj.bldat) || formatDate(obj.BLDAT) || "0000-00-00",
     chect: obj.chect || obj.CHECT || "",
     hbkid: obj.hbkid || obj.HBKID || "",
-    pridt: formatDate(obj.pridt) || formatDate(obj.PRIDT),
+    pridt: formatDate(obj.pridt) || formatDate(obj.PRIDT) || "0000-00-00",
     lifnr: obj.lifnr || obj.LIFNR || "",
     adrnr: obj.adrnr || obj.ADRNR || "",
     bank_desc: obj.bank_desc || obj.BANK_DESC || "",
@@ -161,7 +160,6 @@ const paymentAviceLineItemsPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    id: null,
     sgtxt: obj.sgtxt || obj.SGTXT || "",
     belnr: obj.belnr || obj.BELNR || "",
     gross: obj.gross || obj.GROSS || "",
