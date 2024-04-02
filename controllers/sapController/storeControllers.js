@@ -21,6 +21,10 @@ const insertGateEntryData = async (req, res) => {
             payload = req.body;
         }
 
+
+        
+
+
         console.log("payload", req.body);
 
         const { ITEM_TAB, ...obj } = payload;
