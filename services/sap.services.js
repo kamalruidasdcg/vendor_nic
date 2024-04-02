@@ -13,48 +13,48 @@ exports.zfi_bgm_1_Payload = async (obj) => {
     //     throw new Error("Please send valid payload");
     // }
 
-   // return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
-    const pl = 
-        {
-            "FILE_NO": "FILE-"+obj.purchasing_doc_no.slice(-5),
-            "REF_NO": obj.reference_no || "",
-            "BANKERS_NAME": obj.bank_name || "",
-            "BANKERS_BRANCH": obj.branch_name || "",
-            "BANKERS_ADD1": obj.bank_addr1 || "",
-            "BANKERS_ADD2": obj.bank_addr2 || "",
-            "BANKERS_ADD3": obj.bank_addr3 || "",
-            "BANKERS_CITY": obj.bank_city || "",
-            "B_PIN_CODE": obj.bank_pin_code || "",
-            "BANK_GU_NO": obj.bg_no || "",
-            "BG_DATE": (obj.bg_date && obj.bg_date !="") ? getYyyyMmDd(obj.bg_date) : "",
-            "BG_AMOUNT": obj.bg_ammount || "",
-            "PO_NUMBER": obj.purchasing_doc_no || "",
-            "DEPARTMENT": obj.department || "",
-            "PO_DATE": obj.po_date ? getYyyyMmDd(obj.po_date) : "",
-            "YARD_NO": obj.yard_no || 0,
-            "VALIDITY_DATE": (obj.validity_date && obj.validity_date !="") ? getYyyyMmDd(obj.validity_date) : "",
-            "CLAIM_PERIOD": (obj.claim_priod && obj.claim_priod !="") ? getYyyyMmDd(obj.claim_priod) : "",
-            "CHECKLIST_REF": obj.reference_no || "",
-            "CHECKLIST_DATE": (obj.check_list_date && obj.check_list_date !="") ? getYyyyMmDd(obj.check_list_date) : "",
-            "BG_TYPE": obj.bg_type || "",
-            "VENDOR_NAME": obj.vendor_name || "",
-            "VENDOR_ADD1": obj.vendor_address1 || "",
-            "VENDOR_ADD2": obj.vendor_address2 || "",
-            "VENDOR_ADD3": obj.vendor_address3 || "",
-            "VENDOR_CITY": obj.vendor_city || "",
-            "V_PIN_CODE": obj.vendor_pin_code || 0,
-            "CONFIRMATION": obj.confirmation || "yes",
-            "EXTENTION_DATE1": (obj.extension_date1 && obj.extension_date1 !="") ? getYyyyMmDd(obj.extension_date1) : "",
-            "EXTENTION_DATE2": (obj.extension_date2 && obj.extension_date2 !="") ? getYyyyMmDd(obj.extension_date2) : "",
-            "EXTENTION_DATE3": (obj.extension_date3 && obj.extension_date3 !="") ? getYyyyMmDd(obj.extension_date3) : "",
-            "EXTENTION_DATE4": (obj.extension_date4 && obj.extension_date4 !="") ? getYyyyMmDd(obj.extension_date4) : "",
-            "EXTENTION_DATE5": (obj.extension_date5 && obj.extension_date5 !="") ? getYyyyMmDd(obj.extension_date5) : "",
-            "EXTENTION_DATE6": (obj.extension_date6 && obj.extension_date6 !="")? getYyyyMmDd(obj.extension_date6) : "",
-            "RELEASE_DATE": (obj.release_date && obj.release_date !="") ? getYyyyMmDd(obj.release_date) : "",
-            "DEM_NOTICE_DATE": (obj.demand_notice_date && obj.demand_notice_date !="") ? getYyyyMmDd(obj.demand_notice_date) : "",
-            "EXT_LETTER_DATE": (obj.entension_letter_date && obj.entension_letter_date !="") ? getYyyyMmDd(obj.entension_letter_date) : "",
-        };
-           
+    // return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
+    const pl =
+    {
+        "FILE_NO": "FILE-" + obj.purchasing_doc_no.slice(-5),
+        "REF_NO": obj.reference_no || "",
+        "BANKERS_NAME": obj.bank_name || "",
+        "BANKERS_BRANCH": obj.branch_name || "",
+        "BANKERS_ADD1": obj.bank_addr1 || "",
+        "BANKERS_ADD2": obj.bank_addr2 || "",
+        "BANKERS_ADD3": obj.bank_addr3 || "",
+        "BANKERS_CITY": obj.bank_city || "",
+        "B_PIN_CODE": obj.bank_pin_code || "",
+        "BANK_GU_NO": obj.bg_no || "",
+        "BG_DATE": (obj.bg_date && obj.bg_date != "") ? getYyyyMmDd(obj.bg_date) : "",
+        "BG_AMOUNT": obj.bg_ammount || "",
+        "PO_NUMBER": obj.purchasing_doc_no || "",
+        "DEPARTMENT": obj.department || "",
+        "PO_DATE": obj.po_date ? getYyyyMmDd(obj.po_date) : "",
+        "YARD_NO": obj.yard_no || 0,
+        "VALIDITY_DATE": (obj.validity_date && obj.validity_date != "") ? getYyyyMmDd(obj.validity_date) : "",
+        "CLAIM_PERIOD": (obj.claim_priod && obj.claim_priod != "") ? getYyyyMmDd(obj.claim_priod) : "",
+        "CHECKLIST_REF": obj.reference_no || "",
+        "CHECKLIST_DATE": (obj.check_list_date && obj.check_list_date != "") ? getYyyyMmDd(obj.check_list_date) : "",
+        "BG_TYPE": obj.bg_type || "",
+        "VENDOR_NAME": obj.vendor_name || "",
+        "VENDOR_ADD1": obj.vendor_address1 || "",
+        "VENDOR_ADD2": obj.vendor_address2 || "",
+        "VENDOR_ADD3": obj.vendor_address3 || "",
+        "VENDOR_CITY": obj.vendor_city || "",
+        "V_PIN_CODE": obj.vendor_pin_code || 0,
+        "CONFIRMATION": obj.confirmation || "yes",
+        "EXTENTION_DATE1": (obj.extension_date1 && obj.extension_date1 != "") ? getYyyyMmDd(obj.extension_date1) : "",
+        "EXTENTION_DATE2": (obj.extension_date2 && obj.extension_date2 != "") ? getYyyyMmDd(obj.extension_date2) : "",
+        "EXTENTION_DATE3": (obj.extension_date3 && obj.extension_date3 != "") ? getYyyyMmDd(obj.extension_date3) : "",
+        "EXTENTION_DATE4": (obj.extension_date4 && obj.extension_date4 != "") ? getYyyyMmDd(obj.extension_date4) : "",
+        "EXTENTION_DATE5": (obj.extension_date5 && obj.extension_date5 != "") ? getYyyyMmDd(obj.extension_date5) : "",
+        "EXTENTION_DATE6": (obj.extension_date6 && obj.extension_date6 != "") ? getYyyyMmDd(obj.extension_date6) : "",
+        "RELEASE_DATE": (obj.release_date && obj.release_date != "") ? getYyyyMmDd(obj.release_date) : "",
+        "DEM_NOTICE_DATE": (obj.demand_notice_date && obj.demand_notice_date != "") ? getYyyyMmDd(obj.demand_notice_date) : "",
+        "EXT_LETTER_DATE": (obj.entension_letter_date && obj.entension_letter_date != "") ? getYyyyMmDd(obj.entension_letter_date) : "",
+    };
+
     return pl;
 }
 exports.ztfi_bil_defacePayload = async (payload) => {
@@ -175,7 +175,7 @@ exports.ztfi_bil_defacePayload = async (payload) => {
     return pl;
 }
 exports.ztfi_bil_defacePayload = async (payload) => {
-    if(!payload.data && !payload.data.length) {
+    if (!payload.data && !payload.data.length) {
         throw new Error("Please send valid payload");
     }
     const pl = payload.data.map((obj) => (
@@ -286,8 +286,53 @@ exports.ztfi_bil_defacePayload = async (payload) => {
             MIRO_DATE: obj.MIRO_DATE || null,
             ZTEN_PROCESSED_PYMT: obj.ZTEN_PROCESSED_PYMT || null,
             ED_EC: obj.ED_EC || null,
-          }
+        }
     ));
     return pl;
 }
 
+
+exports.zfi_bgm_1_Payload_sap = async (obj) => {
+    const pl =
+    {
+        "FILE_NO": obj.file_no || obj.FILE_NO,
+        "REF_NO": obj.ref_no || obj.REF_NO || null,
+        "BANKERS_NAME": obj.bank_name || obj.BANKERS_NAME,
+        "BANKERS_BRANCH": obj.branch_name || obj.BANKERS_BRANCH || "",
+        "BANKERS_ADD1": obj.bank_addr1 || obj.BANKERS_ADD1 || "",
+        "BANKERS_ADD2": obj.bank_addr2 || obj.BANKERS_ADD2 || "",
+        "BANKERS_ADD3": obj.bank_addr3 || obj.BANKERS_ADD3 || "",
+        "BANKERS_CITY": obj.bank_city || obj.BANKERS_CITY || "",
+        "B_PIN_CODE": obj.bank_pin_code || obj.B_PIN_CODE || "",
+        "BANK_GU_NO": obj.bg_no || obj.BANK_GU_NO || "",
+        "BG_DATE": formatDate(obj.bg_date) || formatDate(obj.BG_DATE),
+        "BG_AMOUNT": obj.bg_ammount || obj.BG_AMOUNT || "",
+        "PO_NUMBER": obj.purchasing_doc_no || obj.PO_NUMBER || "",
+        "DEPARTMENT": obj.department || obj.DEPARTMENT || "",
+        "PO_DATE": formatDate(obj.po_date) || formatDate(obj.PO_DATE),
+        "YARD_NO": obj.yard_no || obj.YARD_NO || 0,
+        "VALIDITY_DATE": formatDate(obj.validity_date) || formatDate(obj.VALIDITY_DATE),
+        "CLAIM_PERIOD": formatDate(obj.claim_priod)|| formatDate(obj.CLAIM_PERIOD),
+        "CHECKLIST_REF": obj.reference_no || "",
+        "CHECKLIST_DATE": formatDate(obj.check_list_date) || formatDate(obj.CHECKLIST_DATE),
+        "BG_TYPE": obj.bg_type || obj.BG_TYPE || "",
+        "VENDOR_NAME": obj.vendor_name || obj.VENDOR_NAME || "",
+        "VENDOR_ADD1": obj.vendor_address1 || obj.VENDOR_ADD1 || "",
+        "VENDOR_ADD2": obj.vendor_address2 || obj.VENDOR_ADD2 || "",
+        "VENDOR_ADD3": obj.vendor_address3 || obj.VENDOR_ADD3 || "",
+        "VENDOR_CITY": obj.vendor_city ||obj.VENDOR_CITY || "",
+        "V_PIN_CODE": obj.vendor_pin_code || obj.V_PIN_CODE,
+        "CONFIRMATION": obj.confirmation || "yes",
+        "EXTENTION_DATE1": formatDate(obj.extension_date1) || formatDate(obj.EXTENTION_DATE1),
+        "EXTENTION_DATE2": formatDate(obj.extension_date2) || formatDate(obj.EXTENTION_DATE2),
+        "EXTENTION_DATE3": formatDate(obj.extension_date3) || formatDate(obj.EXTENTION_DATE3),
+        "EXTENTION_DATE4": formatDate(obj.extension_date4) || formatDate(obj.EXTENTION_DATE4),
+        "EXTENTION_DATE5": formatDate(obj.extension_date5) || formatDate(obj.EXTENTION_DATE5),
+        "EXTENTION_DATE6": formatDate(obj.extension_date6) || formatDate(obj.EXTENTION_DATE6),
+        "RELEASE_DATE": formatDate(obj.release_date)|| formatDate(obj.RELEASE_DATE),
+        "DEM_NOTICE_DATE": formatDate(obj.demand_notice_date) || formatDate(obj.DEM_NOTICE_DATE),
+        "EXT_LETTER_DATE": formatDate(obj.entension_letter_date) || formatDate(obj.EXT_LETTER_DATE),
+    };
+
+    return pl;
+}

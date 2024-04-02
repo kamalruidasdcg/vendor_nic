@@ -40,7 +40,7 @@ async function saveLogInDb(source="", req_url="", req_method="", status_code="",
     }
     try {
         const { q, val } = generateQuery(INSERT, 'generic_log', logPaylaod);
-        console.log(q, val);
+        // console.log(q, val);
         await query({ query: q, values: val });
     } catch (error) {
         console.log("saveLogInDb", error);

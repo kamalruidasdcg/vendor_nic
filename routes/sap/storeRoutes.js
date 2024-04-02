@@ -5,6 +5,9 @@ const controller = require("../../controllers/sapController/storeControllers");
 router.post("/gateentry", (req, res) => {
     controller.insertGateEntryData(req, res);
 });
+router.post("/gateentryreport", (req, res) => {
+    controller.gateEntryReport(req, res);
+});
 
 
 router.get("/storeActionList", (req, res) => {

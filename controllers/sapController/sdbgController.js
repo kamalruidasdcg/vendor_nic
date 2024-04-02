@@ -1,8 +1,8 @@
 
 const { responseSend } = require("../../lib/resSend");
-const { zfi_bgm_1_Payload, ztfi_bil_defacePayload } = require("../../services/sap.services");
+const { zfi_bgm_1_Payload, ztfi_bil_defacePayload, zfi_bgm_1_Payload_sap } = require("../../services/sap.services");
 const { SDBG_PAYMENT_ADVICE } = require('../../lib/tableName');
-const { generateQueryArray } = require('../../lib/utils');
+const { generateQueryArray, generateInsertUpdateQuery } = require('../../lib/utils');
 const { connection } = require('../../config/dbConfig');
 // const mysql = require("mysql2/promise");
 
@@ -14,12 +14,15 @@ const sdbgPaymentAdvice = async (req, res) => {
     const promiseConnection = await connection();
     try {
         if (!req.body) {
-            responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "0", 400, "Please send a valid payload.", null, null);
         }
         const payload = { ...req.body };
-        const payloadObj = await zfi_bgm_1_Payload(payload);
-        const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
-        const response = await promiseConnection.query(q, [val]);
+        const payloadObj = await zfi_bgm_1_Payload_sap(payload);
+        console.log("payloadObj", payloadObj);
+        // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
+        const q = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, "COMPOSIT_PK" )
+        console.log(q);
+        const response = await promiseConnection.execute(q);
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not fetched", err);
