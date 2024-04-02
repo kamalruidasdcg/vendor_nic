@@ -5,6 +5,7 @@ const { responseSend, resSend } = require("../../lib/resSend");
 const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
 const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
+const Measage = require("../../utils/messages")
 
 
 const insertGateEntryData = async (req, res) => {
@@ -15,26 +16,39 @@ const insertGateEntryData = async (req, res) => {
 
         const promiseConnection = await connection();
         let transactionSuccessful = false;
-        if (Array.isArray(req.body)) {
-            payload = req.body.length > 0 ? req.body[0] : null;
-        } else if (typeof req.body === 'object' && req.body !== null) {
-            payload = req.body;
-        }
+        // if (Array.isArray(req.body)) {
+        //     payload = req.body.length > 0 ? req.body[0] : null;
+        // } else if (typeof req.body === 'object' && req.body !== null) {
+        //     payload = req.body;
+        // }
+        payload = req.body;
 
         console.log("payload", req.body);
 
-        const { ITEM_TAB, ...obj } = payload;
+        // const { ITEM_TAB, ...obj } = payload;
 
-        console.log("GE_LINE_ITEMS", ITEM_TAB);
-        console.log("obj", obj);
+        // console.log("GE_LINE_ITEMS", ITEM_TAB);
+        // console.log("obj", obj);
+        await promiseConnection.beginTransaction();
 
-        try {
+
+        async function insertRecurcionFn(payload, index) {
+
+            console.log("lllll", index, payload.length, payload);
+
+            if (index == payload.length) return;
+
+            const { ITEM_TAB, ...obj } = payload[index];
+
+            console.log("GE_LINE_ITEMS", ITEM_TAB);
+            console.log("obj", obj);
 
             if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR) {
-                return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+                // return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+                throw new Error(Measage.INVALID_PAYLOAD);
             }
 
-            await promiseConnection.beginTransaction();
+            // await promiseConnection.beginTransaction();
 
             insertPayload = await gateEntryHeaderPayload(obj);
             const gate_entry_h_Insert = await generateInsertUpdateQuery(insertPayload, GATE_ENTRY_HEADER, "C_PKEY");
@@ -43,7 +57,8 @@ const insertGateEntryData = async (req, res) => {
                 const [results] = await promiseConnection.execute(gate_entry_h_Insert);
                 console.log("results", results);
             } catch (error) {
-                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                throw new Error(Measage.DATA_INSERT_FAILED + JSON.stringify(error));
+                // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
             if (ITEM_TAB && ITEM_TAB?.length) {
@@ -55,11 +70,51 @@ const insertGateEntryData = async (req, res) => {
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, "C_PKEY");
                     const response = await promiseConnection.execute(insert_zpo_milestone_table)
 
-
                 } catch (error) {
-                    console.log("error, zpo milestone", error);
+                    // console.log("error, zpo milestone", error);
+                    throw new Error(Measage.DATA_INSERT_FAILED + JSON.stringify(error));
                 }
             }
+
+
+            await insertRecurcionFn(payload, index + 1)
+        }
+
+
+
+        try {
+
+            await insertRecurcionFn(payload, 0)
+            // if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR) {
+            //     return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+            // }
+
+            // await promiseConnection.beginTransaction();
+
+            // insertPayload = await gateEntryHeaderPayload(obj);
+            // const gate_entry_h_Insert = await generateInsertUpdateQuery(insertPayload, GATE_ENTRY_HEADER, "C_PKEY");
+
+            // try {
+            //     const [results] = await promiseConnection.execute(gate_entry_h_Insert);
+            //     console.log("results", results);
+            // } catch (error) {
+            //     return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+            // }
+
+            // if (ITEM_TAB && ITEM_TAB?.length) {
+
+            //     try {
+            //         const zmilestonePayload = await gateEntryDataPayload(ITEM_TAB);
+            //         console.log('ekpopayload', zmilestonePayload);
+            //         // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
+            //         const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, "C_PKEY");
+            //         const response = await promiseConnection.execute(insert_zpo_milestone_table)
+
+
+            //     } catch (error) {
+            //         console.log("error, zpo milestone", error);
+            //     }
+            // }
 
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
@@ -71,7 +126,7 @@ const insertGateEntryData = async (req, res) => {
             }
 
         } catch (error) {
-            responseSend(res, "0", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, "Data insert failed !!", error, null);
         }
         finally {
             if (!transactionSuccessful) {
@@ -188,10 +243,46 @@ const storeActionList = async (req, res) => {
         responseSend(res, "F", 400, "Error in database conn!!", error, null);
     }
 };
+const gateEntryReport = async (req, res) => {
+    try {
+        const promiseConnection = await connection();
+        let transactionSuccessful = false;
+        try {
+
+            const query = `
+            SELECT * FROM zmm_gate_entry_h AS ge_header 
+            LEFT JOIN zmm_gate_entry_d as ge_line_items
+            ON( ge_header.ENTRY_NO = ge_line_items.ENTRY_NO) WHERE 1 = 1`;
+
+
+            const [results] = await promiseConnection.execute(query);
+
+            console.log(query, results);
+
+            transactionSuccessful = true;
+
+            if (transactionSuccessful === TRUE && results) {
+                resSend(res, true, 200, "data fetch success", results, null)
+            } else {
+                responseSend(res, false, 200, "no data found", [], null);
+            }
+
+        } catch (error) {
+            responseSend(res, "0", 502, "data fetch failed !!", error, null);
+        }
+        finally {
+            const connEnd = await promiseConnection.end();
+            console.log("Connection End" + "--->" + "connection release");
+        }
+    } catch (error) {
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    }
+};
 
 
 
-module.exports = { insertGateEntryData, storeActionList };
+
+module.exports = { insertGateEntryData, storeActionList, gateEntryReport };
 //     EBELN: "7777777777",
 //     BUKRS: "5788",
 //     BSTYP: "S",
