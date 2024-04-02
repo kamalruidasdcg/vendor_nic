@@ -296,7 +296,7 @@ exports.zfi_bgm_1_Payload_sap = async (obj) => {
     const pl =
     {
         "FILE_NO": obj.file_no || obj.FILE_NO,
-        "REF_NO": obj.ref_no || obj.REF_NO || null,
+        "REF_NO": obj.ref_no || obj.REF_NO,
         "BANKERS_NAME": obj.bank_name || obj.BANKERS_NAME,
         "BANKERS_BRANCH": obj.branch_name || obj.BANKERS_BRANCH || "",
         "BANKERS_ADD1": obj.bank_addr1 || obj.BANKERS_ADD1 || "",

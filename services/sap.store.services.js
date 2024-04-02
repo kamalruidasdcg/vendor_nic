@@ -22,7 +22,6 @@ const gateEntryHeaderPayload = async (obj) => {
     DELIV_DATE: formatDate(obj.DELIV_DATE),
     TRANS_NO: obj.TRANS_NO || null,
     TRAN_NAME: obj.TRAN_NAME || null,
-    VEH_REG_NO: obj.VEH_REG_NO || null,
     LR_NO: obj.LR_NO || null,
     LR_DATE: formatDate(obj.LR_DATE),
     EXNUM: obj.EXNUM || null,

@@ -119,12 +119,6 @@ const insertGateEntryData = async (req, res) => {
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
-            if (transactionSuccessful === TRUE) {
-                responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null)
-            } else {
-                responseSend(res, "F", 200, "data insert succeed without mail.", [], null);
-            }
-
         } catch (error) {
             responseSend(res, "F", 502, "Data insert failed !!", error, null);
         }
@@ -132,6 +126,9 @@ const insertGateEntryData = async (req, res) => {
             if (!transactionSuccessful) {
                 console.log("Connection End" + "--->" + "connection release");
                 await promiseConnection.rollback();
+            }
+            if (transactionSuccessful === TRUE) {
+                responseSend(res, "S", 200, "data insert succeed with", [], null)
             }
             const connEnd = await promiseConnection.end();
             console.log("Connection End" + "--->" + "connection releasettttttttttt");
