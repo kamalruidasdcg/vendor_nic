@@ -1,9 +1,9 @@
 
-const { RESERVATION_RKPF_TABLE, RESERVATION_RESB_TABLE } = require('../../lib/tableName');
+const { RESERVATION_RKPF_TABLE, RESERVATION_RESB_TABLE, SERVICE_ENTRY_TABLE_SAP } = require('../../lib/tableName');
 const { connection, query } = require("../../config/dbConfig");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
-const { reservationLineItemPayload, reservationHeaderPayload } = require('../../services/sap.user.services');
+const { reservationLineItemPayload, reservationHeaderPayload, serviceEntryPayload } = require('../../services/sap.user.services');
 const { TRUE, FALSE } = require('../../lib/constant');
 
 // PAYLOAD //
@@ -77,6 +77,50 @@ const reservation = async (req, res) => {
         responseSend(res, "0", 400, "Error in database conn!!", error, null);
     }
 };
+const serviceEntry = async (req, res) => {
+    let payload = {};
+
+    try {
+        const promiseConnection = await connection();
+        let transactionSuccessful = false;
+        // if (Array.isArray(req.body)) {
+        //     payload = req.body.length > 0 ? req.body[0] : null;
+        // } else if (typeof req.body === 'object' && req.body !== null) {
+        //     payload = req.body;
+        // }
+        payload = req.body;
+
+
+        try {
+            await promiseConnection.beginTransaction();
+            const essrPayload = await serviceEntryPayload(payload);
+            const essrTableInsert = await generateQueryForMultipleData(essrPayload, SERVICE_ENTRY_TABLE_SAP, "lblni");
+            console.log("essrTableInsert", essrTableInsert);
+            const [results] = await promiseConnection.execute(essrTableInsert);
+            console.log("results", results);
+            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+            transactionSuccessful = true;
+
+        } catch (error) {
+            responseSend(res, "F", 502, "Data insert failed !!", error, null);
+        }
+        finally {
+            if (transactionSuccessful === FALSE) {
+                console.log("transactionSuccessful End" + "--->", transactionSuccessful);
+                await promiseConnection.rollback();
+            }
+            const connEnd = await promiseConnection.end();
+
+            if (transactionSuccessful === TRUE) {
+                responseSend(res, "S", 200, "data insert succeed", null, null);
+            }
+
+            console.log("Connection End" + "--->" + "connection release service entry sheet");
+        }
+    } catch (error) {
+        responseSend(res, "0", 400, "Error in database conn!!", error, null);
+    }
+};
 
 const reservationList = async (req, res) => {
 
@@ -130,7 +174,7 @@ const reservationList = async (req, res) => {
         //     val.push(req.body.RSNUM);
         // }
 
-        if(!req.body.reservationNumber) {
+        if (!req.body.reservationNumber) {
             return resSend(res, false, 200, "plese send reservationNumber", [], null);
         }
 
@@ -143,7 +187,7 @@ const reservationList = async (req, res) => {
             val.push(req.body.reservationDate);
         }
 
-        
+
 
         console.log("q", q, val);
         const result = await query({ query: q, values: val });
@@ -192,4 +236,5 @@ const reservationList = async (req, res) => {
 }
 
 
-module.exports = { reservation, reservationList }
+
+module.exports = { reservation, reservationList, serviceEntry }
