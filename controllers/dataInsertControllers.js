@@ -67,6 +67,15 @@ const insertPOData = async (req, res) => {
             }
 
 
+            try {
+                const delete_from_zpo_milestoen = `DELETE FROM zpo_milestone  WHERE  ebeln = '${obj.EBELN}'`;
+                const [results] = await promiseConnection.execute(delete_from_zpo_milestoen);
+                console.log("result zpo", results);
+            } catch (error) {
+               console.log("delete_from_zpo_milestoen", error);
+            }
+
+
             const insertPromiseFn = [];
             // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
             if (ZPO_MILESTONE?.length) {
