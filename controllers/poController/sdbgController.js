@@ -686,6 +686,12 @@ const sdbgUpdateByFinance = async (req, res) => {
           values: [obj.purchasing_doc_no, obj.reference_no],
         });
 
+        const get_po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE purchasing_doc_no = ?`;
+        let get_po_date_data = await query({
+          query: get_po_date_query,
+          values: [obj.purchasing_doc_no],
+        });
+        get_sdbg_entry_data[0].po_date = get_po_date_data[0].AEDAT;
 
         await sendBgToSap(get_sdbg_entry_data[0]);
       } catch(error) {
