@@ -30,7 +30,7 @@ exports.zfi_bgm_1_Payload = async (obj) => {
         "BG_AMOUNT": obj.bg_ammount || "",
         "PO_NUMBER": obj.purchasing_doc_no || "",
         "DEPARTMENT": obj.department || "",
-        "PO_DATE": obj.po_date ? getYyyyMmDd(obj.po_date) : "",
+        "PO_DATE": obj.po_date ? obj.po_date : '00000000',
         "YARD_NO": obj.yard_no || 0,
         "VALIDITY_DATE": (obj.validity_date && obj.validity_date != "") ? getYyyyMmDd(obj.validity_date) : "",
         "CLAIM_PERIOD": (obj.claim_priod && obj.claim_priod != "") ? getYyyyMmDd(obj.claim_priod) : "",
