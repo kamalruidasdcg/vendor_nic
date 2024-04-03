@@ -686,12 +686,21 @@ const sdbgUpdateByFinance = async (req, res) => {
           values: [obj.purchasing_doc_no, obj.reference_no],
         });
 
-        const get_po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE purchasing_doc_no = ?`;
+        const get_po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE EBELN = ?`;
         let get_po_date_data = await query({
           query: get_po_date_query,
           values: [obj.purchasing_doc_no],
         });
-        get_sdbg_entry_data[0].po_date = get_po_date_data[0].AEDAT;
+        // console.log('get_po_date_query_____________');
+        // console.log(get_po_date_data);
+        const utcTimeString = get_po_date_data[0].AEDAT.toString();
+const date = new Date(utcTimeString);
+//console.log(date);
+const yyyyMMdd = date.toISOString().slice(0, 10);
+
+let po_date = yyyyMMdd.split("-").join("");
+
+        get_sdbg_entry_data[0].po_date = po_date;
 
         await sendBgToSap(get_sdbg_entry_data[0]);
       } catch(error) {
@@ -884,9 +893,9 @@ async function sendBgToSap(payload) {
     console.log("wdc_payload -->",);
     
     let modified = await zfi_bgm_1_Payload(payload);
-    // console.log('___________modified');
-    // console.log(modified);
-    // console.log('modified_________');
+    console.log('___________modified');
+    console.log(modified);
+    console.log('modified_________');
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
