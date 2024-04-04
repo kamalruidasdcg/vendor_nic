@@ -247,14 +247,17 @@ const details = async (req, res) => {
                     ON (materialMaster.MATNR = mat.MATNR)
                 LEFT JOIN makt AS mat_desc
                     ON mat_desc.MATNR = mat.MATNR
-            WHERE (mat.loekz != "L" AND mat.EBELN = ?)`;
+            WHERE 1 = 1 AND mat.EBELN = ?`;
 
     let materialResult = await query({
       query: materialQuery,
       values: [queryParams.id],
     });
 
-    materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
+    if(materialResult && materialResult?.length) {
+
+      materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
+    }
 
     const isMaterialTypePO = poTypeCheck(materialResult);
 
@@ -268,6 +271,7 @@ const details = async (req, res) => {
     currentStage.current = await currentStageHandler(queryParams.id);
     console.log(queryParams.id);
     const DO = await doDetails(queryParams.id);
+    console.log("do", DO);
 
     result[0]["currentStage"] = currentStage;
     result[0]["poType"] = poType;
@@ -691,13 +695,15 @@ const poList = async (req, res) => {
 const doDetails = async (str) => {
   const doQry = `SELECT t1.PERNR,t1.CNAME,t2.ERNAM,t2.EBELN
         FROM 
-            pa0002 AS t1 
+        ekko AS t2 
         LEFT JOIN 
-            ekko AS t2 
+        pa0002 AS t1 
         ON 
-            (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN IN(${str})`;
+            (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN = ?`;
 
-  const doArr = await query({ query: doQry, values: [] });
+  const doArr = await query({ query: doQry, values: [str] });
+
+  console.log(doQry, str);
 
   return doArr;
 };

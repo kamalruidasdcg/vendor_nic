@@ -1,4 +1,5 @@
 const http = require('http');
+const { failedDataSave } = require('../utils/sapApiHandel');
 require("dotenv").config();
 
 /**
@@ -71,7 +72,28 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
 }
 
 
-module.exports = { makeHttpRequest }
+const sendDataToSapServer = async (endpoint, payload) => {
+
+  if (!endpoint || !payload) throw new Error('Send valid paylaod || Send Valid endpoint');
+  let postUrl = process.env.SAP_HOST_URL || `http://10.181.1.31:8010`;
+  postUrl = postUrl.concat(endpoint)
+  console.log("postUrl", postUrl);
+  try {
+    const postResponse = await makeHttpRequest(postUrl, 'POST', payload);
+    console.log('POST Response from the server:', postResponse);
+  } catch (error) {
+
+    console.error('Error making the request:', error.message, payload);
+    await failedDataSave(payload, '10.18.7.123', endpoint, error,)
+
+
+  }
+
+}
+
+
+
+module.exports = { makeHttpRequest, sendDataToSapServer }
 
 
 // Example usage with async/await
@@ -103,27 +125,42 @@ module.exports = { makeHttpRequest }
 
 
 
+// sendDataToSapServer("/zobps_sdbg_ent", {
+//   ZBTNO: "20240318501",
+//   ERDAT: "20240318",
+//   ERZET: "",
+//   ERNAM: "600233",
+//   LAEDA: "20240318",
+//   AENAM: "NAME",
+//   LIFNR: "50000437",
+//   ZVBNO: "",
+//   EBELN: "4000234569",
+//   DPERNR1: "",
+//   ZRMK1: "REMARKS",
+// })
+
+
 // Example BTN SAVE INTO SAP
-// // CALL THIS FUNCTION IN BTN CONTROLLER AS PER CONDITION 
+// // CALL THIS FUNCTION IN BTN CONTROLLER AS PER CONDITION
 
 // async function btnSaveToSap() {
 //   try {
 //     const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
 
 //     const btn_payload =
-//     {
-//       ZBTNO: "20240318501",
-//       ERDAT: "20240318",
-//       ERZET: "",
-//       ERNAM: "600233",
-//       LAEDA: "20240318",
-//       AENAM: "NAME",
-//       LIFNR: "50000437",
-//       ZVBNO: "",
-//       EBELN: "4000234569",
-//       DPERNR1: "",
-//       ZRMK1: "REMARKS",
-//     }
+// {
+//   ZBTNO: "20240318501",
+//   ERDAT: "20240318",
+//   ERZET: "",
+//   ERNAM: "600233",
+//   LAEDA: "20240318",
+//   AENAM: "NAME",
+//   LIFNR: "50000437",
+//   ZVBNO: "",
+//   EBELN: "4000234569",
+//   DPERNR1: "",
+//   ZRMK1: "REMARKS",
+// }
 
 
 //     console.log("postUrl", postUrl);
@@ -136,7 +173,7 @@ module.exports = { makeHttpRequest }
 //   }
 // }
 
-// Example SDBG SAVE INTO SAP 
+// Example SDBG SAVE INTO SAP
 // CALL THIS FUNCTION IN SDBG CONTROLLER AS PER CONDITION
 
 // async function sendBgToSap(payload) {
