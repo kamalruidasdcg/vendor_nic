@@ -254,7 +254,10 @@ const details = async (req, res) => {
       values: [queryParams.id],
     });
 
-    materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
+    if(materialResult && materialResult?.length) {
+
+      materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
+    }
 
     const isMaterialTypePO = poTypeCheck(materialResult);
 
