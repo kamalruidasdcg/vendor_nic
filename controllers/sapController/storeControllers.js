@@ -147,76 +147,97 @@ const storeActionList = async (req, res) => {
 
             const query =
                 `(SELECT docno,
-                NULL           AS btn,
-                NULL           AS issueNo,
-                NULL           AS issueYear,
-                NULL           AS reservationNumber,
-                NULL           AS reservationDate,
-                updatedBy,
-                dateTime,
-                'icgrn_report' AS documentType
-         FROM   (SELECT DISTINCT mblnr      AS docNo,
-                                 ersteldat  AS dateTime,
-                                 USER.cname AS updatedBy
-                 FROM   qals AS q
-                        LEFT JOIN pa0002 AS USER
-                               ON ( q.aenderer = USER.pernr )) AS qals)
-        UNION ALL
-        (SELECT NULL              AS docNo,
-                btn,
-                NULL              AS issueNo,
-                NULL              AS issueYear,
-                NULL              AS reservationNumber,
-                NULL              AS reservationDate,
-                updatedBy,
-                dateTime,
-                'ztfi_bil_deface' AS documentType
-         FROM   (SELECT DISTINCT zregnum    AS btn,
-                                 zcreatedon AS dateTime,
-                                 USER.cname AS updatedBy
-                 FROM   ztfi_bil_deface AS zb
-                        LEFT JOIN pa0002 AS USER
-                               ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
-        UNION ALL
-        (SELECT NULL               AS docNo,
-                NULL               AS btn,
-                issueno,
-                issueyear,
-                NULL               AS reservationNumber,
-                NULL               AS reservationDate,
-                updatedBy,
-                dateTime,
-                'goods_issue_slip' AS documentType
-         FROM   (SELECT mblnr      AS issueNo,
-                        mjahr      AS issueYear,
-                        USER.cname AS updatedBy,
-                        budat_mkpf AS dateTime
-                 FROM   mseg AS ms
-                        LEFT JOIN pa0002 AS USER
-                               ON ( ms.usnam_mkpf = USER.pernr )
-                 GROUP  BY ms.mblnr,
-                           ms.mjahr) AS mseg)
-        UNION ALL
-        SELECT NULL                 AS docNo,
-               NULL                 AS btn,
-               NULL                 AS issueNo,
-               NULL                 AS issueYear,
-               reservationnumber,
-               reservationdate,
-               updatedBy,
-               dateTime,
-               'reservation_report' AS documentType
-        FROM   (SELECT rsnum      AS reservationNumber,
-                       rsdat      AS reservationDate,
-                       rsdat      AS dateTime,
-                       USER.cname AS updatedBy
-                FROM   rkpf AS rk
-                       LEFT JOIN pa0002 AS USER
-                              ON ( rk.usnam = USER.pernr )
-                GROUP  BY rk.rsnum,
-                          rk.rsdat) AS rkpf; 
+                    NULL           AS btn,
+                    NULL           AS issueNo,
+                    NULL           AS issueYear,
+                    NULL           AS reservationNumber,
+                    NULL           AS reservationDate,
+                    NULL AS gateEntryNo,
+                    updatedBy,
+                    dateTime,
+                    'icgrn_report' AS documentType
+             FROM   (SELECT DISTINCT mblnr      AS docNo,
+                                     ersteldat  AS dateTime,
+                                     USER.cname AS updatedBy
+                     FROM   qals AS q
+                            LEFT JOIN pa0002 AS USER
+                                   ON ( q.aenderer = USER.pernr )) AS qals)
+            UNION ALL
+            (SELECT NULL              AS docNo,
+                    btn,
+                    NULL              AS issueNo,
+                    NULL              AS issueYear,
+                    NULL              AS reservationNumber,
+                    NULL              AS reservationDate,
+                    NULL AS gateEntryNo,
+                    updatedBy,
+                    dateTime,
+                    'ztfi_bil_deface' AS documentType
+             FROM   (SELECT DISTINCT zregnum    AS btn,
+                                     zcreatedon AS dateTime,
+                                     USER.cname AS updatedBy
+                     FROM   ztfi_bil_deface AS zb
+                            LEFT JOIN pa0002 AS USER
+                                   ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
+            UNION ALL
+            (SELECT NULL               AS docNo,
+                    NULL               AS btn,
+                    issueno,
+                    issueyear,
+                    NULL               AS reservationNumber,
+                    NULL               AS reservationDate,
+                    NULL AS gateEntryNo,
+                    updatedBy,
+                    dateTime,
+                    'goods_issue_slip' AS documentType
+             FROM   (SELECT mblnr      AS issueNo,
+                            mjahr      AS issueYear,
+                            USER.cname AS updatedBy,
+                            budat_mkpf AS dateTime
+                     FROM   mseg AS ms
+                            LEFT JOIN pa0002 AS USER
+                                   ON ( ms.usnam_mkpf = USER.pernr )
+                     GROUP  BY ms.mblnr,
+                               ms.mjahr) AS mseg)
+            UNION ALL
+            (SELECT NULL                 AS docNo,
+                   NULL                 AS btn,
+                   NULL                 AS issueNo,
+                   NULL                 AS issueYear,
+                   NULL AS gateEntryNo,
+                   reservationnumber,
+                   reservationdate,
+                   updatedBy,
+                   dateTime,
+                   'reservation_report' AS documentType
+            FROM   (SELECT rsnum      AS reservationNumber,
+                           rsdat      AS reservationDate,
+                           rsdat      AS dateTime,
+                           USER.cname AS updatedBy
+                    FROM   rkpf AS rk
+                           LEFT JOIN pa0002 AS USER
+                                  ON ( rk.usnam = USER.pernr )
+                    GROUP  BY rk.rsnum,
+                              rk.rsdat) AS rkpf)
+                              )
+            UNION ALL
+            (SELECT NULL                 AS docNo,
+                   NULL                 AS btn,
+                   NULL                 AS issueNo,
+                   NULL                 AS issueYear,
+                   reservationnumber,
+                   reservationdate,
+                   gateEntryNo,
+                   updatedBy,
+                   dateTime,
+                   'gate_entry' AS documentType
+            FROM   ( SELECT ENTRY_NO      AS gateEntryNo,
+                         ENTRY_DATE      AS dateTime,
+                        USER.cname AS updatedBy
+                    FROM   zmm_gate_entry_h AS gateentry
+                           LEFT JOIN pa0002 AS USER
+                                  ON ( gateentry.entry_no = USER.pernr) AS gate_entry)`;
 
-            `
             const [results] = await promiseConnection.execute(query);
 
             console.log(query, results);
@@ -246,20 +267,54 @@ const gateEntryReport = async (req, res) => {
         let transactionSuccessful = false;
         try {
 
-            const query = `
-            SELECT * FROM zmm_gate_entry_h AS ge_header 
-            LEFT JOIN zmm_gate_entry_d as ge_line_items
-            ON( ge_header.ENTRY_NO = ge_line_items.ENTRY_NO) WHERE 1 = 1`;
+            let ge_query = `
+            SELECT 
+                zmm_gate_entry_h.ENTRY_NO as gate_entry_no,
+                zmm_gate_entry_h.ENTRY_DATE as entry_date,
+                zmm_gate_entry_h.VEH_REG_NO as vehicle_no,
+                zmm_gate_entry_h.CHALAN_NO as invoice_number,
+                zmm_gate_entry_d.EBELN as purchising_doc_no,
+                zmm_gate_entry_d.EBELP as po_line_item_no,
+                zmm_gate_entry_d.CH_QTY as chalan_quantity,
+                zmm_gate_entry_d.CH_NETWT as net_quantity
+                FROM zmm_gate_entry_h AS zmm_gate_entry_h 
+            LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
+                ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO) WHERE 1 = 1`;
 
 
-            const [results] = await promiseConnection.execute(query);
 
-            console.log(query, results);
+                console.log("ge_query", ge_query);
+                // if(req.body.gate_entry_no) {
+                //     ge_query = ge_query.concat(" AND zmm_gate_entry_h.ENTRY_NO")
+                // }
+
+
+
+            const [results] = await promiseConnection.execute(ge_query);
+            console.log(results, "jjjj");
+                let obj = {
+                    gate_entry_no: null,
+                    entry_date: null, 
+                    vendor: null,
+                    invoice_number: null,
+                    vehicle_no: null
+                }
+            if(results && results.length) {
+                obj.gate_entry_no =  results[0].gate_entry_no,
+                obj.entry_date =  results[0].entry_date,
+                obj.vendor =  results[0].vendor,
+                obj.invoice_number =  results[0].invoice_number,
+                obj.vehicle_no =  results[0].vehicle_no,
+                obj.line_items = results
+
+            }
+
+            console.log(ge_query, results);
 
             transactionSuccessful = true;
 
             if (transactionSuccessful === TRUE && results) {
-                resSend(res, true, 200, "data fetch success", results, null)
+                resSend(res, true, 200, "data fetch success", obj, null)
             } else {
                 responseSend(res, false, 200, "no data found", [], null);
             }
