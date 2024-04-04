@@ -182,7 +182,7 @@ const materialIssue = async (req, res) => {
                     mseg.MATNR as materialNumber,
                     makt.MAKTX as materialDescription,
                     mseg.MEINS as unit,
-                    mseg.BWART as batchNo,
+                    mseg.CHARG as batchNo,
                     mseg.ERFMG as issueQty,
                     mseg.BPMNG as BPMNG,
                     mkpf.BUDAT as issuDate,

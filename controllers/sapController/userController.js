@@ -78,18 +78,19 @@ const reservation = async (req, res) => {
     }
 };
 const serviceEntry = async (req, res) => {
-    let payload = {};
+    let payload = [];
 
     try {
         const promiseConnection = await connection();
         let transactionSuccessful = false;
-        // if (Array.isArray(req.body)) {
-        //     payload = req.body.length > 0 ? req.body[0] : null;
-        // } else if (typeof req.body === 'object' && req.body !== null) {
-        //     payload = req.body;
-        // }
-        payload = req.body;
+        // console.log("payload", req.body);
+        if (Array.isArray(req.body)) {
+            payload = req.body;
+        } else if (typeof req.body === 'object' && req.body !== null) {
+            payload.push(req.body);
+        }
 
+        console.log("payload...", payload);
 
         try {
             await promiseConnection.beginTransaction();
