@@ -146,97 +146,95 @@ const storeActionList = async (req, res) => {
         try {
 
             const query =
-                `(SELECT docno,
-                    NULL           AS btn,
-                    NULL           AS issueNo,
-                    NULL           AS issueYear,
-                    NULL           AS reservationNumber,
-                    NULL           AS reservationDate,
-                    NULL AS gateEntryNo,
-                    updatedBy,
-                    dateTime,
-                    'icgrn_report' AS documentType
-             FROM   (SELECT DISTINCT mblnr      AS docNo,
-                                     ersteldat  AS dateTime,
-                                     USER.cname AS updatedBy
-                     FROM   qals AS q
-                            LEFT JOIN pa0002 AS USER
-                                   ON ( q.aenderer = USER.pernr )) AS qals)
-            UNION ALL
-            (SELECT NULL              AS docNo,
-                    btn,
-                    NULL              AS issueNo,
-                    NULL              AS issueYear,
-                    NULL              AS reservationNumber,
-                    NULL              AS reservationDate,
-                    NULL AS gateEntryNo,
-                    updatedBy,
-                    dateTime,
-                    'ztfi_bil_deface' AS documentType
-             FROM   (SELECT DISTINCT zregnum    AS btn,
-                                     zcreatedon AS dateTime,
-                                     USER.cname AS updatedBy
-                     FROM   ztfi_bil_deface AS zb
-                            LEFT JOIN pa0002 AS USER
-                                   ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
-            UNION ALL
-            (SELECT NULL               AS docNo,
-                    NULL               AS btn,
-                    issueno,
-                    issueyear,
-                    NULL               AS reservationNumber,
-                    NULL               AS reservationDate,
-                    NULL AS gateEntryNo,
-                    updatedBy,
-                    dateTime,
-                    'goods_issue_slip' AS documentType
-             FROM   (SELECT mblnr      AS issueNo,
-                            mjahr      AS issueYear,
-                            USER.cname AS updatedBy,
-                            budat_mkpf AS dateTime
-                     FROM   mseg AS ms
-                            LEFT JOIN pa0002 AS USER
-                                   ON ( ms.usnam_mkpf = USER.pernr )
-                     GROUP  BY ms.mblnr,
-                               ms.mjahr) AS mseg)
-            UNION ALL
-            (SELECT NULL                 AS docNo,
-                   NULL                 AS btn,
-                   NULL                 AS issueNo,
-                   NULL                 AS issueYear,
-                   NULL AS gateEntryNo,
-                   reservationnumber,
-                   reservationdate,
-                   updatedBy,
-                   dateTime,
-                   'reservation_report' AS documentType
-            FROM   (SELECT rsnum      AS reservationNumber,
-                           rsdat      AS reservationDate,
-                           rsdat      AS dateTime,
-                           USER.cname AS updatedBy
-                    FROM   rkpf AS rk
-                           LEFT JOIN pa0002 AS USER
-                                  ON ( rk.usnam = USER.pernr )
-                    GROUP  BY rk.rsnum,
-                              rk.rsdat) AS rkpf)
-                              )
-            UNION ALL
-            (SELECT NULL                 AS docNo,
-                   NULL                 AS btn,
-                   NULL                 AS issueNo,
-                   NULL                 AS issueYear,
-                   reservationnumber,
-                   reservationdate,
-                   gateEntryNo,
-                   updatedBy,
-                   dateTime,
-                   'gate_entry' AS documentType
-            FROM   ( SELECT ENTRY_NO      AS gateEntryNo,
-                         ENTRY_DATE      AS dateTime,
-                        USER.cname AS updatedBy
-                    FROM   zmm_gate_entry_h AS gateentry
-                           LEFT JOIN pa0002 AS USER
-                                  ON ( gateentry.entry_no = USER.pernr) AS gate_entry)`;
+               `(SELECT docno,
+                NULL           AS btn,
+                NULL           AS issueNo,
+                NULL           AS issueYear,
+                NULL           AS reservationNumber,
+                NULL           AS reservationDate,
+                NULL AS gateEntryNo,
+                updatedBy,
+                dateTime,
+                'icgrn_report' AS documentType
+         FROM   (SELECT DISTINCT mblnr      AS docNo,
+                                 ersteldat  AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   qals AS q
+                        LEFT JOIN pa0002 AS USER
+                               ON ( q.aenderer = USER.pernr )) AS qals)
+        UNION ALL
+        (SELECT NULL              AS docNo,
+                btn,
+                NULL              AS issueNo,
+                NULL              AS issueYear,
+                NULL              AS reservationNumber,
+                NULL              AS reservationDate,
+                NULL AS gateEntryNo,
+                updatedBy,
+                dateTime,
+                'ztfi_bil_deface' AS documentType
+         FROM   (SELECT DISTINCT zregnum    AS btn,
+                                 zcreatedon AS dateTime,
+                                 USER.cname AS updatedBy
+                 FROM   ztfi_bil_deface AS zb
+                        LEFT JOIN pa0002 AS USER
+                               ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
+        UNION ALL
+        (SELECT NULL               AS docNo,
+                NULL               AS btn,
+                issueno,
+                issueyear,
+                NULL               AS reservationNumber,
+                NULL               AS reservationDate,
+                NULL AS gateEntryNo,
+                updatedBy,
+                dateTime,
+                'goods_issue_slip' AS documentType
+         FROM   (SELECT mblnr      AS issueNo,
+                        mjahr      AS issueYear,
+                        USER.cname AS updatedBy,
+                        budat_mkpf AS dateTime
+                 FROM   mseg AS ms
+                        LEFT JOIN pa0002 AS USER
+                               ON ( ms.usnam_mkpf = USER.pernr )
+                 GROUP  BY ms.mblnr,
+                           ms.mjahr) AS mseg)
+        UNION ALL
+        (SELECT NULL                 AS docNo,
+               NULL                 AS btn,
+               NULL                 AS issueNo,
+               NULL                 AS issueYear,
+               NULL AS gateEntryNo,
+               reservationnumber,
+               reservationdate,
+               updatedBy,
+               dateTime,
+               'reservation_report' AS documentType
+        FROM   (SELECT rsnum      AS reservationNumber,
+                       rsdat      AS reservationDate,
+                       rsdat      AS dateTime,
+                       USER.cname AS updatedBy
+                FROM   rkpf AS rk
+                       LEFT JOIN pa0002 AS USER
+                              ON ( rk.usnam = USER.pernr )
+                GROUP  BY rk.rsnum,
+                          rk.rsdat) AS rkpf)
+        UNION ALL
+        (SELECT NULL                 AS docNo,
+               NULL                 AS btn,
+               NULL                 AS issueNo,
+               NULL                 AS issueYear,
+               NULL AS reservationnumber,
+               NULL AS reservationdate,
+               gateEntryNo,
+               updatedBy,
+               dateTime,
+               'gate_entry' AS documentType
+        FROM   ( SELECT ENTRY_NO      AS gateEntryNo,
+                     ENTRY_DATE      AS dateTime,
+                    'grse' AS updatedBy
+                FROM   zmm_gate_entry_h AS gateentry)
+                       AS gate_entry)`;
 
             const [results] = await promiseConnection.execute(query);
 
