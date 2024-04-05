@@ -274,17 +274,24 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.EBELN as purchising_doc_no,
                 zmm_gate_entry_d.EBELP as po_line_item_no,
                 zmm_gate_entry_d.CH_QTY as chalan_quantity,
-                zmm_gate_entry_d.CH_NETWT as net_quantity
+                zmm_gate_entry_d.CH_NETWT as net_quantity,
+                lfa1.LIFNR as vendor_code,
+                lfa1.NAME1 as vendor_name
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
             LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
-                ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO) WHERE 1 = 1`;
+                ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)
+                LEFT JOIN ekko as ekko
+                	ON (zmm_gate_entry_d.EBELN = ekko.EBELN)
+                    LEFT JOIN lfa1 as lfa1
+                    	ON(lfa1.LIFNR = ekko.LIFNR)
+                WHERE 1 = 1`;
 
 
 
                 console.log("ge_query", ge_query);
-                // if(req.body.gate_entry_no) {
-                //     ge_query = ge_query.concat(" AND zmm_gate_entry_h.ENTRY_NO")
-                // }
+                if(req.body.gate_entry_no) {
+                    ge_query = ge_query.concat(" AND zmm_gate_entry_h.ENTRY_NO")
+                }
 
 
 
