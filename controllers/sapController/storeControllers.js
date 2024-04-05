@@ -300,7 +300,8 @@ const gateEntryReport = async (req, res) => {
                 let obj = {
                     gate_entry_no: null,
                     entry_date: null, 
-                    vendor: null,
+                    vendor_code: null,
+                    vendor_name: null,
                     invoice_number: null,
                     vehicle_no: null
                 }
@@ -310,6 +311,8 @@ const gateEntryReport = async (req, res) => {
                 obj.vendor =  results[0].vendor,
                 obj.invoice_number =  results[0].invoice_number,
                 obj.vehicle_no =  results[0].vehicle_no,
+                obj.vendor_name =  results[0].vendor_name,
+                obj.vendor_code =  results[0].vendor_code,
                 obj.line_items = results
 
             }
