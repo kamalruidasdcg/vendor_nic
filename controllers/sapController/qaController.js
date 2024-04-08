@@ -89,20 +89,20 @@ const qalsReport = async (req, res) => {
                 vendor_table.ORT02 as vendorDistrict,
                 vendor_table.PFACH as vendorPinCode,
                 qals.MATNR AS materialNumber,
-                qals.KTEXTMAT as materialDesc,
+                makt.MAKTX as materialDesc,
                 qals.MATNR as material,
                 qals.PAENDTERM as endDate,
                 qals.PAENDZEIT as endTime,
                 qals.PS_PSP_PNR as wbsElement,
                 qals.BWART as momentType,
-                qals.MENGENEINH as baseUnit,
+                ekpo.MEINS as baseUnit,
                 qals.LMENGE01 as acceptedQty,
                 qals.LMENGE07 as rejectedQty,
                 qals.LMENGE01 as unrestrictedUseStock,
                 qals.LMENGEIST as supplyQuantity,
                 qals.LTEXTKZ as remarks,
                 qave.vcode as udCode,
-                qave.VDATUM as inspDate
+                qals.ENSTEHDAT as inspDate
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)
@@ -110,6 +110,10 @@ const qalsReport = async (req, res) => {
                 	ON( qals.EBELN = ekko.EBELN)
                 LEFT JOIN qave as qave
                 	ON( qals.PRUEFLOS = qave.prueflos)
+                LEFT JOIN makt as makt
+                	ON ( makt.MATNR = qals.MATNR)
+                LEFT JOIN ekpo as ekpo
+                	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
                 WHERE 1 = 1`;
             if (req.body.inspectionLotNumber) {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.inspectionLotNumber}`)
