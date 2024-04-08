@@ -142,10 +142,10 @@ const paymentAviceHeaderPayload = async (obj) => {
   }
   const pl = {
     zlsch: obj.zlsch || obj.ZLSCH || "",
-    bldat: formatDate(obj.bldat) || formatDate(obj.BLDAT) || "0000-00-00",
+    bldat: formatDate(obj.bldat) || formatDate(obj.BLDAT),
     chect: obj.chect || obj.CHECT || "",
     hbkid: obj.hbkid || obj.HBKID || "",
-    pridt: formatDate(obj.pridt) || formatDate(obj.PRIDT) || "0000-00-00",
+    pridt: formatDate(obj.pridt) || formatDate(obj.PRIDT),
     lifnr: obj.lifnr || obj.LIFNR || "",
     adrnr: obj.adrnr || obj.ADRNR || "",
     bank_desc: obj.bank_desc || obj.BANK_DESC || "",
