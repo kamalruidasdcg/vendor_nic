@@ -204,9 +204,9 @@ const storeActionList = async (req, res) => {
                NULL                 AS btn,
                NULL                 AS issueNo,
                NULL                 AS issueYear,
-               NULL AS gateEntryNo,
                reservationnumber,
                reservationdate,
+               NULL AS gateEntryNo,
                updatedBy,
                dateTime,
                'reservation_report' AS documentType
