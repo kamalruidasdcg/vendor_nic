@@ -1,4 +1,5 @@
 const { query } = require("../config/dbConfig");
+const { makeHttpRequest } = require("../config/sapServerConfig");
 const {
   C_SDBG_DATE,
   C_DRAWING_DATE,
@@ -11,6 +12,7 @@ const {
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { APPROVED } = require("../lib/status");
+const { getEpochTime } = require("../lib/utils");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -502,8 +504,8 @@ const submitBTNByDO = async (req, res) => {
 
   const btn_payload = {
     ZBTNO: btnInfo[0]?.btn_num, // BTN Number
-    ERDAT: new Date.toLocaleDateString(), // BTN Create Date
-    ERZET: new Date().toLocaleTimeString(), // BTN Create Time
+    ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+    ERZET: getYyyyMmDd(getEpochTime()), // BTN Create Time
     ERNAM: "", // Created Person Name
     LAEDA: "", // Not Needed
     AENAM: "NAME", // Vendor Name
