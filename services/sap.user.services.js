@@ -14,17 +14,18 @@ const reservationHeaderPayload = async (obj) => {
   }
   const pl = {
     // C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
-    RSNUM: obj.RSNUM,
-    RSDAT: formatDate(obj.RSDAT),
-    USNAM: obj.USNAM || null,
-    BWART: obj.BWART || null,
-    WEMPF: obj.WEMPF || null,
-    KOSTL: obj.KOSTL || null,
-    EBELN: obj.EBELN || null,
-    EBELP: obj.EBELP || null,
-    UMWRK: obj.UMWRK || null,
-    UMLGO: obj.UMLGO || null,
-    PS_PSP_PNR: obj.PS_PSP_PNR || null,
+    RSNUM: obj.RSNUM | obj.rsnum,
+    RSDAT: formatDate(obj.RSDAT) | obj.rsdat,
+    USNAM: obj.USNAM || obj.usnam || null,
+    BWART: obj.BWART || obj.bwart || null,
+    WEMPF: obj.WEMPF || obj.wempf || null,
+    KOSTL: obj.KOSTL || obj.kostl || null,
+    EBELN: obj.EBELN || obj.ebeln || null,
+    EBELP: obj.EBELP || obj.ebelp || null,
+    UMWRK: obj.UMWRK || obj.umwrk || null,
+    UMLGO: obj.UMLGO || obj.umlgo || null,
+    PS_PSP_PNR: obj.PS_PSP_PNR || obj.ps_psp_pnr || null,
+    WBS_DESC: obj.WBS_DESC || obj.wsb_desc || null,
   };
   return pl;
 };
