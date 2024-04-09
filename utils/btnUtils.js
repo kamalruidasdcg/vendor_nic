@@ -60,3 +60,32 @@ exports.getICGRNs = async (po) => {
   };
   return res;
 };
+
+exports.checkBTNRegistered = async (btn_num) => {
+  let q = `SELECT count("btn_num") as count FROM btn_do WHERE btn_num = ?`;
+  let result = await query({
+    query: q,
+    values: [btn_num],
+  });
+  console.log(result);
+  if (result.count > 0) {
+    return true;
+  }
+  return false;
+};
+exports.getBTNInfo = async (btn_num) => {
+  let q = `SELECT * FROM btn WHERE btn_num = ?`;
+  let result = await query({
+    query: q,
+    values: [btn_num],
+  });
+  return result;
+};
+exports.getBTNInfoDO = async (btn_num) => {
+  let q = `SELECT * FROM btn_do WHERE btn_num = ?`;
+  let result = await query({
+    query: q,
+    values: [btn_num],
+  });
+  return result;
+};
