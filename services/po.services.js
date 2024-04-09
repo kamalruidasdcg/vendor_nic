@@ -375,19 +375,21 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
 const setActualSubmissionDateSdbg = async (payload, tokenData) => {
   // return 1;
 
-  const select_bg_date_query = `SELECT bg_date FROM ${SDBG_ENTRY} WHERE reference_no = ? AND purchasing_doc_no = ?`;
+  //const select_bg_date_query = `SELECT bg_date FROM ${SDBG_ENTRY} WHERE reference_no = ? AND purchasing_doc_no = ?`;
+  const select_bg_date_query = `SELECT created_at FROM ${SDBG} WHERE action_type = ? AND reference_no = ? AND purchasing_doc_no = ?`;
+
   const select_bg_date = await query({
     query: select_bg_date_query,
-    values: [payload.reference_no, payload.purchasing_doc_no],
+    values: [payload.action_type, payload.reference_no, payload.purchasing_doc_no],
   });
-  if (!select_bg_date[0].bg_date) {
+  if (!select_bg_date[0].created_at) {
     console.log("ERROR IN BG DATE");
   } else {
     const payloadObj = {
       purchasing_doc_no: payload.purchasing_doc_no,
       milestoneId: 1,
       milestoneText: `ACTUAL SDBG SUBMISSION DATE`,
-      actualSubmissionDate: parseInt(select_bg_date[0].bg_date)*1000,
+      actualSubmissionDate: select_bg_date[0].created_at, //parseInt(select_bg_date[0].bg_date)*1000,
       created_at: getEpochTime(),
       created_by_id: tokenData.vendor_code,
     };
@@ -414,23 +416,26 @@ const create_reference_no = async (type, vendor_code) => {
 };
 
 const create_btn_no = async (type) => {
-  // try {
-  //   const reference_no = `${type}-${getEpochTime()}`;
-  //   return reference_no;
-  // } catch (error) {
-  //   console.log("error into create btn :"`${error}`);
-  // }
   try {
     let date = new Date();
     let year = date.getFullYear();
     let month = String(date.getMonth() + 1).padStart(2, "0");
     let day = String(date.getDate()).padStart(2, "0");
+    let dateNeed = `${year}${month}${day}`;
+    let today = new Date().toLocaleDateString();
+    console.log(today);
 
-    let randomFourDigit = Math.floor(100 + Math.random() * 900);
-    const reference_no = `${type}${year}${month}${day}${randomFourDigit}`;
+    let btn_num_q = `SELECT count("*") as count FROM btn WHERE created_at = ?`;
+    let btn_res = await query({
+      query: btn_num_q,
+      values: [today],
+    });
+    console.log(btn_res);
+    let threeDigit = 999 - parseInt(btn_res[0]?.count);
+    const reference_no = `${type}${dateNeed}${threeDigit}`;
     return reference_no;
   } catch (error) {
-    console.log("error into create btn :"`${error}`);
+    console.log("Error into create btn :"`${error}`);
   }
 };
 

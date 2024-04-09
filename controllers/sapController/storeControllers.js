@@ -249,7 +249,7 @@ const storeActionList = async (req, res) => {
             }
 
         } catch (error) {
-            responseSend(res, "0", 502, "data fetch failed !!", error, null);
+            responseSend(res, "F", 502, "data fetch failed !!", error, null);
         }
         finally {
             const connEnd = await promiseConnection.end();
@@ -290,7 +290,7 @@ const gateEntryReport = async (req, res) => {
 
                 console.log("ge_query", ge_query);
                 if(req.body.gate_entry_no) {
-                    ge_query = ge_query.concat(" AND zmm_gate_entry_h.ENTRY_NO")
+                    ge_query = ge_query.concat(` AND zmm_gate_entry_h.ENTRY_NO = '${req.body.gate_entry_no}'`);
                 }
 
 

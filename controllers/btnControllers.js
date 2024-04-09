@@ -18,6 +18,9 @@ const {
   getICGRNs,
   getGateEntry,
   getPBGApprovedFiles,
+  checkBTNRegistered,
+  getBTNInfo,
+  getBTNInfoDO,
 } = require("../utils/btnUtils");
 const { checkTypeArr } = require("../utils/smallFun");
 
@@ -34,7 +37,7 @@ const fetchAllBTNs = async (req, res) => {
     );
   }
 
-  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ?`;
+  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
 
   let result = await query({
     query: btnQ,
@@ -46,7 +49,6 @@ const fetchAllBTNs = async (req, res) => {
 
 const fetchBTNByNum = async (req, res) => {
   const { id, btn_num } = req.query;
-  console.log("hello", id, btn_num);
   if (!id || !btn_num) {
     return resSend(
       res,
@@ -66,6 +68,32 @@ const fetchBTNByNum = async (req, res) => {
   });
 
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
+};
+
+const fetchBTNByNumForDO = async (req, res) => {
+  const { btn_num } = req.query;
+  if (!btn_num) {
+    return resSend(
+      res,
+      false,
+      200,
+      "BTN number is missing, please refresh and retry!",
+      null,
+      null
+    );
+  }
+
+  let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
+  console.log("btn_num", btnDOQ, btn_num);
+
+  let doRes = await query({
+    query: btnDOQ,
+    values: [btn_num],
+  });
+
+  console.log("doRes", doRes);
+
+  return resSend(res, true, 200, "ALL data from BTNs", doRes, null);
 };
 
 const getBTNData = async (req, res) => {
@@ -104,7 +132,6 @@ const getBTNData = async (req, res) => {
       query: a_sdbg_date_q,
       values: [id],
     });
-    console.log(a_dates);
     checkTypeArr(a_dates) &&
       a_dates.forEach((item) => {
         if (item.MTEXT === A_SDBG_DATE) {
@@ -141,6 +168,7 @@ const getBTNData = async (req, res) => {
     if (gate_entry) {
       obj = { ...obj, gate_entry };
     }
+    console.log("gate_entry", gate_entry);
 
     // GET GRN Number by PO Number
     let grn_nos = await getGRNs(id);
@@ -162,14 +190,7 @@ const getBTNData = async (req, res) => {
       obj = { ...obj, pbg_filename: pbg_filename_result };
     }
 
-    resSend(
-      res,
-      true,
-      200,
-      "Succesfully fetched all important dates!",
-      obj,
-      null
-    );
+    resSend(res, true, 200, "Succesfully fetched all data!", obj, null);
   } catch (error) {
     console.error(error);
     resSend(
@@ -193,20 +214,29 @@ const submitBTN = async (req, res) => {
     credit_note,
     gate_entry_no,
     gate_entry_date,
-    grn_no_1,
-    grn_no_2,
-    grn_no_3,
-    grn_no_4,
-    icgrn_no_1,
-    icgrn_no_2,
-    icgrn_no_3,
-    icgrn_no_4,
     hsn_gstn_icgrn,
     ld_gate_entry_date,
     ld_contractual_date,
   } = req.body;
   let payloadFiles = req.files;
+  const tokenData = { ...req.tokenData };
+
   // Check required fields
+  if (!JSON.parse(hsn_gstn_icgrn)) {
+    return resSend(
+      res,
+      false,
+      200,
+      "Please check HSN code, GSTIN, Tax rate is as per PO!",
+      null,
+      null
+    );
+  }
+
+  // Check required fields
+  if (!invoice_value || !invoice_value.trim() === "") {
+    return resSend(res, false, 200, "Invoice Value is missing!", null, null);
+  }
   if (
     !purchasing_doc_no ||
     !purchasing_doc_no.trim() === "" ||
@@ -217,17 +247,17 @@ const submitBTN = async (req, res) => {
   }
 
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ?`;
+  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
   let check_invoice = await query({
     query: check_invoice_q,
-    values: [invoice_no],
+    values: [invoice_no, tokenData.vendor_code],
   });
-  if (checkTypeArr(check_invoice) && check_invoice.count > 0) {
+  if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
     return resSend(
       res,
       false,
       200,
-      "You can't generate BTN with the same invoice number!",
+      "The invoice number is already in use!",
       null,
       null
     );
@@ -256,6 +286,12 @@ const submitBTN = async (req, res) => {
   // GET GRN Number by PO Number
   let grn_nos = await getGRNs(purchasing_doc_no);
 
+  // GET ICGRN Value by PO Number
+  let icgrn_total = await getICGRNs(purchasing_doc_no).total_icgrn_value;
+
+  // GET GRN Number by PO Number
+  let icgrn_nos = await getICGRNs(purchasing_doc_no);
+
   let get_entry_filename;
   payloadFiles["get_entry_filename"]
     ? (get_entry_filename = payloadFiles["get_entry_filename"][0]?.filename)
@@ -274,9 +310,14 @@ const submitBTN = async (req, res) => {
 
   // generate btn num
   const btn_num = await create_btn_no("BTN");
-  const icgrn_total = icgrn_no_1 + icgrn_no_2 + icgrn_no_3 + icgrn_no_4;
 
   // MATH Calculation
+  if (!debit_note || debit_note === "") {
+    debit_note = 0;
+  }
+  if (!credit_note || credit_note === "") {
+    credit_note = 0;
+  }
   let net_claim_amount =
     parseInt(invoice_value) + parseInt(debit_note) - parseInt(credit_note);
 
@@ -312,7 +353,6 @@ const submitBTN = async (req, res) => {
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
   });
-  console.log(a_dates);
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
       a_sdbg_date = item.PLAN_DATE;
@@ -325,52 +365,52 @@ const submitBTN = async (req, res) => {
     }
   });
 
+  // created at
+  let created_at = new Date().toLocaleDateString();
+
   // INSERT Data into btn table
   let btnQ = `INSERT INTO btn SET 
     btn_num = '${btn_num}', 
     purchasing_doc_no = '${purchasing_doc_no}', 
-    invoice_no = '${invoice_no ? invoice_no : null}', 
-    invoice_value='${invoice_value ? invoice_value : null}',
-    invoice_filename ='${invoice_filename ? invoice_filename : null}',
-    e_invoice_no='${e_invoice_no ? e_invoice_no : null}',
-    e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : null}',
-    debit_note='${debit_note ? debit_note : null}',
-    credit_note='${credit_note ? credit_note : null}',
+    vendor_code = '${tokenData.vendor_code}', 
+    invoice_no = '${invoice_no ? invoice_no : ""}', 
+    invoice_value='${invoice_value ? invoice_value : ""}',
+    invoice_filename ='${invoice_filename ? invoice_filename : ""}',
+    e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
+    e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
+    debit_note='${debit_note ? debit_note : ""}',
+    credit_note='${credit_note ? credit_note : ""}',
     debit_credit_filename='${
-      debit_credit_filename ? debit_credit_filename : null
+      debit_credit_filename ? debit_credit_filename : ""
     }',
-    net_claim_amount='${net_claim_amount ? net_claim_amount : null}',
-    c_sdbg_date='${c_sdbg_date ? c_sdbg_date : null}',
+    net_claim_amount='${net_claim_amount ? net_claim_amount : ""}',
+    c_sdbg_date='${c_sdbg_date ? c_sdbg_date : ""}',
     c_sdbg_filename='${
-      sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : null
+      sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : ""
     }',
-    a_sdbg_date='${a_sdbg_date ? a_sdbg_date : null}',
+    a_sdbg_date='${a_sdbg_date ? a_sdbg_date : ""}',
     demand_raise_filename='${
-      demand_raise_filename ? demand_raise_filename : null
+      demand_raise_filename ? demand_raise_filename : ""
     }',
-    gate_entry_no='${gate_entry_no ? gate_entry_no : null}',
-    gate_entry_date='${gate_entry_date ? gate_entry_date : null}',
-    get_entry_filename='${get_entry_filename ? get_entry_filename : null}',
-    grn_no_1='${grn_no_1 ? grn_no_1 : null}',
-    grn_no_2='${grn_no_2 ? grn_no_2 : null}',
-    grn_no_3='${grn_no_3 ? grn_no_3 : null}',
-    grn_no_4='${grn_no_4 ? grn_no_4 : null}',
-    icgrn_no_1='${icgrn_no_1 ? icgrn_no_1 : null}',
-    icgrn_no_2='${icgrn_no_2 ? icgrn_no_2 : null}',
-    icgrn_no_3='${icgrn_no_3 ? icgrn_no_3 : null}',
-    icgrn_no_4='${icgrn_no_4 ? icgrn_no_4 : null}',
-    icgrn_total='${icgrn_total ? icgrn_total : null}',
-    c_drawing_date='${c_drawing_date ? c_drawing_date : null}',
-    a_drawing_date='${a_drawing_date ? a_drawing_date : null}',
-    c_qap_date='${c_qap_date ? c_qap_date : null}',
-    a_qap_date='${a_qap_date ? a_qap_date : null}',
-    c_ilms_date='${c_ilms_date ? c_ilms_date : null}',
-    a_ilms_date='${a_ilms_date ? a_ilms_date : null}',
-    pbg_filename='${pbg_filename ? pbg_filename : null}',
-    hsn_gstn_icgrn='${hsn_gstn_icgrn ? hsn_gstn_icgrn : null}',
-    ld_gate_entry_date='${ld_gate_entry_date ? ld_gate_entry_date : null}',
-    ld_contractual_date='${ld_contractual_date ? ld_contractual_date : null}'
+    gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
+    gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
+    get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
+    grn_nos='${grn_nos ? JSON.stringify(grn_nos) : ""}',
+    icgrn_nos='${icgrn_nos ? JSON.stringify(icgrn_nos) : ""}',
+    icgrn_total='${icgrn_total ? icgrn_total : ""}',
+    c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
+    a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
+    c_qap_date='${c_qap_date ? c_qap_date : ""}',
+    a_qap_date='${a_qap_date ? a_qap_date : ""}',
+    c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
+    a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
+    pbg_filename='${pbg_filename ? pbg_filename : ""}',
+    hsn_gstn_icgrn='${hsn_gstn_icgrn ? hsn_gstn_icgrn : ""}',
+    ld_gate_entry_date='${ld_gate_entry_date ? ld_gate_entry_date : ""}',
+    ld_contractual_date='${ld_contractual_date ? ld_contractual_date : ""}',
+    created_at='${created_at ? created_at : ""}'
   `;
+  console.log("btnQ", btnQ);
 
   let result = await query({
     query: btnQ,
@@ -398,4 +438,116 @@ const submitBTN = async (req, res) => {
   }
 };
 
-module.exports = { fetchAllBTNs, getBTNData, submitBTN, fetchBTNByNum };
+const submitBTNByDO = async (req, res) => {
+  let {
+    btn_num,
+    ld_ge_date,
+    ld_c_date,
+    ld_amount,
+    p_sdbg_amount,
+    p_drg_amount,
+    p_qap_amount,
+    p_ilms_amount,
+    o_deduction,
+    total_deduction,
+    net_payable_amount,
+  } = req.body;
+  const tokenData = { ...req.tokenData };
+
+  console.log("tokenData", tokenData);
+
+  // Check required fields
+  if (!net_payable_amount) {
+    return resSend(res, false, 200, "Net payable is missing!", null, null);
+  }
+
+  if (!btn_num) {
+    return resSend(res, false, 200, "BTN number is missing!", null, null);
+  }
+
+  // Check BTN by BTN Number
+  let checkBTNR = await checkBTNRegistered(btn_num);
+  if (checkBTNR) {
+    return resSend(res, false, 200, "BTN is already submitted!", null, null);
+  }
+  // created at
+  let created_at = new Date().toLocaleDateString();
+  console.log(created_at);
+
+  // INSERT Data into btn table
+  let btnQ = `INSERT INTO btn_do SET 
+    btn_num = '${btn_num}', 
+    contractual_ld = '${ld_c_date}', 
+    ld_amount = '${ld_amount ? ld_amount : ""}', 
+    drg_penalty = '${p_drg_amount ? p_drg_amount : ""}', 
+    qap_penalty = '${p_qap_amount ? p_qap_amount : ""}', 
+    ilms_penalty='${p_ilms_amount ? p_ilms_amount : ""}',
+    other_deduction ='${o_deduction ? o_deduction : ""}',
+    total_deduction='${total_deduction ? total_deduction : ""}',
+    net_payable_amout ='${net_payable_amount ? net_payable_amount : ""}',
+    created_at='${created_at ? created_at : ""}',
+    created_by=''
+  `;
+
+  let result = await query({
+    query: btnQ,
+    values: [],
+  });
+
+  // GET BTN Info by BTN Number
+  // let btnInfo = await getBTNInfo(btn_num);
+  // let btnDOInfo = await getBTNInfoDO(btn_num);
+  // console.log("result: " + JSON.stringify(btnInfo));
+  // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
+
+  // const btn_payload = {
+  //   ZBTNO: btnInfo[0]?.btn_num, // BTN Number
+  //   ERDAT: new Date.toLocaleDateString(), // BTN Create Date
+  //   ERZET: new Date().toLocaleTimeString(), // BTN Create Time
+  //   ERNAM: "", // Created Person Name
+  //   LAEDA: "", // Not Needed
+  //   AENAM: "NAME", // Vendor Name
+  //   LIFNR: "50000437", // Vendor Code
+  //   ZVBNO: btnInfo?.invoice_no, // Invoice Number
+  //   EBELN: btnInfo?.purchasing_doc_no, // PO Number
+  //   DPERNR1: "", // Not Required
+  //   ZRMK1: "Forwared To Finance", // REMARKS
+  // };
+  console.log("result", result);
+  if (result.affectedRows) {
+    // btnSaveToSap(btn_payload);
+    return resSend(res, true, 200, "BTN has been updated!", null, null);
+  } else {
+    return resSend(
+      res,
+      false,
+      200,
+      "Data not inserted! Try Again!",
+      null,
+      null
+    );
+  }
+};
+
+async function btnSaveToSap(btn_payload) {
+  try {
+    const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+
+    console.log("postUrl", postUrl);
+    console.log("btn_payload", btn_payload);
+
+    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+    console.log("POST Response from the server:", postResponse);
+  } catch (error) {
+    console.error("Error making the request:", error.message);
+  }
+}
+
+module.exports = {
+  fetchAllBTNs,
+  getBTNData,
+  submitBTN,
+  submitBTNByDO,
+  fetchBTNByNum,
+  fetchBTNByNumForDO,
+};
