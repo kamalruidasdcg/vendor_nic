@@ -500,22 +500,22 @@ const submitBTNByDO = async (req, res) => {
   // console.log("result: " + JSON.stringify(btnInfo));
   // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
 
-  // const btn_payload = {
-  //   ZBTNO: btnInfo[0]?.btn_num, // BTN Number
-  //   ERDAT: new Date.toLocaleDateString(), // BTN Create Date
-  //   ERZET: new Date().toLocaleTimeString(), // BTN Create Time
-  //   ERNAM: "", // Created Person Name
-  //   LAEDA: "", // Not Needed
-  //   AENAM: "NAME", // Vendor Name
-  //   LIFNR: "50000437", // Vendor Code
-  //   ZVBNO: btnInfo?.invoice_no, // Invoice Number
-  //   EBELN: btnInfo?.purchasing_doc_no, // PO Number
-  //   DPERNR1: "", // Not Required
-  //   ZRMK1: "Forwared To Finance", // REMARKS
-  // };
+  const btn_payload = {
+    ZBTNO: btnInfo[0]?.btn_num, // BTN Number
+    ERDAT: new Date.toLocaleDateString(), // BTN Create Date
+    ERZET: new Date().toLocaleTimeString(), // BTN Create Time
+    ERNAM: "", // Created Person Name
+    LAEDA: "", // Not Needed
+    AENAM: "NAME", // Vendor Name
+    LIFNR: "50000437", // Vendor Code
+    ZVBNO: btnInfo?.invoice_no, // Invoice Number
+    EBELN: btnInfo?.purchasing_doc_no, // PO Number
+    DPERNR1: "", // Not Required
+    ZRMK1: "Forwared To Finance", // REMARKS
+  };
   console.log("result", result);
   if (result.affectedRows) {
-    // btnSaveToSap(btn_payload);
+    btnSaveToSap(btn_payload);
     return resSend(res, true, 200, "BTN has been updated!", null, null);
   } else {
     return resSend(
@@ -529,14 +529,12 @@ const submitBTNByDO = async (req, res) => {
   }
 };
 
-async function btnSaveToSap(btn_payload) {
+async function btnSaveToSap(btnPayload) {
   try {
-    const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
-
-    console.log("postUrl", postUrl);
-    console.log("btn_payload", btn_payload);
-
-    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+    const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
+    const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
+    console.log("postUrl", postUrl, btnPayload);
+    const postResponse = await makeHttpRequest(postUrl, "POST", btnPayload);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
