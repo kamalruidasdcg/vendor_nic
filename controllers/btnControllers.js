@@ -12,7 +12,7 @@ const {
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { APPROVED } = require("../lib/status");
-const { getEpochTime } = require("../lib/utils");
+const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -497,10 +497,10 @@ const submitBTNByDO = async (req, res) => {
   });
 
   // GET BTN Info by BTN Number
-  // let btnInfo = await getBTNInfo(btn_num);
-  // let btnDOInfo = await getBTNInfoDO(btn_num);
-  // console.log("result: " + JSON.stringify(btnInfo));
-  // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
+  let btnInfo = await getBTNInfo(btn_num);
+  let btnDOInfo = await getBTNInfoDO(btn_num);
+  console.log("result: " + JSON.stringify(btnInfo));
+  console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
 
   const btn_payload = {
     ZBTNO: btnInfo[0]?.btn_num, // BTN Number
