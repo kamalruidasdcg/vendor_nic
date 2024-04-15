@@ -7,7 +7,12 @@ const {
   getBTNData,
   submitBTNByDO,
   fetchBTNByNumForDO,
+  getGrnIcrenPenelty,
 } = require("../controllers/btnControllers");
+const {
+  submitBtnServiceHybrid,
+} = require("../controllers/btnServiceHybridControllers");
+
 const { btnmw } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 
@@ -37,5 +42,20 @@ router.post(
     submitBTNByDO(req, res);
   }
 );
+
+router.post(
+  "/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
+     getGrnIcrenPenelty(req, res);
+  }
+);
+
+//// Btn Service Hybrid ////
+///////////////////////////
+router.post("/submitBtnServiceHybrid", [veifyAccessToken, upload], (req, res) => {
+  submitBtnServiceHybrid(req, res);
+})
+//// Btn Service Hybrid ////
+///////////////////////////
+
 
 module.exports = router;
