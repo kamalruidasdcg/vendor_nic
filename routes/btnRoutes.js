@@ -7,6 +7,7 @@ const {
   getBTNData,
   submitBTNByDO,
   fetchBTNByNumForDO,
+  getGrnIcrenPenelty,
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
@@ -42,6 +43,11 @@ router.post(
   }
 );
 
+router.post(
+  "/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
+     getGrnIcrenPenelty(req, res);
+  }
+);
 
 //// Btn Service Hybrid ////
 ///////////////////////////
