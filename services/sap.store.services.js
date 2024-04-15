@@ -99,6 +99,8 @@ const gateEntryDataPayload = async (payload) => {
     POSNR: obj.POSNR || null,
     ZMJAHR: obj.ZMJAHR || null,
     ZEILE: obj.ZEILE || null,
+    INVNO: obj.INVNO || null,
+    INV_DATE: formatDate(obj.INV_DATE),
   }));
   return pl;
 };
