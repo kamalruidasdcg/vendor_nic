@@ -1,4 +1,5 @@
 const { query } = require("../config/dbConfig");
+const { makeHttpRequest } = require("../config/sapServerConfig");
 const {
   C_SDBG_DATE,
   C_DRAWING_DATE,
@@ -11,6 +12,7 @@ const {
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { APPROVED } = require("../lib/status");
+const { getEpochTime } = require("../lib/utils");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -493,13 +495,27 @@ const submitBTNByDO = async (req, res) => {
     query: btnQ,
     values: [],
   });
-
+console.log(result);
+return;
   // GET BTN Info by BTN Number
   // let btnInfo = await getBTNInfo(btn_num);
   // let btnDOInfo = await getBTNInfoDO(btn_num);
   // console.log("result: " + JSON.stringify(btnInfo));
   // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
 
+  const btn_payload = {
+    ZBTNO: btnInfo[0]?.btn_num, // BTN Number
+    ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+    ERZET: getYyyyMmDd(getEpochTime()), // BTN Create Time
+    ERNAM: "", // Created Person Name
+    LAEDA: "", // Not Needed
+    AENAM: "NAME", // Vendor Name
+    LIFNR: "50000437", // Vendor Code
+    ZVBNO: btnInfo?.invoice_no, // Invoice Number
+    EBELN: btnInfo?.purchasing_doc_no, // PO Number
+    DPERNR1: "", // Not Required
+    ZRMK1: "Forwared To Finance", // REMARKS
+  };
   const btn_payload = {
     ZBTNO: btnInfo[0]?.btn_num, // BTN Number
     ERDAT: new Date.toLocaleDateString(), // BTN Create Date
@@ -528,8 +544,6 @@ const submitBTNByDO = async (req, res) => {
     );
   }
 };
-
-
 
 async function btnSaveToSap(btnPayload) {
   try {
