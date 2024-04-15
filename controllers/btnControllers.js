@@ -12,7 +12,7 @@ const {
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { APPROVED } = require("../lib/status");
-const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
+const { getEpochTime } = require("../lib/utils");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -495,12 +495,13 @@ const submitBTNByDO = async (req, res) => {
     query: btnQ,
     values: [],
   });
-
+console.log(result);
+return;
   // GET BTN Info by BTN Number
-  let btnInfo = await getBTNInfo(btn_num);
-  let btnDOInfo = await getBTNInfoDO(btn_num);
-  console.log("result: " + JSON.stringify(btnInfo));
-  console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
+  // let btnInfo = await getBTNInfo(btn_num);
+  // let btnDOInfo = await getBTNInfoDO(btn_num);
+  // console.log("result: " + JSON.stringify(btnInfo));
+  // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
 
   const btn_payload = {
     ZBTNO: btnInfo[0]?.btn_num, // BTN Number
@@ -543,6 +544,38 @@ async function btnSaveToSap(btnPayload) {
   }
 }
 
+const getGrnIcrenPenelty = async (req, res) => {
+  //return resSend(res, false, 200, "Data gate!", null, null);
+  try {
+   // console.log(req.body);
+    const { purchasing_doc_no, invoice_no } = req.body;
+    if(!purchasing_doc_no  || !invoice_no){
+      return resSend(res, true, 200, "Please send a valid payload!", null, null);
+    }
+    const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,ZMBLNR AS grn_no,INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+    let gate_entry_v = await query({
+      query: gate_entry_q,
+      values: [purchasing_doc_no, invoice_no],
+    });
+    console.log(gate_entry_v);
+    if(gate_entry_v.error) {
+      return resSend(res, true, 200, "Something went wrong!", gate_entry_v.error, null);
+    }
+    if(gate_entry_v.length == 0) {
+      return resSend(res, true, 200, "No record found!", null, null);
+    }
+
+    gate_entry_v = gate_entry_v[0];
+
+    return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
+
+  } catch(error) {
+    console.error("Error making the request:", error.message);
+    return resSend(res, true, 400, "error!", error.message, null);
+  }
+}
+
+
 module.exports = {
   fetchAllBTNs,
   getBTNData,
@@ -550,4 +583,5 @@ module.exports = {
   submitBTNByDO,
   fetchBTNByNum,
   fetchBTNByNumForDO,
+  getGrnIcrenPenelty,
 };
