@@ -11,7 +11,9 @@ const HOST_NAME = process.env.HOST_NAME || "10.12.1.148";
 app.use(express.json());
 app.use(cors("*"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
+// app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
+const poDirPath = path.join(__dirname, '..', '..', '..', '..', 'ftpgrse');
+app.use("/sapuploads", express.static(poDirPath));
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
