@@ -7,5 +7,8 @@ module.exports = {
     API_HAS_NO_ACCESS: "The API no access.",
     YOU_ARE_UN_AUTHORIZED: "Unauthorize ! You don't have access.",
     INVALID_PAYLOAD: "Invalid payload.",
-    DATA_INSERT_FAILED : "Data insert failed."
+    DATA_INSERT_FAILED : "Data insert failed.",
+    USER_REG_SUCCESS: "User registration successfully",
+    USER_REG_UN_SUCCESS: "User registration un-successfully",
+    SERVER_ERROR: "Internal server error",
 }
