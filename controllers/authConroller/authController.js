@@ -14,7 +14,7 @@ const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE } = require("../..
 // const { authDataModify } = require("../services/auth.services");
 
 const rolePermission = require("../../lib/role/deptWiseRolePermission");
-const { generateSalt, getHashedText } = require("../../services/crypto.services");
+// const { generateSalt, getHashedText } = require("../../services/crypto.services");
 const { getEpochTime, generateQuery } = require("../../lib/utils");
 
 const Message = require("../../utils/messages");
@@ -282,86 +282,86 @@ const login = async (req, res) => {
 };
 
 
-const registration = async (req, res) => {
+// const registration = async (req, res) => {
 
-    try {
-        const paylaod = req.body;
-        let regData = {};
+//     try {
+//         const paylaod = req.body;
+//         let regData = {};
 
-        if (!paylaod.user_type || !paylaod.username) return resSend(res, false, 400, Message.INVALID_PAYLOAD, null);
-        const salt = generateSalt();
-        const encrytedPassword = getHashedText("1234", salt);
+//         if (!paylaod.user_type || !paylaod.username) return resSend(res, false, 400, Message.INVALID_PAYLOAD, null);
+//         const salt = generateSalt();
+//         const encrytedPassword = getHashedText("1234", salt);
 
-        if (paylaod.user_type === USER_TYPE_VENDOR) {
+//         if (paylaod.user_type === USER_TYPE_VENDOR) {
 
-            const validVendor = await query({ query: "SELECT COUNT(*) as count FROM lfa1 WHERE 1 = 1 AND  lifnr = ? ", values: [paylaod.username] });
-            if (!validVendor) {
-                return resSend(res, false, 200, "User not access for OBPS", paylaod);
-            }
+//             const validVendor = await query({ query: "SELECT COUNT(*) as count FROM lfa1 WHERE 1 = 1 AND  lifnr = ? ", values: [paylaod.username] });
+//             if (!validVendor) {
+//                 return resSend(res, false, 200, "User not access for OBPS", paylaod);
+//             }
 
-            // const encrytedPassword = getHashedText(req.body.password, salt);
+//             // const encrytedPassword = getHashedText(req.body.password, salt);
 
-            regData = {
-                vendor_code: paylaod.username,
-                user_type: USER_TYPE_VENDOR,
-                default_password: encrytedPassword,
-                is_approved: 'N',
-                fistime_login: 'N',
-                created_at: getEpochTime(),
-                user_data: JSON.stringify({ department_id: null, internal_role_id: null })
-            }
+//             regData = {
+//                 vendor_code: paylaod.username,
+//                 user_type: USER_TYPE_VENDOR,
+//                 default_password: encrytedPassword,
+//                 is_approved: 'N',
+//                 fistime_login: 'N',
+//                 created_at: getEpochTime(),
+//                 user_data: JSON.stringify({ department_id: null, internal_role_id: null })
+//             }
 
-            const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
-            const response = await query({ query: q, values: val });
+//             const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
+//             const response = await query({ query: q, values: val });
 
-            if (response.affectedRows) {
-                resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
-            } else {
-                resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
-            }
-
-
-        } else if (paylaod.user_type !== USER_TYPE_VENDOR) {
+//             if (response.affectedRows) {
+//                 resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
+//             } else {
+//                 resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
+//             }
 
 
-            const validVendor = await query({ query: "SELECT COUNT(*) as count FROM pa0002 WHERE 1 = 1 AND  pernr = ? ", values: [paylaod.username] });
-            if (!validVendor) {
-                return resSend(res, false, 200, "User not access for OBPS", paylaod);
-            }
-
-            // const encrytedPassword = getHashedText(req.body.password, salt);
-
-            regData = {
-                vendor_code: paylaod.username,
-                user_type: 2,
-                default_password: encrytedPassword,
-                is_approved: 'N',
-                fistime_login: 'N',
-                created_at: getEpochTime(),
-                user_data: JSON.stringify({ department_id: null, internal_role_id: null })
-            }
-
-            const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
-            const response = await query({ query: q, values: val });
-
-            if (response.affectedRows) {
-                resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
-            } else {
-                resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
-            }
+//         } else if (paylaod.user_type !== USER_TYPE_VENDOR) {
 
 
-        } else {
+//             const validVendor = await query({ query: "SELECT COUNT(*) as count FROM pa0002 WHERE 1 = 1 AND  pernr = ? ", values: [paylaod.username] });
+//             if (!validVendor) {
+//                 return resSend(res, false, 200, "User not access for OBPS", paylaod);
+//             }
 
-            resSend(res, false, 400, Message.DATA_NOT_INSERTED, null);
+//             // const encrytedPassword = getHashedText(req.body.password, salt);
 
-        }
-    } catch (error) {
-        resSend(res, false, 500, Message.SERVER_ERROR, null);
-    }
+//             regData = {
+//                 vendor_code: paylaod.username,
+//                 user_type: 2,
+//                 default_password: encrytedPassword,
+//                 is_approved: 'N',
+//                 fistime_login: 'N',
+//                 created_at: getEpochTime(),
+//                 user_data: JSON.stringify({ department_id: null, internal_role_id: null })
+//             }
 
-}
+//             const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
+//             const response = await query({ query: q, values: val });
+
+//             if (response.affectedRows) {
+//                 resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
+//             } else {
+//                 resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
+//             }
 
 
-module.exports = { login, registration };
+//         } else {
+
+//             resSend(res, false, 400, Message.DATA_NOT_INSERTED, null);
+
+//         }
+//     } catch (error) {
+//         resSend(res, false, 500, Message.SERVER_ERROR, null);
+//     }
+
+// }
+
+
+module.exports = { login };
 
