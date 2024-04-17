@@ -227,7 +227,6 @@ const storeActionList = async (req, res) => {
                      FROM   mseg AS ms
                             LEFT JOIN pa0002 AS USER
                                    ON ( ms.usnam_mkpf = USER.pernr )
-                    WHERE ( ms.BWART IN ('221', '281', '201', '101', '321', '222', '202', '102', '122')
                      GROUP  BY ms.mblnr,
                                ms.mjahr) AS mseg)`;
             
