@@ -9,7 +9,7 @@ const {
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
-const { generateQuery, getEpochTime, getDateString } = require("../../lib/utils");
+const { generateQuery, getEpochTime } = require("../../lib/utils");
 const {
   INSERT,
   UPDATE,
@@ -632,7 +632,7 @@ const sdbgUpdateByFinance = async (req, res) => {
       ...sdbgDataResult,
       remarks: obj.remarks,
       status: obj.status,
-      action_type: `SDBG ${obj.status}`,
+     // action_type: `SDBG ${obj.status}`,
       assigned_from:
         tokenData.internal_role_id == ASSIGNER ? tokenData.vendor_code : null,
       assigned_to:
@@ -686,21 +686,21 @@ const sdbgUpdateByFinance = async (req, res) => {
           values: [obj.purchasing_doc_no, obj.reference_no],
         });
 
-        const get_po_date_query = `SELECT AEDAT as poCreationDate FROM ${EKKO} WHERE EBELN = ?`;
+        const get_po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE EBELN = ?`;
         let get_po_date_data = await query({
           query: get_po_date_query,
           values: [obj.purchasing_doc_no],
         });
         // console.log('get_po_date_query_____________');
         // console.log(get_po_date_data);
-//         const utcTimeString = get_po_date_data[0].AEDAT.toString();
-// const date = new Date(utcTimeString);
-// //console.log(date);
-// const yyyyMMdd = date.toISOString().slice(0, 10);
+        const utcTimeString = get_po_date_data[0].AEDAT.toString();
+const date = new Date(utcTimeString);
+//console.log(date);
+const yyyyMMdd = date.toISOString().slice(0, 10);
 
-// let po_date = yyyyMMdd.split("-").join("");
+let po_date = yyyyMMdd.split("-").join("");
 
-        get_sdbg_entry_data[0].po_date = getDateString(get_po_date_data[0].poCreationDate);
+        get_sdbg_entry_data[0].po_date = po_date;
 
         await sendBgToSap(get_sdbg_entry_data[0]);
       } catch(error) {
