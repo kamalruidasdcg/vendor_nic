@@ -301,6 +301,7 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.EBELP as po_line_item_no,
                 zmm_gate_entry_d.CH_QTY as chalan_quantity,
                 zmm_gate_entry_d.CH_NETWT as net_quantity,
+                zmm_gate_entry_d.MATNR as material_code,
                 lfa1.LIFNR as vendor_code,
                 lfa1.NAME1 as vendor_name
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
