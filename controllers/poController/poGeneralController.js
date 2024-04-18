@@ -348,7 +348,7 @@ function poTypeCheck(materialData, materialType) {
     return 'hybrid';
   } else {
     console.log("default po type");
-    return 'hybrid';
+    return 'service';
   }
 }
 
