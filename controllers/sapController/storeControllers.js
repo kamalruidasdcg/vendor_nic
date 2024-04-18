@@ -156,8 +156,9 @@ const storeActionList = async (req, res) => {
 
         try {
 
-            const query = 
-            `(SELECT NULL         AS docNo,
+            let storeActionListQuery =
+                `
+                SELECT * FROM ((SELECT NULL         AS docNo,
                     NULL         AS btn,
                     NULL         AS issueNo,
                     NULL         AS issueYear,
@@ -165,15 +166,22 @@ const storeActionList = async (req, res) => {
                     NULL         AS reservationDate,
                     gateEntryNo,
                     updatedBy,
-                    datetime,
+                    dateTime,
+ 					purchasing_doc_no,
                     'gate_entry' AS documentType
-             FROM   (SELECT entry_no   AS gateEntryNo,
-                            entry_date AS dateTime,
+             FROM   (SELECT zmm_gate_entry_d.entry_no   AS gateEntryNo,
+                     		zmm_gate_entry_d.ebeln AS purchasing_doc_no,
+                            zmm_gate_entry_h.entry_date AS dateTime,
                             'grse'     AS updatedBy
-                     FROM   zmm_gate_entry_h AS gateentry) AS gate_entry)
-            UNION ALL
-            
-            (SELECT docno,
+                     FROM   zmm_gate_entry_d AS zmm_gate_entry_d
+                     LEFT JOIN zmm_gate_entry_h AS zmm_gate_entry_h
+                     	ON zmm_gate_entry_d.ENTRY_NO = zmm_gate_entry_h.ENTRY_NO
+                     GROUP BY zmm_gate_entry_d.entry_no
+) AS gate_entry)
+
+UNION ALL
+
+(SELECT docno,
                     NULL           AS btn,
                     NULL           AS issueNo,
                     NULL           AS issueYear,
@@ -181,16 +189,20 @@ const storeActionList = async (req, res) => {
                     NULL           AS reservationDate,
                     NULL           AS gateEntryNo,
                     updatedby,
-                    datetime,
+                    dateTime,
+                    purchasing_doc_no,
                     'icgrn_report' AS documentType
              FROM   (SELECT DISTINCT mblnr      AS docNo,
                                      ersteldat  AS dateTime,
+                     q.EBELN as purchasing_doc_no,
                                      USER.cname AS updatedBy
                      FROM   qals AS q
                             LEFT JOIN pa0002 AS USER
                                    ON ( q.aenderer = USER.pernr )) AS qals)
-            UNION ALL
-            (SELECT NULL                 AS docNo,
+
+UNION ALL
+
+(SELECT NULL                 AS docNo,
                     NULL                 AS btn,
                     NULL                 AS issueNo,
                     NULL                 AS issueYear,
@@ -198,19 +210,24 @@ const storeActionList = async (req, res) => {
                     reservationDate,
                     NULL                 AS gateEntryNo,
                     updatedby,
-                    datetime,
+                    dateTime,
+ 					purchasing_doc_no,
                     'reservation_report' AS documentType
-             FROM   (SELECT rsnum      AS reservationNumber,
-                            rsdat      AS reservationDate,
-                            rsdat      AS dateTime,
+             FROM   (SELECT rk.rsnum      AS reservationNumber,
+                            rk.rsdat      AS reservationDate,
+                            rk.rsdat      AS dateTime,
+                     		rk.EBELN as purchasing_doc_no,
                             USER.cname AS updatedBy
                      FROM   rkpf AS rk
                             LEFT JOIN pa0002 AS USER
                                    ON ( rk.usnam = USER.pernr)
                      GROUP  BY rk.rsnum,
                                rk.rsdat) AS rkpf)
-            UNION ALL
-            (
+
+UNION ALL
+
+
+(
                 SELECT NULL AS docno,
                        NULL AS btn,
                        issueno,
@@ -219,14 +236,16 @@ const storeActionList = async (req, res) => {
                        NULL AS reservationdate,
                        NULL AS gateentryno,
                        updatedby,
-                       datetime,
+                       dateTime,
+    				   purchasing_doc_no,
                        'goods_issue_slip' AS documenttype
                 FROM   (
-                                 SELECT    mblnr      AS issueno,
-                                           mjahr      AS issueyear,
+                                 SELECT    ms.mblnr      AS issueno,
+                                           ms.mjahr      AS issueyear,
                                            USER.cname AS updatedby,
-                                           bwart,
-                                           budat_mkpf AS datetime
+                                           ms.bwart,
+                                           budat_mkpf AS dateTime,
+                    						ms.EBELN as purchasing_doc_no
                                  FROM      mseg       AS ms
                                  LEFT JOIN pa0002     AS USER
                                  ON        (
@@ -240,30 +259,40 @@ const storeActionList = async (req, res) => {
                                              '321',
                                              '222',
                                              '202',
-                                             '122'))`;
-            
+                                             '122'))) AS store_action_list WHERE 1 = 1`;
 
 
-    //     (SELECT NULL              AS docNo,
-    //         btn,
-    //         NULL              AS issueNo,
-    //         NULL              AS issueYear,
-    //         NULL              AS reservationNumber,
-    //         NULL              AS reservationDate,
-    //         NULL AS gateEntryNo,
-    //         updatedBy,
-    //         dateTime,
-    //         'ztfi_bil_deface' AS documentType
-    //  FROM   (SELECT DISTINCT zregnum    AS btn,
-    //                          zcreatedon AS dateTime,
-    //                          USER.cname AS updatedBy
-    //          FROM   ztfi_bil_deface AS zb
-    //                 LEFT JOIN pa0002 AS USER
-    //                        ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
-    
-            const [results] = await promiseConnection.execute(query);
 
-            console.log(query, results);
+            //     (SELECT NULL              AS docNo,
+            //         btn,
+            //         NULL              AS issueNo,
+            //         NULL              AS issueYear,
+            //         NULL              AS reservationNumber,
+            //         NULL              AS reservationDate,
+            //         NULL AS gateEntryNo,
+            //         updatedBy,
+            //         dateTime,
+            //         'ztfi_bil_deface' AS documentType
+            //  FROM   (SELECT DISTINCT zregnum    AS btn,
+            //                          zcreatedon AS dateTime,
+            //                          USER.cname AS updatedBy
+            //          FROM   ztfi_bil_deface AS zb
+            //                 LEFT JOIN pa0002 AS USER
+            //                        ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
+
+
+           const queryParams = req.query;
+           const val = [];
+           if(queryParams.poNo) {
+            storeActionListQuery  = storeActionListQuery.concat(" AND purchasing_doc_no = ? ");
+            val.push(queryParams.poNo);
+           }
+           console.log("storeActionListQuery", storeActionListQuery);
+
+            // const [results] = await promiseConnection.execute(storeActionListQuery);
+            const [results] = await promiseConnection.query(storeActionListQuery, val);
+
+            console.log(storeActionListQuery, results);
 
             transactionSuccessful = true;
 
@@ -315,32 +344,32 @@ const gateEntryReport = async (req, res) => {
 
 
 
-                console.log("ge_query", ge_query);
-                if(req.body.gate_entry_no) {
-                    ge_query = ge_query.concat(` AND zmm_gate_entry_h.ENTRY_NO = '${req.body.gate_entry_no}'`);
-                }
+            console.log("ge_query", ge_query);
+            if (req.body.gate_entry_no) {
+                ge_query = ge_query.concat(` AND zmm_gate_entry_h.ENTRY_NO = '${req.body.gate_entry_no}'`);
+            }
 
 
 
             const [results] = await promiseConnection.execute(ge_query);
             console.log(results, "jjjj");
-                let obj = {
-                    gate_entry_no: null,
-                    entry_date: null, 
-                    vendor_code: null,
-                    vendor_name: null,
-                    invoice_number: null,
-                    vehicle_no: null
-                }
-            if(results && results.length) {
-                obj.gate_entry_no =  results[0].gate_entry_no,
-                obj.entry_date =  results[0].entry_date,
-                obj.vendor =  results[0].vendor,
-                obj.invoice_number =  results[0].invoice_number,
-                obj.vehicle_no =  results[0].vehicle_no,
-                obj.vendor_name =  results[0].vendor_name,
-                obj.vendor_code =  results[0].vendor_code,
-                obj.line_items = results
+            let obj = {
+                gate_entry_no: null,
+                entry_date: null,
+                vendor_code: null,
+                vendor_name: null,
+                invoice_number: null,
+                vehicle_no: null
+            }
+            if (results && results.length) {
+                obj.gate_entry_no = results[0].gate_entry_no,
+                    obj.entry_date = results[0].entry_date,
+                    obj.vendor = results[0].vendor,
+                    obj.invoice_number = results[0].invoice_number,
+                    obj.vehicle_no = results[0].vehicle_no,
+                    obj.vendor_name = results[0].vendor_name,
+                    obj.vendor_code = results[0].vendor_code,
+                    obj.line_items = results
 
             }
 
