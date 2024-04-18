@@ -195,19 +195,19 @@ const details = async (req, res) => {
     });
 
     const getLatest = `
-        (SELECT purchasing_doc_no, status, "1" as flag FROM sdbg WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status, "01" as flag FROM sdbg WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, "2" as flag FROM drawing WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status, "02" as flag FROM drawing WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, "3" as flag FROM qap_submission WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status, "03" as flag FROM qap_submission WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, "4" as flag FROM ilms WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1);`;
+        (SELECT purchasing_doc_no, status, "04" as flag FROM ilms WHERE purchasing_doc_no = ? ORDER BY id DESC LIMIT 1);`;
 
     const curret_data = await query({
       query: getLatest,
@@ -745,7 +745,7 @@ function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
     const matchingItem = arr2.find(
       (item2) =>
-        item1.EBELN == item2.purchasing_doc_no && item1.milestoneId == item2.flag
+        item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag
     );
 
     if (matchingItem) {

@@ -72,8 +72,12 @@ const submitSDBG = async (req, res) => {
       const tokenData = { ...req.tokenData };
       console.log(tokenData);
       // create_reference_no = async (type, vendor_code)
+      let action_type = req.body.action_type;
+
+      const firstTwoChars = action_type.slice(0, 2);
+      action_type = firstTwoChars.toUpperCase();
       const reference_no = await create_reference_no(
-        "SD",
+        action_type,
         tokenData.vendor_code
       ); //`BG-${getEpochTime()}-${tokenData.vendor_code.slice(-4)}`;
 
