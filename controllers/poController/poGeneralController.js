@@ -745,7 +745,7 @@ function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
     const matchingItem = arr2.find(
       (item2) =>
-        item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag
+        item1.EBELN == item2.purchasing_doc_no && item1.milestoneId == item2.flag
     );
 
     if (matchingItem) {

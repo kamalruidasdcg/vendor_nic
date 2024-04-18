@@ -194,8 +194,8 @@ const storeActionList = async (req, res) => {
                     NULL                 AS btn,
                     NULL                 AS issueNo,
                     NULL                 AS issueYear,
-                    reservationnumber,
-                    reservationdate,
+                    reservationNumber,
+                    reservationDate,
                     NULL                 AS gateEntryNo,
                     updatedby,
                     datetime,
@@ -206,29 +206,41 @@ const storeActionList = async (req, res) => {
                             USER.cname AS updatedBy
                      FROM   rkpf AS rk
                             LEFT JOIN pa0002 AS USER
-                                   ON ( rk.usnam = USER.pernr )
+                                   ON ( rk.usnam = USER.pernr)
                      GROUP  BY rk.rsnum,
                                rk.rsdat) AS rkpf)
             UNION ALL
-            (SELECT NULL               AS docNo,
-                    NULL               AS btn,
-                    issueNo,
-                    issueYear,
-                    NULL               AS reservationNumber,
-                    NULL               AS reservationDate,
-                    NULL               AS gateEntryNo,
-                    updatedby,
-                    datetime,
-                    'goods_issue_slip' AS documentType
-             FROM   (SELECT mblnr      AS issueNo,
-                            mjahr      AS issueYear,
-                            USER.cname AS updatedBy,
-                            budat_mkpf AS dateTime
-                     FROM   mseg AS ms
-                            LEFT JOIN pa0002 AS USER
-                                   ON ( ms.usnam_mkpf = USER.pernr )
-                     GROUP  BY ms.mblnr,
-                               ms.mjahr) AS mseg)`;
+            (
+                SELECT NULL AS docno,
+                       NULL AS btn,
+                       issueno,
+                       issueyear,
+                       NULL AS reservationnumber,
+                       NULL AS reservationdate,
+                       NULL AS gateentryno,
+                       updatedby,
+                       datetime,
+                       'goods_issue_slip' AS documenttype
+                FROM   (
+                                 SELECT    mblnr      AS issueno,
+                                           mjahr      AS issueyear,
+                                           USER.cname AS updatedby,
+                                           bwart,
+                                           budat_mkpf AS datetime
+                                 FROM      mseg       AS ms
+                                 LEFT JOIN pa0002     AS USER
+                                 ON        (
+                                                     ms.usnam_mkpf = USER.pernr )
+                                 GROUP BY  ms.mblnr,
+                                           ms.mjahr) AS mseg
+                WHERE  
+                              mseg.bwart IN ('221',
+                                             '281',
+                                             '201',
+                                             '321',
+                                             '222',
+                                             '202',
+                                             '122'))`;
             
 
 
@@ -289,6 +301,7 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.EBELP as po_line_item_no,
                 zmm_gate_entry_d.CH_QTY as chalan_quantity,
                 zmm_gate_entry_d.CH_NETWT as net_quantity,
+                zmm_gate_entry_d.MATNR as material_code,
                 lfa1.LIFNR as vendor_code,
                 lfa1.NAME1 as vendor_name
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
