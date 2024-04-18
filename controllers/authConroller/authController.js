@@ -10,10 +10,14 @@ const { query } = require("../../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../../services/jwt.services");
 const { resSend } = require("../../lib/resSend");
 const { AUTH, USTER_TYPE } = require("../../lib/tableName");
-const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN } = require("../../lib/constant");
+const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
 const rolePermission = require("../../lib/role/deptWiseRolePermission");
+// const { generateSalt, getHashedText } = require("../../services/crypto.services");
+const { getEpochTime, generateQuery } = require("../../lib/utils");
+
+const Message = require("../../utils/messages");
 
 
 
@@ -162,7 +166,11 @@ const login = async (req, res) => {
                         (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030")
                     WHERE 
                          t1.PERNR = ?`;
-                userDetails = await query({ query: grseDetaisQ, values: [req.body.vendor_code] });
+                userDetails = await query({
+                    query:
+
+                        grseDetaisQ, values: [req.body.vendor_code]
+                });
 
                 if (userDetails.length) {
                     result[0] = { ...result[0], ...userDetails[0] };
@@ -274,4 +282,86 @@ const login = async (req, res) => {
 };
 
 
+// const registration = async (req, res) => {
+
+//     try {
+//         const paylaod = req.body;
+//         let regData = {};
+
+//         if (!paylaod.user_type || !paylaod.username) return resSend(res, false, 400, Message.INVALID_PAYLOAD, null);
+//         const salt = generateSalt();
+//         const encrytedPassword = getHashedText("1234", salt);
+
+//         if (paylaod.user_type === USER_TYPE_VENDOR) {
+
+//             const validVendor = await query({ query: "SELECT COUNT(*) as count FROM lfa1 WHERE 1 = 1 AND  lifnr = ? ", values: [paylaod.username] });
+//             if (!validVendor) {
+//                 return resSend(res, false, 200, "User not access for OBPS", paylaod);
+//             }
+
+//             // const encrytedPassword = getHashedText(req.body.password, salt);
+
+//             regData = {
+//                 vendor_code: paylaod.username,
+//                 user_type: USER_TYPE_VENDOR,
+//                 default_password: encrytedPassword,
+//                 is_approved: 'N',
+//                 fistime_login: 'N',
+//                 created_at: getEpochTime(),
+//                 user_data: JSON.stringify({ department_id: null, internal_role_id: null })
+//             }
+
+//             const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
+//             const response = await query({ query: q, values: val });
+
+//             if (response.affectedRows) {
+//                 resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
+//             } else {
+//                 resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
+//             }
+
+
+//         } else if (paylaod.user_type !== USER_TYPE_VENDOR) {
+
+
+//             const validVendor = await query({ query: "SELECT COUNT(*) as count FROM pa0002 WHERE 1 = 1 AND  pernr = ? ", values: [paylaod.username] });
+//             if (!validVendor) {
+//                 return resSend(res, false, 200, "User not access for OBPS", paylaod);
+//             }
+
+//             // const encrytedPassword = getHashedText(req.body.password, salt);
+
+//             regData = {
+//                 vendor_code: paylaod.username,
+//                 user_type: 2,
+//                 default_password: encrytedPassword,
+//                 is_approved: 'N',
+//                 fistime_login: 'N',
+//                 created_at: getEpochTime(),
+//                 user_data: JSON.stringify({ department_id: null, internal_role_id: null })
+//             }
+
+//             const { q, val } = generateQuery(INSERT, 'user_registraion', regData);
+//             const response = await query({ query: q, values: val });
+
+//             if (response.affectedRows) {
+//                 resSend(res, true, 200, Message.USER_REG_SUCCESS, null);
+//             } else {
+//                 resSend(res, false, 400, Message.USER_REG_UN_SUCCESS, response);
+//             }
+
+
+//         } else {
+
+//             resSend(res, false, 400, Message.DATA_NOT_INSERTED, null);
+
+//         }
+//     } catch (error) {
+//         resSend(res, false, 500, Message.SERVER_ERROR, null);
+//     }
+
+// }
+
+
 module.exports = { login };
+
