@@ -27,6 +27,8 @@ const {
   WBS_ELEMENT,
   PROJECT,
   USER_TYPE_GRSE_DRAWING,
+  SERVICE_TYPE,
+  MATERIAL_TYPE,
 } = require("../../lib/constant");
 const {
   PENDING,
@@ -218,8 +220,6 @@ const details = async (req, res) => {
     if (timeline.length) {
       timelineData = joinArrays(timeline, curret_data);
     }
-    console.log(timelineData)
-
     // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
     // let resDate;
@@ -239,6 +239,7 @@ const details = async (req, res) => {
             mat.LOEKZ AS isDeleted, 
             materialLineItems.EINDT as contractual_delivery_date2, 
             materialMaster.*, 
+            materialMaster.MTART AS materialType,
             mat_desc.MAKTX as mat_description
             FROM ${EKPO} AS  mat 
                 LEFT JOIN eket AS materialLineItems
@@ -254,14 +255,18 @@ const details = async (req, res) => {
       values: [queryParams.id],
     });
 
-    if(materialResult && materialResult?.length) {
+    if (materialResult && materialResult?.length) {
 
       materialResult = materialResult.filter((elem) => elem.isDeleted != 'L');
     }
 
-    const isMaterialTypePO = poTypeCheck(materialResult);
+    const materialTypeQuery = "SELECT * FROM material_type";
+    const materialType = await query({ query: materialTypeQuery, values: [] });
 
-    const poType = isMaterialTypePO === true ? "service" : "material";
+    const isMaterialTypePO = poTypeCheck(materialResult, materialType);
+    console.log("isMaterialTypePO", isMaterialTypePO);
+
+    const poType = isMaterialTypePO;
 
     // Get Current Stage
     let currentStage = {
@@ -269,9 +274,7 @@ const details = async (req, res) => {
     };
 
     currentStage.current = await currentStageHandler(queryParams.id);
-    console.log(queryParams.id);
     const DO = await doDetails(queryParams.id);
-    console.log("do", DO);
 
     result[0]["currentStage"] = currentStage;
     result[0]["poType"] = poType;
@@ -289,18 +292,64 @@ function isDO(po, user_id) {
   return po.ERNAM == user_id;
 }
 
-function poTypeCheck(materialData) {
-  // const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
-  const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO
-  // regex.test(materialType);
-  let isMatched = true;
+// async function poTypeCheck(materialData) {
+//   // const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
+//   const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO
+//   // regex.test(materialType);
+//   let isMatched = true;
 
-  for (let i = 0; i < materialData.length; i++) {
-    isMatched = regex.test(materialData[i]?.MTART);
-    if (isMatched === false) break;
+
+//   const materialTypeQuery = "SELECT * FROM material_type";
+//   const result = await query({query:  materialTypeQuery, values: []});
+//   console.log(result, "result");
+
+//   for (let i = 0; i < materialData.length; i++) {
+//     isMatched = regex.test(materialData[i]?.MTART);
+//     if (isMatched === false) break;
+//   }
+
+//   return isMatched;
+// }
+
+
+
+function poTypeCheck(materialData, materialType) {
+  const types = materialData.map((mat) => mat.MTART);
+  const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE).map((e) => e.material_type_value));
+  const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE).map((e) => e.material_type_value));
+  // const isService = types.every(type => service.has(type));
+  // const isMaterial = types.every(type => material.has(type));
+  let isService = false;
+  let isMaterial = false;
+
+  for (const type of types) {
+    if (service.has(type)) {
+      isService = true;
+      break;
+    }
   }
 
-  return isMatched;
+  for (const type of types) {
+    if (!service.has(type)) {
+      isMaterial = true;
+      break;
+    }
+  }
+  // // types.every(type => material.includes(type));
+
+  console.log("service", service, "material", material, "type", types);
+  console.log("isService", isService, "isMaterial", isMaterial);
+
+  if (isService && !isMaterial) {
+    return 'service';
+  } else if (isMaterial && !isService) {
+    return 'material';
+  } else if (isService && isMaterial) {
+    return 'hybrid';
+  } else {
+    console.log("default po type");
+    return 'hybrid';
+  }
 }
 
 const download = async (req, res) => {
@@ -551,13 +600,13 @@ const poList = async (req, res) => {
     // ILMS
 
     const modifiedPOData = await poDataModify(poArr);
-
-    console.log("modifiedPOData", modifiedPOData);
+    const materialTypeQuery = "SELECT * FROM material_type";
+    const materialType = await query({ query: materialTypeQuery, values: [] });
 
     const result = [];
     Object.keys(modifiedPOData).forEach((key) => {
-      const isMaterialTypePO = poTypeCheck(modifiedPOData[key]);
-      const poType = isMaterialTypePO === true ? "service" : "material";
+      const isMaterialTypePO = poTypeCheck(modifiedPOData[key], materialType);
+      const poType = isMaterialTypePO;
 
       result.push({
         poNb: key,
@@ -702,8 +751,6 @@ const doDetails = async (str) => {
             (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN = ?`;
 
   const doArr = await query({ query: doQry, values: [str] });
-
-  console.log(doQry, str);
 
   return doArr;
 };
