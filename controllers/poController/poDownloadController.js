@@ -151,6 +151,7 @@ const getPoFileList = async (req, res) => {
     	try {
 
         	files = await POfileFilterOrderBy(req.query.poNo);
+			console.log("reso file", files);
 
         	if (files.success && files?.data?.length) {
 
