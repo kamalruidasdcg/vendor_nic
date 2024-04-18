@@ -314,7 +314,7 @@ function isDO(po, user_id) {
 
 
 function poTypeCheck(materialData, materialType) {
-  const types = materialData.map((mat) => mat.materialType);
+  const types = materialData.map((mat) => mat.MTART);
   const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE ).map((e) => e.material_type_value));
   const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE ).map((e) => e.material_type_value));
   // const isService = types.every(type => service.has(type));
@@ -347,7 +347,8 @@ function poTypeCheck(materialData, materialType) {
   } else if (isService && isMaterial) {
     return 'hybrid';
   } else {
-    return 'unknown';
+    console.log("default po type");
+    return 'hybrid';
   }
 }
 
@@ -605,7 +606,7 @@ const poList = async (req, res) => {
     const result = [];
     Object.keys(modifiedPOData).forEach((key) => {
       const isMaterialTypePO = poTypeCheck(modifiedPOData[key], materialType);
-      const poType = isMaterialTypePO === true ? "service" : "material";
+      const poType = isMaterialTypePO;
 
       result.push({
         poNb: key,
