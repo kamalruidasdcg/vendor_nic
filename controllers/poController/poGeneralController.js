@@ -27,6 +27,8 @@ const {
   WBS_ELEMENT,
   PROJECT,
   USER_TYPE_GRSE_DRAWING,
+  SERVICE_TYPE,
+  MATERIAL_TYPE,
 } = require("../../lib/constant");
 const {
   PENDING,
@@ -313,35 +315,29 @@ function isDO(po, user_id) {
 
 function poTypeCheck(materialData, materialType) {
   const types = materialData.map((mat) => mat.materialType);
-  const service = new Set(materialType.filter((el) => el.material_type === 'service').map((e) => e.material_type_value));
-  const material = new Set(materialType.filter((el) => el.material_type === 'material').map((e) => e.material_type_value));
-  const isService = types.every(type => service.has(type));
-  const isMaterial = types.every(type => material.has(type));
-  // const isService = false;
-  // const isMaterial = false;
+  const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE ).map((e) => e.material_type_value));
+  const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE ).map((e) => e.material_type_value));
+  // const isService = types.every(type => service.has(type));
+  // const isMaterial = types.every(type => material.has(type));
+  let isService = false;
+  let isMaterial = false;
 
-  // for(const type of types) {
-  //   const t = type;
-  //   console.log("ttt", t);
-  //   console.log("service.has(type), ", service.has(type), );
-  //   if( service.has(type) ) {
-  //     isService = true;
-  //     break;
-  //   }
+  for(const type of types) {
+    if( service.has(type) ) {
+      isService = true;
+      break;
+    }
+  }
 
-  //   console.log("-----gg  ->",service, service.has(type),types, type);
-  // }
-
-  // for(const type of types) {
-  //   if( material.has(type) ) {
-  //     isMaterial = true;
-  //     break;
-  //   }
-  //   console.log("------>", types, type);
-  // }
+  for(const type of types) {
+    if( material.has(type) ) {
+      isMaterial = true;
+      break;
+    }
+  }
   // // types.every(type => material.includes(type));
 
-  // console.log("service", service, "material", material, "type", types);
+  console.log("service", service, "material", material, "type", types);
   console.log("isService", isService, "isMaterial", isMaterial);
 
   if (isService && !isMaterial) {
