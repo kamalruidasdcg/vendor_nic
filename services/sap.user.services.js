@@ -15,7 +15,7 @@ const reservationHeaderPayload = async (obj) => {
   const pl = {
     // C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
     RSNUM: obj.RSNUM | obj.rsnum,
-    RSDAT: formatDate(obj.RSDAT) | formatDate(obj.rsdat),
+    RSDAT: formatDate(obj.RSDAT) || formatDate(obj.rsdat),
     USNAM: obj.USNAM || obj.usnam || null,
     BWART: obj.BWART || obj.bwart || null,
     WEMPF: obj.WEMPF || obj.wempf || null,

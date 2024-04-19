@@ -130,7 +130,7 @@ const reservationList = async (req, res) => {
         console.log(req.body);
 
         let q =
-            `SELECT 
+        `SELECT 
         rkpf.RSNUM as reservationNumber,
 		rkpf.RSDAT as reservationDate,
         rkpf.USNAM as userName,
