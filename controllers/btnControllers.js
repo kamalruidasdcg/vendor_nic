@@ -544,36 +544,74 @@ async function btnSaveToSap(btnPayload) {
   }
 }
 
+
 const getGrnIcrenPenelty = async (req, res) => {
-  //return resSend(res, false, 200, "Data gate!", null, null);
   try {
-   // console.log(req.body);
     const { purchasing_doc_no, invoice_no } = req.body;
-    if(!purchasing_doc_no  || !invoice_no){
-      return resSend(res, true, 200, "Please send a valid payload!", null, null);
+    if (!purchasing_doc_no || !invoice_no) {
+      return resSend(
+        res,
+        true,
+        200,
+        "Please send a valid payload!",
+        null,
+        null
+      );
     }
-    const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,ZMBLNR AS grn_no,INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+    const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
+    ZMBLNR AS grn_no,
+    INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
     let gate_entry_v = await query({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
     });
-    console.log(gate_entry_v);
-    if(gate_entry_v.error) {
-      return resSend(res, true, 200, "Something went wrong!", gate_entry_v.error, null);
+    if (gate_entry_v.error) {
+      return resSend(
+        res,
+        true,
+        200,
+        "Something went wrong!",
+        gate_entry_v.error,
+        null
+      );
     }
-    if(gate_entry_v.length == 0) {
+    if (gate_entry_v.length == 0) {
       return resSend(res, true, 200, "No record found!", null, null);
     }
-
     gate_entry_v = gate_entry_v[0];
-
+ 
+    const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity FROM qals WHERE MBLNR = ?`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+    let icgrn_no = await query({
+      query: icgrn_q,
+      values: [gate_entry_v?.grn_no],
+    });
+ 
+    let total_price = 0;
+ 
+    await Promise.all(
+      await icgrn_no.map(async (item) => {
+        const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = ?`;
+        let unit_price = await query({
+          query: price_q,
+          values: [item?.mat_no],
+        });
+        console.log("unit_price", unit_price);
+        await Promise.all(
+          await unit_price.map(async (it) => {
+            console.log("it_price", it.price, parseFloat(it?.price));
+            total_price += parseFloat(it?.price);
+          })
+        );
+      })
+    );
+    gate_entry_v.total_price = total_price;
+ 
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
-
-  } catch(error) {
+  } catch (error) {
     console.error("Error making the request:", error.message);
     return resSend(res, true, 400, "error!", error.message, null);
   }
-}
+};
 
 
 module.exports = {

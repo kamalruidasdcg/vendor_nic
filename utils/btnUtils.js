@@ -31,6 +31,8 @@ exports.getGateEntry = async (po) => {
   });
   return result;
 };
+// ZMLNR
+// EBELN
 
 exports.getGRNs = async (po) => {
   let q = `SELECT grn_no FROM store_grn WHERE purchasing_doc_no = ?`;
