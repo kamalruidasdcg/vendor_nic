@@ -174,9 +174,119 @@ const paymentAviceLineItemsPayload = async (payload) => {
 
   return pl;
 };
+const zbtsHeaderPayload = async (obj) => {
+  console.log("oooo", obj);
+  if (!obj) {
+    throw new Error("Please send valid payload");
+  }
+  const pl = {
+    zbtno: obj.zbtno || obj.ZBTNO,
+    rerdat: formatDate(obj.rerdat) || formatDate(obj.RERDAT),
+    rerzet: formatTime(obj.rerzet) || formatTime(obj.RERZET),
+    rernam: obj.rernam || obj.RERNAM || "",
+    rlaeda: formatDate(obj.rlaeda) || formatDate(obj.RLAEDA),
+    rctime: formatTime(obj.rctime) || formatTime(obj.RCTIME),
+    raenam: obj.raenam || obj.RAENAM || "",
+    lifnr: obj.lifnr || obj.LIFNR || "",
+    zvbno: obj.zvbno || obj.ZVBNO || "",
+    ven_bill_date: formatDate(obj.ven_bill_date) || formatDate(obj.VEN_BILL_DATE),
+    ebeln: obj.ebeln || obj.EBELN || "",
+    dpernr1: obj.dpernr1 || obj.DPERNR1 || null,
+    drerdat1: formatDate(obj.drerdat1) || formatDate(obj.DRERDAT1),
+    drerzet1: formatTime(obj.drerzet1) || formatTime(obj.DRERZET1),
+    drernam1: obj.drernam1 || obj.DRERNAM1 || "",
+    dpernr2: obj.dpernr2 || obj.DPERNR2 || null,
+    drerdat2: formatDate(obj.drerdat2) || formatDate(obj.DRERDAT2),
+    drerzet2: formatTime(obj.drerzet2) || formatTime(obj.DRERZET2),
+    drernam2: obj.drernam2 || obj.DRERNAM2 || "",
+    daerdat: formatDate(obj.daerdat) || formatDate(obj.DAERDAT),
+    daerzet: formatTime(obj.daerzet) || formatTime(obj.DAERZET),
+    daernam: obj.daernam || obj.DAERNAM || "",
+    dalaeda: formatDate(obj.dalaeda) || formatDate(obj.DALAEDA),
+    daaenam: obj.daaenam || obj.DAAENAM || "",
+    deerdat: formatDate(obj.deerdat) || formatDate(obj.DEERDAT),
+    deerzet: formatTime(obj.deerzet) || formatTime(obj.DEERZET),
+    deernam: obj.deernam || obj.DEERNAM || "",
+    delaeda: formatDate(obj.delaeda) || formatDate(obj.DELAEDA),
+    deaenam: obj.deaenam || obj.DEAENAM || "",
+    dferdat: formatDate(obj.dferdat) || formatDate(obj.DFERDAT),
+    dferzet: formatTime(obj.dferzet) || formatTime(obj.DFERZET),
+    dfernam: obj.dfernam || obj.DFERNAM || "",
+    dflaeda: formatDate(obj.dflaeda) || formatDate(obj.DFLAEDA),
+    dfaenam: obj.dfaenam || obj.DFAENAM || "",
+    zrmk1: obj.zrmk1 || obj.ZRMK1 || "",
+    dstatus: obj.dstatus || obj.DSTATUS || "",
+    fpernr1: obj.fpernr1 || obj.FPERNR1 || null,
+    zrmk2: obj.zrmk2 || obj.ZRMK2 || "",
+    fpernr2: obj.fpernr2 || obj.FPERNR2 || null,
+    zdcomment: obj.zdcomment || obj.ZDCOMMENT || "",
+    zrmk3: obj.zrmk3 || obj.ZRMK3 || "",
+    zrmk4: obj.zrmk4 || obj.ZRMK4 || "",
+    zfcomment: obj.zfcomment || obj.ZFCOMMENT || "",
+    fstatus: obj.fstatus || obj.FSTATUS || "",
+    bstatus: obj.bstatus || obj.BSTATUS || "",
+    unitno: obj.unitno || obj.UNITNO || "",
+    comno: obj.comno || obj.COMNO || "",
+    frerdat: formatDate(obj.frerdat) || formatDate(obj.FRERDAT),
+    frerzet: formatTime(obj.frerzet) || formatTime(obj.FRERZET),
+    frernam: obj.frernam || obj.FRERNAM || "",
+    frlaeda: formatDate(obj.frlaeda) || formatDate(obj.FRLAEDA),
+    fraenam: obj.fraenam || obj.FRAENAM || "",
+    faerdat: formatDate(obj.faerdat) || formatDate(obj.FAERDAT),
+    faerzet: formatTime(obj.faerzet) || formatTime(obj.FAERZET),
+    faernam: obj.faernam || obj.FAERNAM || "",
+    falaeda: formatDate(obj.falaeda) || formatDate(obj.FALAEDA),
+    faaenam: obj.faaenam || obj.FAAENAM || "",
+    feerdat: formatDate(obj.feerdat) || formatDate(obj.FEERDAT),
+    feerzet: formatTime(obj.feerzet) || formatTime(obj.FEERZET),
+    feernam: obj.feernam || obj.FEERNAM || "",
+    felaeda: formatDate(obj.felaeda) || formatDate(obj.FELAEDA),
+    feaenam: obj.feaenam || obj.FEAENAM || "",
+    fperdat: formatDate(obj.fperdat) || formatDate(obj.FPERDAT),
+    fperzet: formatTime(obj.fperzet) || formatTime(obj.FPERZET),
+    fpernam: obj.fpernam || obj.FPERNAM || "",
+    fplaeda: formatDate(obj.fplaeda) || formatDate(obj.FPLAEDA),
+    fpaenam: obj.fpaenam || obj.FPAENAM || "",
+    bperdat: formatDate(obj.bperdat) || formatDate(obj.BPERDAT),
+    bperzet: formatTime(obj.bperzet) || formatTime(obj.BPERZET),
+    bpernam: obj.bpernam || obj.BPERNAM || "",
+    bplaeda: formatDate(obj.bplaeda) || formatDate(obj.BPLAEDA),
+    bpaenam: obj.bpaenam || obj.BPAENAM || "",
+    hold: obj.hold || obj.HOLD || "",
+    alert_gm: obj.alert_gm || obj.ALERT_GM || "",
+    alert_dir: obj.alert_dir || obj.ALERT_DIR || "",
+    alert_agm_dgm: obj.alert_agm_dgm || obj.ALERT_AGM_DGM || "",
+  };
+  return pl;
+};
+const zbtsLineItemsPayload = async (obj) => {
+  if (!obj) {
+    throw new Error("Please send valid payload");
+  }
+  const pl = {
+
+
+
+    zbtno: obj.zbtno || obj.ZBTNO || "",
+    srno: obj.srno || obj.SRNO || "",
+    manno: obj.manno || obj.MANNO || null,
+    zsection: obj.zsection || obj.ZSECTION || "",
+    rmk: obj.rmk || obj.RMK || "",
+    erdat: formatDate(obj.erdat) || formatDate(obj.ERDAT),
+    erzet: formatTime(obj.erzet) || formatTime(obj.ERZET),
+    ernam: obj.ernam || obj.ERNAM || "",
+    dretseq: obj.dretseq || obj.DRETSEQ || "",
+    alert_status: obj.alert_status || obj.ALERT_STATUS || ""
+  }
+
+  return pl;
+};
+
 module.exports = {
   paymentPayload,
   ztfi_bil_defacePayload,
   paymentAviceHeaderPayload,
-  paymentAviceLineItemsPayload
+  paymentAviceLineItemsPayload,
+  zbtsHeaderPayload,
+  zbtsLineItemsPayload
 };

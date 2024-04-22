@@ -1,6 +1,7 @@
 
 const router = require("express").Router();
 const paymentController = require("../../controllers/sapController/paymentController");
+const btnController = require("../../controllers/sapController/btnControllers");
 const { dynamicallyUpload } = require("../../lib/fileUpload");
 
 
@@ -19,6 +20,9 @@ router.post("/ztfi_bil_deface_report", [], (req, res) => {
 });
 router.post("/advise/report", [], (req, res) => {
     paymentController.adviceDownload(req, res);
+});
+router.post("/zbts_st", [], (req, res) => {
+    btnController.zbts_st(req, res);
 });
 
 module.exports = router;

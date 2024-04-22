@@ -38,7 +38,7 @@ const insertPOData = async (req, res) => {
 
 
             if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.EBELN) {
-                return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
+                return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
             await promiseConnection.beginTransaction();
@@ -63,7 +63,7 @@ const insertPOData = async (req, res) => {
                 const [results] = await promiseConnection.execute(ekkoTableInsert);
                 console.log("results", results);
             } catch (error) {
-                return responseSend(res, "0", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
 
@@ -144,7 +144,7 @@ const insertPOData = async (req, res) => {
             }
 
         } catch (error) {
-            responseSend(res, "0", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, "Data insert failed !!", error, null);
         }
         finally {
             if (!transactionSuccessful) {
@@ -155,7 +155,7 @@ const insertPOData = async (req, res) => {
             console.log("Connection End" + "--->" + "connection releasettttttttttt");
         }
     } catch (error) {
-        responseSend(res, "0", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
     }
 };
 

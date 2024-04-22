@@ -14,7 +14,7 @@ const sdbgPaymentAdvice = async (req, res) => {
     const promiseConnection = await connection();
     try {
         if (!req.body) {
-            return responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
         const payload = { ...req.body };
         const payloadObj = await zfi_bgm_1_Payload_sap(payload);
@@ -26,7 +26,7 @@ const sdbgPaymentAdvice = async (req, res) => {
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not fetched", err);
-        responseSend(res, "0", 500, "Internal server error", null, null);
+        responseSend(res, "F", 500, "Internal server error", null, null);
     } finally {
         await promiseConnection.end();
     }
@@ -40,7 +40,7 @@ const ztfi_bil_deface = async (req, res) => {
     const promiseConnection = await connection();
     try {
         if (!req.body) {
-            responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
         const payload = { ...req.body };
         const payloadObj = await ztfi_bil_defacePayload(payload);
@@ -54,7 +54,7 @@ const ztfi_bil_deface = async (req, res) => {
         // responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not fetched", err);
-        responseSend(res, "0", 500, "Internal server error", null, null);
+        responseSend(res, "F", 500, "Internal server error", null, null);
     } finally {
         await promiseConnection.end();
     }
