@@ -15,13 +15,13 @@ const apiLog = async (req, res, next) => {
 
         await saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, body, "apilog" );
 
-        console.log(
-            `Request from : ${req.ip},
-             Request path : ${req.path},
-             Request url : ${req.originalUrl},
-             Request method : ${req.method},
-             Response status code : ${res.statusCode},
-             Response obj : ${body}`);
+        // console.log(
+        //     `Request from : ${req.ip},
+        //      Request path : ${req.path},
+        //      Request url : ${req.originalUrl},
+        //      Request method : ${req.method},
+        //      Response status code : ${res.statusCode},
+        //      Response obj : ${body}`);
 
         return res.send(body);
     };
