@@ -8,9 +8,12 @@ const {
   submitBTNByDO,
   fetchBTNByNumForDO,
   getGrnIcrenPenelty,
+
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
+  getBTNDataServiceHybrid,
+  getWdcInfoServiceHybrid,
 } = require("../controllers/btnServiceHybridControllers");
 
 const { btnmw } = require("../services/btnmw");
@@ -54,6 +57,22 @@ router.post(
 router.post("/submitBtnServiceHybrid", [veifyAccessToken, upload], (req, res) => {
   submitBtnServiceHybrid(req, res);
 })
+router.get("/getBTNDataServiceHybrid", [veifyAccessToken], (req, res) => {
+  getBTNDataServiceHybrid(req, res);
+});
+
+// getWdcInfo
+router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
+  getWdcInfo(req, res);
+});
+
+// getWdcInfoServiceHybrid
+router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
+  getWdcInfoServiceHybrid(req, res);
+});
+
+
+
 //// Btn Service Hybrid ////
 ///////////////////////////
 
