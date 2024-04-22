@@ -31,30 +31,33 @@ const zbts_st = async (req, res) => {
                 const payloadObj = await zbtsHeaderPayload(obj);
                 const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", "id");
                 const [results] = await promiseConnection.execute(btnPaymentHeaderQuery);
-                console.log("results", results);
+                console.log("results 1", results);
             } catch (error) {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
-
+            const zbtsmPayload = ZBTSM || zbtsm;
+            console.log("zbtsmPayload", zbtsmPayload);
             // const response1 = await query({ query: btnPaymentHeaderQuery, values: [] });
-            if (ZBTSM) {
+            if (zbtsmPayload) {
 
                 // response2 = await query({ query: btnPaymentLineItemQuery, values: [] });
 
                 try {
-                    const lineItemPayloadObj = await zbtsLineItemsPayload(ZBTSM);
+                    const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload);
                     const btnPaymentLineItemQuery = await generateInsertUpdateQuery(lineItemPayloadObj, "zbtsm_st", "id");
                     const [results] = await promiseConnection.execute(btnPaymentLineItemQuery);
-                    console.log("results", results);
+                    console.log("results 2", results);
                 } catch (error) {
                     return responseSend(res, "F", 502, "Data insert failed !!", error, null);
                 }
             }
 
-
+            console.log("transactionSuccessful", transactionSuccessful);
+            
             const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
-
+            
+            console.log("transactionSuccessful", transactionSuccessful);
 
 
 
@@ -63,6 +66,7 @@ const zbts_st = async (req, res) => {
             // responseSend(res, "S", 200, "Data inserted successfully", response, null)
 
         } catch (error) {
+            console.log("errorerrorerrorerror", error);
             responseSend(res, "F", 502, "Data insert failed !!", error, null);
         }
         finally {
@@ -73,13 +77,13 @@ const zbts_st = async (req, res) => {
 
             const connEnd = await promiseConnection.end();
             if (transactionSuccessful) {
-                responseSend(res, "S", 200, "Data inserted successfully", response, null)
+                responseSend(res, "S", 200, "Data inserted successfully", null, null)
             }
 
             console.log("Connection End" + "--->" + "conn release", connEnd);
         }
     } catch (error) {
-        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 500, "Error in database conn!!", error, null);
     }
 }
 
