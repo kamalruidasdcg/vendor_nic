@@ -210,7 +210,7 @@ const qalsReport = async (req, res) => {
             await promiseConnection.end();
         }
     } catch (error) {
-        responseSend(res, "0", 500, "DB CONN ERROR", error, null);
+        responseSend(res, "F", 500, "DB CONN ERROR", error, null);
     }
 
 };

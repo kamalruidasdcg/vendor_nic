@@ -74,7 +74,7 @@ const reservation = async (req, res) => {
             console.log("Connection End" + "--->" + "connection relaease reservation");
         }
     } catch (error) {
-        responseSend(res, "0", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
     }
 };
 const serviceEntry = async (req, res) => {
@@ -119,7 +119,7 @@ const serviceEntry = async (req, res) => {
             console.log("Connection End" + "--->" + "connection release service entry sheet");
         }
     } catch (error) {
-        responseSend(res, "0", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
     }
 };
 

@@ -470,7 +470,7 @@ const gateEntryReport = async (req, res) => {
             }
 
         } catch (error) {
-            responseSend(res, "0", 502, "data fetch failed !!", error, null);
+            responseSend(res, "F", 502, "data fetch failed !!", error, null);
         }
         finally {
             const connEnd = await promiseConnection.end();

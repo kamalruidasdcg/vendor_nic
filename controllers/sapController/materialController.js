@@ -29,7 +29,7 @@ const makt = async (req, res) => {
 
 
             if (!payload || typeof payload !== 'object' || !Object.keys(payload)?.length || !payload.MATNR) {
-                return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
+                return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
             await promiseConnection.beginTransaction();
@@ -52,7 +52,7 @@ const makt = async (req, res) => {
                 console.log("results", results);
 
             } catch (error) {
-                return responseSend(res, "0", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
             try {
 
@@ -66,7 +66,7 @@ const makt = async (req, res) => {
                 console.log("results", results);
 
             } catch (error) {
-                return responseSend(res, "0", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
             await promiseConnection.commit(); // Commit the transaction if everything was successful
@@ -76,7 +76,7 @@ const makt = async (req, res) => {
 
         } catch (error) {
             console.log("[[[1]]]]");
-            responseSend(res, "0", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, "Data insert failed !!", error, null);
         }
         finally {
             if (!transactionSuccessful) {
@@ -91,7 +91,7 @@ const makt = async (req, res) => {
 
         console.log("[[[3]]]]");
 
-        responseSend(res, "0", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 400, "Error in database conn!!", error, null);
     }
 };
 
@@ -101,7 +101,7 @@ const mseg = async (req, res) => {
     const promiseConnection = await connection();
     try {
         if (!req.body) {
-            responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
         const payload = req.body;
         console.log("payload mseg", payload);
@@ -127,7 +127,7 @@ const mseg = async (req, res) => {
         // responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     } finally {
         await promiseConnection.end();
     }
@@ -139,7 +139,7 @@ const mkpf = async (req, res) => {
     const promiseConnection = await connection();
     try {
         if (!req.body) {
-            responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
         // const payload = req.body;
 
@@ -169,7 +169,7 @@ const mkpf = async (req, res) => {
         // responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     } finally {
         await promiseConnection.end();
     }

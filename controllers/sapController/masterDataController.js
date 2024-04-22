@@ -26,7 +26,7 @@ const lfa1 = async (req, res) => {
 
 
         if (!payload || !Array.isArray(payload)) {
-            return responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
 
         const payloadObj = await lfa1Payload(payload);
@@ -41,7 +41,7 @@ const lfa1 = async (req, res) => {
 
     } catch (error) {
         console.log("data not inserted", error);
-        responseSend(res, "0", 500, "Internal server errorR", error, null);
+        responseSend(res, "F", 500, "Internal server errorR", error, null);
     }
 
 
@@ -92,7 +92,7 @@ const addUser = async (req, res) => {
 
 
         if (!payload || !Array.isArray(payload)) {
-            return responseSend(res, "0", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
 
         const payloadObj = await addUserPayload(payload);
@@ -107,7 +107,7 @@ const addUser = async (req, res) => {
         }
     } catch (err) {
         console.log("data not inserted", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     }
 };
 

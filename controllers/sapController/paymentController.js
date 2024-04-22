@@ -2,7 +2,7 @@
 const { resSend, responseSend } = require("../../lib/resSend");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const { PAYMENT_ADVICE2, PAYMENT_VOUCHER } = require('../../lib/tableName');
-const { paymentPayload, ztfi_bil_defacePayload, paymentAviceHeaderPayload, paymentAviceLineItemsPayload } = require("../../services/sap.payment.services");
+const { paymentPayload, ztfi_bil_defacePayload, paymentAviceHeaderPayload, paymentAviceLineItemsPayload, zbtsHeaderPayload, zbtsLineItemsPayload } = require("../../services/sap.payment.services");
 const { INSERT } = require("../../lib/constant");
 const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { query } = require("../../config/dbConfig");
@@ -148,7 +148,7 @@ const ztfi_bil_deface = async (req, res) => {
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     }
 }
 const newPaymentAdvice = async (req, res) => {
@@ -187,9 +187,52 @@ const newPaymentAdvice = async (req, res) => {
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not inserted", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     }
 }
+// const zbts_st = async (req, res) => {
+
+//     try {
+//         if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
+//             return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+//         }
+
+//         const payload = req.body;
+//         // console.log('zbts st payload', payload);
+//         if (!payload) {
+//             return responseSend(res, "F", 400, "Invalid payload.", null, null);
+//         }
+
+//         const { ZBTSM, ...obj } = payload;
+
+//         console.log("payloadObj", obj);
+
+//         const payloadObj = await zbtsHeaderPayload(obj);
+//         const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", "id");
+//         const response1 = await query({ query: btnPaymentHeaderQuery, values: [] });
+//         let response2;
+//         if (ZBTSM) {
+
+//             const lineItemPayloadObj = await zbtsLineItemsPayload(ZBTSM);
+//             const btnPaymentLineItemQuery = await generateInsertUpdateQuery(lineItemPayloadObj, "zbtsm_st", "id");
+//             response2 = await query({ query: btnPaymentLineItemQuery, values: [] });
+//         }
+
+//         console.log("response", response1, response1);
+//         if (response1.affectedRows && response2.affectedRows) {
+//             responseSend(res, "S", 200, "Data inserted successfully", { response1, response2 }, null);
+
+//         } else {
+//             // resSend(res, false, 400, "No data inserted", response, null);
+//             responseSend(res, "F", 400, "Data inserted failed", { response1, response2 }, null);
+
+//         }
+//         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+//     } catch (err) {
+//         console.log("data not inserted", err);
+//         responseSend(res, "0", 500, "Internal server errorR", err, null);
+//     }
+// }
 const ztfi_bil_deface_report = async (req, res) => {
 
     try {
@@ -262,10 +305,9 @@ const ztfi_bil_deface_report = async (req, res) => {
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("Error", err);
-        responseSend(res, "0", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, "Internal server errorR", err, null);
     }
 }
-
 
 const adviceDownload = async (req, res) => {
     try {
@@ -311,7 +353,7 @@ const adviceDownload = async (req, res) => {
 const POfileFilter = async (id) => {
     try {
 
-        const directoryPath = path.join(__dirname, '..', '..','sapuploads', 'paymentadvice');
+        const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'paymentadvice');
         const files = await fs.promises.readdir(directoryPath); // Use promise-based readdir for async handling
         return { success: true, msg: "file fetched", data: files }; // Return the array of most recent files
 

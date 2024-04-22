@@ -48,7 +48,7 @@ const addWBSElement = async (req, res) => {
     console.log("req.body)", req.body);
     try {
         if (!req.body) {
-            responseSend(res, "0", 400, "Please send a valid payload.gg", null, null);
+            responseSend(res, "F", 400, "Please send a valid payload.gg", null, null);
         }
         const payload = [...req.body];
         const payloadObj = await wbsPayload(payload);
@@ -59,7 +59,7 @@ const addWBSElement = async (req, res) => {
         responseSend(res, "1", 200, "Data inserted successfully", response, null);
     } catch (err) {
         console.log("data not fetched", err);
-        responseSend(res, "0", 500, "Internal server error", null, null);
+        responseSend(res, "F", 500, "Internal server error", null, null);
     }
 
 }
