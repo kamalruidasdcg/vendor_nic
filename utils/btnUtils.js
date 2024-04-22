@@ -91,3 +91,24 @@ exports.getBTNInfoDO = async (btn_num) => {
   });
   return result;
 };
+
+exports.getVendorCodeName = async (po_no) => {
+  const vendor_q = `SELECT t1.lifnr AS vendor_code,t2.name1 AS vendor_name FROM ekko as t1
+    LEFT JOIN lfa1 as t2 ON t1.lifnr = t2.lifnr WHERE t1.ebeln = ? LIMIT 1`;
+  let result = await query({
+      query: vendor_q,
+      values: [po_no],
+    });
+  result = result[0];
+  return result;
+};
+
+// exports.getWdcInfo = async (po_no) => {
+//   const vendor_q = `SELECT actual_start_date,actual_completion_date FROM wdc WHERE reference_no = ? LIMIT 1`;
+//   let result = await query({
+//       query: vendor_q,
+//       values: [po_no],
+//     });
+//   result = result[0];
+//   return result;
+// };
