@@ -117,55 +117,55 @@ const qalsReport = async (req, res) => {
                 WHERE 1 = 1`;
 
 
-        icgrnGetQuery = `
-                SELECT 
-                qals.PRUEFLOS as inspectionLotNumber,
-                qals.EBELN as purchasing_doc_no,
-                qals.EBELP as purchasing_doc_no_item,
-                ekko.AEDAT as purchasing_doc_date,
-                qals.MBLNR as docNo,
-                qals.BUDAT as docdate,
-                qals.LIFNR as suppplier,
-                vendor_table.LAND1 as vendorCountry,
-                vendor_table.NAME1 as vendorName,
-                vendor_table.ORT01 as vendorCity,
-                vendor_table.ORT02 as vendorDistrict,
-                vendor_table.PFACH as vendorPinCode,
-                qals.MATNR AS materialNumber,
-                makt.MAKTX as materialDesc,
-                qals.MATNR as material,
-                qals.PAENDTERM as endDate,
-                qals.PAENDZEIT as endTime,
-                qals.PS_PSP_PNR as wbsElement,
-                qals.BWART as momentType,
-                ekpo.MEINS as baseUnit,
-                qals.LMENGE01 as acceptedQty,
-                qals.LMENGE07 as rejectedQty,
-                qals.LMENGE01 as unrestrictedUseStock,
-                qals.LMENGEIST as supplyQuantity,
-                qals.LTEXTKZ as remarks,
-                qave.vcode as udCode,
-                qals.ENSTEHDAT as inspDate,
-                zmm_gate_entry_d.INVNO as invoiceNo,
-                zmm_gate_entry_d.INV_DATE as invoiceDate,
-                zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
-                zmm_gate_entry_h.ENTRY_DATE as gateEntryDate,
-                zmm_gate_entry_h.ENTRY_TIME as gateEntryTime
-                FROM qals as qals 
-                LEFT JOIN lfa1 as vendor_table
-                	ON( qals.LIFNR = vendor_table.LIFNR)
-                LEFT JOIN ekko as ekko
-                	ON( qals.EBELN = ekko.EBELN)
-                LEFT JOIN qave as qave
-                	ON( qals.PRUEFLOS = qave.prueflos)
-                LEFT JOIN makt as makt
-                	ON ( makt.MATNR = qals.MATNR)
-                LEFT JOIN ekpo as ekpo
-                	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
-                LEFT JOIN  zmm_gate_entry_d as zmm_gate_entry_d
-                	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR)
-                LEFT JOIN  zmm_gate_entry_h as zmm_gate_entry_h
-                	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO) WHERE 1 = 1`;
+        // icgrnGetQuery = `
+        //         SELECT 
+        //         qals.PRUEFLOS as inspectionLotNumber,
+        //         qals.EBELN as purchasing_doc_no,
+        //         qals.EBELP as purchasing_doc_no_item,
+        //         ekko.AEDAT as purchasing_doc_date,
+        //         qals.MBLNR as docNo,
+        //         qals.BUDAT as docdate,
+        //         qals.LIFNR as suppplier,
+        //         vendor_table.LAND1 as vendorCountry,
+        //         vendor_table.NAME1 as vendorName,
+        //         vendor_table.ORT01 as vendorCity,
+        //         vendor_table.ORT02 as vendorDistrict,
+        //         vendor_table.PFACH as vendorPinCode,
+        //         qals.MATNR AS materialNumber,
+        //         makt.MAKTX as materialDesc,
+        //         qals.MATNR as material,
+        //         qals.PAENDTERM as endDate,
+        //         qals.PAENDZEIT as endTime,
+        //         qals.PS_PSP_PNR as wbsElement,
+        //         qals.BWART as momentType,
+        //         ekpo.MEINS as baseUnit,
+        //         qals.LMENGE01 as acceptedQty,
+        //         qals.LMENGE07 as rejectedQty,
+        //         qals.LMENGE01 as unrestrictedUseStock,
+        //         qals.LMENGEIST as supplyQuantity,
+        //         qals.LTEXTKZ as remarks,
+        //         qave.vcode as udCode,
+        //         qals.ENSTEHDAT as inspDate,
+        //         zmm_gate_entry_d.INVNO as invoiceNo,
+        //         zmm_gate_entry_d.INV_DATE as invoiceDate,
+        //         zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
+        //         zmm_gate_entry_h.ENTRY_DATE as gateEntryDate,
+        //         zmm_gate_entry_h.ENTRY_TIME as gateEntryTime
+        //         FROM qals as qals 
+        //         LEFT JOIN lfa1 as vendor_table
+        //         	ON( qals.LIFNR = vendor_table.LIFNR)
+        //         LEFT JOIN ekko as ekko
+        //         	ON( qals.EBELN = ekko.EBELN)
+        //         LEFT JOIN qave as qave
+        //         	ON( qals.PRUEFLOS = qave.prueflos)
+        //         LEFT JOIN makt as makt
+        //         	ON ( makt.MATNR = qals.MATNR)
+        //         LEFT JOIN ekpo as ekpo
+        //         	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
+        //         LEFT JOIN  zmm_gate_entry_d as zmm_gate_entry_d
+        //         	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR)
+        //         LEFT JOIN  zmm_gate_entry_h as zmm_gate_entry_h
+        //         	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO) WHERE 1 = 1`;
             if (req.body.inspectionLotNumber) {
                 icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.inspectionLotNumber}`)
             }

@@ -240,7 +240,7 @@ const details = async (req, res) => {
             materialLineItems.EINDT as contractual_delivery_date2, 
             materialMaster.*, 
             materialMaster.MTART AS materialType,
-            mat_desc.MAKTX as mat_description
+            mat.TXZ01 as mat_description
             FROM ${EKPO} AS  mat 
                 LEFT JOIN eket AS materialLineItems
                     ON (materialLineItems.EBELN = mat.EBELN AND materialLineItems.EBELP = mat.EBELP )
@@ -314,30 +314,51 @@ function isDO(po, user_id) {
 
 
 function poTypeCheck(materialData, materialType) {
-  const types = materialData.map((mat) => mat.MTART);
-  const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE).map((e) => e.material_type_value));
-  const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE).map((e) => e.material_type_value));
-  // const isService = types.every(type => service.has(type));
-  // const isMaterial = types.every(type => material.has(type));
+  // const types = materialData.map((mat) => mat.MTART);
+  // const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE).map((e) => e.material_type_value));
+  // const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE).map((e) => e.material_type_value));
+
+  console.log("materialData", materialData);
+
   let isService = false;
   let isMaterial = false;
 
-  for (const type of types) {
-    if (service.has(type)) {
+  for (const mat of materialData) {
+    const type = mat.MATNR;
+    console.log("po type", type);
+
+    if (!type) {
       isService = true;
-      break;
+    }
+    if (type && typeof type === 'string' && type.includes("SER")) {
+      isService = true;
+    }
+    if (type && typeof type === 'string' && !type.includes("SER")) {
+      isMaterial = true;
     }
   }
 
-  for (const type of types) {
-    if (!service.has(type)) {
-      isMaterial = true;
-      break;
-    }
-  }
+  // const isService = types.every(type => service.has(type));
+  // const isMaterial = types.every(type => material.has(type));
+  // let isService = false;
+  // let isMaterial = false;
+
+  // for (const type of types) {
+  //   if (service.has(type)) {
+  //     isService = true;
+  //     break;
+  //   }
+  // }
+
+  // for (const type of types) {
+  //   if (type && !service.has(type)) {
+  //     isMaterial = true;
+  //     break;
+  //   }
+  // }
   // // types.every(type => material.includes(type));
 
-  console.log("service", service, "material", material, "type", types);
+  // console.log("service", service, "material", material, "type", types);
   console.log("isService", isService, "isMaterial", isMaterial);
 
   if (isService && !isMaterial) {
@@ -348,7 +369,7 @@ function poTypeCheck(materialData, materialType) {
     return 'hybrid';
   } else {
     console.log("default po type");
-    return 'service';
+    return 'unknown';
   }
 }
 
@@ -483,6 +504,7 @@ const poList = async (req, res) => {
                         ekko.bsart AS poType,
                         ekpo.matnr AS m_number,
                         mara.mtart AS MTART,
+                        ekpo.MATNR AS MATNR,
                         ekko.ernam AS po_creator
                  FROM   ekko
                         left join ekpo

@@ -9,7 +9,7 @@ const {
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
-const { generateQuery, getEpochTime } = require("../../lib/utils");
+const { generateQuery, getEpochTime, getDateString } = require("../../lib/utils");
 const {
   INSERT,
   UPDATE,
@@ -704,7 +704,7 @@ const yyyyMMdd = date.toISOString().slice(0, 10);
 
 let po_date = yyyyMMdd.split("-").join("");
 
-        get_sdbg_entry_data[0].po_date = po_date;
+        get_sdbg_entry_data[0].po_date = getDateString(get_po_date_data[0].AEDAT);
 
         await sendBgToSap(get_sdbg_entry_data[0]);
       } catch(error) {
