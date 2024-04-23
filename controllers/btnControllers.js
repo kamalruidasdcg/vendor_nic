@@ -324,24 +324,24 @@ const submitBTN = async (req, res) => {
     parseInt(invoice_value) + parseInt(debit_note) - parseInt(credit_note);
 
   // GET Contractual Dates from other Table
-  let c_sdbg_date;
-  let c_drawing_date;
-  let c_qap_date;
-  let c_ilms_date;
+  let c_sdbg_date = null;
+  let c_drawing_date =null;
+  let c_qap_date = null;
+  let c_ilms_date = null;
   let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
   let c_dates = await query({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
   });
   c_dates.forEach((item) => {
-    if (item.MTEXT === C_SDBG_DATE) {
-      c_sdbg_date = item.PLAN_DATE;
-    } else if (item.MTEXT === C_DRAWING_DATE) {
-      c_drawing_date = item.PLAN_DATE;
-    } else if (item.MTEXT === C_QAP_DATE) {
-      c_qap_date = item.PLAN_DATE;
-    } else if (item.MTEXT === C_ILMS_DATE) {
-      c_ilms_date = item.PLAN_DATE;
+    if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
+      c_sdbg_date = new Date(item.PLAN_DATE).getTime();
+    } else if (item.PLAN_DATE && item.MTEXT === C_DRAWING_DATE) {
+      c_drawing_date = new Date(item.PLAN_DATE).getTime();
+    } else if (item.PLAN_DATE && item.MTEXT === C_QAP_DATE) {
+      c_qap_date = new Date(item.PLAN_DATE).getTime();
+    } else if (item.PLAN_DATE && item.MTEXT === C_ILMS_DATE) {
+      c_ilms_date = new Date(item.PLAN_DATE).getTime();
     }
   });
 

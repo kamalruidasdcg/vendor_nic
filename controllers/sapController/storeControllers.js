@@ -415,7 +415,7 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.CH_NETWT as net_quantity,
                 zmm_gate_entry_d.MATNR as material_code,
                 material.MAKTX as material_desc,
-                lfa1.LIFNR as vendor_code,
+                ekko.LIFNR as vendor_code,
                 lfa1.NAME1 as vendor_name
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
             LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
@@ -427,8 +427,6 @@ const gateEntryReport = async (req, res) => {
                     LEFT JOIN makt as material
                         ON(material.MATNR = zmm_gate_entry_d.MATNR)
                 WHERE 1 = 1`;
-
-
 
             console.log("ge_query", ge_query);
             if (req.body.gate_entry_no) {
