@@ -4,7 +4,8 @@ const { query } = require("../../config/dbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { QAP, RIC } = require("../../lib/depertmentMaster");
-const { POfileFilter, POfileFilterOrderBy } = require("../../lib/fetchFileDirectory");
+const { POfileFilter, POfileFilterOrderBy, paymentAdviceFiles } = require("../../lib/fetchFileDirectory");
+const Message = require('../../utils/messages');
 
 
 
@@ -183,4 +184,50 @@ const getPoFileList = async (req, res) => {
 	}
 }
 
-module.exports = { download, tncdownload, downloadLatest, getPoFileList }
+
+const getPaymentAdvliceList = async (req, res) => {
+	try {
+
+    	// if (!req.query.poNo) {
+        // 	return resSend(res, false, 400, "Please send PO number", null, null);
+    	// }
+    	let files;
+    	try {
+
+        	files = await paymentAdviceFiles(req.query.poNo);
+			console.log("reso file", files);
+
+        	if (files.success && files?.data?.length) {
+
+				const fileName = files?.data?.map((el) => el.split("_")[0]);
+
+				console.log("fileName", fileName);
+
+            	const resustFiles = files.data.map(file => {
+                	const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'pymtadvice', `${file}`);
+                	const file_path = path.join('home', 'ftpgrse', 'pymtadvice', `${file}`)
+                	let fileInfo = {};
+                	fileInfo.FullFilePath = directoryPath;
+                	fileInfo.filePath = file_path;
+                	fileInfo.fileName = file;
+
+                	return fileInfo;
+            	});
+
+            	resSend(res, true, 200, Message.FILE_FETCH_SUCCESSFULLY, resustFiles, null);
+        	} else {
+            	resSend(res, true, 200, files.msg, files.data, null);
+        	}
+    	} catch (error) {
+        	return resSend(res, false, 500, Message.FILE_FETCH_ERROR, error, null);
+    	}
+
+	} catch (error) {
+    	return resSend(res, false, 500, Message.SERVER_ERROR, {}, null);
+	}
+}
+
+
+
+
+module.exports = { download, tncdownload, downloadLatest, getPoFileList, getPaymentAdvliceList }

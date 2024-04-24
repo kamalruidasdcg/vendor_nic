@@ -11,4 +11,6 @@ module.exports = {
     USER_REG_SUCCESS: "User registration successfully",
     USER_REG_UN_SUCCESS: "User registration un-successfully",
     SERVER_ERROR: "Internal server error",
+    FILE_FETCH_SUCCESSFULLY: "File fetched successfully",
+    FILE_FETCH_ERROR: "File fetch error"
 }
