@@ -124,7 +124,7 @@ const qalsReport = async (req, res) => {
                 qals.EBELP as purchasing_doc_no_item,
                 ekko.AEDAT as purchasing_doc_date,
                 qals.MBLNR as docNo,
-                qals.BUDAT as docDate,
+                qals.BUDAT as docdate,
                 qals.LIFNR as suppplier,
                 vendor_table.LAND1 as vendorCountry,
                 vendor_table.NAME1 as vendorName,
