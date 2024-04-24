@@ -195,6 +195,10 @@ const qalsReport = async (req, res) => {
                     vendorCity: resp.vendorCity,
                     vendorDistrict: resp.vendorDistrict,
                     vendorPinCode: resp.vendorPinCode,
+                    invoiceNo: resp.invoiceNo,
+                    invoiceDate: resp.invoiceDate,
+                    gateEntryNo: resp.gateEntryNo,
+                    gateEntryDate: resp.gateEntryDate,
                     lineItems: response[0]
 
                 }
