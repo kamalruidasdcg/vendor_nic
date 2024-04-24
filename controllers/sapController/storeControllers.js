@@ -416,12 +416,15 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.MATNR as material_code,
                 material.MAKTX as material_desc,
                 ekko.LIFNR as vendor_code,
-                lfa1.NAME1 as vendor_name
+                lfa1.NAME1 as vendor_name,
+                ekpo.MENGE as quantity
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
             LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
                 ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)
                 LEFT JOIN ekko as ekko
                 	ON (zmm_gate_entry_d.EBELN = ekko.EBELN)
+                    LEFT JOIN ekpo as ekpo
+                	ON (zmm_gate_entry_d.EBELN = ekpo.EBELN AND zmm_gate_entry_d.EBELP = ekpo.EBELP)
                     LEFT JOIN lfa1 as lfa1
                     	ON(lfa1.LIFNR = ekko.LIFNR)
                     LEFT JOIN makt as material
