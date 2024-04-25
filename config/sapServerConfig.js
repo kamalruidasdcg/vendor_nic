@@ -145,26 +145,26 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 
 // async function btnSaveToSap() {
 //   try {
-//     const postUrl = "http://grsebld1dev:8000/sap/bc/zobps_out_api";
+//     const postUrl = "http://10.181.1.31:8010/sap/bc/zobps_out_api";
 
 //     const btn_payload =
 // {
-//   ZBTNO: "20240318501",
+//   ZBTNO: "20240425995",
 //   ERDAT: "20240318",
-//   ERZET: "",
+//   ERZET: "164853",
 //   ERNAM: "600233",
 //   LAEDA: "20240318",
 //   AENAM: "NAME",
 //   LIFNR: "50000437",
 //   ZVBNO: "",
-//   EBELN: "4000234569",
-//   DPERNR1: "",
-//   ZRMK1: "REMARKS",
+//   EBELN: "4100000236",
+//   DPERNR1: "600233",
+//   ZRMK1: "REMARKS SEND FROM OBPS LAN SERVER",
 // }
 
 
 //     console.log("postUrl", postUrl);
-//     console.log("wdc_payload", btn_payload);
+//     console.log("btn_payload", btn_payload);
 
 //     const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
 //     console.log('POST Response from the server:', postResponse);
@@ -172,6 +172,8 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //     console.error('Error making the request:', error.message);
 //   }
 // }
+
+// btnSaveToSap();
 
 // Example SDBG SAVE INTO SAP
 // CALL THIS FUNCTION IN SDBG CONTROLLER AS PER CONDITION
