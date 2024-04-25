@@ -77,7 +77,17 @@ const fetchBTNByNum = async (req, res) => {
     query: btnQ,
     values: [id, btn_num],
   });
+  const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
+  ZMBLNR AS grn_no,
+  INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+  
+  let gate_entry_v = await query({
+    query: gate_entry_q,
+    values: [result[0].purchasing_doc_no, result[0].invoice_no],
+  });
 
+  console.log(gate_entry_v);
+  
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
 
@@ -613,6 +623,7 @@ const getGrnIcrenPenelty = async (req, res) => {
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no,
     INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+
     let gate_entry_v = await query({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
