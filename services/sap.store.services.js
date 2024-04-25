@@ -26,6 +26,7 @@ const gateEntryHeaderPayload = async (obj) => {
     LR_DATE: formatDate(obj.LR_DATE),
     EXNUM: obj.EXNUM || null,
     EXDAT: formatDate(obj.EXDAT) || null,
+    VEH_REG_NO: obj.VEH_REG_NO || null,
   };
   return pl;
 };
