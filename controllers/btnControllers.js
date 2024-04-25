@@ -658,6 +658,7 @@ const getGrnIcrenPenelty = async (req, res) => {
     );
     gate_entry_v.total_price = total_price;
     gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
+    gate_entry_v.grn_nos = gate_entry_v.grn_no;
  
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
   } catch (error) {
