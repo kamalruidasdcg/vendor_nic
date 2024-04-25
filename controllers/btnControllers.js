@@ -46,7 +46,16 @@ const fetchAllBTNs = async (req, res) => {
     values: [id],
   });
 
-  return resSend(res, true, 200, "ALL data from BTNs", result, null);
+  let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+
+  let result2 = await query({
+    query: btnQ2,
+    values: [id],
+  });
+
+  const data = result.concat(result2); 
+
+  return resSend(res, true, 200, "ALL data from BTNs", data, null);
 };
 
 const fetchBTNByNum = async (req, res) => {
@@ -258,7 +267,7 @@ const submitBTN = async (req, res) => {
     return resSend(
       res,
       false,
-      200,
+      200, 
       "The invoice number is already in use!",
       null,
       null
@@ -335,12 +344,24 @@ const submitBTN = async (req, res) => {
   });
   c_dates.forEach((item) => {
     if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${C_SDBG_DATE} is missing!`, null, null);
+      }
       c_sdbg_date = new Date(item.PLAN_DATE).getTime();
     } else if (item.PLAN_DATE && item.MTEXT === C_DRAWING_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${C_DRAWING_DATE} is missing!`, null, null);
+      }
       c_drawing_date = new Date(item.PLAN_DATE).getTime();
     } else if (item.PLAN_DATE && item.MTEXT === C_QAP_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${C_QAP_DATE} is missing!`, null, null);
+      }
       c_qap_date = new Date(item.PLAN_DATE).getTime();
     } else if (item.PLAN_DATE && item.MTEXT === C_ILMS_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${C_ILMS_DATE} is missing!`, null, null);
+      }
       c_ilms_date = new Date(item.PLAN_DATE).getTime();
     }
   });
@@ -357,12 +378,25 @@ const submitBTN = async (req, res) => {
   });
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_SDBG_DATE} is missing!`, null, null);
+      }
       a_sdbg_date = item.PLAN_DATE;
+      
     } else if (item.MTEXT === A_DRAWING_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_SDBG_DATE} is missing!`, null, null);
+      }
       a_drawing_date = item.PLAN_DATE;
     } else if (item.MTEXT === A_QAP_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_QAP_DATE} is missing!`, null, null);
+      }
       a_qap_date = item.PLAN_DATE;
     } else if (item.MTEXT === A_ILMS_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_ILMS_DATE} is missing!`, null, null);
+      }
       a_ilms_date = item.PLAN_DATE;
     }
   });
@@ -496,7 +530,7 @@ const submitBTNByDO = async (req, res) => {
     values: [],
   });
 console.log(result);
-return;
+//return;
   // GET BTN Info by BTN Number
   // let btnInfo = await getBTNInfo(btn_num);
   // let btnDOInfo = await getBTNInfoDO(btn_num);
@@ -510,7 +544,7 @@ return;
     ERNAM: "", // Created Person Name
     LAEDA: "", // Not Needed
     AENAM: "NAME", // Vendor Name
-    LIFNR: "50000437", // Vendor Code
+    LIFNR: "50000437", // Vendor Codebtn_v2
     ZVBNO: btnInfo?.invoice_no, // Invoice Number
     EBELN: btnInfo?.purchasing_doc_no, // PO Number
     DPERNR1: "", // Not Required
@@ -547,8 +581,16 @@ async function btnSaveToSap(btnPayload) {
 
 const getGrnIcrenPenelty = async (req, res) => {
   try {
-    const { purchasing_doc_no, invoice_no } = req.body;
-    if (!purchasing_doc_no || !invoice_no) {
+   
+    let env_no;
+    if(req.body.invoice_no) {
+        env_no = req.body.invoice_no;
+    }
+    if(req.body.e_invoice_no) {
+        env_no = req.body.e_invoice_no;
+    }
+
+    if (!purchasing_doc_no || !env_no || env_no == "") {
       return resSend(
         res,
         true,
@@ -558,6 +600,9 @@ const getGrnIcrenPenelty = async (req, res) => {
         null
       );
     }
+
+    const { purchasing_doc_no, invoice_no } = req.body;
+
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no,
     INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
