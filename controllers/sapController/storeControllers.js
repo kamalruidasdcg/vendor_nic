@@ -243,108 +243,108 @@ const storeActionList = async (req, res) => {
                                              '202',
                                              '122'))`;
 
-                            //                  SELECT * FROM ((SELECT NULL         AS docNo,
-                            //                     NULL         AS btn,
-                            //                     NULL         AS issueNo,
-                            //                     NULL         AS issueYear,
-                            //                     NULL         AS reservationNumber,
-                            //                     NULL         AS reservationDate,
-                            //                     gateEntryNo,
-                            //                     updatedBy,
-                            //                     dateTime,
-                            //                      purchasing_doc_no,
-                            //                     'gate_entry' AS documentType
-                            //              FROM   (SELECT zmm_gate_entry_d.entry_no   AS gateEntryNo,
-                            //                              zmm_gate_entry_d.ebeln AS purchasing_doc_no,
-                            //                             zmm_gate_entry_h.entry_date AS dateTime,
-                            //                             'grse'     AS updatedBy
-                            //                      FROM   zmm_gate_entry_d AS zmm_gate_entry_d
-                            //                      LEFT JOIN zmm_gate_entry_h AS zmm_gate_entry_h
-                            //                          ON zmm_gate_entry_d.ENTRY_NO = zmm_gate_entry_h.ENTRY_NO
-                            //                      GROUP BY zmm_gate_entry_d.entry_no
-                            // ) AS gate_entry)
+            storeActionListQuery = `SELECT * FROM ((SELECT NULL         AS docNo,
+                                                NULL         AS btn,
+                                                NULL         AS issueNo,
+                                                NULL         AS issueYear,
+                                                NULL         AS reservationNumber,
+                                                NULL         AS reservationDate,
+                                                gateEntryNo,
+                                                updatedBy,
+                                                dateTime,
+                                                 purchasing_doc_no,
+                                                'gate_entry' AS documentType
+                                         FROM   (SELECT zmm_gate_entry_d.entry_no   AS gateEntryNo,
+                                                         zmm_gate_entry_d.ebeln AS purchasing_doc_no,
+                                                        zmm_gate_entry_h.entry_date AS dateTime,
+                                                        'grse'     AS updatedBy
+                                                 FROM   zmm_gate_entry_d AS zmm_gate_entry_d
+                                                 LEFT JOIN zmm_gate_entry_h AS zmm_gate_entry_h
+                                                     ON zmm_gate_entry_d.ENTRY_NO = zmm_gate_entry_h.ENTRY_NO
+                                                 GROUP BY zmm_gate_entry_d.entry_no
+                            ) AS gate_entry)
                             
-                            // UNION ALL
+                            UNION ALL
                             
-                            // (SELECT docno,
-                            //                     NULL           AS btn,
-                            //                     NULL           AS issueNo,
-                            //                     NULL           AS issueYear,
-                            //                     NULL           AS reservationNumber,
-                            //                     NULL           AS reservationDate,
-                            //                     NULL           AS gateEntryNo,
-                            //                     updatedby,
-                            //                     dateTime,
-                            //                     purchasing_doc_no,
-                            //                     'icgrn_report' AS documentType
-                            //              FROM   (SELECT DISTINCT mblnr      AS docNo,
-                            //                                      ersteldat  AS dateTime,
-                            //                      q.EBELN as purchasing_doc_no,
-                            //                                      USER.cname AS updatedBy
-                            //                      FROM   qals AS q
-                            //                             LEFT JOIN pa0002 AS USER
-                            //                                    ON ( q.aenderer = USER.pernr )) AS qals)
+                            (SELECT docno,
+                                                NULL           AS btn,
+                                                NULL           AS issueNo,
+                                                NULL           AS issueYear,
+                                                NULL           AS reservationNumber,
+                                                NULL           AS reservationDate,
+                                                NULL           AS gateEntryNo,
+                                                updatedby,
+                                                dateTime,
+                                                purchasing_doc_no,
+                                                'icgrn_report' AS documentType
+                                         FROM   (SELECT DISTINCT mblnr      AS docNo,
+                                                                 ersteldat  AS dateTime,
+                                                 q.EBELN as purchasing_doc_no,
+                                                                 USER.cname AS updatedBy
+                                                 FROM   qals AS q
+                                                        LEFT JOIN pa0002 AS USER
+                                                               ON ( q.aenderer = USER.pernr )) AS qals)
                             
-                            // UNION ALL
+                            UNION ALL
                             
-                            // (SELECT NULL                 AS docNo,
-                            //                     NULL                 AS btn,
-                            //                     NULL                 AS issueNo,
-                            //                     NULL                 AS issueYear,
-                            //                     reservationNumber,
-                            //                     reservationDate,
-                            //                     NULL                 AS gateEntryNo,
-                            //                     updatedby,
-                            //                     dateTime,
-                            //                      purchasing_doc_no,
-                            //                     'reservation_report' AS documentType
-                            //              FROM   (SELECT rk.rsnum      AS reservationNumber,
-                            //                             rk.rsdat      AS reservationDate,
-                            //                             rk.rsdat      AS dateTime,
-                            //                              rk.EBELN as purchasing_doc_no,
-                            //                             USER.cname AS updatedBy
-                            //                      FROM   rkpf AS rk
-                            //                             LEFT JOIN pa0002 AS USER
-                            //                                    ON ( rk.usnam = USER.pernr)
-                            //                      GROUP  BY rk.rsnum,
-                            //                                rk.rsdat) AS rkpf)
+                            (SELECT NULL                 AS docNo,
+                                                NULL                 AS btn,
+                                                NULL                 AS issueNo,
+                                                NULL                 AS issueYear,
+                                                reservationNumber,
+                                                reservationDate,
+                                                NULL                 AS gateEntryNo,
+                                                updatedby,
+                                                dateTime,
+                                                 purchasing_doc_no,
+                                                'reservation_report' AS documentType
+                                         FROM   (SELECT rk.rsnum      AS reservationNumber,
+                                                        rk.rsdat      AS reservationDate,
+                                                        rk.rsdat      AS dateTime,
+                                                         rk.EBELN as purchasing_doc_no,
+                                                        USER.cname AS updatedBy
+                                                 FROM   rkpf AS rk
+                                                        LEFT JOIN pa0002 AS USER
+                                                               ON ( rk.usnam = USER.pernr)
+                                                 GROUP  BY rk.rsnum,
+                                                           rk.rsdat) AS rkpf)
                             
-                            // UNION ALL
+                            UNION ALL
                             
                             
-                            // (
-                            //                 SELECT NULL AS docno,
-                            //                        NULL AS btn,
-                            //                        issueno,
-                            //                        issueyear,
-                            //                        NULL AS reservationnumber,
-                            //                        NULL AS reservationdate,
-                            //                        NULL AS gateentryno,
-                            //                        updatedby,
-                            //                        dateTime,
-                            //                        purchasing_doc_no,
-                            //                        'goods_issue_slip' AS documenttype
-                            //                 FROM   (
-                            //                                  SELECT    ms.mblnr      AS issueno,
-                            //                                            ms.mjahr      AS issueyear,
-                            //                                            USER.cname AS updatedby,
-                            //                                            ms.bwart,
-                            //                                            budat_mkpf AS dateTime,
-                            //                                             ms.EBELN as purchasing_doc_no
-                            //                                  FROM      mseg       AS ms
-                            //                                  LEFT JOIN pa0002     AS USER
-                            //                                  ON        (
-                            //                                                      ms.usnam_mkpf = USER.pernr )
-                            //                                  GROUP BY  ms.mblnr,
-                            //                                            ms.mjahr) AS mseg
-                            //                 WHERE  
-                            //                               mseg.bwart IN ('221',
-                            //                                              '281',
-                            //                                              '201',
-                            //                                              '321',
-                            //                                              '222',
-                            //                                              '202',
-                            //                                              '122'))) AS store_action_list WHERE 1 = 1
+                            (
+                                            SELECT NULL AS docno,
+                                                   NULL AS btn,
+                                                   issueno,
+                                                   issueyear,
+                                                   NULL AS reservationnumber,
+                                                   NULL AS reservationdate,
+                                                   NULL AS gateentryno,
+                                                   updatedby,
+                                                   dateTime,
+                                                   purchasing_doc_no,
+                                                   'goods_issue_slip' AS documenttype
+                                            FROM   (
+                                                             SELECT    ms.mblnr      AS issueno,
+                                                                       ms.mjahr      AS issueyear,
+                                                                       USER.cname AS updatedby,
+                                                                       ms.bwart,
+                                                                       budat_mkpf AS dateTime,
+                                                                        ms.EBELN as purchasing_doc_no
+                                                             FROM      mseg       AS ms
+                                                             LEFT JOIN pa0002     AS USER
+                                                             ON        (
+                                                                                 ms.usnam_mkpf = USER.pernr )
+                                                             GROUP BY  ms.mblnr,
+                                                                       ms.mjahr) AS mseg
+                                            WHERE  
+                                                          mseg.bwart IN ('221',
+                                                                         '281',
+                                                                         '201',
+                                                                         '321',
+                                                                         '222',
+                                                                         '202',
+                                                                         '122'))) AS store_action_list WHERE 1 = 1`
 
             //     (SELECT NULL              AS docNo,
             //         btn,
@@ -364,13 +364,13 @@ const storeActionList = async (req, res) => {
             //                        ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
 
 
-           const queryParams = req.query;
-           const val = [];
-        //    if(queryParams.poNo) {
-        //     storeActionListQuery  = storeActionListQuery.concat(" AND purchasing_doc_no = ? ");
-        //     val.push(queryParams.poNo);
-        //    }
-           console.log("storeActionListQuery", storeActionListQuery);
+            const queryParams = req.query;
+            const val = [];
+               if(queryParams.poNo) {
+                storeActionListQuery  = storeActionListQuery.concat(" AND store_action_list.purchasing_doc_no = ? ");
+                val.push(queryParams.poNo);
+               }
+            console.log("storeActionListQuery", storeActionListQuery);
 
             // const [results] = await promiseConnection.execute(storeActionListQuery);
             const [results] = await promiseConnection.query(storeActionListQuery, val);
@@ -416,12 +416,15 @@ const gateEntryReport = async (req, res) => {
                 zmm_gate_entry_d.MATNR as material_code,
                 material.MAKTX as material_desc,
                 ekko.LIFNR as vendor_code,
-                lfa1.NAME1 as vendor_name
+                lfa1.NAME1 as vendor_name,
+                ekpo.MENGE as quantity
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
             LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
                 ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)
                 LEFT JOIN ekko as ekko
                 	ON (zmm_gate_entry_d.EBELN = ekko.EBELN)
+                    LEFT JOIN ekpo as ekpo
+                	ON (zmm_gate_entry_d.EBELN = ekpo.EBELN AND zmm_gate_entry_d.EBELP = ekpo.EBELP)
                     LEFT JOIN lfa1 as lfa1
                     	ON(lfa1.LIFNR = ekko.LIFNR)
                     LEFT JOIN makt as material
