@@ -454,7 +454,7 @@ const submitBTN = async (req, res) => {
     c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
     a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
     pbg_filename='${pbg_filename ? pbg_filename : ""}',
-    hsn_gstn_icgrn='${hsn_gstn_icgrn ? hsn_gstn_icgrn : ""}',
+    hsn_gstn_icgrn='${hsn_gstn_icgrn ? (hsn_gstn_icgrn === true) ? 1 : 0 : 0}',
     ld_gate_entry_date='${ld_gate_entry_date ? ld_gate_entry_date : ""}',
     ld_contractual_date='${ld_contractual_date ? ld_contractual_date : ""}',
     created_at='${created_at ? created_at : ""}',
@@ -595,16 +595,10 @@ async function btnSaveToSap(btnPayload) {
 
 const getGrnIcrenPenelty = async (req, res) => {
   try {
-   
-    let env_no;
-    if(req.body.invoice_no) {
-        env_no = req.body.invoice_no;
-    }
-    if(req.body.e_invoice_no) {
-        env_no = req.body.e_invoice_no;
-    }
+    
+    const { purchasing_doc_no, invoice_no } = req.body;
 
-    if (!purchasing_doc_no || !env_no || env_no == "") {
+    if (!purchasing_doc_no || !invoice_no) {
       return resSend(
         res,
         true,
@@ -615,7 +609,6 @@ const getGrnIcrenPenelty = async (req, res) => {
       );
     }
 
-    const { purchasing_doc_no, invoice_no } = req.body;
 
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no,
