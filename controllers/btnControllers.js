@@ -46,7 +46,16 @@ const fetchAllBTNs = async (req, res) => {
     values: [id],
   });
 
-  return resSend(res, true, 200, "ALL data from BTNs", result, null);
+  let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+
+  let result2 = await query({
+    query: btnQ2,
+    values: [id],
+  });
+
+  const data = result.concat(result2); 
+
+  return resSend(res, true, 200, "ALL data from BTNs", data, null);
 };
 
 const fetchBTNByNum = async (req, res) => {
@@ -68,7 +77,17 @@ const fetchBTNByNum = async (req, res) => {
     query: btnQ,
     values: [id, btn_num],
   });
+  const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
+  ZMBLNR AS grn_no,
+  INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+  
+  let gate_entry_v = await query({
+    query: gate_entry_q,
+    values: [result[0].purchasing_doc_no, result[0].invoice_no],
+  });
 
+  console.log(gate_entry_v);
+  
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
 
@@ -207,6 +226,8 @@ const getBTNData = async (req, res) => {
 };
 
 const submitBTN = async (req, res) => {
+  // console.log(req.body);
+  // return;
   let {
     purchasing_doc_no,
     invoice_no,
@@ -216,6 +237,9 @@ const submitBTN = async (req, res) => {
     credit_note,
     gate_entry_no,
     gate_entry_date,
+    grn_nos,
+    icgrn_nos,
+    gst_rate,
     hsn_gstn_icgrn,
     ld_gate_entry_date,
     ld_contractual_date,
@@ -258,7 +282,7 @@ const submitBTN = async (req, res) => {
     return resSend(
       res,
       false,
-      200,
+      200, 
       "The invoice number is already in use!",
       null,
       null
@@ -285,14 +309,14 @@ const submitBTN = async (req, res) => {
   // GET Approved SDBG by PO Number
   let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
 
-  // GET GRN Number by PO Number
-  let grn_nos = await getGRNs(purchasing_doc_no);
+  // // GET GRN Number by PO Number
+  // let grn_nos = await getGRNs(purchasing_doc_no);
 
   // GET ICGRN Value by PO Number
   let icgrn_total = await getICGRNs(purchasing_doc_no).total_icgrn_value;
 
-  // GET GRN Number by PO Number
-  let icgrn_nos = await getICGRNs(purchasing_doc_no);
+  // // GET GRN Number by PO Number
+  // let icgrn_nos = await getICGRNs(purchasing_doc_no);
 
   let get_entry_filename;
   payloadFiles["get_entry_filename"]
@@ -333,6 +357,15 @@ const submitBTN = async (req, res) => {
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
   });
+  console.log(c_dates);
+  const dates_arr = [C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE];
+  for(const item of dates_arr) {
+    const i = c_dates.findIndex((el) => el.MTEXT == item);
+    if(i <0 ) {
+        return resSend(res, false, 200,  `${item} is missing!`, null, null);
+    }
+  }
+
   c_dates.forEach((item) => {
     if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
       c_sdbg_date = new Date(item.PLAN_DATE).getTime();
@@ -355,14 +388,37 @@ const submitBTN = async (req, res) => {
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
   });
+  console.log(a_dates);
+  const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
+  for(const item of a_dates_arr) {
+    const i = a_dates.findIndex((el) => el.MTEXT == item);
+    if(i <0 ) {
+        return resSend(res, false, 200,  `${item} is missing!`, null, null);
+    }
+  }
+
+  //return;
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_SDBG_DATE} is missing!`, null, null);
+      }
       a_sdbg_date = item.PLAN_DATE;
+      
     } else if (item.MTEXT === A_DRAWING_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_SDBG_DATE} is missing!`, null, null);
+      }
       a_drawing_date = item.PLAN_DATE;
     } else if (item.MTEXT === A_QAP_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_QAP_DATE} is missing!`, null, null);
+      }
       a_qap_date = item.PLAN_DATE;
     } else if (item.MTEXT === A_ILMS_DATE) {
+      if(!item.PLAN_DATE) {
+        return resSend(res, false, 200,  `${A_ILMS_DATE} is missing!`, null, null);
+      }
       a_ilms_date = item.PLAN_DATE;
     }
   });
@@ -397,8 +453,9 @@ const submitBTN = async (req, res) => {
     gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
     gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
     get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
-    grn_nos='${grn_nos ? JSON.stringify(grn_nos) : ""}',
-    icgrn_nos='${icgrn_nos ? JSON.stringify(icgrn_nos) : ""}',
+    grn_nos='${grn_nos ? grn_nos : ""}',
+    icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
+    gst_rate='${gst_rate ? gst_rate : ""}',
     icgrn_total='${icgrn_total ? icgrn_total : ""}',
     c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
     a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
@@ -407,10 +464,11 @@ const submitBTN = async (req, res) => {
     c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
     a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
     pbg_filename='${pbg_filename ? pbg_filename : ""}',
-    hsn_gstn_icgrn='${hsn_gstn_icgrn ? hsn_gstn_icgrn : ""}',
+    hsn_gstn_icgrn='${hsn_gstn_icgrn ? (hsn_gstn_icgrn === true) ? 1 : 0 : 0}',
     ld_gate_entry_date='${ld_gate_entry_date ? ld_gate_entry_date : ""}',
     ld_contractual_date='${ld_contractual_date ? ld_contractual_date : ""}',
-    created_at='${created_at ? created_at : ""}'
+    created_at='${created_at ? created_at : ""}',
+    btn_type='hybrid-bill-material'
   `;
   console.log("btnQ", btnQ);
 
@@ -496,7 +554,7 @@ const submitBTNByDO = async (req, res) => {
     values: [],
   });
 console.log(result);
-return;
+//return;
   // GET BTN Info by BTN Number
   // let btnInfo = await getBTNInfo(btn_num);
   // let btnDOInfo = await getBTNInfoDO(btn_num);
@@ -510,7 +568,7 @@ return;
     ERNAM: "", // Created Person Name
     LAEDA: "", // Not Needed
     AENAM: "NAME", // Vendor Name
-    LIFNR: "50000437", // Vendor Code
+    LIFNR: "50000437", // Vendor Codebtn_v2
     ZVBNO: btnInfo?.invoice_no, // Invoice Number
     EBELN: btnInfo?.purchasing_doc_no, // PO Number
     DPERNR1: "", // Not Required
@@ -547,7 +605,9 @@ async function btnSaveToSap(btnPayload) {
 
 const getGrnIcrenPenelty = async (req, res) => {
   try {
+
     const { purchasing_doc_no, invoice_no } = req.body;
+
     if (!purchasing_doc_no || !invoice_no) {
       return resSend(
         res,
@@ -558,9 +618,12 @@ const getGrnIcrenPenelty = async (req, res) => {
         null
       );
     }
+
+
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no,
     INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+
     let gate_entry_v = await query({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
@@ -605,6 +668,8 @@ const getGrnIcrenPenelty = async (req, res) => {
       })
     );
     gate_entry_v.total_price = total_price;
+    gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
+    gate_entry_v.grn_nos = gate_entry_v.grn_no;
  
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
   } catch (error) {
