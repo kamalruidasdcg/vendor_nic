@@ -595,7 +595,7 @@ async function btnSaveToSap(btnPayload) {
 
 const getGrnIcrenPenelty = async (req, res) => {
   try {
-    
+
     const { purchasing_doc_no, invoice_no } = req.body;
 
     if (!purchasing_doc_no || !invoice_no) {
@@ -657,6 +657,7 @@ const getGrnIcrenPenelty = async (req, res) => {
       })
     );
     gate_entry_v.total_price = total_price;
+    gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
  
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
   } catch (error) {
