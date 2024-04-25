@@ -191,6 +191,9 @@ const getPaymentAdvliceList = async (req, res) => {
     	// if (!req.query.poNo) {
         // 	return resSend(res, false, 400, "Please send PO number", null, null);
     	// }
+
+		const payload = req.body;
+
     	let files;
     	try {
 
@@ -199,22 +202,49 @@ const getPaymentAdvliceList = async (req, res) => {
 
         	if (files.success && files?.data?.length) {
 
-				const fileName = files?.data?.map((el) => el.split("_")[0]);
+				const queryValues = files?.data?.map((el) => el.split("_")[0]);
+				const placeholders = queryValues.map(() => '?').join(',');
+				
+				console.log(placeholders);
 
-				console.log("fileName", fileName);
+				// const paymentAdviceQuery = `SELECT * FROM zfi_pymt_advce_data_final WHERE vblnr in ( ${placeholders} )`;
+				let paymentAdviceQuery = `SELECT  
+													bldat AS docuentDate, 
+													lifnr AS vendor_code,
+													vblnr AS documentNo
+														FROM zfi_pymt_advce_data_final 
+															WHERE 1 = 1 AND vblnr in ( ${placeholders} )`;
+															
 
-            	const resustFiles = files.data.map(file => {
-                	const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'pymtadvice', `${file}`);
-                	const file_path = path.join('home', 'ftpgrse', 'pymtadvice', `${file}`)
-                	let fileInfo = {};
-                	fileInfo.FullFilePath = directoryPath;
-                	fileInfo.filePath = file_path;
-                	fileInfo.fileName = file;
 
-                	return fileInfo;
-            	});
+				if(payload.vendor_code) {
+					paymentAdviceQuery = paymentAdviceQuery.concat(" AND lifnr = ?");
+					queryValues.push(payload.vendor_code);
+				}
+				const result = await query({query:paymentAdviceQuery, values: queryValues});
+			
 
-            	resSend(res, true, 200, Message.FILE_FETCH_SUCCESSFULLY, resustFiles, null);
+				console.log("queryValues", queryValues, paymentAdviceQuery, result);
+				
+				const resustFiles = result.map((ele) => {
+					const realFileName = files?.data?.find((el) => el.includes(ele.documentNo))
+					const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'pymtadvice', `${realFileName}`);
+					const file_path = path.join('home', 'ftpgrse', 'pymtadvice', `${realFileName}`)
+					return {...ele, fullFilePath:directoryPath,
+						filePath: file_path,
+						fileName: realFileName}
+				})
+
+            	// const resustFiles = files.data.map(file => {
+                // 	let fileInfo = {};
+                // 	fileInfo.fullFilePath = directoryPath;
+                // 	fileInfo.filePath = file_path;
+                // 	fileInfo.fileName = file;
+
+                // 	return fileInfo;
+            	// });
+
+            	resSend(res, true, 200, Message.FILE_FETCH_SUCCESSFULLY, { resustFiles }, null);
         	} else {
             	resSend(res, true, 200, files.msg, files.data, null);
         	}

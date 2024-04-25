@@ -16,7 +16,7 @@ router.get("/latestDocFile", [], (req, res) => {
 router.get("/getPoFileList", [], (req, res) => {
     downloadController.getPoFileList(req, res);
 });
-router.get("/paymentAdvice", [], (req, res) => {
+router.post("/paymentAdvice", [], (req, res) => {
     downloadController.getPaymentAdvliceList(req, res);
 });
 
