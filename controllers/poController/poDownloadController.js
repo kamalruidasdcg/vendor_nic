@@ -214,14 +214,16 @@ const getPaymentAdvliceList = async (req, res) => {
 													vblnr AS documentNo
 														FROM zfi_pymt_advce_data_final 
 															WHERE 1 = 1 AND vblnr in ( ${placeholders} )`;
-															
 
-
-				if(payload.vendor_code) {
+				
+				if(payload.poNo) {
+					console.log("payload.poNo",payload.poNo);
+					const result = await query({query: `SELECT lifnr AS vendor_code FROM ekko WHERE ebeln = ?`, values: [payload.poNo]});
+					console.log(result, "resultresult");
 					paymentAdviceQuery = paymentAdviceQuery.concat(" AND lifnr = ?");
-					queryValues.push(payload.vendor_code);
+					queryValues.push(result[0].vendor_code);
 				}
-				const result = await query({query:paymentAdviceQuery, values: queryValues});
+				const result = await query({query: paymentAdviceQuery, values: queryValues});
 			
 
 				console.log("queryValues", queryValues, paymentAdviceQuery, result);
