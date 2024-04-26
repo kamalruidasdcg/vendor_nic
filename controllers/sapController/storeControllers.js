@@ -243,7 +243,10 @@ const storeActionList = async (req, res) => {
                                              '202',
                                              '122'))`;
 
-            storeActionListQuery = `SELECT * FROM ((SELECT NULL         AS docNo,
+            storeActionListQuery = `SELECT * FROM ((SELECT 
+                
+                NULL         AS matDocNo,
+                NULL         AS docNo,
                                                 NULL         AS btn,
                                                 NULL         AS issueNo,
                                                 NULL         AS issueYear,
@@ -263,10 +266,36 @@ const storeActionList = async (req, res) => {
                                                      ON zmm_gate_entry_d.ENTRY_NO = zmm_gate_entry_h.ENTRY_NO
                                                  GROUP BY zmm_gate_entry_d.entry_no
                             ) AS gate_entry)
+
+
+                            UNION ALL
+
+                            (
+
+                            SELECT 		matDocNo,
+                				NULL           AS docno,
+                                NULL           AS btn,
+                                NULL           AS issueNo,
+                                NULL           AS issueYear,
+                                NULL           AS reservationNumber,
+                                NULL           AS reservationDate,
+                                NULL           AS gateEntryNo,
+                                NULL           AS updatedby,
+                                NULL           AS dateTime,
+                                purchasing_doc_no,
+                                'grn_report' AS documentType
+                         FROM   (
+                            SELECT 
+                        mseg.MBLNR as matDocNo,
+                        mseg.EBELN as purchasing_doc_no
+                            FROM mseg AS mseg
+                            WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )) AS mseg
+                            )
                             
                             UNION ALL
                             
-                            (SELECT docno,
+                            (SELECT             NULL         AS matDocNo,
+                                                docno,
                                                 NULL           AS btn,
                                                 NULL           AS issueNo,
                                                 NULL           AS issueYear,
@@ -287,7 +316,8 @@ const storeActionList = async (req, res) => {
                             
                             UNION ALL
                             
-                            (SELECT NULL                 AS docNo,
+                            (SELECT             NULL                 AS matDocNo,
+                                                NULL                 AS docNo,
                                                 NULL                 AS btn,
                                                 NULL                 AS issueNo,
                                                 NULL                 AS issueYear,
@@ -313,7 +343,9 @@ const storeActionList = async (req, res) => {
                             
                             
                             (
-                                            SELECT NULL AS docno,
+                                            SELECT 
+                                                   NULL         AS matDocNo,
+                                                   NULL AS docno,
                                                    NULL AS btn,
                                                    issueno,
                                                    issueyear,
@@ -366,10 +398,10 @@ const storeActionList = async (req, res) => {
 
             const queryParams = req.query;
             const val = [];
-               if(queryParams.poNo) {
-                storeActionListQuery  = storeActionListQuery.concat(" AND store_action_list.purchasing_doc_no = ? ");
+            if (queryParams.poNo) {
+                storeActionListQuery = storeActionListQuery.concat(" AND store_action_list.purchasing_doc_no = ? ");
                 val.push(queryParams.poNo);
-               }
+            }
             console.log("storeActionListQuery", storeActionListQuery);
 
             // const [results] = await promiseConnection.execute(storeActionListQuery);
