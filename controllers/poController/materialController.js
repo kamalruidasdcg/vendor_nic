@@ -264,7 +264,101 @@ const materialIssue = async (req, res) => {
 
 
 }
+const grn = async (req, res) => {
+
+    try {
+
+        // if (!req.body) {
+        //     return resSend(res, false, 400, "Please send body", null, "");
+        // }
+
+        console.log(req.body);
+
+
+        let grnQuery =
+        `SELECT 
+                    mseg.MBLNR as matDocNo,
+                    mseg.MATNR as materialNumber,
+                    mseg.BWART as moment,
+                    mseg.EBELN as purchasing_doc_no,
+                    mseg.EBELP as poItemNumber,
+                    mseg.LIFNR as vendor_code,
+                    mkpf.XBLNR as refferecnce,
+                    mkpf.BKTXT as headerText,
+                    mkpf.FRBNR as billOfLoading,
+                    mkpf.BLDAT as documentDate,
+                    mkpf.BUDAT as postingDate,
+                    mkpf.CPUDT as entryDate,
+                    makt.MAKTX as materialDesc
+                FROM mseg AS mseg
+                	LEFT JOIN mkpf AS mkpf
+                    	ON( mseg.MBLNR = mkpf.MBLNR)
+                     LEFT JOIN makt AS makt
+                    	ON( mseg.MATNR = makt.MATNR) 
+                        WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )`;
+
+        if(!req.body.matDocNo) {
+            return resSend(res, false, 200, "plese send matDocNo No", [], null);
+        }
+        let val = [];
+
+        if (req.body.matDocNo) {
+            q = q.concat(" AND mseg.MBLNR = ? ");
+            val.push(req.body.issueNo);
+        }
+        // if (req.body.issueYear) {
+        //     q = q.concat(" AND mseg.MJAHR = ? ");
+        //     val.push(req.body.issueYear);
+        // }
+
+        console.log("q", grnQuery, val);
+
+        const result = await query({ query: grnQuery, values: val });
+
+        // let response = {
+        //     issueNo: null,
+        //     issuDate: null,
+        //     plantName: null,
+        //     reservationNo: null,
+        //     lineItem: result
+        // }
+
+        // console.log("result", result);
+        // {
+        //     issueNo: '1000001014',
+        //     materialNumber: null,
+        //     materialDescription: null,
+        //     unit: null,
+        //     batchNo: null,
+        //     issueQty: null,
+        //     BPMNG: null,
+        //     issuDate: null,
+        //     purchasing_doc_no: null,
+        //     poItemNumber: null,
+        //     reserationNo: null,
+        //     vendor_code: '50000437',
+        //     requiredQty: null
+        //   }
+
+        if (result.length > 0) {
+            // response.issueNo = result[0].issueNo;
+            // response.issuDate = result[0].issuDate || null;
+            // response.plantName = result[0].plantName;
+            // response.reservationNo = result[0].reservationNo || null;
+
+            resSend(res, true, 200, "Data fetched successfully", result, null);
+        } else {
+            resSend(res, false, 200, "No Record Found", result, null);
+        }
+
+
+    } catch (error) {
+        return resSend(res, false, 500, "internal server error", error, null);
+    }
+
+
+}
 
 
 
-module.exports = { wmcInsert, wmcList, mrsInsert, mrsList, materialIssue };
+module.exports = { wmcInsert, wmcList, mrsInsert, mrsList, materialIssue, grn };

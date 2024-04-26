@@ -5,7 +5,7 @@ const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { qalsPayload, qavePayloadFn } = require('../../services/sap.qa.services');
-
+const Message = require('../../utils/messages')
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -68,56 +68,56 @@ const qalsReport = async (req, res) => {
             //     responseSend(res, "0", 400, "Please send a valid payload.", null, null);
             // }
 
-            if(!req.body.docNo) {
+            if (!req.body.docNo) {
                 return resSend(res, false, 200, "plese send docNo", [], null);
             }
 
 
 
             let icgrnGetQuery = "";
-                // `SELECT 
-                // qals.PRUEFLOS as inspectionLotNumber,
-                // qals.EBELN as purchasing_doc_no,
-                // qals.EBELP as purchasing_doc_no_item,
-                // ekko.AEDAT as purchasing_doc_date,
-                // qals.MBLNR as docNo,
-                // qals.BUDAT as docDate,
-                // qals.LIFNR as suppplier,
-                // vendor_table.LAND1 as vendorCountry,
-                // vendor_table.NAME1 as vendorName,
-                // vendor_table.ORT01 as vendorCity,
-                // vendor_table.ORT02 as vendorDistrict,
-                // vendor_table.PFACH as vendorPinCode,
-                // qals.MATNR AS materialNumber,
-                // makt.MAKTX as materialDesc,
-                // qals.MATNR as material,
-                // qals.PAENDTERM as endDate,
-                // qals.PAENDZEIT as endTime,
-                // qals.PS_PSP_PNR as wbsElement,
-                // qals.BWART as momentType,
-                // ekpo.MEINS as baseUnit,
-                // qals.LMENGE01 as acceptedQty,
-                // qals.LMENGE07 as rejectedQty,
-                // qals.LMENGE01 as unrestrictedUseStock,
-                // qals.LMENGEIST as supplyQuantity,
-                // qals.LTEXTKZ as remarks,
-                // qave.vcode as udCode,
-                // qals.ENSTEHDAT as inspDate
-                // FROM qals as qals 
-                // LEFT JOIN lfa1 as vendor_table
-                // 	ON( qals.LIFNR = vendor_table.LIFNR)
-                // LEFT JOIN ekko as ekko
-                // 	ON( qals.EBELN = ekko.EBELN)
-                // LEFT JOIN qave as qave
-                // 	ON( qals.PRUEFLOS = qave.prueflos)
-                // LEFT JOIN makt as makt
-                // 	ON ( makt.MATNR = qals.MATNR)
-                // LEFT JOIN ekpo as ekpo
-                // 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
-                // WHERE 1 = 1`;
+            // `SELECT 
+            // qals.PRUEFLOS as inspectionLotNumber,
+            // qals.EBELN as purchasing_doc_no,
+            // qals.EBELP as purchasing_doc_no_item,
+            // ekko.AEDAT as purchasing_doc_date,
+            // qals.MBLNR as docNo,
+            // qals.BUDAT as docDate,
+            // qals.LIFNR as suppplier,
+            // vendor_table.LAND1 as vendorCountry,
+            // vendor_table.NAME1 as vendorName,
+            // vendor_table.ORT01 as vendorCity,
+            // vendor_table.ORT02 as vendorDistrict,
+            // vendor_table.PFACH as vendorPinCode,
+            // qals.MATNR AS materialNumber,
+            // makt.MAKTX as materialDesc,
+            // qals.MATNR as material,
+            // qals.PAENDTERM as endDate,
+            // qals.PAENDZEIT as endTime,
+            // qals.PS_PSP_PNR as wbsElement,
+            // qals.BWART as momentType,
+            // ekpo.MEINS as baseUnit,
+            // qals.LMENGE01 as acceptedQty,
+            // qals.LMENGE07 as rejectedQty,
+            // qals.LMENGE01 as unrestrictedUseStock,
+            // qals.LMENGEIST as supplyQuantity,
+            // qals.LTEXTKZ as remarks,
+            // qave.vcode as udCode,
+            // qals.ENSTEHDAT as inspDate
+            // FROM qals as qals 
+            // LEFT JOIN lfa1 as vendor_table
+            // 	ON( qals.LIFNR = vendor_table.LIFNR)
+            // LEFT JOIN ekko as ekko
+            // 	ON( qals.EBELN = ekko.EBELN)
+            // LEFT JOIN qave as qave
+            // 	ON( qals.PRUEFLOS = qave.prueflos)
+            // LEFT JOIN makt as makt
+            // 	ON ( makt.MATNR = qals.MATNR)
+            // LEFT JOIN ekpo as ekpo
+            // 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
+            // WHERE 1 = 1`;
 
 
-        icgrnGetQuery = `
+            icgrnGetQuery = `
                 SELECT 
                 qals.PRUEFLOS as inspectionLotNumber,
                 qals.EBELN as purchasing_doc_no,
@@ -219,6 +219,79 @@ const qalsReport = async (req, res) => {
 
 };
 
+const grnReport = async (req, res) => {
+
+    try {
+        const promiseConnection = await connection();
+        try {
 
 
-module.exports = { qals, qalsReport }
+            console.log(req.body);
+
+
+            let grnQuery =
+                `SELECT 
+                        mseg.MBLNR as matDocNo,
+                        mseg.MATNR as materialNumber,
+                        mseg.BWART as moment,
+                        mseg.EBELN as purchasing_doc_no,
+                        mseg.EBELP as poItemNumber,
+                        mseg.LIFNR as vendor_code,
+                        mkpf.XBLNR as refferecnce,
+                        mkpf.BKTXT as headerText,
+                        mkpf.FRBNR as billOfLoading,
+                        mkpf.BLDAT as documentDate,
+                        mkpf.BUDAT as postingDate,
+                        mkpf.CPUDT as entryDate,
+                        makt.MAKTX as materialDesc
+                    FROM mseg AS mseg
+                        LEFT JOIN mkpf AS mkpf
+                            ON( mseg.MBLNR = mkpf.MBLNR)
+                         LEFT JOIN makt AS makt
+                            ON( mseg.MATNR = makt.MATNR) 
+                            WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )`;
+
+            if (!req.body.matDocNo) {
+                return resSend(res, false, 200, "plese send matDocNo No", [], null);
+            }
+            let val = [];
+
+            if (req.body.matDocNo) {
+                grnQuery = grnQuery.concat(" AND mseg.MBLNR = ? ");
+                val.push(req.body.matDocNo);
+            }
+
+            console.log("q", grnQuery, val);
+
+
+            const response = await promiseConnection.execute(grnQuery, val);
+
+
+            if (response) {
+                const resp = response[0][0] || {}
+                resSend(res, true, 200, "Data fetched successfully", resp, null);
+            } else {
+                resSend(res, false, 200, "No Record Found", result, null);
+            }
+
+
+        } catch (err) {
+            console.log("data not inserted", err);
+
+
+            responseSend(res, "F", 500, "Internal server errorR", err, null);
+        } finally {
+            await promiseConnection.end();
+        }
+
+    } catch (error) {
+
+        return resSend(res, false, 500, Message.DB_CONN_ERROR, error, null);
+    }
+
+
+}
+
+
+
+module.exports = { qals, qalsReport, grnReport }
