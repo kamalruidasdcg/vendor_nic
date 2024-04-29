@@ -1,6 +1,5 @@
 const { query } = require("../../config/dbConfig");
 const { resSend } = require("../../lib/resSend");
-
 const Message = require('../../utils/messages');
 
 const serviceEntryReport = async (req, res) => {
@@ -221,10 +220,6 @@ const materialIssue = async (req, res) => {
 
 }
 
-
-
-
-
 const icgrnReport = async (req, res) => {
 
     try {
@@ -370,10 +365,78 @@ const icgrnReport = async (req, res) => {
         }
 
     } catch (error) {
-        return resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+        resSend(res, false, 500, Message.SERVER_ERROR, error, null);
     }
 
 };
 
 
-module.exports = { serviceEntryReport, grnReport, materialIssue, icgrnReport }
+
+
+const gateEntryReport = async (req, res) => {
+
+    try {
+        let ge_query = `
+            SELECT 
+                zmm_gate_entry_h.ENTRY_NO as gate_entry_no,
+                zmm_gate_entry_h.ENTRY_DATE as entry_date,
+                zmm_gate_entry_h.VEH_REG_NO as vehicle_no,
+                zmm_gate_entry_d.INVNO as invoice_number,
+                zmm_gate_entry_d.INV_DATE as invoice_date,
+                zmm_gate_entry_d.EBELN as purchising_doc_no,
+                zmm_gate_entry_d.EBELP as po_line_item_no,
+                zmm_gate_entry_d.CH_QTY as chalan_quantity,
+                zmm_gate_entry_d.CH_NETWT as net_quantity,
+                zmm_gate_entry_d.MATNR as material_code,
+                material.MAKTX as material_desc,
+                ekko.LIFNR as vendor_code,
+                lfa1.NAME1 as vendor_name,
+                ekpo.MENGE as quantity
+                FROM zmm_gate_entry_h AS zmm_gate_entry_h 
+            LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
+                ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)
+                LEFT JOIN ekko as ekko
+                	ON (zmm_gate_entry_d.EBELN = ekko.EBELN)
+                    LEFT JOIN ekpo as ekpo
+                	ON (zmm_gate_entry_d.EBELN = ekpo.EBELN AND zmm_gate_entry_d.EBELP = ekpo.EBELP)
+                    LEFT JOIN lfa1 as lfa1
+                    	ON(lfa1.LIFNR = ekko.LIFNR)
+                    LEFT JOIN makt as material
+                        ON(material.MATNR = zmm_gate_entry_d.MATNR)`;
+
+        console.log("ge_query", ge_query);
+        const val = [];
+
+        let whereClause = " WHERE 1 = 1";
+        if (req.body.gate_entry_no) {
+            whereClause += " AND zmm_gate_entry_h.ENTRY_NO = ?";
+            val.push(req.body.gate_entry_no)
+        }
+        const finalQuery = ge_query + whereClause;
+        const result = await query({ query: finalQuery, values: val });
+
+        if (result && result.length) {
+            let obj = {};
+            obj.gate_entry_no = result[0].gate_entry_no;
+            obj.entry_date = result[0].entry_date;
+            obj.vendor = result[0].vendor;
+            obj.invoice_number = result[0].invoice_number;
+            obj.vehicle_no = result[0].vehicle_no;
+            obj.vendor_name = result[0].vendor_name;
+            obj.vendor_code = result[0].vendor_code;
+            obj.line_items = result;
+
+            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
+        } else {
+            resSend(res, false, 200, Message.NO_RECORD_FOUND, result, null);
+        }
+
+    } catch (error) {
+        resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    }
+
+};
+
+
+
+module.exports = { serviceEntryReport, grnReport, materialIssue, icgrnReport,  gateEntryReport}

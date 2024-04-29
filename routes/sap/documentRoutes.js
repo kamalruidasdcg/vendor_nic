@@ -16,5 +16,9 @@ router.post("/icgrnReport", [], (req, res) => {
     controller.icgrnReport(req, res);
 });
 
+router.post("/gateentryReport", (req, res) => {
+    controller.gateEntryReport(req, res);
+});
+
 
 module.exports = router;
