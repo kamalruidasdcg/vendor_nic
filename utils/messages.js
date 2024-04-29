@@ -16,4 +16,5 @@ module.exports = {
     FILE_FETCH_SUCCESSFULLY: "File fetched successfully",
     FILE_FETCH_ERROR: "File fetch error",
     DB_CONN_ERROR: "DB connection error",
+    NO_RECORD_FOUND: "No record found."
 }
