@@ -5,7 +5,6 @@ const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { qalsPayload, qavePayloadFn } = require('../../services/sap.qa.services');
-const Message = require('../../utils/messages')
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -218,8 +217,6 @@ const qalsReport = async (req, res) => {
     }
 
 };
-
-
 
 
 
