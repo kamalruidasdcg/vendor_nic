@@ -9,6 +9,7 @@ const qaRoutes =  require("./qaRoutes");
 const masterDataRoutes =  require("./masterDataRoutes");
 const storeRoutes =  require("./storeRoutes");
 const userRoutes =  require("./userRoutes");
+const docRoutes =  require("./documentRoutes");
 
 /**
  * SAP API START 
@@ -27,6 +28,7 @@ router.use("/mdata", masterDataRoutes);
 router.use("/store",storeRoutes );
 router.use("/qa", qaRoutes);
 router.use("/user", userRoutes);
+router.use("/document", docRoutes);
 
 // router.post("/po", [], (req, res) => {
 //     dataInsert.insertPOData(req, res);
