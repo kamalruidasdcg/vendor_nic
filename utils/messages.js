@@ -2,6 +2,8 @@ module.exports = {
     DB_INSERT_ERROR: "Database insert error.",
     DATA_BASE_CONNECTON_RELEASE: "Connection release.",
     DATA_SEND_SUCCESSFULL: "Data send successfull.",
+    DATA_FETCH_SUCCESSFULL: "Data fetch successfully !.",
+    DATA_FETCH_ERROR: "Data fetch error !!.",
     DATA_NOT_INSERTED: "Data not inserted",
     NO_DATA_FOUND: "No data found.",
     API_HAS_NO_ACCESS: "The API no access.",
@@ -12,5 +14,7 @@ module.exports = {
     USER_REG_UN_SUCCESS: "User registration un-successfully",
     SERVER_ERROR: "Internal server error",
     FILE_FETCH_SUCCESSFULLY: "File fetched successfully",
-    FILE_FETCH_ERROR: "File fetch error"
+    FILE_FETCH_ERROR: "File fetch error",
+    DB_CONN_ERROR: "DB connection error",
+    NO_RECORD_FOUND: "No record found."
 }

@@ -267,4 +267,5 @@ const materialIssue = async (req, res) => {
 
 
 
+
 module.exports = { wmcInsert, wmcList, mrsInsert, mrsList, materialIssue };
