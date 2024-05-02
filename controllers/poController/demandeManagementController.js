@@ -21,11 +21,11 @@ const insert = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
-        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
-            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-            // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 200, "Please send valid payload", null, null);
-        }
+        // if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
+        //     // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+        //     // const isDel = handleFileDeletion(directory, req.file.filename);
+        //     return resSend(res, false, 200, "Please send valid payload", null, null);
+        // }
 
         if (tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
             return resSend(res, false, 200, "Please login as PPNC depertment!", null, null);
@@ -43,27 +43,32 @@ const insert = async (req, res) => {
             if(!obj.action_type || obj.action_type == "") {
                 return resSend(res, false, 200, "please send a valid action_type!", null, null);
             }
-            if(!obj.request_amount || obj.request_amount < 0) {
-                return resSend(res, false, 200, "please send a valid request_amount!", null, null);
-            }
+            // if(!obj.request_amount || obj.request_amount < 0) {
+            //     return resSend(res, false, 200, "please send a valid request_amount!", null, null);
+            // }
             let reference_no = await create_reference_no("DM", tokenData.vendor_code);
 
-            payload = {...obj,reference_no:reference_no,created_at:getEpochTime(),created_by_id : tokenData.vendor_code,remarks:obj.remarks};
+            payload = {...obj,reference_no:reference_no,demand:JSON.stringify(obj.demand), created_at:getEpochTime(),created_by_id : tokenData.vendor_code,remarks:obj.remarks};
 
         } else if(obj.status == STATUS_RECEIVED) {
             
             if(!obj.reference_no || obj.reference_no == "") {
                 return resSend(res, false, 200, "please send reference_no!", null, null);
             }
-            if(!obj.recived_quantity || obj.recived_quantity < 0) {
-                return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
-            }
+            // if(!obj.recived_quantity || obj.recived_quantity < 0) {
+            //     return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
+            // }
 
             let last_data = await get_latest_activity(DEMAND_MANAGEMENT, obj.purchasing_doc_no, obj.reference_no);
             if (last_data) {
                 delete last_data.id;
-                payload = {...last_data, status: obj.status, recived_quantity:obj.recived_quantity,remarks:obj.remarks,created_at : getEpochTime(),created_by_id : tokenData.vendor_code};         
+                last_data.request_amount = 0;
+                last_data.recived_quantity = 0;
 
+                payload = {...last_data, status: obj.status, recived_quantity:1,remarks:obj.remarks,created_at : getEpochTime(),created_by_id : tokenData.vendor_code};         
+console.log("$%^&*(*&^%$");
+console.log(payload);
+console.log("#$%^&");
             } else {
                 return resSend(res, false, 200, `No record found with this reference_no!`, fileData, null);
             }
