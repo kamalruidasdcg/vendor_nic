@@ -2,7 +2,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
-const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
+const { DEMAND_MANAGEMENT, EKPO } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, SUBMITTED, STATUS_RECEIVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -149,19 +149,11 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        // const demande_query = `SELECT  SUM(a1.MENGE) AS total_amount,SUM(a2.request_amount) AS total_requested_amount,a3.KTMNG AS target_amount
-        // FROM ekpo AS a3
-        // LEFT JOIN demande_management AS a2 ON (a3.EBELN = a2.purchasing_doc_no AND a3.EBELP = a2.line_item_no)
-        // LEFT JOIN mseg a1 ON (a1.EBELN = a3.EBELN AND a1.EBELP = a3.EBELP)
-        // WHERE aa.EBELN = ? AND  aa.EBELP = ?`;
-
-        // const demande_query = `SELECT  SUM(ab.MENGE) AS total_amount,aa.KTMNG AS target_amount,SUM(ac.request_amount) AS total_requested_amount
-        // FROM ekpo AS aa
-        // JOIN demande_management AS ac ON (aa.EBELN = ac.purchasing_doc_no AND aa.EBELP = ac.line_item_no)
-        // JOIN mseg AS ab ON (aa.EBELN = ab.EBELN AND aa.EBELP = ab.EBELP)
-        // WHERE aa.EBELN = ? AND  aa.EBELP = ?`;
-
-
+        
+        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
+        let get_data_result = await query({ query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
+console.log(get_data_result);
+//return;
 const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
 let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
 total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
@@ -188,7 +180,9 @@ console.log("total_recived_amount_from_dm_table_result :" + total_recived_amount
         // console.log(rest_amount);
         //   return;
         if (rest_amount) {
-            return resSend(res, true, 200, "Rest Amount fetched succesfully!", {rest_amount : rest_amount}, null);
+            const resData = get_data_result[0];
+            resData.rest_amount = rest_amount;
+            return resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
         } else {
             return resSend(res, false, 200, "something went wrong!", null, null);
         }
