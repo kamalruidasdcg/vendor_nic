@@ -166,7 +166,7 @@ const storeActionList = async (req, res) => {
                     NULL         AS reservationDate,
                     gateEntryNo,
                     updatedBy,
-                    datetime,
+                    dateTime,
                     'gate_entry' AS documentType
              FROM   (SELECT entry_no   AS gateEntryNo,
                             entry_date AS dateTime,
@@ -182,7 +182,7 @@ const storeActionList = async (req, res) => {
                     NULL           AS reservationDate,
                     NULL           AS gateEntryNo,
                     updatedby,
-                    datetime,
+                    dateTime,
                     'icgrn_report' AS documentType
              FROM   (SELECT DISTINCT mblnr      AS docNo,
                                      ersteldat  AS dateTime,
@@ -199,7 +199,7 @@ const storeActionList = async (req, res) => {
                     reservationDate,
                     NULL                 AS gateEntryNo,
                     updatedby,
-                    datetime,
+                    dateTime,
                     'reservation_report' AS documentType
              FROM   (SELECT rsnum      AS reservationNumber,
                             rsdat      AS reservationDate,
@@ -220,14 +220,14 @@ const storeActionList = async (req, res) => {
                        NULL AS reservationdate,
                        NULL AS gateentryno,
                        updatedby,
-                       datetime,
+                       dateTime,
                        'goods_issue_slip' AS documenttype
                 FROM   (
                                  SELECT    mblnr      AS issueno,
                                            mjahr      AS issueyear,
                                            USER.cname AS updatedby,
                                            bwart,
-                                           budat_mkpf AS datetime
+                                           budat_mkpf AS dateTime
                                  FROM      mseg       AS ms
                                  LEFT JOIN pa0002     AS USER
                                  ON        (
@@ -288,6 +288,7 @@ const storeActionList = async (req, res) => {
                             SELECT 
                         mseg.MBLNR as matDocNo,
                         mseg.EBELN as purchasing_doc_no
+                        mseg.budat_mkpf AS dateTime,
                             FROM mseg AS mseg
                             WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )) AS mseg
                             )
