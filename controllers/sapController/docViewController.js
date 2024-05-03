@@ -97,6 +97,7 @@ const grnReport = async (req, res) => {
                         vendor_details.NAME1 as vendor_name,
                         mkpf.XBLNR as refferecnce,
                         mkpf.BKTXT as headerText,
+                        mkpf.MAT_PSPNR as accountingAssegnment,
                         mkpf.FRBNR as billOfLoading,
                         mkpf.BLDAT as documentDate,
                         mkpf.BUDAT as postingDate,
