@@ -100,15 +100,15 @@ const grnReport = async (req, res) => {
                         mkpf.BLDAT as documentDate,
                         mkpf.BUDAT as postingDate,
                         mkpf.CPUDT as entryDate,    
-                        makt.MAKTX as materialDesc,
+                        ekpo.TXZ01 as materialDesc,
                         zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
                         zmm_gate_entry_d.INVNO as invoiceNo,
                         zmm_gate_entry_h.CHALAN_NO as chalanNo
                     FROM mseg AS mseg
                         LEFT JOIN mkpf AS mkpf
                             ON( mseg.MBLNR = mkpf.MBLNR)
-                         LEFT JOIN makt AS makt
-                            ON( mseg.MATNR = makt.MATNR)
+                         LEFT JOIN ekpo AS ekpo
+                            ON( mseg.EBELN = ekpo.EBELN AND mseg.EBELP = ekpo.EBELP)
                         LEFT JOIN lfa1 as vendor_details
                             ON(vendor_details.LIFNR = mseg.LIFNR)
 						LEFT JOIN zmm_gate_entry_d  AS zmm_gate_entry_d
@@ -133,11 +133,26 @@ const grnReport = async (req, res) => {
         const finalQuery = grnQuery + whereClause;
 
         const result = await query({ query: finalQuery, values: val });
+        console.log("result", result);
 
         if (result.length) {
-            resSend(res, true, 200, "Data fetched successfully", result, null);
+
+            const responseObj = {
+                matDocNo : result[0].matDocNo,
+                entryDate : result[0].entryDate,
+                invoiceNo : result[0].invoiceNo,
+                gateEntryNo : result[0].gateEntryNo,
+                plant : result[0].plant,
+                vendor_code : result[0].vendor_code,
+                vendor_name : result[0].vendor_name,
+                purchasing_doc_no : result[0].purchasing_doc_no,
+                chalanNo : result[0].chalanNo,
+                lineItem: result
+            }
+
+            resSend(res, true, 200, "Data fetched successfully", responseObj, null);
         } else {
-            resSend(res, false, 200, "No Record Found", result, null);
+            resSend(res, false, 200, "No Record Found", {}, null);
         }
     } catch (err) {
         resSend(res, false, 500, "Internal server errorR", err, null);
