@@ -434,7 +434,8 @@ const create_btn_no = async (type) => {
     });
     console.log(btn_res);
     let threeDigit = 999 - parseInt(btn_res[0]?.count);
-    const reference_no = `${type}${dateNeed}${threeDigit}`;
+    // const reference_no = `${type}${dateNeed}${threeDigit}`;
+    const reference_no = `${dateNeed}${threeDigit}`;
     return reference_no;
   } catch (error) {
     console.log("Error into create btn :"`${error}`);

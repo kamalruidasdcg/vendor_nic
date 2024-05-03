@@ -2,7 +2,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
-const { DEMAND_MANAGEMENT } = require("../../lib/tableName");
+const { DEMAND_MANAGEMENT, EKPO } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, SUBMITTED, STATUS_RECEIVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -21,11 +21,11 @@ const insert = async (req, res) => {
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
-        if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
-            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-            // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 200, "Please send valid payload", null, null);
-        }
+        // if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
+        //     // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+        //     // const isDel = handleFileDeletion(directory, req.file.filename);
+        //     return resSend(res, false, 200, "Please send valid payload", null, null);
+        // }
 
         if (tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
             return resSend(res, false, 200, "Please login as PPNC depertment!", null, null);
@@ -43,29 +43,35 @@ const insert = async (req, res) => {
             if(!obj.action_type || obj.action_type == "") {
                 return resSend(res, false, 200, "please send a valid action_type!", null, null);
             }
-            if(!obj.request_amount || obj.request_amount < 0) {
-                return resSend(res, false, 200, "please send a valid request_amount!", null, null);
-            }
+            // if(!obj.request_amount || obj.request_amount < 0) {
+            //     return resSend(res, false, 200, "please send a valid request_amount!", null, null);
+            // }
             let reference_no = await create_reference_no("DM", tokenData.vendor_code);
 
-            payload = {...obj,reference_no:reference_no,created_at:getEpochTime(),created_by_id : tokenData.vendor_code,remarks:obj.remarks};
+            obj.request_amount = 0;
+            obj.recived_quantity = 0;
+
+            payload = {...obj,reference_no:reference_no,demand:JSON.stringify(obj.demand), created_at:getEpochTime(),created_by_id : tokenData.vendor_code,remarks:obj.remarks};
 
         } else if(obj.status == STATUS_RECEIVED) {
             
             if(!obj.reference_no || obj.reference_no == "") {
                 return resSend(res, false, 200, "please send reference_no!", null, null);
             }
-            if(!obj.recived_quantity || obj.recived_quantity < 0) {
-                return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
-            }
+            // if(!obj.recived_quantity || obj.recived_quantity < 0) {
+            //     return resSend(res, false, 200, "please send a valid recived_quantity!", null, null);
+            // }
 
             let last_data = await get_latest_activity(DEMAND_MANAGEMENT, obj.purchasing_doc_no, obj.reference_no);
             if (last_data) {
                 delete last_data.id;
-                payload = {...last_data, status: obj.status, recived_quantity:obj.recived_quantity,remarks:obj.remarks,created_at : getEpochTime(),created_by_id : tokenData.vendor_code};         
+                last_data.request_amount = 0;
+                last_data.recived_quantity = 0;
+                last_data.demand = JSON.stringify(obj.demand);
+                payload = {...last_data, status: obj.status, remarks:obj.remarks,created_at : getEpochTime(),created_by_id : tokenData.vendor_code};         
 
             } else {
-                return resSend(res, false, 200, `No record found with this reference_no!`, fileData, null);
+                return resSend(res, false, 200, `No record found with this reference_no!`, null, null);
             }
         }
 
@@ -149,46 +155,48 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        // const demande_query = `SELECT  SUM(a1.MENGE) AS total_amount,SUM(a2.request_amount) AS total_requested_amount,a3.KTMNG AS target_amount
-        // FROM ekpo AS a3
-        // LEFT JOIN demande_management AS a2 ON (a3.EBELN = a2.purchasing_doc_no AND a3.EBELP = a2.line_item_no)
-        // LEFT JOIN mseg a1 ON (a1.EBELN = a3.EBELN AND a1.EBELP = a3.EBELP)
-        // WHERE aa.EBELN = ? AND  aa.EBELP = ?`;
+        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
+        let get_data_result = await query({ query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
+        const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
+        let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
+        total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
+        console.log("total_amount_result :" + total_amount_result);
 
-        // const demande_query = `SELECT  SUM(ab.MENGE) AS total_amount,aa.KTMNG AS target_amount,SUM(ac.request_amount) AS total_requested_amount
-        // FROM ekpo AS aa
-        // JOIN demande_management AS ac ON (aa.EBELN = ac.purchasing_doc_no AND aa.EBELP = ac.line_item_no)
-        // JOIN mseg AS ab ON (aa.EBELN = ab.EBELN AND aa.EBELP = ab.EBELP)
-        // WHERE aa.EBELN = ? AND  aa.EBELP = ?`;
+        const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
+        let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
+        target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
+        console.log("target_amount :" + target_amount_result);
 
+        // const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
+        // let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
+        // total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
+        // console.log("total_requested_amount_result :" + total_requested_amount_result);
+            
+        // const total_recived_amount_from_dm_table_query = `SELECT SUM(recived_quantity) AS total_recived_amount_from_dm_table from demande_management WHERE purchasing_doc_no = ? AND line_item_no = ? AND status = ?  `;
+        // let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, req.query.line_item_no, STATUS_RECEIVED] });
+        // total_recived_amount_from_dm_table_result = (total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table == null) ? 0 : total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table;
+        // console.log("total_recived_amount_from_dm_table_result :" + total_recived_amount_from_dm_table_result);
 
-const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
-let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
-console.log("total_amount_result :" + total_amount_result);
+        const total_recived_amount_from_dm_table_query = `SELECT demand from demande_management WHERE purchasing_doc_no = ? AND status = ?  `;
+        let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, STATUS_RECEIVED] });
+        console.log(total_recived_amount_from_dm_table_result);
+        let recived_amount_from_dm_table = 0;
+        total_recived_amount_from_dm_table_result.map( (item) => {
+            let datas = JSON.parse(item.demand);
+            const find_line_item_no = datas.find(({ line_item_no }) => line_item_no == req.query.line_item_no);
+            if(find_line_item_no) {
+                console.log(find_line_item_no.recived_quantity);
+                recived_amount_from_dm_table += parseInt(find_line_item_no.recived_quantity);
+            } 
+        });
 
-const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
-let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
-console.log("target_amount :" + target_amount_result);
-
-// const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
-// let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
-// total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
-// console.log("total_requested_amount_result :" + total_requested_amount_result);
-      
-const total_recived_amount_from_dm_table_query = `SELECT SUM(recived_quantity) AS total_recived_amount_from_dm_table from demande_management WHERE purchasing_doc_no = ? AND line_item_no = ? AND status = ?  `;
-let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, req.query.line_item_no, STATUS_RECEIVED] });
-total_recived_amount_from_dm_table_result = (total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table == null) ? 0 : total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table;
-console.log("total_recived_amount_from_dm_table_result :" + total_recived_amount_from_dm_table_result);
-
-
-//return;
-        const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(total_recived_amount_from_dm_table_result));
-        // console.log(rest_amount);
-        //   return;
+        //const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(total_recived_amount_from_dm_table_result));
+        const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(recived_amount_from_dm_table));
+     
         if (rest_amount) {
-            return resSend(res, true, 200, "Rest Amount fetched succesfully!", {rest_amount : rest_amount}, null);
+            const resData = get_data_result[0];
+            resData.rest_amount = rest_amount;
+            return resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
         } else {
             return resSend(res, false, 200, "something went wrong!", null, null);
         }

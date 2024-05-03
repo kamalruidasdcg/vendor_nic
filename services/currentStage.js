@@ -30,15 +30,15 @@ const currentStageHandler = async (id) => {
       if (item === "sdbg") {
         r = "SDBG";
       } else if (item === "drawing") {
-        r = "Drawing";
+        r = "DRAWING";
       } else if (item === "qap_submission") {
         r = "QAP";
       } else if (item === "ilms") {
         r = "ILMS";
       } else if (item === "inspection_call_letter") {
-        r = "Inspection call letter";
+        r = "INSPECTION";
       } else if (item === "shipping_documents") {
-        r = "Shipping documents";
+        r = "SHIPPING";
       } else if (
         item === "store_icgrn" ||
         item === "store_grn" ||
@@ -49,7 +49,7 @@ const currentStageHandler = async (id) => {
         r = "WDC";
         finalStage = r;
       } else if (item === "btn") {
-        r = "WDC";
+        r = "PAYMENT";
         finalStage = r;
       } else {
         r = item;
