@@ -281,13 +281,13 @@ const storeActionList = async (req, res) => {
                                 NULL           AS reservationDate,
                                 NULL           AS gateEntryNo,
                                 NULL           AS updatedby,
-                                NULL           AS dateTime,
+                                dateTime,
                                 purchasing_doc_no,
                                 'grn_report' AS documentType
                          FROM   (
                             SELECT 
                         mseg.MBLNR as matDocNo,
-                        mseg.EBELN as purchasing_doc_no
+                        mseg.EBELN as purchasing_doc_no,
                         mseg.budat_mkpf AS dateTime,
                             FROM mseg AS mseg
                             WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )) AS mseg
