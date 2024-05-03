@@ -148,6 +148,7 @@ const grnReport = async (req, res) => {
                 vendor_code : result[0].vendor_code,
                 vendor_name : result[0].vendor_name,
                 purchasing_doc_no : result[0].purchasing_doc_no,
+                headerText : result[0].headerText,
                 chalanNo : result[0].chalanNo,
                 lineItem: result
             }
