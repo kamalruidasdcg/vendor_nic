@@ -288,7 +288,7 @@ const storeActionList = async (req, res) => {
                             SELECT 
                         mseg.MBLNR as matDocNo,
                         mseg.EBELN as purchasing_doc_no,
-                        mseg.budat_mkpf AS dateTime,
+                        mseg.budat_mkpf AS dateTime
                             FROM mseg AS mseg
                             WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )) AS mseg
                             )
