@@ -85,6 +85,7 @@ const grnReport = async (req, res) => {
 
             `SELECT 
                         mseg.MBLNR as matDocNo,
+                        mseg.ZEILE as matDocNoLineItem,
                         mseg.MATNR as materialNumber,
                         mseg.BWART as momentType,
                         mseg.EBELN as purchasing_doc_no,
