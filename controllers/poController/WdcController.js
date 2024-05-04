@@ -33,7 +33,8 @@ exports.wdc = async (req, res) => {
   try {
     const tokenData = { ...req.tokenData };
     const { ...obj } = req.body;
-
+    let payloadFiles = req.files;
+    
     if (!obj.purchasing_doc_no || !obj.status) {
       // const directory = path.join(__dirname, '..', 'uploads', lastParam);
       // const isDel = handleFileDeletion(directory, req.file.filename);
@@ -121,6 +122,7 @@ exports.wdc = async (req, res) => {
           ...obj,
           updated_by: "GRSE",
           created_by_id: tokenData.vendor_code,
+          created_by_name: tokenData.name,
           created_at: getEpochTime(),
         };
       } else {
@@ -134,17 +136,30 @@ exports.wdc = async (req, res) => {
         );
       }
     } else {
-      console.log(payload);
-
+      //console.log(payload);
+      // console.log(obj);
+      // return;
       let reference_no = await create_reference_no(
         obj.action_type,
         tokenData.vendor_code
       );
-      // console.log(payload);
-      // return;
-      obj.entry_by_production = "";
-      obj.stage_datiels = "";
-      obj.actual_payable_amount = 0;
+      
+      // Handle uploaded files
+      obj.file_inspection_note_ref_no =
+        payloadFiles["file_inspection_note_ref_no"]
+          ? (invoice_filename = payloadFiles["file_inspection_note_ref_no"][0]?.filename)
+          : null;
+
+      obj.file_hinderence_report_cerified_by_berth =
+        payloadFiles["file_hinderence_report_cerified_by_berth"]
+          ? (invoice_filename = payloadFiles["file_hinderence_report_cerified_by_berth"][0]?.filename)
+          : null;
+
+      obj.file_attendance_report =
+        payloadFiles["file_attendance_report"]
+          ? (invoice_filename = payloadFiles["file_attendance_report"][0]?.filename)
+          : null;
+          obj.line_item_array = (obj.line_item_array) ? JSON.stringify(obj.line_item_array) : null;
       payload = {
         ...fileData,
         ...obj,
@@ -152,13 +167,15 @@ exports.wdc = async (req, res) => {
         vendor_code: tokenData.vendor_code,
         updated_by: "VENDOR",
         created_by_id: tokenData.vendor_code,
+        created_by_name: tokenData.name,
         created_at: getEpochTime(),
       };
     }
+// console.log(payload);
+//       return;
+   // const insertObj = wdcPayload(payload);
 
-    const insertObj = wdcPayload(payload);
-
-    const { q, val } = generateQuery(INSERT, WDC, insertObj);
+    const { q, val } = generateQuery(INSERT, WDC, payload);
     const response = await query({ query: q, values: val });
 
     if (response.affectedRows) {
@@ -222,3 +239,46 @@ async function submitToSapServer(data) {
     console.error("Error making the request:", error.message);
   }
 }
+
+// {
+//   "purchasing_doc_no": "",
+//   "remarks": "",
+//   "status": "",
+//   "work_done_by": "",
+//   "work_title": "",
+//   "job_location": "",
+//   "yard_no": "",
+//   "inspection_note_ref_no": "",
+//   "file_inspection_note_ref_no": "file",
+//   "hinderence_report_cerified_by_berth": "",
+//   "file_hinderence_report_cerified_by_berth": "file",
+//   "attendance_report": "",
+//   "file_attendance_report": "FILE",
+//   "unit": "",
+//   "stage_details":"",
+//   "line_item_array": [
+//     {
+//       "Description":"",
+//     "open_po_qty":"",
+//     "UOM":"",
+//     "claim_qty":"",
+//     "contractual_start_date":"",
+//     "Contractual_completion_date":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "hinderance_in_days":""
+//     },
+//     {
+//       "Description":"",
+//     "open_po_qty":"",
+//     "UOM":"",
+//     "claim_qty":"",
+//     "contractual_start_date":"",
+//     "Contractual_completion_date":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "hinderance_in_days":""
+//     }
+//   ],
+//   "action_type":"WDC"
+// }
