@@ -138,7 +138,7 @@ const list = async (req, res) => {
 
         const demande_query = `SELECT * FROM demande_management WHERE purchasing_doc_no = ?`;
         const result = await query({ query: demande_query, values: [req.query.poNo] })
-
+ 
         if (result) {
             return resSend(res, true, 200, "Demande Management Data fetched succesfully!", result, null);
         } else {
