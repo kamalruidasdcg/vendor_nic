@@ -6,7 +6,7 @@ const {
   USER_TYPE_VENDOR,
   USER_TYPE_PPNC_DEPARTMENT,
 } = require("../../lib/constant");
-const { WDC } = require("../../lib/tableName");
+const {EKPO, WDC } = require("../../lib/tableName");
 const { SUBMITTED, APPROVED, REJECTED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require("path");
@@ -216,16 +216,54 @@ exports.list = async (req, res) => {
   //   console.log("data not fetched", err);
   // }
   //resSend(res, true, 200, "oded!", req.query.dd, null);
+  
 
+  // console.log(get_data_result);
+  // return;
   try {
-    const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = ?`;
-    let get_data_result = await query({ query: get_data_query, values: [req.query.poNo] });
-    const modfResult = get_data_result.map((el) => {
-      let aa = JSON.parse(el.line_item_array);
-      //console.log(aa[0]);
-      el.line_item_array = JSON.parse(el.line_item_array);
-      return el;
-  })
+      const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ?`;
+      let line_item_array = await query({ query: line_item_array_q, values: [req.query.poNo] });
+     
+
+      let line_item_array2 = [];
+      await Promise.all(
+        line_item_array.map(async(els) => { 
+          //console.log(els);
+          const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
+          let total_amount_result = await query({ query: total_amount_query, values: [req.query.poNo, els.line_item_no] });
+          total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
+          console.log(total_amount_result);
+          let rest_amount = parseInt(els.target_amount) - parseInt(total_amount_result);
+  
+            line_item_array2.push({...els, rest_amount : rest_amount});
+  
+        })
+
+      );
+      
+      //console.log(line_item_array2);
+//return;
+      const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = ?`;
+      let get_data_result = await query({ query: get_data_query, values: [req.query.poNo] });
+
+      const modfResult = get_data_result.map((el) => {
+
+        let line_item = JSON.parse(el.line_item_array);
+        
+        if(line_item && Array.isArray(line_item)) {
+
+          line_item =   line_item.map((el2) => {
+            const DOObj =   line_item_array2.find((elms) => elms.line_item_no == el2.line_item_no);
+;
+
+            return DOObj ? {...DOObj, ...el2} : el2;
+
+          });
+        
+        }
+        el.line_item_array = line_item;
+        return el;
+      })
     return resSend(res, false, 200, "data fetched!", modfResult, null);
   } catch (err) {
     console.log("data not fetched", err);
@@ -234,6 +272,25 @@ exports.list = async (req, res) => {
   
 };
 
+const getLineItemArray = async(poNo) => {
+  const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ?`;
+      let get_data_result = await query({ query: line_item_array_q, values: [poNo] });
+
+  const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
+  let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
+  total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
+  console.log("total_amount_result :" + total_amount_result);
+
+  let target_amount_result = (get_data_result[0].target_amount) ? get_data_result[0].target_amount : 0;
+
+  const rest_amount = parseInt(target_amount_result) - parseInt(total_amount_result);
+
+  // const resData = get_data_result[0];
+  //           resData.rest_amount = rest_amount;
+
+            return {...get_data_result[0], rest_amount : rest_amount};
+
+}
 
 exports.grseEmpList = async (req, res) => {
   req.query.$tableName = `pa0002`;
@@ -245,6 +302,7 @@ exports.grseEmpList = async (req, res) => {
   }
 
 };
+
 async function submitToSapServer(data) {
   try {
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
