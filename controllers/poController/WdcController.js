@@ -208,14 +208,30 @@ exports.wdc = async (req, res) => {
 };
 
 exports.list = async (req, res) => {
-  req.query.$tableName = `wdc`;
-  req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+  // req.query.$tableName = `wdc`;
+  // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
+  // try {
+  //   getFilteredData(req, res);
+  // } catch (err) {
+  //   console.log("data not fetched", err);
+  // }
+  //resSend(res, true, 200, "oded!", req.query.dd, null);
+
   try {
-    getFilteredData(req, res);
+    const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = ?`;
+    let get_data_result = await query({ query: get_data_query, values: [req.query.poNo] });
+    const modfResult = get_data_result.map((el) => {
+      let aa = JSON.parse(el.line_item_array);
+      //console.log(aa[0]);
+      el.line_item_array = JSON.parse(el.line_item_array);
+      return el;
+  })
+    return resSend(res, false, 200, "data fetched!", modfResult, null);
   } catch (err) {
     console.log("data not fetched", err);
+    return resSend(res, false, 500, "internal server error", [], null);
   }
-  // resSend(res, true, 200, "oded!", req.query.dd, null);
+  
 };
 
 async function submitToSapServer(data) {
