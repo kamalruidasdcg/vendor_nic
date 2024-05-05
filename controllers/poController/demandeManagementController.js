@@ -155,18 +155,21 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
+        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
         let get_data_result = await query({ query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
-        
+        // console.log(get_data_result);
+        // return;
         const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
         let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
         total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
         console.log("total_amount_result :" + total_amount_result);
 
-        const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
-        let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-        target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
-        console.log("target_amount :" + target_amount_result);
+        // const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
+        // let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
+        // target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
+        // console.log("target_amount :" + target_amount_result);
+
+        let target_amount_result = (get_data_result[0].target_amount) ? get_data_result[0].target_amount : 0;
 
         // const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
         // let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });

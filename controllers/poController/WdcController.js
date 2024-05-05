@@ -234,6 +234,17 @@ exports.list = async (req, res) => {
   
 };
 
+
+exports.grseEmpList = async (req, res) => {
+  req.query.$tableName = `pa0002`;
+  req.query.$select = `PERNR as code, CNAME as name`;
+  try {
+    getFilteredData(req, res);
+  } catch (err) {
+    console.log("data not fetched", err);
+  }
+
+};
 async function submitToSapServer(data) {
   try {
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
@@ -274,9 +285,7 @@ async function submitToSapServer(data) {
 //   "stage_details":"",
 //   "line_item_array": [
 //     {
-//       "Description":"",
-//     "open_po_qty":"",
-//     "UOM":"",
+//       "line_item_no":"",
 //     "claim_qty":"",
 //     "contractual_start_date":"",
 //     "Contractual_completion_date":"",
@@ -285,16 +294,35 @@ async function submitToSapServer(data) {
 //     "hinderance_in_days":""
 //     },
 //     {
-//       "Description":"",
-//     "open_po_qty":"",
-//     "UOM":"",
+//       "line_item_no":"",
 //     "claim_qty":"",
 //     "contractual_start_date":"",
 //     "Contractual_completion_date":"",
 //     "actual_start_date":"",
 //     "actual_completion_date":"",
 //     "hinderance_in_days":""
-//     }
+//     },
 //   ],
 //   "action_type":"WDC"
 // }
+
+// [
+//       {
+//         "line_item_no":"",
+//       "claim_qty":"",
+//       "contractual_start_date":"",
+//       "Contractual_completion_date":"",
+//       "actual_start_date":"",
+//       "actual_completion_date":"",
+//       "hinderance_in_days":""
+//       },
+//       {
+//         "line_item_no":"",
+//       "claim_qty":"",
+//       "contractual_start_date":"",
+//       "Contractual_completion_date":"",
+//       "actual_start_date":"",
+//       "actual_completion_date":"",
+//       "hinderance_in_days":""
+//       },
+//     ]

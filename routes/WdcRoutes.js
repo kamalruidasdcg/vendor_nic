@@ -14,6 +14,7 @@ const upload = wdcmw();
 
 router.post("/submitWdc", [veifyAccessToken, upload], WdcController.wdc);
 router.get("/wdcList", [veifyAccessToken], WdcController.list);
+router.get("/grseEmpList", [veifyAccessToken], WdcController.grseEmpList);
 // 
 
 
