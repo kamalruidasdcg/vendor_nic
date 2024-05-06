@@ -2,7 +2,7 @@ const { resSend } = require("../../lib/resSend");
 const { query } = require("../../config/dbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
-const { DEMAND_MANAGEMENT, EKPO } = require("../../lib/tableName");
+const { DEMAND_MANAGEMENT, EKPO, EKKO } = require("../../lib/tableName");
 const { PENDING, REJECTED, ACKNOWLEDGED, APPROVED, RE_SUBMITTED, CREATED, SUBMITTED, STATUS_RECEIVED } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
@@ -17,19 +17,25 @@ const insert = async (req, res) => {
 
     try {
 
-
+ 
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
-        // if (!obj.purchasing_doc_no || !obj.line_item_no || !obj.status) {
+        if (!obj.purchasing_doc_no || !obj.status) {
         //     // const directory = path.join(__dirname, '..', 'uploads', lastParam);
         //     // const isDel = handleFileDeletion(directory, req.file.filename);
-        //     return resSend(res, false, 200, "Please send valid payload", null, null);
-        // }
-
-        if (tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT) {
-            return resSend(res, false, 200, "Please login as PPNC depertment!", null, null);
+            return resSend(res, false, 200, "Please send valid payload", null, null);
         }
+
+        if (tokenData.user_type == 1) {
+            return resSend(res, false, 200, "Please login as GRSE users!", null, null);
+        }
+
+        const checkDo = await checkIsDealingOfficer(obj.purchasing_doc_no, tokenData.vendor_code);
+        if(checkDo == 1) {
+            return resSend(res, false, 200, "Do can not raise demand!", null, null);
+        }
+        
 
         if (obj.status != SUBMITTED && obj.status != STATUS_RECEIVED) {
             // console.log();
@@ -110,6 +116,18 @@ const insert = async (req, res) => {
         return resSend(res, false, 500, "internal server error", [], null);
     }
 }
+
+const checkIsDealingOfficer = async (purchasing_doc_no, vendor_code) => {
+    console.log([purchasing_doc_no, vendor_code]);
+    console.log("#$%^&*");
+    const getQuery = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = ? AND ERNAM = ?`;
+    const result = await query({
+      query: getQuery,
+      values: [purchasing_doc_no, vendor_code],
+    });
+    return result[0].man_no;
+  };
+
 
 const list = async (req, res) => {
 
