@@ -267,7 +267,7 @@ exports.list = async (req, res) => {
         el.line_item_array = line_item2;
         return el;
       })
-      modfResult = JSON.stringify(modfResult);
+     // modfResult = JSON.stringify(modfResult);
     return resSend(res, true, 200, "WDC data fetched!", modfResult, null);
   } catch (err) {
     console.log("data not fetched", err);
