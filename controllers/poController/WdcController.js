@@ -59,6 +59,9 @@ exports.wdc = async (req, res) => {
       }
     }
 
+    
+    //return;
+
     let fileData = {};
     if (req.file) {
       fileData = {
@@ -69,7 +72,7 @@ exports.wdc = async (req, res) => {
     //console.log(fileData);
     let payload = { created_by_id: tokenData.vendor_code };
 
-    if (tokenData.department_id == USER_TYPE_PPNC_DEPARTMENT) {
+    if (tokenData.user_type != USER_TYPE_VENDOR) {
       if (!obj || obj.reference_no == "") {
         return resSend(
           res,
@@ -79,6 +82,12 @@ exports.wdc = async (req, res) => {
           null,
           null
         );
+      }
+      const line_item_array_q = `SELECT COUNT(assigned_to) AS assingn from ${WDC} WHERE purchasing_doc_no = ? AND  assigned_to = ?`;
+      let line_item_array = await query({ query: line_item_array_q, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
+     
+      if(line_item_array[0].assingn == 0) {
+        return resSend(res, false, 200, "You are not authorised person!", null, null);
       }
       let last_data = await get_latest_activity(
         WDC,
