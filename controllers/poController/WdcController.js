@@ -255,24 +255,19 @@ exports.list = async (req, res) => {
       const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = ?`;
       let get_data_result = await query({ query: get_data_query, values: [req.query.poNo] });
 
-      const modfResult = get_data_result.map((el) => {
-
+      let modfResult = get_data_result.map((el) => {
         let line_item = JSON.parse(el.line_item_array);
-        
+        let line_item2;
         if(line_item && Array.isArray(line_item)) {
-
-          line_item =   line_item.map((el2) => {
+          line_item2 = line_item.map((el2) => {
             const DOObj =   line_item_array2.find((elms) => elms.line_item_no == el2.line_item_no);
-;
-
             return DOObj ? {...DOObj, ...el2} : el2;
-
           });
-        
         }
-        el.line_item_array = line_item;
+        el.line_item_array = line_item2;
         return el;
       })
+      modfResult = JSON.stringify(modfResult);
     return resSend(res, true, 200, "WDC data fetched!", modfResult, null);
   } catch (err) {
     console.log("data not fetched", err);
