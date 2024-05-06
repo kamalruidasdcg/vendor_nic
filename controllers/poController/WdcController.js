@@ -273,7 +273,7 @@ exports.list = async (req, res) => {
         el.line_item_array = line_item;
         return el;
       })
-    return resSend(res, false, 200, "data fetched!", modfResult, null);
+    return resSend(res, true, 200, "WDC data fetched!", modfResult, null);
   } catch (err) {
     console.log("data not fetched", err);
     return resSend(res, false, 500, "internal server error", [], null);
