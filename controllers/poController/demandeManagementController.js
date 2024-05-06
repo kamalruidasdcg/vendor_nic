@@ -17,7 +17,7 @@ const insert = async (req, res) => {
 
     try {
 
-
+ 
         const tokenData = { ...req.tokenData };
         const obj = { ...req.body };
 
