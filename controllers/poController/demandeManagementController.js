@@ -138,7 +138,7 @@ const list = async (req, res) => {
 
         const demande_query = `SELECT * FROM demande_management WHERE purchasing_doc_no = ?`;
         const result = await query({ query: demande_query, values: [req.query.poNo] })
-
+ 
         if (result) {
             return resSend(res, true, 200, "Demande Management Data fetched succesfully!", result, null);
         } else {
@@ -155,17 +155,21 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
+        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
         let get_data_result = await query({ query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
+        // console.log(get_data_result);
+        // return;
         const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = ? AND EBELP = ?`;
         let total_amount_result = await query({ query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
         total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
         console.log("total_amount_result :" + total_amount_result);
 
-        const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
-        let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
-        target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
-        console.log("target_amount :" + target_amount_result);
+        // const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
+        // let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
+        // target_amount_result = (target_amount_result[0].target_amount == null) ? 0 : target_amount_result[0].target_amount;
+        // console.log("target_amount :" + target_amount_result);
+
+        let target_amount_result = (get_data_result[0].target_amount) ? get_data_result[0].target_amount : 0;
 
         // const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
         // let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
@@ -177,21 +181,21 @@ const getRestAmount = async (req, res) => {
         // total_recived_amount_from_dm_table_result = (total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table == null) ? 0 : total_recived_amount_from_dm_table_result[0].total_recived_amount_from_dm_table;
         // console.log("total_recived_amount_from_dm_table_result :" + total_recived_amount_from_dm_table_result);
 
-        const total_recived_amount_from_dm_table_query = `SELECT demand from demande_management WHERE purchasing_doc_no = ? AND status = ?  `;
-        let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, STATUS_RECEIVED] });
-        console.log(total_recived_amount_from_dm_table_result);
-        let recived_amount_from_dm_table = 0;
-        total_recived_amount_from_dm_table_result.map( (item) => {
-            let datas = JSON.parse(item.demand);
-            const find_line_item_no = datas.find(({ line_item_no }) => line_item_no == req.query.line_item_no);
-            if(find_line_item_no) {
-                console.log(find_line_item_no.recived_quantity);
-                recived_amount_from_dm_table += parseInt(find_line_item_no.recived_quantity);
-            } 
-        });
+        // const total_recived_amount_from_dm_table_query = `SELECT demand from demande_management WHERE purchasing_doc_no = ? AND status = ?  `;
+        // let total_recived_amount_from_dm_table_result = await query({ query: total_recived_amount_from_dm_table_query, values: [req.query.po_no, STATUS_RECEIVED] });
+        // console.log(total_recived_amount_from_dm_table_result);
+        // let recived_amount_from_dm_table = 0;
+        // total_recived_amount_from_dm_table_result.map( (item) => {
+        //     let datas = JSON.parse(item.demand);
+        //     const find_line_item_no = datas.find(({ line_item_no }) => line_item_no == req.query.line_item_no);
+        //     if(find_line_item_no) {
+        //         console.log(find_line_item_no.recived_quantity);
+        //         recived_amount_from_dm_table += parseInt(find_line_item_no.recived_quantity);
+        //     } 
+        // });
 
-        //const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(total_recived_amount_from_dm_table_result));
-        const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(recived_amount_from_dm_table));
+        //const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(recived_amount_from_dm_table));
+        const rest_amount = parseInt(target_amount_result) - parseInt(total_amount_result);
      
         if (rest_amount) {
             const resData = get_data_result[0];

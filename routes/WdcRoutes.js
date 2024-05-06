@@ -1,4 +1,5 @@
 const express = require("express");
+const { wdcmw } = require("../services/wdcmw");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
 const sdbgController = require("../controllers/poController/sdbgController");
@@ -9,9 +10,11 @@ const { unlockPrivilege } = require("../services/auth.services");
 
 
 // PO DRAWING CONTROLLER
+const upload = wdcmw();
 
-router.post("/submitWdc", [veifyAccessToken, dynamicallyUpload.single("file")], WdcController.wdc);
+router.post("/submitWdc", [veifyAccessToken, upload], WdcController.wdc);
 router.get("/wdcList", [veifyAccessToken], WdcController.list);
+router.get("/grseEmpList", [veifyAccessToken], WdcController.grseEmpList);
 // 
 
 
