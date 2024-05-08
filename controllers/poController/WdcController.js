@@ -232,7 +232,7 @@ exports.list = async (req, res) => {
   // console.log(get_data_result);
   // return;
   try {
-      const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ?`;
+      const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount from ${EKPO} WHERE EBELN = ?`;
       let line_item_array = await query({ query: line_item_array_q, values: [req.query.poNo] });
      
 
