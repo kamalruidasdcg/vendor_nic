@@ -18,6 +18,7 @@ const rolePermission = require("../../lib/role/deptWiseRolePermission");
 const { getEpochTime, generateQuery } = require("../../lib/utils");
 
 const Message = require("../../utils/messages");
+const { getQuery } = require("../../config/pgDbConfig");
 
 
 
@@ -83,7 +84,7 @@ const login = async (req, res) => {
                 ON	
                     t1.internal_role_id = t3.id
                 WHERE 
-                    t1.vendor_code = ?`;
+                    t1.vendor_code = $1`;
 
         // if (req.body.userType === "VENDOR") {
         //     login_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, 
@@ -108,7 +109,9 @@ const login = async (req, res) => {
         // }
         // const  vendorLogin_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password, t2.*, t3.SMTP_ADDR FROM auth as t1 LEFT JOIN lfa1 AS t2 ON t1.vendor_code = t2.LIFNR LEFT JOIN adr6 as t3 ON t1.vendor_code = t3.PERSNUMBER  WHERE t1.vendor_code = ?`;
 
-        let result = await query({ query: login_Q, values: [req.body.vendor_code] });
+        let result = await getQuery({ query: login_Q, values: [req.body.vendor_code] });
+
+        console.log("result", result);
         let user = {};
         let permission = {};
         let userDetails = [];
@@ -165,8 +168,8 @@ const login = async (req, res) => {
                     ON
                         (t1.PERNR = t2.PERNR AND t2.SUBTY = "0030")
                     WHERE 
-                         t1.PERNR = ?`;
-                userDetails = await query({
+                         t1.PERNR = $1`;
+                userDetails = await getQuery({
                     query:
 
                         grseDetaisQ, values: [req.body.vendor_code]
