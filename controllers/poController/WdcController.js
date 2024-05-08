@@ -245,7 +245,7 @@ exports.list = async (req, res) => {
           total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
           console.log(total_amount_result);
           let rest_amount = parseInt(els.target_amount) - parseInt(total_amount_result);
-  
+          (rest_amount < 0) ? 0 : rest_amount;
             line_item_array2.push({...els, rest_amount : rest_amount});
   
         })
