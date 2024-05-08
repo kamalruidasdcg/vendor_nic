@@ -71,7 +71,7 @@ exports.wdc = async (req, res) => {
     }
     //console.log(fileData);
     let payload = { created_by_id: tokenData.vendor_code };
-
+    let last_data;
     if (tokenData.user_type != USER_TYPE_VENDOR) {
       if (!obj || obj.reference_no == "") {
         return resSend(
@@ -89,7 +89,7 @@ exports.wdc = async (req, res) => {
       if(line_item_array[0].assingn == 0) {
         return resSend(res, false, 200, "You are not authorised person!", null, null);
       }
-      let last_data = await get_latest_activity(
+      last_data = await get_latest_activity(
         WDC,
         obj.purchasing_doc_no,
         obj.reference_no
@@ -108,32 +108,35 @@ exports.wdc = async (req, res) => {
             null
           );
         }
-        if (obj.status == APPROVED) {
-          if (
-            !obj.stage_datiels ||
-            obj.stage_datiels == "" ||
-            !obj.actual_payable_amount ||
-            obj.actual_payable_amount == ""
-          ) {
-            return resSend(
-              res,
-              false,
-              200,
-              "Please send required fields to APPROVED this File!",
-              null,
-              null
-            );
-          }
-        }
+        // if (obj.status == APPROVED) {
+        //   if (
+        //     !obj.stage_datiels ||
+        //     obj.stage_datiels == "" ||
+        //     !obj.actual_payable_amount ||
+        //     obj.actual_payable_amount == ""
+        //   ) {
+        //     return resSend(
+        //       res,
+        //       false,
+        //       200,
+        //       "Please send required fields to APPROVED this File!",
+        //       null,
+        //       null
+        //     );
+        //   }
+        // }
+        payload = wdcPayload(obj, last_data.line_item_array);
         payload = {
+          //...obj,
           ...last_data,
-          ...fileData,
-          ...obj,
+          ...payload,
+         // ...fileData,
           updated_by: "GRSE",
           created_by_id: tokenData.vendor_code,
-          created_by_name: tokenData.name,
+          created_by_name: tokenData.iss,
           created_at: getEpochTime(),
         };
+
       } else {
         return resSend(
           res,
@@ -178,21 +181,23 @@ exports.wdc = async (req, res) => {
         vendor_code: tokenData.vendor_code,
         updated_by: "VENDOR",
         created_by_id: tokenData.vendor_code,
-        created_by_name: tokenData.name,
+        created_by_name: tokenData.iss,
         created_at: getEpochTime(),
       };
     }
-// console.log(payload);
-//       return;
-   // const insertObj = wdcPayload(payload);
+
 
     const { q, val } = generateQuery(INSERT, WDC, payload);
     const response = await query({ query: q, values: val });
-
+// console.log(response);
+//       return;
     if (response.affectedRows) {
       if (payload.status === APPROVED) {
         try {
+         
           payload = { ...payload, slno: response.insertId };
+          console.log(payload);
+          console.log("payload$%^&*(");
           await submitToSapServer(payload);
         } catch (error) {
           console.warn(
@@ -232,7 +237,7 @@ exports.list = async (req, res) => {
   // console.log(get_data_result);
   // return;
   try {
-      const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, KTMNG AS target_amount from ${EKPO} WHERE EBELN = ?`;
+      const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount from ${EKPO} WHERE EBELN = ?`;
       let line_item_array = await query({ query: line_item_array_q, values: [req.query.poNo] });
      
 
@@ -245,7 +250,7 @@ exports.list = async (req, res) => {
           total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
           console.log(total_amount_result);
           let rest_amount = parseInt(els.target_amount) - parseInt(total_amount_result);
-  
+          (rest_amount < 0) ? 0 : rest_amount;
             line_item_array2.push({...els, rest_amount : rest_amount});
   
         })
@@ -316,13 +321,24 @@ async function submitToSapServer(data) {
     console.log("postUrl", postUrl);
     console.log("wdc_payload -->");
     let payload = { ...data };
-    const wdc_payload = {
-      slno: payload.slno,
-      ebeln: payload.purchasing_doc_no,
-      ebelp: payload.po_line_iten_no,
-      wdc: payload.reference_no,
-    };
-    console.log("wdc_payload", wdc_payload);
+    // const wdc_payload = {
+    //   slno: payload.slno,
+    //   ebeln: payload.purchasing_doc_no,
+    //   ebelp: payload.po_line_iten_no,
+    //   wdc: payload.reference_no,
+    // };
+
+let new_line_item = JSON.parse(payload.line_item_array);
+    let wdc_payload;
+        if(new_line_item && Array.isArray(new_line_item)) {
+          wdc_payload = new_line_item.map((el2) => {
+            return {slno: payload.slno, ebeln: payload.purchasing_doc_no, ebelp: el2.line_item_no, wdc: payload.reference_no};
+          });
+        }
+
+
+    console.log("wdc_payload-----------");
+    console.log(wdc_payload);
 
     const postResponse = await makeHttpRequest(postUrl, "POST", wdc_payload);
     console.log("POST Response from the server:", postResponse);
@@ -390,3 +406,24 @@ async function submitToSapServer(data) {
 //       "hinderance_in_days":""
 //       },
 //     ]
+
+
+
+// {
+//   "purchasing_doc_no": "",
+//   "reference_no": "",
+//   "status": "",
+//   "line_item_array": [
+//     {
+//     "contractual_start_date":"",
+//     "Contractual_completion_date":"",
+//     "delay":""
+//     },
+//     {
+//     "contractual_start_date":"",
+//     "Contractual_completion_date":"",
+//     "delay":""
+//     }
+//   ]
+// }
+
