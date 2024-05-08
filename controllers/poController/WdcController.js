@@ -168,7 +168,9 @@ exports.wdc = async (req, res) => {
         payloadFiles["file_attendance_report"]
           ? (invoice_filename = payloadFiles["file_attendance_report"][0]?.filename)
           : null;
-          obj.line_item_array = (obj.line_item_array) ? JSON.stringify(obj.line_item_array) : null;
+          console.log(obj.line_item_array, typeof obj.line_item_array)
+      // obj.line_item_array = (obj.line_item_array) ? JSON.stringify(obj.line_item_array) : null;
+      console.log("obj.line_item_array", obj.line_item_array, typeof obj.line_item_array)
       payload = {
         ...fileData,
         ...obj,
