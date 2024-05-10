@@ -427,3 +427,57 @@ let new_line_item = JSON.parse(payload.line_item_array);
 //   ]
 // }
 
+///////////// JCC //////////////////
+//// VENODOR SUBMIT //////////
+// {
+//   "purchasing_doc_no": "",
+//   "remarks": "",
+//   "status": "",
+//   "work_done_by": "",
+//   "work_title": "",
+//   "job_location": "",
+//   "yard_no": "",
+//   "line_item_array": [
+//     {
+//      "line_item_no":"",
+//     "claim_qty":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "delay_in_work_execution":""
+//     },
+//     {
+//      "line_item_no":"",
+//     "claim_qty":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "delay_in_work_execution":""
+//     },
+//   ],
+//   "guarantee_defect_liability_start_date": 1234567890
+//   "guarantee_defect_liability_end_date": 1234567891
+//   "action_type":"JCC"
+// }
+
+
+
+///////////// JCC //////////////////
+//// GRSE SUBMIT //////////
+// {
+//   "purchasing_doc_no": "",
+//   "remarks": "",
+//   "status": "",
+//   "reference_no": ""
+//   "line_item_array": [
+//     {
+//      "line_item_no":"",
+//      "status":""
+//     },
+//     {
+//      "line_item_no":"",
+//      "status":""
+//     },
+//   ],
+//   "total_amount_status": "APPROVED",
+//   "action_type":"JCC"
+// }
+
