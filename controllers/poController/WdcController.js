@@ -201,7 +201,7 @@ exports.wdc = async (req, res) => {
           await submitToSapServer(payload);
         } catch (error) {
           console.warn(
-            "WDC save in sap faild, please refer to wdcContorller submitToSapServer fn"
+            "WDC/JCC save in sap faild, please refer to wdcContorller submitToSapServer fn"
           );
         }
       }
