@@ -675,7 +675,7 @@ const submitBTNByDO = async (req, res) => {
     ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
     EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
     DPERNR1: assigned_to, // assigned_to
-    DSTATUS: "4",
+    DSTATUS: "4",// sap deparment forword status
     ZRMK1: "Forwared To Finance", // REMARKS
   };
   console.log("result", result);
