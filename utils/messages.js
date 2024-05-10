@@ -11,10 +11,14 @@ module.exports = {
     INVALID_PAYLOAD: "Invalid payload.",
     DATA_INSERT_FAILED : "Data insert failed.",
     USER_REG_SUCCESS: "User registration successfully",
-    USER_REG_UN_SUCCESS: "User registration un-successfully",
+    USER_REG_UN_SUCCESS: "User registration un-successfully.",
     SERVER_ERROR: "Internal server error",
-    FILE_FETCH_SUCCESSFULLY: "File fetched successfully",
+    FILE_FETCH_SUCCESSFULLY: "File fetched successfully.",
     FILE_FETCH_ERROR: "File fetch error",
     DB_CONN_ERROR: "DB connection error",
-    NO_RECORD_FOUND: "No record found."
+    NO_RECORD_FOUND: "No record found.",
+    MANDATORY_INPUTS_REQUIRED: "Mandatory inputs required !",
+    USER_NOT_FOUND: "No registered user found !",
+    USER_AUTHENTICATION_SUCCESS: "User authentication successfully."
+
 }
