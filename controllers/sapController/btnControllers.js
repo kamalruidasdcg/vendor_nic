@@ -1,7 +1,7 @@
 // const { query,  } = require("../config/dbConfig");
 const { connection } = require("../../config/dbConfig");
 const { responseSend } = require("../../lib/resSend");
-const { generateInsertUpdateQuery } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
 
 
@@ -29,7 +29,7 @@ const zbts_st = async (req, res) => {
 
             try {
                 const payloadObj = await zbtsHeaderPayload(obj);
-                const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", "id");
+                const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", "zbtno");
                 const [results] = await promiseConnection.execute(btnPaymentHeaderQuery);
                 console.log("results 1", results);
             } catch (error) {
@@ -43,8 +43,8 @@ const zbts_st = async (req, res) => {
                 // response2 = await query({ query: btnPaymentLineItemQuery, values: [] });
 
                 try {
-                    const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload);
-                    const btnPaymentLineItemQuery = await generateInsertUpdateQuery(lineItemPayloadObj, "zbtsm_st", "id");
+                    const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
+                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", "zbtno");
                     const [results] = await promiseConnection.execute(btnPaymentLineItemQuery);
                     console.log("results 2", results);
                 } catch (error) {

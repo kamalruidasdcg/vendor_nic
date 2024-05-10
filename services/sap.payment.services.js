@@ -259,15 +259,12 @@ const zbtsHeaderPayload = async (obj) => {
   };
   return pl;
 };
-const zbtsLineItemsPayload = async (obj) => {
-  if (!obj) {
+const zbtsLineItemsPayload = async (payload, zbtsHeaderPayload) => {
+  if (!payload) {
     throw new Error("Please send valid payload");
   }
-  const pl = {
-
-
-
-    zbtno: obj.zbtno || obj.ZBTNO || "",
+  const pl = payload.map((obj) => ({
+    zbtno: obj.zbtno || obj.ZBTNO || zbtsHeaderPayload.zbtno || zbtsHeaderPayload.ZBTNO || "",
     srno: obj.srno || obj.SRNO || "",
     manno: obj.manno || obj.MANNO || null,
     zsection: obj.zsection || obj.ZSECTION || "",
@@ -277,7 +274,19 @@ const zbtsLineItemsPayload = async (obj) => {
     ernam: obj.ernam || obj.ERNAM || "",
     dretseq: obj.dretseq || obj.DRETSEQ || "",
     alert_status: obj.alert_status || obj.ALERT_STATUS || ""
-  }
+  }))
+  // const pl = {
+  //   zbtno: obj.zbtno || obj.ZBTNO || "",
+  //   srno: obj.srno || obj.SRNO || "",
+  //   manno: obj.manno || obj.MANNO || null,
+  //   zsection: obj.zsection || obj.ZSECTION || "",
+  //   rmk: obj.rmk || obj.RMK || "",
+  //   erdat: formatDate(obj.erdat) || formatDate(obj.ERDAT),
+  //   erzet: formatTime(obj.erzet) || formatTime(obj.ERZET),
+  //   ernam: obj.ernam || obj.ERNAM || "",
+  //   dretseq: obj.dretseq || obj.DRETSEQ || "",
+  //   alert_status: obj.alert_status || obj.ALERT_STATUS || ""
+  // }
 
   return pl;
 };
