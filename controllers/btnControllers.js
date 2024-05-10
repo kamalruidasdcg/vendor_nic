@@ -230,6 +230,9 @@ const submitBTN = async (req, res) => {
     purchasing_doc_no,
     invoice_no,
     invoice_value,
+    cgst,
+    igst,
+    sgst,
     e_invoice_no,
     debit_note,
     credit_note,
@@ -461,6 +464,9 @@ const submitBTN = async (req, res) => {
     vendor_code = '${tokenData.vendor_code}', 
     invoice_no = '${invoice_no ? invoice_no : ""}', 
     invoice_value='${invoice_value ? invoice_value : ""}',
+    cgst='${cgst ? cgst : ""}',
+    igst='${igst ? igst : ""}',
+    sgst='${sgst ? sgst : ""}',
     invoice_filename ='${invoice_filename ? invoice_filename : ""}',
     e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
     e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
@@ -515,6 +521,9 @@ const submitBTN = async (req, res) => {
             vendor_code = '${tokenData.vendor_code}', 
             invoice_no = '${invoice_no ? invoice_no : ""}', 
             invoice_value='${invoice_value ? invoice_value : ""}',
+            cgst='${cgst ? cgst : ""}',
+            igst='${igst ? igst : ""}',
+            sgst='${sgst ? sgst : ""}',
             invoice_filename ='${invoice_filename ? invoice_filename : ""}',
             e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
             e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
@@ -595,6 +604,7 @@ const submitBTNByDO = async (req, res) => {
     o_deduction,
     total_deduction,
     net_payable_amount,
+    assigned_to
   } = req.body;
   const tokenData = { ...req.tokenData };
 
@@ -628,7 +638,9 @@ const submitBTNByDO = async (req, res) => {
     total_deduction='${total_deduction ? total_deduction : ""}',
     net_payable_amout ='${net_payable_amount ? net_payable_amount : ""}',
     created_at='${created_at ? created_at : ""}',
-    created_by=''
+    created_by='',
+    assigned_to='${assigned_to ? assigned_to : ""}'
+
   `;
 
   let result = await query({
@@ -662,7 +674,8 @@ const submitBTNByDO = async (req, res) => {
     LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
     ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
     EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
-    DPERNR1: "", // Not Required
+    DPERNR1: assigned_to, // assigned_to
+    DSTATUS: "4",// sap deparment forword status
     ZRMK1: "Forwared To Finance", // REMARKS
   };
   console.log("result", result);
