@@ -29,7 +29,6 @@ const billRoutes = require("./billRoutes");
 const sdbgRoutes = require("./sdbgRoutes");
 const drawingRoutes = require("./drawingRoutes");
 const wdcRoutes = require("./WdcRoutes");
-const jccRoutes = require("./jccRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
 const demandeManagementRoutes = require("./demandeManagementRoutes");
 
@@ -118,7 +117,6 @@ const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
 router.use(poPrefix + "/drawing", drawingRoutes);
 router.use(poPrefix + "/wdc", wdcRoutes);
-router.use(poPrefix + "/jcc", jccRoutes);
 router.use(poPrefix + "/ilms", ilmsRoutes);
 
 router.use(poPrefix + "/dashboard", dashboardRoutes);

@@ -108,6 +108,7 @@ exports.wdc = async (req, res) => {
             null
           );
         }
+
         // if (obj.status == APPROVED) {
         //   if (
         //     !obj.stage_datiels ||
@@ -125,6 +126,7 @@ exports.wdc = async (req, res) => {
         //     );
         //   }
         // }
+        
         payload = wdcPayload(obj, last_data.line_item_array);
         payload = {
           //...obj,
