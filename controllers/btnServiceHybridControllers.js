@@ -270,7 +270,6 @@ const submitBtnServiceHybrid = async (req, res) => {
     get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
     grn_nos='${grn_nos ? grn_nos : ""}',
     icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
-    
     icgrn_total='${icgrn_total ? icgrn_total : ""}',
     c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
     a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
