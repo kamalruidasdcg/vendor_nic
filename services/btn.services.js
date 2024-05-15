@@ -256,12 +256,13 @@ const filesData = (payloadFiles) => {
 }
 
 
-const contractualSubmissionDate = async (purchasing_doc_no) => {
+const contractualSubmissionDate = async (purchasing_doc_no, client) => {
     let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
-    let c_dates = await query({
-        query: c_sdbg_date_q,
-        values: [purchasing_doc_no],
-    });
+    console.log('c_sdbg_date_q', c_sdbg_date_q);    
+    const [results] =  await client.execute(c_sdbg_date_q, [purchasing_doc_no]);
+    console.log("results", results);
+    // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
+    let c_dates = results;
     const dates_arr = [C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE];
     for (const item of dates_arr) {
         const i = c_dates.findIndex((el) => el.MTEXT == item);
@@ -291,7 +292,7 @@ const contractualSubmissionDate = async (purchasing_doc_no) => {
 
 
 }
-const actualSubmissionDate = async (purchasing_doc_no) => {
+const actualSubmissionDate = async (purchasing_doc_no, client) => {
     // GET Actual Dates from other Table
     // let a_sdbg_date;
     // let a_drawing_date;
@@ -302,21 +303,34 @@ const actualSubmissionDate = async (purchasing_doc_no) => {
     let response = {}
 
     let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
-    let a_dates = await query({
-        query: a_sdbg_date_q,
-        values: [purchasing_doc_no],
-    });
-    const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
+    // let a_dates = await query({
+    //     query: a_sdbg_date_q,
+    //     values: [purchasing_doc_no],
+    // });
+
+    const [results] =  await client.execute(a_sdbg_date_q, [purchasing_doc_no]);
+    let a_dates = results;
+
+    console.log(a_dates, "ooooooooooooooooo")
+
+    // if(!a_dates.length) throw new Error(`All milestone is missing!`)
+    if(!a_dates.length) return { status: false, data: {}, msg: `All milestone is missing!` };
+        const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
+    console.log(a_dates_arr, "a_dates_arra_dates_arra_dates_arr")
     for (const item of a_dates_arr) {
         const i = a_dates.findIndex((el) => el.MTEXT == item);
         if (i < 0) {
-            return { status: false, data: {}, msg: `${item} is missing!` }
+            return { status: false, data: {}, msg: `${item} is missing!` };
+
+            // throw new Error(`${item} is missing!`)
         }
     }
 
     for (const item of a_dates) {
         if (item.MTEXT === A_SDBG_DATE) {
             if (!item.PLAN_DATE) {
+
+                // throw new Error(`${A_SDBG_DATE} is missing!`)
 
                 return { status: false, data: {}, msg: `${A_SDBG_DATE} is missing!` }
                 // return resSend(
@@ -333,6 +347,7 @@ const actualSubmissionDate = async (purchasing_doc_no) => {
         } else if (item.MTEXT === A_DRAWING_DATE) {
             if (!item.PLAN_DATE) {
 
+                // throw new Error(`${A_DRAWING_DATE} is missing!`)
                 return { status: false, data: {}, msg: `${A_DRAWING_DATE} is missing!` };
         
                 // return resSend(
@@ -347,7 +362,7 @@ const actualSubmissionDate = async (purchasing_doc_no) => {
             actualSubmissionObj.a_drawing_date = item.PLAN_DATE;
         } else if (item.MTEXT === A_QAP_DATE) {
             if (!item.PLAN_DATE) {
-
+                // throw new Error(`${A_QAP_DATE} is missing!`)
                 return { status: false, data: {}, msg: `${A_QAP_DATE} is missing!` };
 
                 // return resSend(
@@ -362,7 +377,7 @@ const actualSubmissionDate = async (purchasing_doc_no) => {
             actualSubmissionObj.a_qap_date = item.PLAN_DATE;
         } else if (item.MTEXT === A_ILMS_DATE) {
             if (!item.PLAN_DATE) {
-
+                // throw new Error(`${A_ILMS_DATE} is missing!`);
                 return{ status: false, data: {}, msg: `${A_ILMS_DATE} is missing!` };
                 
 

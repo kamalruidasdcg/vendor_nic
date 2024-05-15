@@ -15,13 +15,14 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
 
     try {
-        const promiseConnection = await connection();
+        const client = await connection();
 
         try {
             let payload = req.body;
             const tokenData = req.tokenData;
 
             // Check required fields
+
             if (!payload) {
                 return resSend(res, false, 400, "Invalid payload!", null, null);
             }
@@ -48,16 +49,10 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
             // icgrn_total = icgrn_total.total_icgrn_value;
 
-
-
-
+            // BTN NUMBER GENERATE
             const btn_num = await create_btn_no("BTN");
-
-            console.log("btn_num", btn_num);
-
+            // UPLOAD FILES DATA
             const uploadedFiles = filesData(payloadFiles);
-
-            console.log("uploadedFiles", uploadedFiles);
 
             // let credit_note;
             // let debit_note;
@@ -75,21 +70,20 @@ const submitAdvanceBillHybrid = async (req, res) => {
             //     parseFloat(gst_rate) -
             //     parseFloat(credit_note);
 
-
-            const contDateSetup = await contractualSubmissionDate(payload.purchasing_doc_no);
-
+            // CONTRACTUAL SUBMISSION DATA
+            const contDateSetup = await contractualSubmissionDate(payload.purchasing_doc_no, client);
+            console.log("contDateSetup", contDateSetup);
             if (contDateSetup.status == false) {
                 return resSend(res, false, 200, contDateSetup.msg, null, null);
             }
-            const actualDateSetup = await actualSubmissionDate(payload.purchasing_doc_no);
 
+            // ACTUAL SUMBISSION DATA
+            const actualDateSetup = await actualSubmissionDate(payload.purchasing_doc_no, client);
             if (actualDateSetup.status == false) {
                 return resSend(res, false, 200, contDateSetup.msg, null, null);
             }
 
-
-
-
+            // ADDING EXTRA DATA IN PAYLOAD
             payload = {
                 ...payload,
                 ...uploadedFiles,
@@ -99,10 +93,12 @@ const submitAdvanceBillHybrid = async (req, res) => {
                 vendor_code: tokenData.vendor_code,
                 created_at: getEpochTime()
             };
+            
+            // PAYLOAD DATA
             const btnPayload = await advBillHybridbtnPayload(payload, 'advance-bill-hybrid');
+            // GENERATE QUERY, DATA AND SAVE
             const btnQuery = generateQuery(INSERT, 'btn', btnPayload);
-            const result1 = await promiseConnection.execute(btnQuery.q, btnQuery.val);
-            console.log("btnQuery", btnQuery, result1);
+            const result1 = await client.execute(btnQuery.q, btnQuery.val);
             let associated_po_arr = [];
             if (associated_po && Array.isArray(associated_po)) {
                 associated_po_arr = associated_po.map((ele) => ({
@@ -111,12 +107,8 @@ const submitAdvanceBillHybrid = async (req, res) => {
                 }));
 
                 const multipledataInsert = await generateQueryForMultipleData(associated_po_arr, 'btn', 'id');
-                const result2 = await promiseConnection.execute(multipledataInsert);
+                const result2 = await client.execute(multipledataInsert);
             }
-
-
-
-
 
             resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, "", null)
 
@@ -126,7 +118,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
             resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null)
 
         } finally {
-            const connEnd = await promiseConnection.end();
+            await client.end();
         }
     } catch (error) {
         resSend(res, false, 500, Message.DB_CONN_ERROR, null, null)
