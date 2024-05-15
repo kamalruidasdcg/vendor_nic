@@ -18,6 +18,7 @@ const {
 
 const { btnmw } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
+const { submitAdvanceBillHybrid } = require("../controllers/poController/advanceBillBTNController");
 
 router.get("/", [], (req, res) => {
   fetchAllBTNs(req, res);
@@ -75,6 +76,13 @@ router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
 
 //// Btn Service Hybrid ////
 ///////////////////////////
+
+router.post("/submitAdvBillHybrid", [veifyAccessToken, btnmw()], (req, res) => {
+  // submitAdvanceBillHybrid(req, res);
+    submitAdvanceBillHybrid(req, res)
+
+});
+
 
 
 module.exports = router;
