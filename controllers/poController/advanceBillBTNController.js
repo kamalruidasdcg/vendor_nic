@@ -1,6 +1,6 @@
 const { query, connection } = require("../../config/dbConfig");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
-const {INSERT } = require("../../lib/constant");
+const { INSERT } = require("../../lib/constant");
 const { resSend } = require("../../lib/resSend");
 const { APPROVED } = require("../../lib/status");
 const { getEpochTime, getYyyyMmDd, generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
@@ -93,7 +93,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
                 vendor_code: tokenData.vendor_code,
                 created_at: getEpochTime()
             };
-            
+
             // PAYLOAD DATA
             const btnPayload = await advBillHybridbtnPayload(payload, 'advance-bill-hybrid');
             // GENERATE QUERY, DATA AND SAVE
@@ -110,7 +110,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
                 const result2 = await client.execute(multipledataInsert);
             }
 
-            resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, "", null)
+            resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, {}, null)
 
 
         } catch (error) {
@@ -126,6 +126,56 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
 }
 
+
+
+const getAdvBillHybridData = async (req, res) => {
+
+    try {
+        const payload = req.body;
+
+        if (!payload.poNo) {
+            return resSend(res, false, 400, Message.MANDATORY_PARAMETR, null, null);
+        }
+
+        let baseQuery =
+            `SELECT 
+                ekko.ebeln as purchasing_doc_no, 
+                ekko.lifnr as vendor_code,
+                lfa1.name1 as vendor_name,
+                actualsubmissiondate.milestonetext as milestonetext,
+                actualsubmissiondate.actualsubmissiondate as actualsubmissiondate
+            FROM ekko	as ekko
+                LEFT JOIN lfa1 as lfa1
+                    ON( lfa1.LIFNR = ekko.LIFNR)
+                LEFT JOIN zpo_milestone as zpo_milestone
+                    ON(zpo_milestone.EBELN = ekko.EBELN  AND zpo_milestone.MID = '01')
+                LEFT JOIN actualsubmissiondate as actualsubmissiondate
+                    ON(actualsubmissiondate.purchasing_doc_no = ekko.EBELN  AND actualsubmissiondate.milestoneId = '01')`;
+
+        let conditionQuery = " WHERE 1 = 1 ";
+        const valueArr = [];
+
+        if (payload.poNo) {
+            conditionQuery += " AND ekko.EBELN = ?";
+            valueArr.push(payload.poNo);
+        }
+
+        const advBillReqDataQuery = baseQuery + conditionQuery;
+        const results = await query({ query: advBillReqDataQuery, values: valueArr });
+
+        console.log("jhjklk", advBillReqDataQuery, valueArr);
+
+        resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, results, null)
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, null, null)
+    } 
+
+}
+
+
+
 module.exports = {
-    submitAdvanceBillHybrid
+    submitAdvanceBillHybrid,
+    getAdvBillHybridData
 };
