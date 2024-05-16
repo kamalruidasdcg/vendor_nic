@@ -1,4 +1,6 @@
 const { query } = require("../config/dbConfig");
+const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
+const {BTN_SERVICE_HYBRID } = require("../lib/tableName");
 const {
   C_SDBG_DATE,
   C_DRAWING_DATE,
@@ -179,7 +181,7 @@ const submitBtnServiceHybrid = async (req, res) => {
     net_claim_amt_gst,
     hsn_gstn_icgrn,
     wdc_number,
-    btn_typ
+    assigned_to
   } = req.body;
   let payloadFiles = req.files;
   const tokenData = { ...req.tokenData };
@@ -203,7 +205,7 @@ const submitBtnServiceHybrid = async (req, res) => {
   }
 
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
+  let check_invoice_q = `SELECT count(invoice_no) as count FROM ${BTN_SERVICE_HYBRID} WHERE invoice_no = ? and vendor_code = ?`;
   let check_invoice = await query({query: check_invoice_q, values: [invoice_no, tokenData.vendor_code],});
 
   if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
@@ -227,7 +229,7 @@ const submitBtnServiceHybrid = async (req, res) => {
         payloadFiles["debit_credit_filename"][0]?.filename)
     : null;
 
-  const btn_num = await create_btn_no("BTN");
+  const btn_num = await create_btn_no("");
 
   net_claim_amount = parseFloat(invoice_value) + parseFloat(debit_note) - parseFloat(credit_note);
 
@@ -240,9 +242,10 @@ const submitBtnServiceHybrid = async (req, res) => {
   }
 
   // INSERT Data into btn table
-  let btnQ = `INSERT INTO btn SET
+  let btnQ = `INSERT INTO ${BTN_SERVICE_HYBRID} SET
     btn_num = '${btn_num}',
     purchasing_doc_no = '${purchasing_doc_no}',
+    vendor_name = '${tokenData.iss}',
     vendor_code = '${tokenData.vendor_code}',
     invoice_no = '${invoice_no ? invoice_no : ""}',
     invoice_value='${invoice_value ? invoice_value : ""}',
@@ -254,37 +257,18 @@ const submitBtnServiceHybrid = async (req, res) => {
     e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
     debit_note='${debit_note ? debit_note : ""}',
     credit_note='${credit_note ? credit_note : ""}',
-    debit_credit_filename='${
-      debit_credit_filename ? debit_credit_filename : ""
-    }',
+    debit_credit_filename='${debit_credit_filename ? debit_credit_filename : ""}',
     net_claim_amount='${net_claim_amount ? net_claim_amount : ""}',
-    c_sdbg_date='${c_sdbg_date ? c_sdbg_date : ""}',
-    c_sdbg_filename='${
-      sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : ""
-    }',
-    a_sdbg_date='${a_sdbg_date ? a_sdbg_date : ""}',
-    demand_raise_filename='${
-      demand_raise_filename ? demand_raise_filename : ""
-    }',
-    gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
-    gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
-    get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
-    grn_nos='${grn_nos ? grn_nos : ""}',
-    icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
-    icgrn_total='${icgrn_total ? icgrn_total : ""}',
-    c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
-    a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
-    c_qap_date='${c_qap_date ? c_qap_date : ""}',
-    a_qap_date='${a_qap_date ? a_qap_date : ""}',
-    c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
-    a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
-    pbg_filename='${pbg_filename ? pbg_filename : ""}',
+    net_claim_amt_gst='${net_claim_amt_gst ? net_claim_amt_gst : ""}',
+    wdc_number='${wdc_number ? wdc_number : ""}',
     hsn_gstn_icgrn='${hsn_gstn_icgrn ? (hsn_gstn_icgrn === true ? 1 : 0) : 0}',
-    created_at='${created_at ? created_at : ""}',
+    created_at= ${getEpochTime()},
+    created_by_id = '${tokenData.vendor_code}',
+    assigned_to='${assigned_to ? assigned_to : ""}',
     btn_type='hybrid-bill-material'
   `;
   let result = await query({query: btnQ, values: [],});
-
+console.log(result);
 
 };
 
