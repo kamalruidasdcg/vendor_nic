@@ -804,4 +804,6 @@ module.exports = {
   fetchBTNByNum,
   fetchBTNByNumForDO,
   getGrnIcrenPenelty,
+  btnSaveToSap,
+  timeInHHMMSS
 };

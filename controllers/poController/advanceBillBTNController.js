@@ -4,9 +4,10 @@ const { INSERT } = require("../../lib/constant");
 const { resSend } = require("../../lib/resSend");
 const { APPROVED } = require("../../lib/status");
 const { getEpochTime, getYyyyMmDd, generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
-const { filesData, advBillHybridbtnPayload, getSDBGApprovedFiles, getICGRNs, contractualSubmissionDate, actualSubmissionDate, dateToEpochTime } = require("../../services/btn.services");
+const { filesData, advBillHybridbtnPayload, getSDBGApprovedFiles, getICGRNs, contractualSubmissionDate, actualSubmissionDate, dateToEpochTime, checkBTNRegistered, advBillHybridbtnDOPayload, getBTNInfo } = require("../../services/btn.services");
 const { create_btn_no } = require("../../services/po.services");
 const Message = require("../../utils/messages");
+const { btnSaveToSap, timeInHHMMSS } = require("../btnControllers");
 
 
 const submitAdvanceBillHybrid = async (req, res) => {
@@ -184,7 +185,84 @@ const getAdvBillHybridData = async (req, res) => {
 
 
 
+const submitAdvBillBTNByDO = async (req, res) => {
+
+    try {
+        const client = await connection();
+        try {
+            let payload = req.body;
+            const tokenData = req.tokenData;
+            // Check required fields
+            if (!payload.btn_num) {
+                return resSend(res, false, 200, "BTN number is missing!", null, null);
+            }
+            if (!payload.net_payable_amount) {
+                return resSend(res, false, 200, "Net payable is missing!", null, null);
+            }
+
+
+            // Check BTN by BTN Number
+            let checkBTNR = await checkBTNRegistered(payload.btn_num, 'btn_advance_bill_hybrid_do', client);
+            if (checkBTNR) {
+                return resSend(res, false, 200, "BTN is already submitted!", null, null);
+            }
+
+            payload = {
+                ...payload,
+                created_by: tokenData.vendor_code,
+                created_at: getEpochTime(),
+            }
+
+            const btnPayload = await advBillHybridbtnDOPayload(payload);
+            console.log("btnPayload", btnPayload);
+            const btnQuery = generateQuery(INSERT, 'btn_advance_bill_hybrid_do', btnPayload);
+            console.log("btnQuery", btnQuery);
+            const [results] = await client.execute(btnQuery.q, btnQuery.val);
+            console.log("resultsresultsresults", results);
+            let btnInfo = await getBTNInfo(payload.btn_num, 'btn_advance_bill_hybrid', client);
+
+            console.log("result: " + JSON.stringify(btnInfo));
+
+
+            const btn_payload = {
+                ZBTNO: payload.btn_num, // BTN Number
+                ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+                ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
+                ERNAM: tokenData.vendor_code, // Created Person Name
+                LAEDA: "", // Not Needed
+                AENAM: btnInfo[0].vendor_name, // Vendor Name
+                LIFNR: btnInfo[0].vendor_code, // Vendor Codebtn_v2
+                ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
+                EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
+                DPERNR1: payload.assigned_to, // assigned_to
+                DSTATUS: "4", // sap deparment forword status
+                ZRMK1: "Forwared To Finance", // REMARKS
+            };
+            console.log("result", results);
+            console.log("btn_payload", btn_payload);
+            if (results.affectedRows) {
+                // btnSaveToSap(btn_payload);
+                return resSend(res, true, 200, "BTN has been updated!", null, null);
+            } else {
+                return resSend(res, false, 200, JSON.stringify(results), null, null);
+            }
+
+        } catch (error) {
+            resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null)
+        } finally {
+            await client.end();
+        }
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, null, null)
+    }
+};
+
+
+
+
 module.exports = {
     submitAdvanceBillHybrid,
-    getAdvBillHybridData
+    getAdvBillHybridData,
+    submitAdvBillBTNByDO
 };

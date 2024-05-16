@@ -87,6 +87,31 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
 
     return pl;
 }
+const advBillHybridbtnDOPayload = async (payload) => {
+
+    if (!payload || !Object.keys(payload).length) throw new Error("Invalid payload in advBillHybridbtnPayload");
+
+    const pl = {
+        btn_num: payload.btn_num,
+        contractual_ld: payload.contractual_ld || "",
+        ld_amount: payload.ld_amount || "",
+        drg_penalty: payload.drg_penalty || "",
+        qap_penalty: payload.qap_penalty || "",
+        ilms_penalty: payload.ilms_penalty || "",
+        // estimate_penalty: payload.estimate_penalty || "",
+        other_deduction: payload.other_deduction || "",
+        total_deduction: payload.total_deduction || "",
+        // net_payable_amount: payload.net_payable_amount || "",
+        created_at: payload.created_at || "",
+        created_by: payload.created_by || "",
+        assigned_to: payload.assigned_to || ""
+    };
+
+    return pl;
+}
+
+
+
 
 
 const checkMissingActualSubmissionDate = async () => {
@@ -202,25 +227,30 @@ const getICGRNs = async (body) => {
     };
 };
 
-const checkBTNRegistered = async (btn_num) => {
-    let q = `SELECT count("btn_num") as count FROM btn_do WHERE btn_num = ?`;
-    let result = await query({
-        query: q,
-        values: [btn_num],
-    });
-    console.log(result);
-    if (result.count > 0) {
-        return true;
+const checkBTNRegistered = async (btn_num, btn_table_name, client) => {
+    let q = `SELECT count("btn_num") as count FROM ${btn_table_name} WHERE btn_num = ?`;
+    let [results] = await client.execute(q, [btn_num]);
+    console.log(results);
+    if (results.length) {
+        return results[0].count > 0;
     }
     return false;
 };
-const getBTNInfo = async (btn_num) => {
-    let q = `SELECT * FROM btn WHERE btn_num = ?`;
-    let result = await query({
-        query: q,
-        values: [btn_num],
-    });
-    return result;
+const getBTNInfo = async (btn_num, btn_table_name, client) => {
+    let q = `SELECT * FROM ${btn_table_name} WHERE btn_num = ?`;
+
+    q = 
+        `SELECT 
+            btn.*, 
+            vendor.name1 as vendor_name 
+        FROM 
+            ${btn_table_name} as btn
+        LEFT JOIN 
+            lfa1 as vendor 
+        ON(vendor.lifnr = btn.vendor_code)
+            WHERE btn_num = ?`
+    let [results] = await client.execute(q, [btn_num]);
+    return results;
 };
 const getBTNInfoDO = async (btn_num) => {
     let q = `SELECT * FROM btn_do WHERE btn_num = ?`;
@@ -416,5 +446,6 @@ module.exports = {
     filesData,
     contractualSubmissionDate,
     actualSubmissionDate,
-    dateToEpochTime
+    dateToEpochTime,
+    advBillHybridbtnDOPayload
 }
