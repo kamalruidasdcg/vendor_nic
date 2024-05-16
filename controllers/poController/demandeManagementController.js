@@ -173,7 +173,7 @@ const list = async (req, res) => {
 
 const getRestAmount = async (req, res) => {
     try {
-        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
+        const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount, NETPR AS po_rate from ${EKPO} WHERE EBELN = ? AND EBELP = ?`;
         let get_data_result = await query({ query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
         // console.log(get_data_result);
         // return;

@@ -1,7 +1,7 @@
 const { json } = require("express");
 const { query } = require("../config/dbConfig");
 const { INSERT } = require("../lib/constant");
-const { SUBMITTED } = require("../lib/status");
+const { SUBMITTED, ACCEPTED, REJECTED } = require("../lib/status");
 const {
   ACTUAL_SUBMISSION_DATE,
   ILMS,
@@ -158,13 +158,15 @@ const wdcPayload = (payload,line_item_array) => {
   //     line_item_no:15,
   //   contractual_start_date:"1234",
   //   Contractual_completion_date:"5678",
-  //   delay:"10"
+  //   delay:"10",
+  //   status:ACCEPTED
   //   },
   //   {
   //     line_item_no:20,
   //     contractual_start_date:"12qqqq34",
   //     Contractual_completion_date:"qqqq5678",
-  //     delay:"qqq0"
+  //     delay:"qqq0",
+  //     status:REJECTED
   //     }
   // ];
  // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
@@ -468,8 +470,8 @@ const create_btn_no = async (type) => {
     });
     console.log(btn_res);
     let threeDigit = 999 - parseInt(btn_res[0]?.count);
-    const reference_no = `${type}${dateNeed}${threeDigit}`;
-    // const reference_no = `${dateNeed}${threeDigit}`;
+    // const reference_no = `${type}${dateNeed}${threeDigit}`;
+    const reference_no = `${dateNeed}${threeDigit}`;
     return reference_no;
   } catch (error) {
     console.log("Error into create btn :"`${error}`);
