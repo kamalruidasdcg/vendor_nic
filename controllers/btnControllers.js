@@ -25,7 +25,7 @@ const {
   getBTNInfoDO,
 } = require("../utils/btnUtils");
 const { checkTypeArr } = require("../utils/smallFun");
-
+ 
 const fetchAllBTNs = async (req, res) => {
   const { id } = req.query;
   if (!id) {
@@ -38,26 +38,26 @@ const fetchAllBTNs = async (req, res) => {
       null
     );
   }
-
+ 
   let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
-
+ 
   let result = await query({
     query: btnQ,
     values: [id],
   });
-
+ 
   let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
-
+ 
   let result2 = await query({
     query: btnQ2,
     values: [id],
   });
-
+ 
   const data = result.concat(result2);
-
+ 
   return resSend(res, true, 200, "ALL data from BTNs", data, null);
 };
-
+ 
 const fetchBTNByNum = async (req, res) => {
   const { id, btn_num } = req.query;
   if (!id || !btn_num) {
@@ -70,9 +70,9 @@ const fetchBTNByNum = async (req, res) => {
       null
     );
   }
-
+ 
   let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? and btn_num = ?`;
-
+ 
   let result = await query({
     query: btnQ,
     values: [id, btn_num],
@@ -80,17 +80,17 @@ const fetchBTNByNum = async (req, res) => {
   // const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
   // ZMBLNR AS grn_no,
   // INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
-
+ 
   // let gate_entry_v = await query({
   //   query: gate_entry_q,
   //   values: [result[0].purchasing_doc_no, result[0].invoice_no],
   // });
-
+ 
   // console.log(gate_entry_v);
-
+ 
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
-
+ 
 const fetchBTNByNumForDO = async (req, res) => {
   const { btn_num } = req.query;
   if (!btn_num) {
@@ -103,20 +103,20 @@ const fetchBTNByNumForDO = async (req, res) => {
       null
     );
   }
-
+ 
   let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
   console.log("btn_num", btnDOQ, btn_num);
-
+ 
   let doRes = await query({
     query: btnDOQ,
     values: [btn_num],
   });
-
+ 
   console.log("doRes", doRes);
-
+ 
   return resSend(res, true, 200, "ALL data from BTNs", doRes, null);
 };
-
+ 
 const getBTNData = async (req, res) => {
   try {
     const { id } = req.query;
@@ -142,7 +142,7 @@ const getBTNData = async (req, res) => {
           c_ilms_date = item.PLAN_DATE;
         }
       });
-
+ 
     // GET Actual Dates from other Table
     let a_sdbg_date;
     let a_drawing_date;
@@ -165,7 +165,7 @@ const getBTNData = async (req, res) => {
           a_ilms_date = item.PLAN_DATE;
         }
       });
-
+ 
     let obj = {
       c_sdbg_date,
       c_drawing_date,
@@ -176,41 +176,41 @@ const getBTNData = async (req, res) => {
       a_qap_date,
       a_ilms_date,
     };
-
+ 
     // GET Approved SDBG by PO Number
     let sdbg_filename_result = await getSDBGApprovedFiles(id);
-
+ 
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
-
+ 
     // GET gate by PO Number
     let gate_entry = await getGateEntry(id);
     if (gate_entry) {
       obj = { ...obj, gate_entry };
     }
     console.log("gate_entry", gate_entry);
-
+ 
     // GET GRN Number by PO Number
     let grn_nos = await getGRNs(id);
     if (checkTypeArr(grn_nos)) {
       obj = { ...obj, grn_nos };
     }
-
+ 
     // GET GRN Number by PO Number
     // let icgrn_nos = await getICGRNs(id);
     // if (icgrn_nos) {
     //   obj = { ...obj, icgrn_nos };
     // }
-
+ 
     // GET Approved SDBG by PO Number
     let pbg_filename_result = await getPBGApprovedFiles(id);
     console.log(pbg_filename_result);
-
+ 
     if (checkTypeArr(pbg_filename_result)) {
       obj = { ...obj, pbg_filename: pbg_filename_result };
     }
-
+ 
     resSend(res, true, 200, "Succesfully fetched all data!", obj, null);
   } catch (error) {
     console.error(error);
@@ -224,7 +224,7 @@ const getBTNData = async (req, res) => {
     );
   }
 };
-
+ 
 const submitBTN = async (req, res) => {
   let {
     purchasing_doc_no,
@@ -246,7 +246,7 @@ const submitBTN = async (req, res) => {
   } = req.body;
   let payloadFiles = req.files;
   const tokenData = { ...req.tokenData };
-
+ 
   // Check required fields
   if (!JSON.parse(hsn_gstn_icgrn)) {
     return resSend(
@@ -258,7 +258,7 @@ const submitBTN = async (req, res) => {
       null
     );
   }
-
+ 
   // Check required fields
   if (!invoice_value || !invoice_value.trim() === "") {
     return resSend(res, false, 200, "Invoice Value is missing!", null, null);
@@ -271,7 +271,7 @@ const submitBTN = async (req, res) => {
   ) {
     return resSend(res, false, 200, "Invoice Number is missing!", null, null);
   }
-
+ 
   // check invoice number is already present in DB
   let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
   let check_invoice = await query({
@@ -288,57 +288,57 @@ const submitBTN = async (req, res) => {
       null
     );
   }
-
+ 
   // Handle uploaded files
   let invoice_filename;
   payloadFiles["invoice_filename"]
     ? (invoice_filename = payloadFiles["invoice_filename"][0]?.filename)
     : null;
-
+ 
   let e_invoice_filename;
   payloadFiles["e_invoice_filename"]
     ? (e_invoice_filename = payloadFiles["e_invoice_filename"][0]?.filename)
     : null;
-
+ 
   let debit_credit_filename;
   payloadFiles["debit_credit_filename"]
     ? (debit_credit_filename =
         payloadFiles["debit_credit_filename"][0]?.filename)
     : null;
-
+ 
   // GET Approved SDBG by PO Number
   let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
-
+ 
   // // GET GRN Number by PO Number
   // let grn_nos = await getGRNs(purchasing_doc_no);
-
+ 
   // GET ICGRN Value by PO Number
   let icgrn_total = await getICGRNs({ purchasing_doc_no, invoice_no });
-
+ 
   icgrn_total = icgrn_total.total_icgrn_value;
-
+ 
   // // GET GRN Number by PO Number
   // let icgrn_nos = await getICGRNs(purchasing_doc_no);
-
+ 
   let get_entry_filename;
   payloadFiles["get_entry_filename"]
     ? (get_entry_filename = payloadFiles["get_entry_filename"][0]?.filename)
     : null;
-
+ 
   let demand_raise_filename;
   payloadFiles["demand_raise_filename"]
     ? (demand_raise_filename =
         payloadFiles["demand_raise_filename"][0]?.filename)
     : null;
-
+ 
   let pbg_filename;
   payloadFiles["pbg_filename"]
     ? (pbg_filename = payloadFiles["pbg_filename"][0]?.filename)
     : null;
-
+ 
   // generate btn num
   const btn_num = await create_btn_no("BTN");
-
+ 
   // MATH Calculation
   if (!debit_note || debit_note === "") {
     debit_note = 0;
@@ -346,13 +346,9 @@ const submitBTN = async (req, res) => {
   if (!credit_note || credit_note === "") {
     credit_note = 0;
   }
-
-  let net_claim_amount =
-    parseFloat(invoice_value) +
-    parseFloat(debit_note) +
-    parseFloat(gst_rate) -
-    parseFloat(credit_note);
-
+ 
+  let net_claim_amount = parseFloat(invoice_value) + parseFloat(debit_note) - parseFloat(credit_note);
+ 
   // GET Contractual Dates from other Table
   let c_sdbg_date = null;
   let c_drawing_date = null;
@@ -370,7 +366,7 @@ const submitBTN = async (req, res) => {
       return resSend(res, false, 200, `${item} is missing!`, null, null);
     }
   }
-
+ 
   c_dates.forEach((item) => {
     if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
       c_sdbg_date = new Date(item.PLAN_DATE).getTime();
@@ -382,7 +378,7 @@ const submitBTN = async (req, res) => {
       c_ilms_date = new Date(item.PLAN_DATE).getTime();
     }
   });
-
+ 
   // GET Actual Dates from other Table
   let a_sdbg_date;
   let a_drawing_date;
@@ -400,7 +396,7 @@ const submitBTN = async (req, res) => {
       return resSend(res, false, 200, `${item} is missing!`, null, null);
     }
   }
-
+ 
   //return;
   a_dates.forEach((item) => {
     if (item.MTEXT === A_SDBG_DATE) {
@@ -453,16 +449,16 @@ const submitBTN = async (req, res) => {
       a_ilms_date = item.PLAN_DATE;
     }
   });
-
+ 
   // created at
   let created_at = getEpochTime(); //new Date().toLocaleDateString();
-
+ 
   // INSERT Data into btn table
-  let btnQ = `INSERT INTO btn SET 
-    btn_num = '${btn_num}', 
-    purchasing_doc_no = '${purchasing_doc_no}', 
-    vendor_code = '${tokenData.vendor_code}', 
-    invoice_no = '${invoice_no ? invoice_no : ""}', 
+  let btnQ = `INSERT INTO btn SET
+    btn_num = '${btn_num}',
+    purchasing_doc_no = '${purchasing_doc_no}',
+    vendor_code = '${tokenData.vendor_code}',
+    invoice_no = '${invoice_no ? invoice_no : ""}',
     invoice_value='${invoice_value ? invoice_value : ""}',
     cgst='${cgst ? cgst : ""}',
     igst='${igst ? igst : ""}',
@@ -489,7 +485,6 @@ const submitBTN = async (req, res) => {
     get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
     grn_nos='${grn_nos ? grn_nos : ""}',
     icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
-    gst_rate='${gst_rate ? gst_rate : ""}',
     icgrn_total='${icgrn_total ? icgrn_total : ""}',
     c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
     a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
@@ -506,27 +501,29 @@ const submitBTN = async (req, res) => {
     query: btnQ,
     values: [],
   });
-
-  console.log(associated_po, "associated_po")
+ 
+  console.log(associated_po, "associated_po");
   if (associated_po && associated_po !== "" && Array.isArray(associated_po)) {
-    console.log(associated_po, "associated_po2")
+    console.log(associated_po, "associated_po2");
     await Promise.all(
       associated_po.forEach(async (item) => {
-        console.log(item)
-        if(item && item?.a_po !== ""){
+        console.log(item);
+        if (item && item?.a_po !== "") {
           // INSERT Data into btn table
-          let btnQ = `INSERT INTO btn SET 
-            btn_num = '${btn_num}', 
-            purchasing_doc_no = '${item.a_po}', 
-            vendor_code = '${tokenData.vendor_code}', 
-            invoice_no = '${invoice_no ? invoice_no : ""}', 
+          let btnQ = `INSERT INTO btn SET
+            btn_num = '${btn_num}',
+            purchasing_doc_no = '${item.a_po}',
+            vendor_code = '${tokenData.vendor_code}',
+            invoice_no = '${invoice_no ? invoice_no : ""}',
             invoice_value='${invoice_value ? invoice_value : ""}',
             cgst='${cgst ? cgst : ""}',
             igst='${igst ? igst : ""}',
             sgst='${sgst ? sgst : ""}',
             invoice_filename ='${invoice_filename ? invoice_filename : ""}',
             e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
-            e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
+            e_invoice_filename ='${
+              e_invoice_filename ? e_invoice_filename : ""
+            }',
             debit_note='${debit_note ? debit_note : ""}',
             credit_note='${credit_note ? credit_note : ""}',
             debit_credit_filename='${
@@ -543,7 +540,9 @@ const submitBTN = async (req, res) => {
             }',
             gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
             gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
-            get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
+            get_entry_filename='${
+              get_entry_filename ? get_entry_filename : ""
+            }',
             grn_nos='${grn_nos ? grn_nos : ""}',
             icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
             gst_rate='${gst_rate ? gst_rate : ""}',
@@ -569,7 +568,7 @@ const submitBTN = async (req, res) => {
       })
     );
   }
-
+ 
   if (result.affectedRows) {
     return resSend(
       res,
@@ -590,7 +589,7 @@ const submitBTN = async (req, res) => {
     );
   }
 };
-
+ 
 const submitBTNByDO = async (req, res) => {
   let {
     btn_num,
@@ -602,21 +601,22 @@ const submitBTNByDO = async (req, res) => {
     p_qap_amount,
     p_ilms_amount,
     o_deduction,
+    p_estimate_amount,
     total_deduction,
     net_payable_amount,
-    assigned_to
+    assigned_to,
   } = req.body;
   const tokenData = { ...req.tokenData };
-
+ 
   // Check required fields
   if (!net_payable_amount) {
     return resSend(res, false, 200, "Net payable is missing!", null, null);
   }
-
+ 
   if (!btn_num) {
     return resSend(res, false, 200, "BTN number is missing!", null, null);
   }
-
+ 
   // Check BTN by BTN Number
   let checkBTNR = await checkBTNRegistered(btn_num);
   if (checkBTNR) {
@@ -625,24 +625,25 @@ const submitBTNByDO = async (req, res) => {
   // created at
   let created_at = new Date().toLocaleDateString(); //getEpochTime();
   console.log(created_at);
-
+ 
   // INSERT Data into btn table
-  let btnQ = `INSERT INTO btn_do SET 
-    btn_num = '${btn_num}', 
-    contractual_ld = '${ld_c_date}', 
-    ld_amount = '${ld_amount ? ld_amount : ""}', 
-    drg_penalty = '${p_drg_amount ? p_drg_amount : ""}', 
-    qap_penalty = '${p_qap_amount ? p_qap_amount : ""}', 
+  let btnQ = `INSERT INTO btn_do SET
+    btn_num = '${btn_num}',
+    contractual_ld = '${ld_c_date}',
+    ld_amount = '${ld_amount ? ld_amount : ""}',
+    drg_penalty = '${p_drg_amount ? p_drg_amount : ""}',
+    qap_penalty = '${p_qap_amount ? p_qap_amount : ""}',
     ilms_penalty='${p_ilms_amount ? p_ilms_amount : ""}',
+    estimate_penalty='${p_estimate_amount ? p_estimate_amount : ""}',
     other_deduction ='${o_deduction ? o_deduction : ""}',
     total_deduction='${total_deduction ? total_deduction : ""}',
     net_payable_amout ='${net_payable_amount ? net_payable_amount : ""}',
     created_at='${created_at ? created_at : ""}',
     created_by='',
     assigned_to='${assigned_to ? assigned_to : ""}'
-
+ 
   `;
-
+ 
   let result = await query({
     query: btnQ,
     values: [],
@@ -654,14 +655,14 @@ const submitBTNByDO = async (req, res) => {
   let btnDOInfo = await getBTNInfoDO(btn_num);
   console.log("result: " + JSON.stringify(btnInfo));
   console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
-
-  const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN 
+ 
+  const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
   lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = ?`;
   let result_qq = await query({
     query: qq,
     values: [btnInfo[0].purchasing_doc_no],
   });
-
+ 
   console.log(result_qq);
   console.log("4567898765ji8y");
   const btn_payload = {
@@ -675,7 +676,7 @@ const submitBTNByDO = async (req, res) => {
     ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
     EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
     DPERNR1: assigned_to, // assigned_to
-    DSTATUS: "4",// sap deparment forword status
+    DSTATUS: "4", // sap deparment forword status
     ZRMK1: "Forwared To Finance", // REMARKS
   };
   console.log("result", result);
@@ -686,7 +687,7 @@ const submitBTNByDO = async (req, res) => {
     return resSend(res, false, 200, JSON.stringify(result), null, null);
   }
 };
-
+ 
 async function btnSaveToSap(btnPayload) {
   try {
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
@@ -698,11 +699,11 @@ async function btnSaveToSap(btnPayload) {
     console.error("Error making the request:", error.message);
   }
 }
-
+ 
 const getGrnIcrenPenelty = async (req, res) => {
   try {
     const { purchasing_doc_no, invoice_no } = req.body;
-
+ 
     if (!purchasing_doc_no || !invoice_no) {
       return resSend(
         res,
@@ -713,11 +714,11 @@ const getGrnIcrenPenelty = async (req, res) => {
         null
       );
     }
-
+ 
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no, EBELP as po_lineitem,
     INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
-
+ 
     let gate_entry_v = await query({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
@@ -733,23 +734,30 @@ const getGrnIcrenPenelty = async (req, res) => {
       );
     }
     if (gate_entry_v.length == 0) {
-      return resSend(res, false, 200, "No record found under the invoice number!", null, null);
+      return resSend(
+        res,
+        false,
+        200,
+        "No record found under the invoice number!",
+        null,
+        null
+      );
     }
     gate_entry_v = gate_entry_v[0];
     console.log("gate_entry_v", gate_entry_v);
-
-    const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity 
+ 
+    const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity
     FROM qals WHERE MBLNR = ?`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
     let icgrn_no = await query({
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-
+ 
     console.log("icgrn_no", icgrn_no);
-
+ 
     let total_price = 0;
     let total_quantity = 0;
-
+ 
     await Promise.all(
       await icgrn_no.map(async (item) => {
         const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = ? and EBELN = ? and EBELP = ?`;
@@ -770,7 +778,7 @@ const getGrnIcrenPenelty = async (req, res) => {
     gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
     gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
     gate_entry_v.grn_nos = gate_entry_v.grn_no;
-
+ 
     console.log;
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
   } catch (error) {
@@ -778,16 +786,16 @@ const getGrnIcrenPenelty = async (req, res) => {
     return resSend(res, true, 400, "error!", error.message, null);
   }
 };
-
+ 
 const timeInHHMMSS = () => {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
-
+ 
   return hours + minutes + seconds;
 };
-
+ 
 module.exports = {
   fetchAllBTNs,
   getBTNData,

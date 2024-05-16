@@ -108,6 +108,7 @@ exports.wdc = async (req, res) => {
             null
           );
         }
+
         // if (obj.status == APPROVED) {
         //   if (
         //     !obj.stage_datiels ||
@@ -125,6 +126,7 @@ exports.wdc = async (req, res) => {
         //     );
         //   }
         // }
+        
         payload = wdcPayload(obj, last_data.line_item_array);
         payload = {
           //...obj,
@@ -171,9 +173,30 @@ exports.wdc = async (req, res) => {
         payloadFiles["file_attendance_report"]
           ? (invoice_filename = payloadFiles["file_attendance_report"][0]?.filename)
           : null;
-          console.log(obj.line_item_array, typeof obj.line_item_array)
-      // obj.line_item_array = (obj.line_item_array) ? JSON.stringify(obj.line_item_array) : null;
-      console.log("obj.line_item_array", obj.line_item_array, typeof obj.line_item_array)
+
+          obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
+          let line_item_array = JSON.parse(obj.line_item_array);
+          obj.total_amount = 0;
+
+          if(obj.action_type == 'JCC' && obj.line_item_array != "") {
+             
+              const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = ?`;
+              let get_data_result = await query({ query: line_item_array_q, values: [obj.purchasing_doc_no] });
+              
+              obj.line_item_array = line_item_array.map((el2) => {
+                const DOObj =   get_data_result.find((elms) => elms.line_item_no == el2.line_item_no);
+                let total = parseFloat(DOObj.po_rate) * parseFloat(el2.claim_qty);
+                
+                total = total.toFixed(2);
+                obj.total_amount += parseFloat(total);
+                return DOObj ? {...el2, total : total} : el2;
+              });
+
+              obj.line_item_array = JSON.stringify(obj.line_item_array);
+             
+          }
+
+
       payload = {
         ...fileData,
         ...obj,
@@ -201,7 +224,7 @@ exports.wdc = async (req, res) => {
           await submitToSapServer(payload);
         } catch (error) {
           console.warn(
-            "WDC save in sap faild, please refer to wdcContorller submitToSapServer fn"
+            "WDC/JCC save in sap faild, please refer to wdcContorller submitToSapServer fn"
           );
         }
       }
@@ -425,5 +448,59 @@ let new_line_item = JSON.parse(payload.line_item_array);
 //     "delay":""
 //     }
 //   ]
+// }
+
+///////////// JCC //////////////////
+//// VENODOR SUBMIT //////////
+// {
+//   "purchasing_doc_no": "",
+//   "remarks": "",
+//   "status": "",
+//   "work_done_by": "",
+//   "work_title": "",
+//   "job_location": "",
+//   "yard_no": "",
+//   "line_item_array": [
+//     {
+//      "line_item_no":"",
+//     "claim_qty":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "delay_in_work_execution":""
+//     },
+//     {
+//      "line_item_no":"",
+//     "claim_qty":"",
+//     "actual_start_date":"",
+//     "actual_completion_date":"",
+//     "delay_in_work_execution":""
+//     },
+//   ],
+//   "guarantee_defect_liability_start_date": 1234567890
+//   "guarantee_defect_liability_end_date": 1234567891
+//   "action_type":"JCC"
+// }
+
+
+
+///////////// JCC //////////////////
+//// GRSE SUBMIT //////////
+// {
+//   "purchasing_doc_no": "",
+//   "remarks": "",
+//   "status": "",
+//   "reference_no": ""
+//   "line_item_array": [
+//     {
+//      "line_item_no":"",
+//      "status":""
+//     },
+//     {
+//      "line_item_no":"",
+//      "status":""
+//     },
+//   ],
+//   "total_amount_status": "APPROVED",
+//   "action_type":"JCC"
 // }
 
