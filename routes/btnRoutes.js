@@ -16,7 +16,7 @@ const {
   getWdcInfoServiceHybrid,
 } = require("../controllers/btnServiceHybridControllers");
 
-const { btnmw } = require("../services/btnmw");
+const { btnmw, btnAdvanceBillHybridUploadFile } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const { submitAdvanceBillHybrid, getAdvBillHybridData } = require("../controllers/poController/advanceBillBTNController");
 
@@ -77,7 +77,7 @@ router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
 //// Btn Service Hybrid ////
 ///////////////////////////
 
-router.post("/submitAdvBillHybrid", [veifyAccessToken, btnmw()], (req, res) => {
+router.post("/submitAdvBillHybrid", [veifyAccessToken, btnAdvanceBillHybridUploadFile()], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
     submitAdvanceBillHybrid(req, res)
 

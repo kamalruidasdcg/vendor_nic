@@ -4,7 +4,7 @@ const { INSERT } = require("../../lib/constant");
 const { resSend } = require("../../lib/resSend");
 const { APPROVED } = require("../../lib/status");
 const { getEpochTime, getYyyyMmDd, generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
-const { filesData, advBillHybridbtnPayload, getSDBGApprovedFiles, getICGRNs, contractualSubmissionDate, actualSubmissionDate } = require("../../services/btn.services");
+const { filesData, advBillHybridbtnPayload, getSDBGApprovedFiles, getICGRNs, contractualSubmissionDate, actualSubmissionDate, dateToEpochTime } = require("../../services/btn.services");
 const { create_btn_no } = require("../../services/po.services");
 const Message = require("../../utils/messages");
 
@@ -26,9 +26,9 @@ const submitAdvanceBillHybrid = async (req, res) => {
             if (!payload) {
                 return resSend(res, false, 400, "Invalid payload!", null, null);
             }
-            if (!JSON.parse(payload.hsn_gstn_icgrn)) {
-                return resSend(res, false, 200, "Please check HSN code, GSTIN, Tax rate is as per PO!", null, null);
-            }
+            // if (!JSON.parse(payload.hsn_gstn_icgrn)) {
+            //     return resSend(res, false, 200, "Please check HSN code, GSTIN, Tax rate is as per PO!", null, null);
+            // }
             if (!payload.invoice_value) {
                 return resSend(res, false, 200, "Invoice Value is missing!", null, null);
             }
@@ -38,16 +38,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
             let payloadFiles = req.files;
             const { associated_po } = payload;
-            // GET Approved SDBG by PO Number
-            // let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
 
-            // // GET GRN Number by PO Number
-            // let grn_nos = await getGRNs(purchasing_doc_no);
-
-            // GET ICGRN Value by PO Number
-            // let icgrn_total = await getICGRNs({ purchasing_doc_no, invoice_no });
-
-            // icgrn_total = icgrn_total.total_icgrn_value;
 
             // BTN NUMBER GENERATE
             const btn_num = await create_btn_no("BTN");
@@ -71,24 +62,22 @@ const submitAdvanceBillHybrid = async (req, res) => {
             //     parseFloat(credit_note);
 
             // CONTRACTUAL SUBMISSION DATA
-            const contDateSetup = await contractualSubmissionDate(payload.purchasing_doc_no, client);
-            console.log("contDateSetup", contDateSetup);
-            if (contDateSetup.status == false) {
-                return resSend(res, false, 200, contDateSetup.msg, null, null);
-            }
+            // const contDateSetup = await contractualSubmissionDate(payload.purchasing_doc_no, client);
+            // console.log("contDateSetup", contDateSetup);
+            // if (contDateSetup.status == false) {
+            //     return resSend(res, false, 200, contDateSetup.msg, null, null);
+            // }
 
             // ACTUAL SUMBISSION DATA
-            const actualDateSetup = await actualSubmissionDate(payload.purchasing_doc_no, client);
-            if (actualDateSetup.status == false) {
-                return resSend(res, false, 200, contDateSetup.msg, null, null);
-            }
+            // const actualDateSetup = await actualSubmissionDate(payload.purchasing_doc_no, client);
+            // if (actualDateSetup.status == false) {
+            //     return resSend(res, false, 200, contDateSetup.msg, null, null);
+            // }
 
             // ADDING EXTRA DATA IN PAYLOAD
             payload = {
                 ...payload,
                 ...uploadedFiles,
-                ...contDateSetup.data,
-                ...actualDateSetup.data,
                 btn_num,
                 vendor_code: tokenData.vendor_code,
                 created_at: getEpochTime()
@@ -97,7 +86,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
             // PAYLOAD DATA
             const btnPayload = await advBillHybridbtnPayload(payload, 'advance-bill-hybrid');
             // GENERATE QUERY, DATA AND SAVE
-            const btnQuery = generateQuery(INSERT, 'btn', btnPayload);
+            const btnQuery = generateQuery(INSERT, 'btn_advance_bill_hybrid', btnPayload);
             const result1 = await client.execute(btnQuery.q, btnQuery.val);
             let associated_po_arr = [];
             if (associated_po && Array.isArray(associated_po)) {
@@ -106,7 +95,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
                     purchasing_doc_no: ele
                 }));
 
-                const multipledataInsert = await generateQueryForMultipleData(associated_po_arr, 'btn', 'id');
+                const multipledataInsert = await generateQueryForMultipleData(associated_po_arr, 'btn_advance_bill_hybrid', 'id');
                 const result2 = await client.execute(multipledataInsert);
             }
 
@@ -130,6 +119,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
 const getAdvBillHybridData = async (req, res) => {
 
+    const client = await connection();
     try {
         const payload = req.body;
 
@@ -139,18 +129,19 @@ const getAdvBillHybridData = async (req, res) => {
 
         let baseQuery =
             `SELECT 
-                ekko.ebeln as purchasing_doc_no, 
-                ekko.lifnr as vendor_code,
-                lfa1.name1 as vendor_name,
-                actualsubmissiondate.milestonetext as milestonetext,
-                actualsubmissiondate.actualsubmissiondate as actualsubmissiondate
-            FROM ekko	as ekko
-                LEFT JOIN lfa1 as lfa1
+                ekko.ebeln AS purchasing_doc_no, 
+                ekko.lifnr AS vendor_code,
+                lfa1.name1 AS vendor_name,
+                actualsubmissiondate.milestonetext AS milestonetext,
+                actualsubmissiondate.actualsubmissiondate AS a_sdbg_sub_date,
+                zpo_milestone.plan_date AS c_sdbg_sub_date
+            FROM ekko	AS ekko
+                LEFT JOIN lfa1 AS lfa1
                     ON( lfa1.LIFNR = ekko.LIFNR)
-                LEFT JOIN zpo_milestone as zpo_milestone
-                    ON(zpo_milestone.EBELN = ekko.EBELN  AND zpo_milestone.MID = '01')
-                LEFT JOIN actualsubmissiondate as actualsubmissiondate
-                    ON(actualsubmissiondate.purchasing_doc_no = ekko.EBELN  AND actualsubmissiondate.milestoneId = '01')`;
+                LEFT JOIN zpo_milestone AS zpo_milestone
+                    ON(zpo_milestone.EBELN = ekko.EBELN  AND zpo_milestone.MID = '1')
+                LEFT JOIN actualsubmissiondate AS actualsubmissiondate
+                    ON(actualsubmissiondate.purchasing_doc_no = ekko.EBELN  AND actualsubmissiondate.milestoneId = '1')`;
 
         let conditionQuery = " WHERE 1 = 1 ";
         const valueArr = [];
@@ -161,15 +152,33 @@ const getAdvBillHybridData = async (req, res) => {
         }
 
         const advBillReqDataQuery = baseQuery + conditionQuery;
-        const results = await query({ query: advBillReqDataQuery, values: valueArr });
+        // let results = await query({ query: advBillReqDataQuery, values: valueArr });
+        let [results] = await client.execute(advBillReqDataQuery, valueArr);
+
+        console.log("results", results);
+
+        const data = await getSDBGApprovedFiles(payload.poNo, client);
+
+        console.log("res", data);
+
+        if (results && results.length) {
+            results = results.map((el) => ({ ...el, c_sdbg_sub_date: dateToEpochTime(el.c_sdbg_sub_date) }));
+        }
+
+        if (results && results.length && data && data.length) {
+            results = results.map((el) => ({ ...el, c_sdbg_filename: data[0].file_name, c_sdbg_file_path: data[0].file_path, }));
+        }
 
         console.log("jhjklk", advBillReqDataQuery, valueArr);
 
         resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, results, null)
 
     } catch (error) {
-        resSend(res, false, 500, Message.DB_CONN_ERROR, null, null)
-    } 
+        resSend(res, false, 500, Message.DB_CONN_ERROR, JSON.stringify(error), null)
+    }
+    finally {
+        client.end();
+    }
 
 }
 

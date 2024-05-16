@@ -11,39 +11,37 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
     const pl = {
         btn_num: payload.btn_num,
         purchasing_doc_no: payload.purchasing_doc_no,
-        vendor_code: payload.vendor_code || "",
         invoice_no: payload.invoice_no || "",
-        invoice_value: payload.invoice_value || 0,
-        cgst: payload.cgst || 0,
-        igst: payload.igst || 0,
-        sgst: payload.sgst || 0,
         invoice_filename: payload.invoice_filename || "",
+        invoice_value: payload.invoice_value || "",
         e_invoice_no: payload.e_invoice_no || "",
         e_invoice_filename: payload.e_invoice_filename || "",
-        debit_note: payload.debit_note || 0,
-        credit_note: payload.credit_note || 0,
+        debit_note: payload.debit_note || "",
+        credit_note: payload.credit_note || "",
         debit_credit_filename: payload.debit_credit_filename || "",
-        net_claim_amount: payload.net_claim_amount || 0,
-        c_sdbg_date: payload.c_sdbg_date || null,
+        net_claim_amount: payload.net_claim_amount || "",
+        cgst: payload.cgst || "",
+        sgst: payload.sgst || "",
+        igst: payload.igst || "",
+        net_claim_amt_gst: payload.net_claim_amt_gst || "",
+        c_sdbg_date: payload.c_sdbg_date || "",
         c_sdbg_filename: payload.c_sdbg_filename || "",
-        a_sdbg_date: payload.a_sdbg_date || null,
-        demand_raise_filename: payload.demand_raise_filename || "",
-        gate_entry_no: payload.gate_entry_no || "",
-        gate_entry_date: payload.gate_entry_date || null,
-        get_entry_filename: payload.get_entry_filename || "",
-        grn_nos: payload.grn_nos || "",
-        icgrn_nos: payload.icgrn_nos || "",
-        icgrn_total: payload.icgrn_total || 0,
-        c_drawing_date: payload.c_drawing_date || null,
-        a_drawing_date: payload.a_drawing_date || null,
-        c_qap_date: payload.c_qap_date || null,
-        a_qap_date: payload.a_qap_date || null,
-        c_ilms_date: payload.c_ilms_date || null,
-        a_ilms_date: payload.a_ilms_date || null,
-        pbg_filename: payload.pbg_filename || "",
-        hsn_gstn_icgrn: payload.hsn_gstn_icgrn || "",
-        created_at: payload.created_at,
-        btn_type
+        a_sdbg_date: payload.a_sdbg_date || "",
+        updated_by: payload.updated_by || "",
+        created_at: payload.created_at || "",
+        created_by_id: payload.created_by_id || "",
+        vendor_code: payload.vendor_code || "",
+        btn_type: btn_type || "",
+        status: payload.status || "",
+        c_level1_doc_sub_date: payload.c_level1_doc_sub_date || "",
+        c_level2_doc_sub_date: payload.c_level2_doc_sub_date || "",
+        c_level3_doc_sub_date: payload.c_level3_doc_sub_date || "",
+        c_level1_doc_name: payload.c_level1_doc_name || "",
+        c_level2_doc_name: payload.c_level2_doc_name || "",
+        c_level3_doc_name: payload.c_level3_doc_name || "",
+        is_hsn_code: payload.is_hsn_code || "",
+        is_gstin: payload.is_gstin || "",
+        is_tax_rate: payload.is_tax_rate || ""
     };
 
 
@@ -111,14 +109,15 @@ const checkMissingActualSubmissionDate = async () => {
 }
 
 
-const getSDBGApprovedFiles = async (po) => {
+const getSDBGApprovedFiles = async (po, client) => {
     // GET Approved SDBG by PO Number
-    let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
-    let result = await query({
-        query: q,
-        values: [po, APPROVED, ACTION_SDBG],
-    });
-    return result;
+    let q = `SELECT file_name, file_path FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
+    let [results] = await client.execute(
+        q,
+        [po, APPROVED, ACTION_SDBG]
+    );
+    console.log("results000000000000000", results);
+    return results;
 };
 
 const getPBGApprovedFiles = async (po) => {
@@ -258,8 +257,8 @@ const filesData = (payloadFiles) => {
 
 const contractualSubmissionDate = async (purchasing_doc_no, client) => {
     let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
-    console.log('c_sdbg_date_q', c_sdbg_date_q);    
-    const [results] =  await client.execute(c_sdbg_date_q, [purchasing_doc_no]);
+    console.log('c_sdbg_date_q', c_sdbg_date_q);
+    const [results] = await client.execute(c_sdbg_date_q, [purchasing_doc_no]);
     console.log("results", results);
     // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
     let c_dates = results;
@@ -308,14 +307,14 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     //     values: [purchasing_doc_no],
     // });
 
-    const [results] =  await client.execute(a_sdbg_date_q, [purchasing_doc_no]);
+    const [results] = await client.execute(a_sdbg_date_q, [purchasing_doc_no]);
     let a_dates = results;
 
     console.log(a_dates, "ooooooooooooooooo")
 
     // if(!a_dates.length) throw new Error(`All milestone is missing!`)
-    if(!a_dates.length) return { status: false, data: {}, msg: `All milestone is missing!` };
-        const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
+    if (!a_dates.length) return { status: false, data: {}, msg: `All milestone is missing!` };
+    const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
     console.log(a_dates_arr, "a_dates_arra_dates_arra_dates_arr")
     for (const item of a_dates_arr) {
         const i = a_dates.findIndex((el) => el.MTEXT == item);
@@ -349,7 +348,7 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
 
                 // throw new Error(`${A_DRAWING_DATE} is missing!`)
                 return { status: false, data: {}, msg: `${A_DRAWING_DATE} is missing!` };
-        
+
                 // return resSend(
                 //     res,
                 //     false,
@@ -378,8 +377,8 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
         } else if (item.MTEXT === A_ILMS_DATE) {
             if (!item.PLAN_DATE) {
                 // throw new Error(`${A_ILMS_DATE} is missing!`);
-                return{ status: false, data: {}, msg: `${A_ILMS_DATE} is missing!` };
-                
+                return { status: false, data: {}, msg: `${A_ILMS_DATE} is missing!` };
+
 
                 // return resSend(
                 //     res,
@@ -397,6 +396,11 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     return { status: true, data: actualSubmissionObj, msg: "All milestone passed.." };
 }
 
+
+const dateToEpochTime = (date) => {
+    return date ? new Date(date).getTime() : null;
+}
+
 module.exports = {
     advBillHybridbtnPayload,
     getSDBGApprovedFiles,
@@ -411,5 +415,6 @@ module.exports = {
     checkMissingActualSubmissionDate,
     filesData,
     contractualSubmissionDate,
-    actualSubmissionDate
+    actualSubmissionDate,
+    dateToEpochTime
 }
