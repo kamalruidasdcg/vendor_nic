@@ -169,16 +169,17 @@ const submitBtnServiceHybrid = async (req, res) => {
     purchasing_doc_no,
     invoice_no,
     invoice_value,
-    cgst,
-    igst,
-    sgst,
     e_invoice_no,
     debit_note,
     credit_note,
-    net_gross_claim_amount,
-    total_amount,
+    net_claim_amount,
+    cgst,
+    igst,
+    sgst,
+    net_claim_amt_gst,
     hsn_gstn_icgrn,
-    associated_po,
+    wdc_number,
+    btn_typ
   } = req.body;
   let payloadFiles = req.files;
   const tokenData = { ...req.tokenData };
@@ -228,7 +229,7 @@ const submitBtnServiceHybrid = async (req, res) => {
 
   const btn_num = await create_btn_no("BTN");
 
-  let net_claim_amount = parseFloat(invoice_value) + parseFloat(debit_note) - parseFloat(credit_note);
+  net_claim_amount = parseFloat(invoice_value) + parseFloat(debit_note) - parseFloat(credit_note);
 
   // MATH Calculation
   if (!debit_note || debit_note === "") {
