@@ -39,6 +39,13 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
         c_level1_doc_name: payload.c_level1_doc_name || "",
         c_level2_doc_name: payload.c_level2_doc_name || "",
         c_level3_doc_name: payload.c_level3_doc_name || "",
+
+        a_level1_doc_sub_date: payload.a_level1_doc_sub_date || "",
+        a_level2_doc_sub_date: payload.a_level2_doc_sub_date || "",
+        a_level3_doc_sub_date: payload.a_level3_doc_sub_date || "",
+        a_level1_doc_name: payload.a_level1_doc_name || "",
+        a_level2_doc_name: payload.a_level2_doc_name || "",
+        a_level3_doc_name: payload.a_level3_doc_name || "",
         is_hsn_code: payload.is_hsn_code || "",
         is_gstin: payload.is_gstin || "",
         is_tax_rate: payload.is_tax_rate || ""
@@ -85,6 +92,9 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
     //     btn_type
     // }))
 
+
+    console.log("payload", pl);
+
     return pl;
 }
 const advBillHybridbtnDOPayload = async (payload) => {
@@ -107,6 +117,7 @@ const advBillHybridbtnDOPayload = async (payload) => {
         assigned_to: payload.assigned_to || ""
     };
 
+    console.log("pl", pl);
     return pl;
 }
 

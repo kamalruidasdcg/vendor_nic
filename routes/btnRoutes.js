@@ -18,7 +18,7 @@ const {
 
 const { btnmw, btnAdvanceBillHybridUploadFile } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
-const { submitAdvanceBillHybrid, getAdvBillHybridData, submitAdvBillBTNByDO } = require("../controllers/poController/advanceBillBTNController");
+const { submitAdvanceBillHybrid, getAdvBillHybridData, submitAdvBillBTNByDO, getAdvBillHybridDataForDO } = require("../controllers/poController/advanceBillBTNController");
 
 router.get("/", [], (req, res) => {
   fetchAllBTNs(req, res);
@@ -85,6 +85,16 @@ router.post("/submitAdvBillHybrid", [veifyAccessToken, btnAdvanceBillHybridUploa
 router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
   getAdvBillHybridData(req, res)
+
+});
+router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
+  // submitAdvanceBillHybrid(req, res);
+  getAdvBillHybridData(req, res)
+
+});
+router.post("/getAdvBillHybridForDO", [veifyAccessToken], (req, res) => {
+  // submitAdvanceBillHybrid(req, res);
+  getAdvBillHybridDataForDO(req, res)
 
 });
 router.post("/submitAdvBillBTNByDO", [veifyAccessToken], (req, res) => {
