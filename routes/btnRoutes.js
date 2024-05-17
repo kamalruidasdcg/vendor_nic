@@ -49,7 +49,7 @@ router.post(
 
 router.post(
   "/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
-     getGrnIcrenPenelty(req, res);
+    getGrnIcrenPenelty(req, res);
   }
 );
 
@@ -77,11 +77,14 @@ router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
 //// Btn Service Hybrid ////
 ///////////////////////////
 
-router.post("/submitAdvBillHybrid", [veifyAccessToken, btnAdvanceBillHybridUploadFile()], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
+router.post("/submitAdvBillHybrid",
+  [ veifyAccessToken,
+    btnAdvanceBillHybridUploadFile()
+  ], (req, res) => {
+    // submitAdvanceBillHybrid(req, res);
     submitAdvanceBillHybrid(req, res)
 
-});
+  });
 router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
   getAdvBillHybridData(req, res)
