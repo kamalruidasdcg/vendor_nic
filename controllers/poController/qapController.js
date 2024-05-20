@@ -232,10 +232,11 @@ const submitQAP = async (req, res) => {
     // }
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      const reference_no = await create_reference_no(
-        "QAP",
-        tokenData.vendor_code
-      );
+      const reference_no = (payload.reference_no && payload.reference_no != "") ? payload.reference_no : await create_reference_no("QAP",tokenData.vendor_code);
+      // const reference_no = await create_reference_no(
+      //   "QAP",
+      //   tokenData.vendor_code
+      // );
       payload = { ...payload, reference_no };
     }
     // else {
@@ -295,16 +296,16 @@ const submitQAP = async (req, res) => {
         console.log("other1");
     }
     //////// SET STATUS AND CREATE QAP PAYLOAD /////////
-
+console.log(activity_type);
     if (
       tokenData.user_type === USER_TYPE_VENDOR &&
-      activity_type != SUBMITTED
+      (activity_type != SUBMITTED && activity_type != RE_SUBMITTED)
     ) {
       return resSend(
         res,
         false,
         200,
-        `Vendor can only send status for ${SUBMITTED}`,
+        `Vendor can only send status for ${SUBMITTED}/${RE_SUBMITTED}`,
         null,
         null
       );
