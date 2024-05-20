@@ -3,12 +3,13 @@ const router = require("express").Router();
 const { dynamicallyUpload } = require("../../lib/fileUpload");
 const { query, connection } = require("../../config/dbConfig");
 const { INSERT, TRUE } = require("../../lib/constant");
-const { responseSend } = require("../../lib/resSend");
+const { responseSend, resSend } = require("../../lib/resSend");
 const { EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { msegPayload } = require("../../services/sap.material.services");
-
-
+const Message = require("../../utils/messages");
+const { poolClient } = require("../../config/pgDbConfig");
+const { UPDATED } = require("../../lib/status");
 
 
 ////////////// STRAT TESTING APIS //////////////
@@ -26,7 +27,7 @@ router.post("/", [], async (req, res) => {
 
             const obj = req.body;
 
-            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj?.EBELN ) {
+            if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj?.EBELN) {
                 return responseSend(res, "0", 400, "INVALID PAYLOAD", null, null);
             }
             await promiseConnection.beginTransaction();
@@ -110,7 +111,7 @@ router.post("/table", [], async (req, res) => {
             //     EKGRP: obj.EKGRP ? obj.EKGRP : null,
             // };
 
-            insertPayload = await msegPayload (obj);
+            insertPayload = await msegPayload(obj);
             console.log(insertPayload, "jjjjjjjjjjjjj");
 
             const ekkoTableInsert = await generateQueryForMultipleData(insertPayload, "mseg", "C_PKEY");
@@ -153,6 +154,54 @@ router.post("/table", [], async (req, res) => {
     }
 
 });
+
+router.post("/po", [], async (req, res) => {
+
+
+    try {
+        const client = await poolClient();
+        try {
+            const obj = req.body;
+            const insertPayload = {
+                EBELN: obj.EBELN,
+                BUKRS: obj.BUKRS ?? "",
+                BSTYP: obj.BSTYP ?? "",
+                BSART: obj.BSART ?? "",
+                LOEKZ: obj.LOEKZ ?? "",
+                AEDAT: obj.AEDAT ?? null,
+                ERNAM: obj.ERNAM ?? "",
+                LIFNR: obj.LIFNR ?? "",
+                EKORG: obj.EKORG ?? "",
+                EKGRP: obj.EKGRP ?? "",
+            };
+
+            const cond = ` EBELN = '4000234571'`
+            const { q, val } = {};
+
+            console.log("condcondcondcondcond", cond);
+            
+            const d  = generateQuery(INSERT, 'ekko', insertPayload );
+            console.log("d", d);
+            console.log(q, val);
+
+            const response = await client.query(d.q, d.val);
+          
+
+            // const response = await client.query(up, values2);
+            console.log("response", response);
+            return resSend(res, true, 200, Message.USER_AUTHENTICATION_SUCCESS, response);
+        } catch (error) {
+        
+            return resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error));
+        } finally {
+            client.release();
+        }
+    }
+    catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, JSON.stringify(error));
+    }
+
+})
 
 
 ////////////// END OF TEST API //////////////

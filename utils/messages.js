@@ -19,6 +19,7 @@ module.exports = {
     NO_RECORD_FOUND: "No record found.",
     MANDATORY_INPUTS_REQUIRED: "Mandatory inputs required !",
     USER_NOT_FOUND: "No registered user found !",
-    USER_AUTHENTICATION_SUCCESS: "User authentication successfully."
-
+    USER_AUTHENTICATION_SUCCESS: "User authentication successfully.",
+    VALID_PARAMETER: "please send valid parameters",
+    SEND_VALID_CONDITION_TEXT:"Please send whereCondition"
 }
