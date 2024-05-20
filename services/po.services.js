@@ -1,6 +1,7 @@
+const { json } = require("express");
 const { query } = require("../config/dbConfig");
 const { INSERT } = require("../lib/constant");
-const { SUBMITTED } = require("../lib/status");
+const { SUBMITTED, ACCEPTED, REJECTED } = require("../lib/status");
 const {
   ACTUAL_SUBMISSION_DATE,
   ILMS,
@@ -150,42 +151,77 @@ const hrCompliancePayload = (payload) => {
 
   return payloadObj;
 };
-const wdcPayload = (payload) => {
-  const payloadObj = {
-    reference_no: payload.reference_no,
-    purchasing_doc_no: payload.purchasing_doc_no,
-    action_type: payload.action_type,
-    vendor_code: payload.vendor_code,
-    file_name: payload.fileName ? payload.fileName : null,
-    file_path: payload.filePath ? payload.filePath : null,
-    remarks: payload.remarks,
-    status: payload.status,
-    updated_by: payload.updated_by,
-    created_at: payload.created_at ? payload.created_at : getEpochTime(),
-    created_by_id: payload.created_by_id,
-    wdc_date: payload.wdc_date ? payload.wdc_date : null,
-    po_line_iten_no: payload.po_line_iten_no ? payload.po_line_iten_no : null,
-    job_location: payload.job_location ? payload.job_location : null,
-    yard_no: payload.yard_no ? payload.yard_no : null,
-    actual_start_date: payload.actual_start_date
-      ? payload.actual_start_date
-      : null,
-    actual_completion_date: payload.actual_completion_date
-      ? payload.actual_completion_date
-      : null,
-    unit: payload.unit ? payload.unit : null,
-    messurment: payload.messurment ? payload.messurment : null,
-    quantity: payload.quantity ? payload.quantity : null,
-    entry_by_production: payload.entry_by_production
-      ? payload.entry_by_production
-      : null,
-    stage_datiels: payload.stage_datiels ? payload.stage_datiels : null,
-    actual_payable_amount: payload.actual_payable_amount
-      ? payload.actual_payable_amount
-      : null,
-  };
+const wdcPayload = (payload,line_item_array) => {
+  let line_item = JSON.parse(payload.line_item_array);
+  // let line_item =  [
+  //   {
+  //     line_item_no:15,
+  //   contractual_start_date:"1234",
+  //   Contractual_completion_date:"5678",
+  //   delay:"10",
+  //   status:ACCEPTED
+  //   },
+  //   {
+  //     line_item_no:20,
+  //     contractual_start_date:"12qqqq34",
+  //     Contractual_completion_date:"qqqq5678",
+  //     delay:"qqq0",
+  //     status:REJECTED
+  //     }
+  // ];
+ // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
+  let last_data_line_item_array = JSON.parse(line_item_array);
 
-  return payloadObj;
+   let resData;
+        if(line_item && Array.isArray(line_item)) {
+          resData = line_item.map((el2) => {
+            const resData =   last_data_line_item_array.find((elms) => elms.line_item_no == el2.line_item_no);
+            return resData ? {...resData, ...el2} : el2;
+          });
+        }
+
+        payload.line_item_array = JSON.stringify(resData);
+  return payload;
+
+  // const payloadObj = {
+  //   reference_no: payload.reference_no,
+  //   purchasing_doc_no: payload.purchasing_doc_no,
+  //   action_type: payload.action_type,
+  //   vendor_code: payload.vendor_code,
+  //   file_name: payload.fileName ? payload.fileName : null,
+  //   file_path: payload.filePath ? payload.filePath : null,
+  //   remarks: payload.remarks,
+  //   status: payload.status,
+  //   updated_by: payload.updated_by,
+  //   created_at: payload.created_at ? payload.created_at : getEpochTime(),
+  //   created_by_id: payload.created_by_id,
+  //   wdc_date: payload.wdc_date ? payload.wdc_date : null,
+  //   po_line_iten_no: payload.po_line_iten_no ? payload.po_line_iten_no : null,
+  //   job_location: payload.job_location ? payload.job_location : null,
+  //   yard_no: payload.yard_no ? payload.yard_no : null,
+  //   actual_start_date: payload.actual_start_date
+  //     ? payload.actual_start_date
+  //     : null,
+  //   actual_completion_date: payload.actual_completion_date
+  //     ? payload.actual_completion_date
+  //     : null,
+  //   unit: payload.unit ? payload.unit : null,
+  //   messurment: payload.messurment ? payload.messurment : null,
+  //   quantity: payload.quantity ? payload.quantity : null,
+  //   entry_by_production: payload.entry_by_production
+  //     ? payload.entry_by_production
+  //     : null,
+  //   stage_datiels: payload.stage_datiels ? payload.stage_datiels : null,
+  //   actual_payable_amount: payload.actual_payable_amount
+  //     ? payload.actual_payable_amount
+  //     : null,
+  // };
+    // let line_item_array = JSON.parse(payload.line_item_array);
+    // if(!payload || Array.isArray(line_item_array)) {
+    //   return [];
+    //   }
+    
+ 
 };
 
 const shippingDocumentsPayload = (payload, status) => {
