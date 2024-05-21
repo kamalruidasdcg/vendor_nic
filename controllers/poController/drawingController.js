@@ -264,7 +264,7 @@ const submitDrawing = async (req, res) => {
     if (payload.status === APPROVED) {
       const actual_subminission = await setActualSubmissionDate(
         payload,
-        2,
+        "02",
         tokenData,
         SUBMITTED
       );

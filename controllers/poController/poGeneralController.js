@@ -95,13 +95,13 @@ const details = async (req, res) => {
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
-                            AND act.milestoneid = 1 )
+                            AND act.milestoneid = "01" )
                 INNER JOIN (SELECT Max(id) AS id,
                                    purchasing_doc_no,
                                    status
                             FROM   sdbg) AS b
                         ON ( b.purchasing_doc_no = a.ebeln )
-         WHERE  a.mid = 1
+         WHERE  a.mid = "01"
                 AND a.ebeln = ?)
         UNION
         (SELECT a.*,
@@ -111,7 +111,7 @@ const details = async (req, res) => {
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
-                            AND act.milestoneid = 2 )
+                            AND act.milestoneid = "02" )
                 INNER JOIN (SELECT id,
                                    purchasing_doc_no,
                                    status
@@ -168,28 +168,28 @@ const details = async (req, res) => {
     const timeLineQuery = `
         (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 1)
-            WHERE a.EBELN = ? AND a.MID = 1)
+                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = "01")
+            WHERE a.EBELN = ? AND a.MID = "01")
             
             UNION
             (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 2)
-            WHERE a.EBELN = ? AND a.MID = 2)
-            
-            UNION
-            
-            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
-            LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 3)
-            WHERE a.EBELN = ? AND a.MID= 3)
+                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = "02")
+            WHERE a.EBELN = ? AND a.MID = "02")
             
             UNION
             
             (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
-                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = 4)
-            WHERE a.EBELN = ? AND a.MID = 4);
+                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = "03")
+            WHERE a.EBELN = ? AND a.MID= "03")
+            
+            UNION
+            
+            (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
+            LEFT JOIN actualsubmissiondate AS sub ON 
+                ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = "04")
+            WHERE a.EBELN = ? AND a.MID = "04");
         `;
     const timeline = await query({
       query: timeLineQuery,
@@ -216,10 +216,32 @@ const details = async (req, res) => {
       values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id],
     });
 
+    const getAcknowledgementntQry = `
+        (SELECT purchasing_doc_no, status, "01" as flag, created_at as acknowledgementnt_date FROM sdbg WHERE purchasing_doc_no = ? AND status = 'APPROVED' ORDER BY id DESC LIMIT 1)
+
+        UNION
+
+        (SELECT purchasing_doc_no, status, "02" as flag, created_at as acknowledgementnt_date FROM drawing WHERE purchasing_doc_no = ? AND status = 'APPROVED' ORDER BY id DESC LIMIT 1)
+
+        UNION
+
+        (SELECT purchasing_doc_no, status, "03" as flag, created_at as acknowledgementnt_date FROM qap_submission WHERE purchasing_doc_no = ? AND status = 'APPROVED' ORDER BY id DESC LIMIT 1)
+
+        UNION
+
+        (SELECT purchasing_doc_no, status, "04" as flag, created_at as acknowledgementnt_date FROM ilms WHERE purchasing_doc_no = ? AND status = 'APPROVED' ORDER BY id DESC LIMIT 1);`;
+
+    const acknowledgementnt_date = await query({
+      query: getAcknowledgementntQry,
+      values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id],
+    });
+
     let timelineData;
     if (timeline.length) {
       timelineData = joinArrays(timeline, curret_data);
+      timelineData = joinArrays(timelineData, acknowledgementnt_date);
     }
+    
     // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
     // let resDate;
