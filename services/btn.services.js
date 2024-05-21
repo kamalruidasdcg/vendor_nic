@@ -16,9 +16,9 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
         invoice_value: payload.invoice_value || "",
         e_invoice_no: payload.e_invoice_no || "",
         e_invoice_filename: payload.e_invoice_filename || "",
-        debit_note: payload.debit_note || "",
-        credit_note: payload.credit_note || "",
-        debit_credit_filename: payload.debit_credit_filename || "",
+        // debit_note: payload.debit_note || "",
+        // credit_note: payload.credit_note || "",
+        // debit_credit_filename: payload.debit_credit_filename || "",
         net_claim_amount: payload.net_claim_amount || "",
         cgst: payload.cgst || "",
         sgst: payload.sgst || "",
@@ -46,9 +46,9 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
         a_level1_doc_name: payload.a_level1_doc_name || "",
         a_level2_doc_name: payload.a_level2_doc_name || "",
         a_level3_doc_name: payload.a_level3_doc_name || "",
-        is_hsn_code: payload.is_hsn_code || "",
-        is_gstin: payload.is_gstin || "",
-        is_tax_rate: payload.is_tax_rate || ""
+        is_hsn_code: payload.is_hsn_code || "Y",
+        is_gstin: payload.is_gstin || "Y",
+        is_tax_rate: payload.is_tax_rate || "Y"
     };
 
 
@@ -103,18 +103,20 @@ const advBillHybridbtnDOPayload = async (payload) => {
 
     const pl = {
         btn_num: payload.btn_num,
-        contractual_ld: payload.contractual_ld || "",
-        ld_amount: payload.ld_amount || "",
         drg_penalty: payload.drg_penalty || "",
         qap_penalty: payload.qap_penalty || "",
         ilms_penalty: payload.ilms_penalty || "",
-        // estimate_penalty: payload.estimate_penalty || "",
+        estimate_penalty: payload.estimate_penalty || "",
         other_deduction: payload.other_deduction || "",
         total_deduction: payload.total_deduction || "",
-        // net_payable_amount: payload.net_payable_amount || "",
+        net_payable_amount: payload.net_payable_amount || "",
         created_at: payload.created_at || "",
         created_by: payload.created_by || "",
-        assigned_to: payload.assigned_to || ""
+        assigned_to: payload.assigned_to || "",
+        a_drawing_sub_date: payload.a_drawing_sub_date,
+        a__qap_sub_date:payload.a__qap_sub_date,
+        a_ilms_sub_date:payload.a_ilms_sub_date,
+
     };
 
     console.log("pl", pl);

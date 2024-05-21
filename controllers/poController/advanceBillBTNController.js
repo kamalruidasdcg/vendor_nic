@@ -306,6 +306,46 @@ const getAdvBillHybridDataForDO = async (req, res) => {
 }
 
 
+const getAdvBillHybridBTN = async (req, res) => {
+
+    const client = await connection();
+    try {
+        const payload = req.body;
+
+        if (!payload.btn_num) {
+            return resSend(res, false, 400, Message.MANDATORY_PARAMETR, null, null);
+        }
+
+        let baseQuery =
+            `SELECT * FROM btn_advance_bill_hybrid`;
+
+        let conditionQuery = " WHERE 1 = 1 ";
+        const valueArr = [];
+
+        if (payload.btn_num) {
+            conditionQuery += " AND btn_num  = ?";
+            valueArr.push(payload.btn_num);
+        }
+
+        const advBillReqDataQuery = baseQuery + conditionQuery;
+        // let results = await query({ query: advBillReqDataQuery, values: valueArr });
+        let [results] = await client.execute(advBillReqDataQuery, valueArr);
+
+        console.log("results", results);
+
+
+        resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, results, null)
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, JSON.stringify(error), null)
+    }
+    finally {
+        client.end();
+    }
+
+}
+
+
 
 
 
@@ -315,5 +355,6 @@ module.exports = {
     submitAdvanceBillHybrid,
     getAdvBillHybridData,
     submitAdvBillBTNByDO,
-    getAdvBillHybridDataForDO
+    getAdvBillHybridDataForDO,
+    getAdvBillHybridBTN
 };
