@@ -318,7 +318,7 @@ console.log(activity_type);
       if (insertObj.status === APPROVED) {
         const actual_subminission = await setActualSubmissionDate(
           insertObj,
-          3,
+          "03",
           tokenData,
           SUBMITTED
         );
