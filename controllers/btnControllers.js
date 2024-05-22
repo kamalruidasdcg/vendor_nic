@@ -52,8 +52,15 @@ const fetchAllBTNs = async (req, res) => {
     query: btnQ2,
     values: [id],
   });
+  let btnQ3 = `SELECT * FROM btn_advance_bill_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
  
-  const data = result.concat(result2);
+  let result3 = await query({
+    query: btnQ3,
+    values: [id],
+  });
+ 
+  let data = result.concat(result2);
+  data = data.concat(result3);
  
   return resSend(res, true, 200, "ALL data from BTNs", data, null);
 };
