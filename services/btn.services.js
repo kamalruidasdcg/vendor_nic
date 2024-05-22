@@ -306,13 +306,13 @@ const contractualSubmissionDate = async (purchasing_doc_no, client) => {
     // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
     let c_dates = results;
     const dates_arr = [C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE];
-    for (const item of dates_arr) {
-        const i = c_dates.findIndex((el) => el.MTEXT == item);
-        if (i < 0) {
-            // return resSend(res, false, 200, `${item} is missing!`, null, null);
-            return { status: false, data: {}, msg: `${item} is missing!` }
-        }
-    }
+    // for (const item of dates_arr) {
+    //     const i = c_dates.findIndex((el) => el.MTEXT == item);
+    //     if (i < 0) {
+    //         // return resSend(res, false, 200, `${item} is missing!`, null, null);
+    //         return { status: false, data: {}, msg: `${item} is missing!` }
+    //     }
+    // }
 
     const contractualDateObj = {}
 
@@ -359,14 +359,14 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     if (!a_dates.length) return { status: false, data: {}, msg: `All milestone is missing!` };
     const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
     console.log(a_dates_arr, "a_dates_arra_dates_arra_dates_arr")
-    for (const item of a_dates_arr) {
-        const i = a_dates.findIndex((el) => el.MTEXT == item);
-        if (i < 0) {
-            return { status: false, data: {}, msg: `${item} is missing!` };
+    // for (const item of a_dates_arr) {
+    //     const i = a_dates.findIndex((el) => el.MTEXT == item);
+    //     if (i < 0) {
+    //         return { status: false, data: {}, msg: `${item} is missing!` };
 
-            // throw new Error(`${item} is missing!`)
-        }
-    }
+    //         // throw new Error(`${item} is missing!`)
+    //     }
+    // }
 
     for (const item of a_dates) {
         if (item.MTEXT === A_SDBG_DATE) {

@@ -261,48 +261,87 @@ const submitAdvBillBTNByDO = async (req, res) => {
 
 const getAdvBillHybridDataForDO = async (req, res) => {
 
-    const client = await connection();
     try {
-        const payload = req.body;
+        const client = await connection();
 
-        if (!payload.btn_num && !payload.poNo) {
-            return resSend(res, false, 400, Message.MANDATORY_PARAMETR, null, null);
+
+        try {
+            const payload = req.body;
+
+            if (!payload.btn_num && !payload.poNo) {
+                return resSend(res, false, 400, Message.MANDATORY_PARAMETR, null, null);
+            }
+
+            let baseQuery = `SELECT * FROM btn_advance_bill_hybrid`;
+
+            let conditionQuery = " WHERE 1 = 1 ";
+            const valueArr = [];
+
+            if (payload.btn_num) {
+                conditionQuery += " AND btn_num = ?";
+                valueArr.push(payload.btn_num);
+            }
+            if (payload.poNo) {
+                conditionQuery += " AND purchasing_doc_no = ?";
+                valueArr.push(payload.poNo);
+            }
+
+            const advBillReqDataQuery = baseQuery + conditionQuery;
+            let contractualDates = `SELECT plan_date as c_milestone_date, mtext as c_milestone_text, mid as m_id FROM zpo_milestone WHERE EBELN = ?`;
+            let actualDates = `SELECT actualsubmissiondate AS a_submisson_date, milestoneText AS a_submisson_text, milestoneid as m_id FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
+
+            // let [results] = await client.execute(advBillReqDataQuery, valueArr);
+            // let [results] = await client.execute(contractualDates, [payload.poNo]);
+            // let [results] = await client.execute(actualDates, [payload.poNo]);
+
+            let result = {};
+
+            // await Promise.all(
+            //     [client.execute(advBillReqDataQuery, valueArr),
+            //     client.execute(contractualDates, [payload.poNo]),
+            //     client.execute(actualDates, [payload.poNo])
+            //     ])
+
+            const [results] = await client.execute(advBillReqDataQuery, valueArr);
+
+            console.log("results", results);
+
+
+            // CONTRACTUAL SUBMISSION DATA
+            const contDateSetup = await contractualSubmissionDate(payload.poNo, client);
+            console.log("contDateSetup", contDateSetup);
+            // if (contDateSetup.status == false) {
+            //     return resSend(res, false, 200, contDateSetup.msg, null, null);
+            // }
+
+            // ACTUAL SUMBISSION DATA
+            const actualDateSetup = await actualSubmissionDate(payload.poNo, client);
+            // if (actualDateSetup.status == false) {
+            //     return resSend(res, false, 200, contDateSetup.msg, null, null);
+            // }
+
+
+            result = {
+                ...results[0],
+                ...contDateSetup.data,
+                ...actualDateSetup.data,
+
+            }
+
+            console.log("result", result);
+
+            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, null);
+
+        } catch (error) {
+            resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null);
         }
-
-        let baseQuery =
-            `SELECT * FROM btn_advance_bill_hybrid`;
-
-        let conditionQuery = " WHERE 1 = 1 ";
-        const valueArr = [];
-
-        if (payload.btn_num) {
-            conditionQuery += " AND btn_num = ?";
-            valueArr.push(payload.btn_num);
+        finally {
+            client.end();
         }
-
-        const advBillReqDataQuery = baseQuery + conditionQuery;
-        let contractualDates = `SELECT plan_date as c_milestone_date, mtext as c_milestone_text, mid as m_id FROM zpo_milestone WHERE EBELN = ?`;
-        let actualDates = `SELECT actualsubmissiondate AS a_submisson_date, milestoneText AS a_submisson_text, milestoneid as m_id FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
-
-        // let [results] = await client.execute(advBillReqDataQuery, valueArr);
-        // let [results] = await client.execute(contractualDates, [payload.poNo]);
-        // let [results] = await client.execute(actualDates, [payload.poNo]);
-
-        let result = Promise.all(
-            [client.execute(advBillReqDataQuery, valueArr),
-            client.execute(contractualDates, [payload.poNo]),
-            client.execute(actualDates, [payload.poNo])
-            ])
-
-        resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, null);
-
-    } catch (error) {
+    }
+    catch (error) {
         resSend(res, false, 500, Message.DB_CONN_ERROR, JSON.stringify(error), null);
     }
-    finally {
-        client.end();
-    }
-
 }
 
 
