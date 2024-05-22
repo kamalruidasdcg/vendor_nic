@@ -3,7 +3,7 @@ const { insertTableData } = require("../controllers/genralControlles");
 const { INSERT, ARCHIVE } = require("../lib/constant");
 const { NEW } = require("../lib/status");
 const { EMAILS, ARCHIVE_EMAILS } = require("../lib/tableName");
-const { generateQuery, getEpochTime } = require("../lib/utils");
+const { generateQuery, getEpochTime, getDateTime } = require("../lib/utils");
 const mailBody = require("../lib/mailBody");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
 
@@ -12,40 +12,47 @@ const { EMAIL_TEMPLAE } = require("../templates/mail-template");
  * @param {Object} data 
  * @param {String} eventName
  */
-const mailInsert = async (data, event, subject, heading = "") => {
+const mailInsert = async (data, event, activity_name, heading = "") => {
 
     try {
 
-        if (!data.mailSendTo || !event) {
-            throw new Error("recipent and event required");
+        if (!data.mailSendTo || !event || !data.email_subject) {
+            throw new Error("recipent, email_subject and event required");
         }
-        console.log(event)
+        console.log("event name", event);
         const mail_body = mailBody[event].replace(/{{(.*?)}}/g, (match, p1) => data[p1.trim()] || match);
 
-        // mailDetails = {
-        //     to: payload.vendor_email,
-        //     subject: subject,
-        //     html: EMAIL_TEMPLAE(mail_body, heading)
-        // };
+        console.log("mail_body", mail_body);
 
-        const mailObj = {
-            sender: data.mailSendTo,
-            event: event,
-            subject: subject,
-            body: EMAIL_TEMPLAE(mail_body, heading),
-            status: NEW,
-            created_at: getEpochTime(),
-            creatd_by_name: data.action_by_name ? data.action_by_name : "No Name",
-            created_by_id: data.action_by_id ? data.action_by_id : "No Id",
-            message: "new mail inserted"
+        if (!mailBody) {
+            throw new Error("PLEASE ADD EVENT IN MAIL BODY FILE");
         }
 
-        const { q, val } = generateQuery(INSERT, EMAILS, mailObj)
-        const res = await query({ query: q, values: val });
+        const dd = data.created_at ? new Date(data.created_at) : new Date();
+        const now = getDateTime(dd);
+
+        const mailPayload = {
+            "event_name": event,
+            "email_to": data.mailSendTo,
+            "email_subject": data.email_subject,
+            "email_cc": data.email_cc ? data.email_cc : null,
+            "email_bcc": data.email_bcc ? data.email_bcc : null,
+            "email_body": EMAIL_TEMPLAE(mail_body, heading),
+            "email_send_on": now.dateTime,
+            "created_on": now.date,
+            "created_by": data.created_by_id,
+            "modified_by": data.modified_by || null,
+            "modified_on": data.modified_on || null,
+            "attachemnt_path": data.attachemnt_path ? data.attachemnt_path : null,
+            "activity_name": activity_name | null
+        }
+        const { q, val } = generateQuery(INSERT, EMAILS, mailPayload)
+        const d = await query({ query: q, values: val });
+        console.log("d", d, q, val);
         return true;
 
     } catch (error) {
-        console.log(error);
+        console.log("mailInsert function", error);
         return false;
     }
 }
