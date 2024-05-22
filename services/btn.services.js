@@ -113,9 +113,9 @@ const advBillHybridbtnDOPayload = async (payload) => {
         created_at: payload.created_at || "",
         created_by: payload.created_by || "",
         assigned_to: payload.assigned_to || "",
-        a_drawing_sub_date: payload.a_drawing_sub_date,
-        a__qap_sub_date:payload.a__qap_sub_date,
-        a_ilms_sub_date:payload.a_ilms_sub_date,
+        a_drawing_date: payload.a_drawing_date || null,
+        a_qap_date:payload.a_qap_date || null,
+        a_ilms_date:payload.a_ilms_date || null,
 
     };
 
