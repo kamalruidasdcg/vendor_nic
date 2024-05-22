@@ -360,13 +360,13 @@ const insertActualSubmission = async (data) => {
 async function setActualSubmissionDate(payload, mid, tokenData, status) {
   const getTableName = (mid) => {
     switch (mid) {
-      case 1:
+      case "01":
         return SDBG;
-      case 2:
+      case "02":
         return DRAWING;
-      case 3:
+      case "03":
         return QAP_SUBMISSION;
-      case 4:
+      case "04":
         return ILMS;
       default:
         return null;
@@ -386,10 +386,10 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
   console.log(result);
 
   const mtext = {
-    1: "ACTUAL SDBG SUBMISSION DATE",
-    2: "ACTUAL DRAWING SUBMISSION DATE",
-    3: "ACTUAL QAP SUBMISSION DATE",
-    4: "ACTUAL ILMS SUBMISSION DATE",
+    "01": "ACTUAL SDBG SUBMISSION DATE",
+    "02": "ACTUAL DRAWING SUBMISSION DATE",
+    "03": "ACTUAL QAP SUBMISSION DATE",
+    "04": "ACTUAL ILMS SUBMISSION DATE",
   };
 
   if (result && result.length) {
