@@ -42,16 +42,22 @@ const { deptLogEntry } = require("../../log/deptActivities");
 const submitQAP = async (req, res) => {
   try {
     const tokenData = { ...req.tokenData };
-    let fileData = {};
-    if (req.file) {
-      fileData = {
-        fileName: req.file.filename,
-        filePath: req.file.path,
-        fileType: req.file.mimetype,
-        fileSize: req.file.size,
-      };
+    let fileName = (req.files.file && req.files.file[0].filename) ? req.files.file[0].filename : "";
+    let filePath = (req.files.file && req.files.file[0].path) ? req.files.file[0].path : "";
+    let supporting_doc;
+    //console.log(req.files.supporting_doc.length);
+    if(req.files.supporting_doc && req.files.supporting_doc.length > 0) {
+      supporting_doc = req.files.supporting_doc.map( (elem) => {
+          let value = {};
+          value.file_name = elem.filename;
+          value.file_path = elem.path;
+          return value;
+      });
     }
-    let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+    supporting_doc = (supporting_doc) ? JSON.stringify(supporting_doc) : "";
+    //console.log(supporting_doc);
+
+    let payload = { ...req.body, fileName : fileName, filePath : filePath, supporting_doc : supporting_doc, created_at: getEpochTime() };
 
     payload.updated_by =
       tokenData.user_type === USER_TYPE_VENDOR ? "VENDOR" : "GRSE";
@@ -330,7 +336,7 @@ console.log(activity_type);
       payload.insertId = response.insertId;
       payload.sendAt = new Date(payload.created_at);
       // handelMail(tokenData, payload);
-      resSend(res, true, 200, "Inserted successfully", fileData, null);
+      resSend(res, true, 200, "Inserted successfully", [], null);
     } else {
       resSend(res, false, 400, "No data inserted", response, null);
     }

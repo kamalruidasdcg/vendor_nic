@@ -118,6 +118,7 @@ const qapPayload = (payload, status) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
+    supporting_doc: payload.supporting_doc ? payload.supporting_doc : null,
     remarks: payload.remarks ? payload.remarks : null,
     action_type: payload.action_type ? payload.action_type : null,
     assigned_to: payload.assigned_to ? payload.assigned_to : null,
