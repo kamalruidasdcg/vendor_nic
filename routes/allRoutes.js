@@ -223,7 +223,9 @@ router.get(poPrefix + '/ListOfPaymentAdvise', paymentAdviseController.List);
 
 
 // QAP CONTROLLERS
-router.post(poPrefix + "/qap", [veifyAccessToken, dynamicallyUpload.single("file")], (req, res) => {
+const { qapMfw } = require("../services/qapMfw");
+const upload = qapMfw();
+router.post(poPrefix + "/qap", [veifyAccessToken, upload], (req, res) => {
   qapController.submitQAP(req, res);
 });
 router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
