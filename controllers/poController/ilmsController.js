@@ -80,7 +80,7 @@ const submitILMS = async (req, res) => {
         console.log(q);
 
         if (payload.status === APPROVED || payload.status === ACCEPTED || payload.status === ACKNOWLEDGED) {
-            const actual_subminission = await setActualSubmissionDate(payload, 4, tokenData, SUBMITTED);
+            const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
             console.log("actual_subminission", actual_subminission);
         }
         const response = await query({ query: q, values: val });

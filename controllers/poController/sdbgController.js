@@ -681,7 +681,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         || sdbgDataResult.action_type == ACTION_DD)) {
       console.log("ACCEPTED2");
       // const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
-      const actual_subminission = await setActualSubmissionDate(insertPayloadForSdbg, 1, tokenData, SUBMITTED);
+      const actual_subminission = await setActualSubmissionDate(insertPayloadForSdbg, "01", tokenData, SUBMITTED);
       try {
 
         const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = ? AND reference_no = ?`;
