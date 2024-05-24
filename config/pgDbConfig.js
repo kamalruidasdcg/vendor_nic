@@ -20,10 +20,10 @@ const asyncPool = async () => {
     }
 };
 
-const query = async ({ queryText, values }) => {
+const query = async ({ query, values }) => {
     const pool = await asyncPool();
     try {
-        const result = await pool.query(queryText, values);
+        const result = await pool.query(query, values);
         return result;
     } catch (error) {
         throw new Error(`Error executing query: ${error.message}`);
@@ -37,8 +37,8 @@ const query = async ({ queryText, values }) => {
 const getQuery = async ({ query, values }) => {
     const pool = await asyncPool();
     try {
-        const result = await pool.query(query, values);
-        return result.rows;
+        const { rows } = await pool.query(query, values);
+        return rows;
     } catch (error) {
         throw new Error(`Error fetching rows: ${error.message}`);
     } finally {
@@ -59,4 +59,4 @@ const poolClient = async () => {
     }
 };
 
-module.exports = { query, poolClient, getQuery };
+module.exports = { query, poolClient, getQuery, asyncPool };

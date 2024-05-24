@@ -1,14 +1,14 @@
 
 const router = require("express").Router();
 const { dynamicallyUpload } = require("../../lib/fileUpload");
-const { query, connection } = require("../../config/dbConfig");
-const { INSERT, TRUE } = require("../../lib/constant");
+const { connection } = require("../../config/dbConfig");
+const { INSERT, TRUE, UPDATE } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { EKKO, EKPO, ZPO_MILESTONE } = require("../../lib/tableName");
 const { generateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { msegPayload } = require("../../services/sap.material.services");
 const Message = require("../../utils/messages");
-const { poolClient } = require("../../config/pgDbConfig");
+const { poolClient, query } = require("../../config/pgDbConfig");
 const { UPDATED } = require("../../lib/status");
 
 
@@ -179,20 +179,19 @@ router.post("/po", [], async (req, res) => {
             const { q, val } = {};
 
             console.log("condcondcondcondcond", cond);
-            
-            const d  = generateQuery(INSERT, 'ekko', insertPayload );
-            console.log("d", d);
-            console.log(q, val);
 
-            const response = await client.query(d.q, d.val);
-          
+            const d = generateQuery(INSERT, 'ekko', insertPayload, cond);
+            console.log("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", d);
 
-            // const response = await client.query(up, values2);
+            // const response = await client.query(d.q, d.val);
+            const response = await query({ query: d.q, values: d.val });
+
             console.log("response", response);
+
             return resSend(res, true, 200, Message.USER_AUTHENTICATION_SUCCESS, response);
         } catch (error) {
-        
-            return resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error));
+
+            return resSend(res, false, 500, Message.SERVER_ERROR, error);
         } finally {
             client.release();
         }

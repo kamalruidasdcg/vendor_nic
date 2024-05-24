@@ -33,7 +33,7 @@ const { apiLog } = require("./services/api.services");
 //   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
 // });
 
-app.use(apiLog);
+// app.use(apiLog);
 
 // use routes
 app.use("/api/v1", allRoutes);
