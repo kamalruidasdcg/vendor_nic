@@ -11,7 +11,7 @@ const zpo_milestonePayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.EBELN}-${obj.MID}`,
+    // C_PKEY: `${obj.EBELN}-${obj.MID}`,
     EBELN: obj.EBELN,
     MID: obj.MID,
     PLAN_DATE: formatDate(obj.PLAN_DATE),
@@ -26,7 +26,7 @@ const ekpoTablePayload = async (payload, poNo) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${poNo}-${obj.EBELP}`,
+    // C_PKEY: `${poNo}-${obj.EBELP}`,
     EBELN: poNo,
     EBELP: obj.EBELP,
     LOEKZ: obj.LOEKZ || null,

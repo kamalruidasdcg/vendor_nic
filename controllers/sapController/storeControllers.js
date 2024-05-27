@@ -5,7 +5,8 @@ const { responseSend, resSend } = require("../../lib/resSend");
 const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
 const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
-const Measage = require("../../utils/messages")
+const Measage = require("../../utils/messages");
+const { poolClient } = require("../../config/pgDbConfig");
 
 
 const insertGateEntryData = async (req, res) => {
@@ -14,7 +15,8 @@ const insertGateEntryData = async (req, res) => {
 
     try {
 
-        const promiseConnection = await connection();
+        // const promiseConnection = await connection();
+        const promiseConnection = await poolClient();
         let transactionSuccessful = false;
         // if (Array.isArray(req.body)) {
         //     payload = req.body.length > 0 ? req.body[0] : null;

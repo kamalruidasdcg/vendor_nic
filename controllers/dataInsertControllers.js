@@ -8,6 +8,7 @@ const { generateQuery, formatDate, generateInsertUpdateQuery, generateQueryForMu
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
 const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archivePoLineItemsPayload } = require("../services/sap.po.services");
+const { poolClient } = require("../config/pgDbConfig");
 
 // require("dotenv").config();
 
@@ -17,8 +18,7 @@ const insertPOData = async (req, res) => {
     let payload = {};
 
     try {
-
-        const promiseConnection = await connection();
+        const client = await poolClient();
         let transactionSuccessful = false;
         if (Array.isArray(req.body)) {
             payload = req.body.length > 0 ? req.body[0] : null;
@@ -26,22 +26,14 @@ const insertPOData = async (req, res) => {
             payload = req.body;
         }
 
-        console.log("payload", req.body);
-
         const { EKPO, ZPO_MILESTONE, ...obj } = payload;
 
-        console.log("EKPO", EKPO);
-        console.log("ZPO_MILESTONE", ZPO_MILESTONE);
-
         try {
-
-
-
             if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.EBELN) {
                 return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
 
-            await promiseConnection.beginTransaction();
+            await client.query('BEGIN');
 
             insertPayload = {
                 EBELN: obj.EBELN,
@@ -55,24 +47,18 @@ const insertPOData = async (req, res) => {
                 EKORG: obj.EKORG ? obj.EKORG : null,
                 EKGRP: obj.EKGRP ? obj.EKGRP : null,
             };
-
-            // const ekkoTableInsert = generateQuery(INSERT, EKKO, insertPayload);
-            const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, EKKO, "EBELN");
-
+            const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, EKKO, ["EBELN"]);
             try {
-                const [results] = await promiseConnection.execute(ekkoTableInsert);
-                console.log("results", results);
+                await client.query(ekkoTableInsert);
             } catch (error) {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
 
-
             try {
-                const delete_from_zpo_milestoen = `DELETE FROM zpo_milestone  WHERE  ebeln = '${obj.EBELN}'`;
-                const [results] = await promiseConnection.execute(delete_from_zpo_milestoen);
-                console.log("result zpo", results);
+                const delete_from_zpo_milestoen = `DELETE FROM zpo_milestone  WHERE  ebeln = $1`;
+                const results = await client.query(delete_from_zpo_milestoen, [obj.EBELN]);
             } catch (error) {
-               console.log("delete_from_zpo_milestoen", error);
+                console.log("delete_from_zpo_milestoen", error);
             }
 
 
@@ -82,19 +68,18 @@ const insertPOData = async (req, res) => {
 
                 try {
 
-
+                    const zmilestonePayload = await zpo_milestonePayload(ZPO_MILESTONE);
+                    const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, "zpo_milestone", ["EBELN", "MID"]);
+                    insertPromiseFn.push(client.query(insert_zpo_milestone_table));
+                    // console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
                     // const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
                     // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
-                    const zmilestonePayload = await zpo_milestonePayload(ZPO_MILESTONE);
-                    console.log('ekpopayload', zmilestonePayload);
+                    // console.log('ekpopayload', zmilestonePayload);
                     // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                    const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, "zpo_milestone", "C_PKEY");
                     // console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
-                    insertPromiseFn.push(promiseConnection.execute(insert_zpo_milestone_table));
                     // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
                     // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
-
-                    insertPromiseFn.push(promiseConnection.execute(insert_zpo_milestone_table));
+                    // insertPromiseFn.push(client.query(insert_zpo_milestone_table));
                 } catch (error) {
                     console.log("error, zpo milestone", error);
                 }
@@ -108,39 +93,38 @@ const insertPOData = async (req, res) => {
 
 
                     const ekpopayload = await ekpoTablePayload(EKPO, obj.EBELN);
-                    console.log("ekpopayload", ekpopayload);
+                    // console.log("ekpopayload", ekpopayload);
                     // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                    const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", "C_PKEY");
-                    console.log("insert_ekpo_table", insert_ekpo_table);
-                    insertPromiseFn.push(promiseConnection.execute(insert_ekpo_table));
+                    const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", ["EBELN", "EBELP"]);
+                    // console.log("insert_ekpo_table", insert_ekpo_table);
+                    // console.log("insert_ekpo_table", insert_ekpo_table);
+                    insertPromiseFn.push(client.query(insert_ekpo_table));
                 } catch (error) {
                     console.log("error, ekpo", error);
-
                 }
 
             }
             if (insertPromiseFn.length) {
                 const insert = await Promise.all(insertPromiseFn);
-
-                console.log("insert", insert);
             }
-            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
-            transactionSuccessful = true;
 
-            // const vendorNumber = insertPayload.LIFNR;
-            // const poCreator = insertPayload.ERNAM;
+            // const comm = await client.commit(); // Commit the transaction if everything was successful
+
+            await client.query('COMMIT');
+
+            transactionSuccessful = true;
 
             if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
                 //console.log("Connectio");
 
                 try {
                     // await sendMail(insertPayload);
-                    responseSend(res, "1", 200, "data insert succeed with mail trigere", [], null);
+                    responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
                 } catch (error) {
-                    responseSend(res, "1", 201, "Data insert but mail not send !!", error, null);
+                    responseSend(res, "F", 201, "Data insert but mail not send !!", error, null);
                 }
             } else {
-                responseSend(res, "1", 200, "data insert succeed without mail.", [], null);
+                responseSend(res, "S", 200, "data insert succeed without mail.", [], null);
             }
 
         } catch (error) {
@@ -148,11 +132,13 @@ const insertPOData = async (req, res) => {
         }
         finally {
             if (!transactionSuccessful) {
-                console.log("Connection End" + "--->" + "connection release");
-                await promiseConnection.rollback();
+                // console.log("Connection End" + "--->" + "connection release, FAILED TO SAVE DATA");
+                // await client.rollback();
+                await client.query('ROLLBACK')
             }
-            const connEnd = await promiseConnection.end();
-            console.log("Connection End" + "--->" + "connection releasettttttttttt");
+            // const connEnd = await client.end();
+            const connEnd = client.release()
+            // console.log("Connection End" + "--->" + "connection release");
         }
     } catch (error) {
         responseSend(res, "F", 400, "Error in database conn!!", error, null);
@@ -228,12 +214,12 @@ const archivePo = async (req, res) => {
         console.log("cdhdr_table_data", cdhdr_table_data);
         console.log("CDPOS", cdpos_table_data);
 
-    
+
 
         try {
 
             await promiseConnection.beginTransaction();
-            if (cdhdr_table_data?.length)  {
+            if (cdhdr_table_data?.length) {
                 try {
                     insertPayload = await archivePoHeaderPayload(cdhdr_table_data)
                     console.log('insertPayload', insertPayload);
