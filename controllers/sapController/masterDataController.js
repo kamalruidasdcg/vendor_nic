@@ -1,9 +1,10 @@
 
 const { VENDOR_MASTER_LFA1, EMPLAYEE_MASTER_PA0002 } = require('../../lib/tableName');
-const { query } = require("../../config/dbConfig");
+// const { query } = require("../../config/dbConfig");
 const { responseSend } = require("../../lib/resSend");
 const { generateQueryForMultipleData } = require("../../lib/utils");
 const { lfa1Payload, addUserPayload } = require('../../services/sap.masterData.services');
+const { query } = require('../../config/pgDbConfig');
 
 
 const lfa1 = async (req, res) => {
@@ -31,9 +32,10 @@ const lfa1 = async (req, res) => {
 
         const payloadObj = await lfa1Payload(payload);
         console.log("payloadObj", payloadObj);
-        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, "LIFNR");
-        const response = await query({ query: multipleUserInsertQ, values: [] });
-        if (response.affectedRows) {
+        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, ["LIFNR"]);
+        const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
+        console.log('response', response);
+        if (response.rows) {
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
         } else {
             responseSend(res, "F", 400, "data insert filed !!", response, null);
@@ -97,10 +99,10 @@ const addUser = async (req, res) => {
 
         const payloadObj = await addUserPayload(payload);
         console.log("payloadObj", payloadObj);
-        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, "PERNR");
-        const response = await query({ query: multipleUserInsertQ, values: [] });
+        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, ["PERNR"]);
+        const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
 
-        if (response.affectedRows) {
+        if (response.rowCount) {
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
         } else {
             responseSend(res, "F", 400, "data insert filed !!", response, null);
