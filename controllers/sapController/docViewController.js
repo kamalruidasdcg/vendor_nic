@@ -1,8 +1,10 @@
-const { query } = require("../../config/dbConfig");
+// const { query } = require("../../config/dbConfig");
+const { getQuery } = require("../../config/pgDbConfig");
 const { resSend } = require("../../lib/resSend");
 const Message = require('../../utils/messages');
 
 const serviceEntryReport = async (req, res) => {
+    console.log("serviceEntryReport", "serviceEntryReport");
 
     try {
 
@@ -26,17 +28,20 @@ const serviceEntryReport = async (req, res) => {
                 LEFT JOIN lfa1 as vendorDetails
                 	ON( ekko.LIFNR = vendorDetails.LIFNR)`;
 
+        console.log("serviceEntryReportQ", serviceEntryReportQ);
         const val = []
         let whereClause = " WHERE 1 = 1";
-
+        let count = 0;
         if (req.body.serviceEntryNumber) {
-            whereClause += " AND essr.lblni = ?";
+            whereClause += ` AND essr.lblni = $${++count}`;
             val.push(req.body.serviceEntryNumber);
         }
 
         const finalQuery = serviceEntryReportQ + whereClause;
+        console.log("finalQuery", finalQuery);
 
-        const result = await query({ query: finalQuery, values: val });
+        const result = await getQuery({ query: finalQuery, values: val });
+        console.log("result", result);
 
         if (!result.error) {
             resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result);
@@ -45,7 +50,7 @@ const serviceEntryReport = async (req, res) => {
         }
 
     } catch (error) {
-        resSend(res, false, 400, "Error in database conn!!", error, null);
+        resSend(res, false, 400, Message.DB_CONN_ERROR, error, null);
     }
 };
 
@@ -126,30 +131,30 @@ const grnReport = async (req, res) => {
 
         let whereClause = " WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )";
 
-
+        let count = 0;
         if (req.body.matDocNo) {
-            whereClause += " AND mseg.MBLNR = ? ";
+            whereClause += ` AND mseg.MBLNR = $${++count}`;
             val.push(req.body.matDocNo);
         }
 
         const finalQuery = grnQuery + whereClause;
 
-        const result = await query({ query: finalQuery, values: val });
+        const result = await getQuery({ query: finalQuery, values: val });
         console.log("result", result);
 
         if (result.length) {
 
             const responseObj = {
-                matDocNo : result[0].matDocNo,
-                entryDate : result[0].entryDate,
-                invoiceNo : result[0].invoiceNo,
-                gateEntryNo : result[0].gateEntryNo,
-                plant : result[0].plant,
-                vendor_code : result[0].vendor_code,
-                vendor_name : result[0].vendor_name,
-                purchasing_doc_no : result[0].purchasing_doc_no,
-                headerText : result[0].headerText,
-                chalanNo : result[0].chalanNo,
+                matDocNo: result[0].matDocNo,
+                entryDate: result[0].entryDate,
+                invoiceNo: result[0].invoiceNo,
+                gateEntryNo: result[0].gateEntryNo,
+                plant: result[0].plant,
+                vendor_code: result[0].vendor_code,
+                vendor_name: result[0].vendor_name,
+                purchasing_doc_no: result[0].purchasing_doc_no,
+                headerText: result[0].headerText,
+                chalanNo: result[0].chalanNo,
                 lineItem: result
             }
 
@@ -200,12 +205,13 @@ const materialIssue = async (req, res) => {
         }
         let val = [];
 
+        let count = 0;
         if (req.body.issueNo) {
-            q = q.concat(" AND mseg.MBLNR = ? ");
+            q = q.concat(` AND mseg.MBLNR = $${++count} `);
             val.push(req.body.issueNo);
         }
         if (req.body.issueYear) {
-            q = q.concat(" AND mseg.MJAHR = ? ");
+            q = q.concat(` AND mseg.MJAHR = $${++count} `);
             val.push(req.body.issueYear);
         }
 
@@ -338,23 +344,23 @@ const icgrnReport = async (req, res) => {
                 	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)`;
 
         let whereClause = " WHERE 1 = 1";
-
+        let count = 0;
         const val = [];
         if (req.body.inspectionLotNumber) {
-            whereClause += " AND qals.PRUEFLOS = ?";
+            whereClause += ` AND qals.PRUEFLOS = $${++count}`;
             val.push(req.body.inspectionLotNumber);
         }
         if (req.body.docNo) {
-            whereClause += " AND qals.MBLNR = ?";
+            whereClause += ` AND qals.MBLNR = $${++count}`;
             val.push(req.body.docNo);
         }
         if (req.body.purchasing_doc_no) {
-            whereClause += " AND qals.EBELN = ?";
+            whereClause += ` AND qals.EBELN = $${++count}`;
             val.push(req.body.purchasing_doc_no);
         }
         // const response = await promiseConnection.execute(icgrnGetQuery);
         const finalQuery = icgrnGetQuery + whereClause;
-        const response = await query({ query: finalQuery, values: val });
+        const response = await getQuery({ query: finalQuery, values: val });
 
         if (response && response.length) {
             const resp = response[0];
@@ -426,12 +432,13 @@ const gateEntryReport = async (req, res) => {
         const val = [];
 
         let whereClause = " WHERE 1 = 1";
+        let count = 0;
         if (req.body.gate_entry_no) {
-            whereClause += " AND zmm_gate_entry_h.ENTRY_NO = ?";
+            whereClause += ` AND zmm_gate_entry_h.ENTRY_NO = $${++count}`;
             val.push(req.body.gate_entry_no)
         }
         const finalQuery = ge_query + whereClause;
-        const result = await query({ query: finalQuery, values: val });
+        const result = await getQuery({ query: finalQuery, values: val });
 
         if (result && result.length) {
             let obj = {};
@@ -457,4 +464,4 @@ const gateEntryReport = async (req, res) => {
 
 
 
-module.exports = { serviceEntryReport, grnReport, materialIssue, icgrnReport,  gateEntryReport}
+module.exports = { serviceEntryReport, grnReport, materialIssue, icgrnReport, gateEntryReport }
