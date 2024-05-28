@@ -180,18 +180,40 @@ router.post("/po", [], async (req, res) => {
 
             console.log("condcondcondcondcond", cond);
 
-            const d = generateQuery(INSERT, 'ekko', insertPayload, cond);
-            console.log("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", d);
+
+            const qu = `INSERT INTO ekko 
+                                (EBELN, BUKRS, BSTYP, BSART, LOEKZ, AEDAT, ERNAM, LIFNR, EKORG, EKGRP)
+                            VALUES 
+                                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10), 
+                                ($11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+                            ON CONFLICT (EBELN)
+                            DO UPDATE SET
+                                BUKRS = EXCLUDED.BUKRS, 
+                                BSTYP = EXCLUDED.BSTYP, 
+                                LOEKZ = EXCLUDED.LOEKZ, 
+                                AEDAT = EXCLUDED.AEDAT`;
+
+            const values = [
+                '4000234573', '5788', 'S', 'ABCD', 'W', '20241109', '34567656787', '50000437', '1234', '123',
+                '4000234574', '5789', 'S', 'EFGH', 'X', '20241101', '34567656788', '50000438', '1235', '124'
+            ]
+
+            // const d = generateQuery(INSERT, 'ekko', insertPayload, cond);
+            // console.log("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU", d);
 
             // const response = await client.query(d.q, d.val);
-            const response = await query({ query: d.q, values: d.val });
+            // const response = await query({ query: d.q, values: d.val });
+            try {
+                await query({ query: qu, values: values });
+            } catch (error) {
+                console.log(error);
+            }
+            console.log("response", "response");
 
-            console.log("response", response);
-
-            return resSend(res, true, 200, Message.USER_AUTHENTICATION_SUCCESS, response);
+            resSend(res, true, 200, Message.USER_AUTHENTICATION_SUCCESS, "response");
         } catch (error) {
 
-            return resSend(res, false, 500, Message.SERVER_ERROR, error);
+            resSend(res, false, 500, Message.SERVER_ERROR, error);
         } finally {
             client.release();
         }
