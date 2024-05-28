@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query, getQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { VENDOR_ACTIVITIES } = require("../../lib/tableName");
@@ -57,13 +57,13 @@ const vendorActivities = async (req, res) => {
         const { q, val } = generateQuery(INSERT, VENDOR_ACTIVITIES, insertObj);
         const response = await query({ query: q, values: val });
 
-        if (response.affectedRows) {
+        if (response) {
 
             // await handleEmail();
 
-           return  resSend(res, true, 200, "vendor Activities Uploaded successfully !", null, null);
+           return  resSend(res, true, 200, "vendor Activities Uploaded successfully !", response, null);
         } else {
-          return  resSend(res, false, 400, "No data inserted", response, null);
+          return  resSend(res, false, 400, "No data inserted", null, null);
         }
 
 
@@ -92,10 +92,10 @@ const list = async (req, res) => {
             `SELECT *
             FROM   ${VENDOR_ACTIVITIES} 
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? ) ORDER BY created_at DESC`;
+                     AND purchasing_doc_no = $1 ) ORDER BY created_at DESC`;
         const result = await query({ query: get_query, values: [req.query.poNo] })
 
-       return resSend(res, true, 200, "VENDOR ACTIVITIES List fetched", result, "");
+       return resSend(res, true, 200, "VENDOR ACTIVITIES List fetched", result.rows, "");
 
     } catch (err) {
         console.log("data not fetched", err);

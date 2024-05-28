@@ -59,4 +59,14 @@ const poolClient = async () => {
     }
 };
 
-module.exports = { query, poolClient, getQuery, asyncPool };
+const poolQuery = async ({ client, query, values }) => {
+ 
+    try {
+        const { rows } = await client.query(query, values);
+        return rows;
+    } catch (error) {
+        throw new Error(`Error executing query: ${error.message}`);
+    }
+}
+
+module.exports = { query, poolClient, getQuery, asyncPool, poolQuery };
