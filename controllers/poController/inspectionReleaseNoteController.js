@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query, getQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { INSPECTIONRELEASENOTE } = require("../../lib/tableName");
@@ -65,13 +65,13 @@ const inspectionReleaseNote = async (req, res) => {
         const { q, val } = generateQuery(INSERT, INSPECTIONRELEASENOTE, insertObj);
         const response = await query({ query: q, values: val });
 
-        if (response.affectedRows) {
+        if (response.rowCount) {
 
             // await handleEmail();
 
-            resSend(res, true, 200, "Ispection Release Note inserted successfully !", null, null);
+            resSend(res, true, 200, "Ispection Release Note inserted successfully !", response, null);
         } else {
-            resSend(res, false, 400, "No data inserted", response, null);
+            resSend(res, false, 400, "No data inserted", null, null);
         }
 
 
@@ -100,10 +100,10 @@ const list = async (req, res) => {
             `SELECT *
             FROM   ${INSPECTIONRELEASENOTE}
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? )`;
+                     AND purchasing_doc_no = $1 )`;
         const result = await query({ query: insp_call_query, values: [req.query.poNo] })
 
-        resSend(res, true, 200, "Inspection Release Note fetched", result, "");
+        resSend(res, true, 200, "Inspection Release Note fetched", result.rows, "");
 
     } catch (err) {
         console.log("data not fetched", err);
