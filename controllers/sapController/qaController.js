@@ -5,11 +5,13 @@ const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { qalsPayload, qavePayloadFn } = require('../../services/sap.qa.services');
+const { poolClient, poolQuery, getQuery } = require('../../config/pgDbConfig');
+const Message = require("../../utils/messages");
 
 const qals = async (req, res) => {
     console.log("qalssss");
     try {
-        const promiseConnection = await connection();
+        const client = await poolClient();
         let tempPayload;
         if (req.body && Array.isArray(req.body)) {
             tempPayload = req.body.length > 0 ? req.body[0] : null;
@@ -22,26 +24,26 @@ const qals = async (req, res) => {
             const { QAVE, ...payload } = tempPayload;
 
             if (!payload || !payload.PRUEFLOS) {
-                return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+                return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
             }
 
             const payloadObj = await qalsPayload(payload);
-            const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, "PRUEFLOS");
-            const response = await promiseConnection.execute(qalsInsertQuery);
+            const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, ["PRUEFLOS"]);
+            const response = await poolQuery({ client, query: qalsInsertQuery.q, values: qalsInsertQuery.val });
 
             if (QAVE && typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
                 const qavePayload = await qavePayloadFn(QAVE);
-                const qaveInsertQuery = await generateInsertUpdateQuery(qavePayload, QAVE_TABLE, "c_pkey");
-                const resp = await promiseConnection.execute(qaveInsertQuery);
+                const qaveInsertQuery = await generateInsertUpdateQuery(qavePayload, QAVE_TABLE, ["PRUEFLOS", "KZART", "ZAEHLER"]);
+                const resp = await poolQuery({ client, query: qaveInsertQuery.q, values: qaveInsertQuery.val });
             }
 
             // .execute(ekkoTableInsert["q"], ekkoTableInsert["val"])
-            responseSend(res, "S", 200, "Data inserted successfully", response, null);
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (err) {
             console.log("data not inserted", err);
-            responseSend(res, "F", 500, "Internal server errorR", err, null);
+            responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
         } finally {
-            await promiseConnection.end();
+            client.release();
         }
     } catch (error) {
         responseSend(res, "F", 500, "DB CONN ERROR", error, null);
@@ -51,8 +53,8 @@ const qals = async (req, res) => {
 
 const qalsReport = async (req, res) => {
     console.log("qalssss");
-    try {
-        const promiseConnection = await connection();
+    // try {
+        // const client = await poolClient();
         // let payload;
         // if (req.body && Array.isArray(req.body)) {
         //     payload = req.body.length > 0 ? req.body[0] : null;
@@ -68,7 +70,7 @@ const qalsReport = async (req, res) => {
             // }
 
             if (!req.body.docNo) {
-                return resSend(res, false, 200, "plese send docNo", [], null);
+                return resSend(res, false, 200, Message.MANDATORY_PARAMETR, [], null);
             }
 
 
@@ -118,38 +120,38 @@ const qalsReport = async (req, res) => {
 
             icgrnGetQuery = `
                 SELECT 
-                qals.PRUEFLOS as inspectionLotNumber,
-                qals.EBELN as purchasing_doc_no,
-                qals.EBELP as purchasing_doc_no_item,
-                ekko.AEDAT as purchasing_doc_date,
-                qals.MBLNR as docNo,
-                qals.BUDAT as docdate,
-                qals.LIFNR as suppplier,
-                vendor_table.LAND1 as vendorCountry,
-                vendor_table.NAME1 as vendorName,
-                vendor_table.ORT01 as vendorCity,
-                vendor_table.ORT02 as vendorDistrict,
-                vendor_table.PFACH as vendorPinCode,
-                qals.MATNR AS materialNumber,
-                makt.MAKTX as materialDesc,
-                qals.MATNR as material,
-                qals.PAENDTERM as endDate,
-                qals.PAENDZEIT as endTime,
-                qals.PS_PSP_PNR as wbsElement,
-                qals.BWART as momentType,
-                ekpo.MEINS as baseUnit,
-                qals.LMENGE01 as acceptedQty,
-                qals.LMENGE07 as rejectedQty,
-                qals.LMENGE01 as unrestrictedUseStock,
-                qals.LMENGEIST as supplyQuantity,
-                qals.LTEXTKZ as remarks,
-                qave.vcode as udCode,
-                qals.ENSTEHDAT as inspDate,
-                zmm_gate_entry_d.INVNO as invoiceNo,
-                zmm_gate_entry_d.INV_DATE as invoiceDate,
-                zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
-                zmm_gate_entry_h.ENTRY_DATE as gateEntryDate,
-                zmm_gate_entry_h.ENTRY_TIME as gateEntryTime
+                qals.PRUEFLOS as "inspectionLotNumber",
+                qals.EBELN as "purchasing_doc_no",
+                qals.EBELP as "purchasing_doc_no_item",
+                ekko.AEDAT as "purchasing_doc_date",
+                qals.MBLNR as "docNo",
+                qals.BUDAT as "docdate",
+                qals.LIFNR as "suppplier",
+                vendor_table.LAND1 as "vendorCountry",
+                vendor_table.NAME1 as "vendorName",
+                vendor_table.ORT01 as "vendorCity",
+                vendor_table.ORT02 as "vendorDistrict",
+                vendor_table.PFACH as "vendorPinCode",
+                qals.MATNR AS "materialNumber",
+                makt.MAKTX as "materialDesc",
+                qals.MATNR as "material",
+                qals.PAENDTERM as "endDate",
+                qals.PAENDZEIT as "endTime",
+                qals.PS_PSP_PNR as "wbsElement",
+                qals.BWART as "momentType",
+                ekpo.MEINS as "baseUnit",
+                qals.LMENGE01 as "acceptedQty",
+                qals.LMENGE07 as "rejectedQty",
+                qals.LMENGE01 as "unrestrictedUseStock",
+                qals.LMENGEIST as "supplyQuantity",
+                qals.LTEXTKZ as "remarks",
+                qave.vcode as "udCode",
+                qals.ENSTEHDAT as "inspDate",
+                zmm_gate_entry_d.INVNO as "invoiceNo",
+                zmm_gate_entry_d.INV_DATE as "invoiceDate",
+                zmm_gate_entry_d.ENTRY_NO as "gateEntryNo",
+                zmm_gate_entry_h.ENTRY_DATE as "gateEntryDate",
+                zmm_gate_entry_h.ENTRY_TIME as "gateEntryTime"
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)
@@ -165,18 +167,25 @@ const qalsReport = async (req, res) => {
                 	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR)
                 LEFT JOIN  zmm_gate_entry_h as zmm_gate_entry_h
                 	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO) WHERE 1 = 1`;
+
+            let count = 0;
+            let val = []
             if (req.body.inspectionLotNumber) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = ${req.body.inspectionLotNumber}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.PRUEFLOS = $${++count}`);
+                val.push(req.body.inspectionLotNumber);
             }
             if (req.body.docNo) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.MBLNR = ${req.body.docNo}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.MBLNR = $${++count}`);
+                val.push(req.body.docNo)
             }
             if (req.body.purchasing_doc_no) {
-                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = ${req.body.purchasing_doc_no}`)
+                icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = $${++count}`)
+                val.push(req.body.purchasing_doc_no)
             }
-            const response = await promiseConnection.execute(icgrnGetQuery);
-
             console.log("icgrnGetQuery", icgrnGetQuery);
+            const response = await getQuery({ query: icgrnGetQuery, values: val });
+
+            console.log("response", response);
 
             if (response && response.length) {
 
@@ -201,20 +210,22 @@ const qalsReport = async (req, res) => {
                     lineItems: response[0]
 
                 }
-                responseSend(res, "S", 200, "Data fetch successfully", obj, null);
+                responseSend(res, "S", 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
+            } else {
+                responseSend(res, "S", 200, Message.NO_DATA_FOUND, {}, null);
             }
 
         } catch (err) {
             console.log("data not inserted", err);
 
 
-            responseSend(res, "F", 500, "Internal server errorR", err, null);
+            responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
         } finally {
-            await promiseConnection.end();
+            // await client.end();
         }
-    } catch (error) {
-        responseSend(res, "F", 500, "DB CONN ERROR", error, null);
-    }
+    // } catch (error) {
+    //     responseSend(res, "F", 500, "DB CONN ERROR", error, null);
+    // }
 
 };
 

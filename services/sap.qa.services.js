@@ -264,7 +264,7 @@ const qavePayloadFn = async (obj) => {
   // }
   // const pl = payload.map((obj) => (
     const pl = {
-    c_pkey: `${obj.PRUEFLOS}-${obj.KZART}-${obj.ZAEHLER}`,
+    // c_pkey: `${obj.PRUEFLOS}-${obj.KZART}-${obj.ZAEHLER}`,
     prueflos: obj.prueflos || obj.PRUEFLOS || null,
     kzart: obj.kzart || obj.KZART || null,
     zaehler: obj.zaehler || obj.ZAEHLER || null,
