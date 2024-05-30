@@ -19,7 +19,7 @@ const sdbgPaymentAdvice = async (req, res) => {
         const payloadObj = await zfi_bgm_1_Payload_sap(payload);
         console.log("payloadObj", payloadObj);
         // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
-        const queryText = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, ["COMPOSIT_PK"])
+        const queryText = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, ["FILE_NO", "REF_NO"])
         console.log(q);
         const response = await query({ query: queryText.q, values: queryText.val });
         responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
