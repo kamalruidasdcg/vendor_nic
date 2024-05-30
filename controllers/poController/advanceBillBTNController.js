@@ -1,4 +1,5 @@
 const { query, connection } = require("../../config/dbConfig");
+const { poolQuery, poolClient } = require("../../config/pgDbConfig");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { INSERT } = require("../../lib/constant");
 const { resSend } = require("../../lib/resSend");
@@ -16,7 +17,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
 
     try {
-        const client = await connection();
+        const client = await poolClient();
 
         try {
             let payload = req.body;
@@ -88,7 +89,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
             const btnPayload = await advBillHybridbtnPayload(payload, 'advance-bill-hybrid');
             // GENERATE QUERY, DATA AND SAVE
             const btnQuery = generateQuery(INSERT, 'btn_advance_bill_hybrid', btnPayload);
-            const result1 = await client.execute(btnQuery.q, btnQuery.val);
+            const result1 = await poolQuery({ client, query: btnQuery.q, values: btnQuery.val });
             let associated_po_arr = [];
             if (associated_po && Array.isArray(associated_po)) {
                 associated_po_arr = associated_po.map((ele) => ({
@@ -96,8 +97,8 @@ const submitAdvanceBillHybrid = async (req, res) => {
                     purchasing_doc_no: ele
                 }));
 
-                const multipledataInsert = await generateQueryForMultipleData(associated_po_arr, 'btn_advance_bill_hybrid', 'id');
-                const result2 = await client.execute(multipledataInsert);
+                const multipledataInsert = await generateQueryForMultipleData(associated_po_arr, 'btn_advance_bill_hybrid', ['id']);
+                const result2 = await poolQuery({ client, query: multipledataInsert.q, values: multipledataInsert.val });
             }
 
             resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, {}, null)
@@ -108,7 +109,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
             resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null)
 
         } finally {
-            await client.end();
+            client.release();
         }
     } catch (error) {
         resSend(res, false, 500, Message.DB_CONN_ERROR, null, null)

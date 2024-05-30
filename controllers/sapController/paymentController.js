@@ -5,10 +5,12 @@ const { PAYMENT_ADVICE2, PAYMENT_VOUCHER } = require('../../lib/tableName');
 const { paymentPayload, ztfi_bil_defacePayload, paymentAviceHeaderPayload, paymentAviceLineItemsPayload, zbtsHeaderPayload, zbtsLineItemsPayload } = require("../../services/sap.payment.services");
 const { INSERT } = require("../../lib/constant");
 const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
-const { query } = require("../../config/dbConfig");
+// const { query } = require("../../config/dbConfig");
 
 const path = require('path');
 const fs = require('fs');
+const { query, getQuery } = require("../../config/pgDbConfig");
+const Message = require("../../utils/messages");
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -29,7 +31,7 @@ const addPaymentVoucher = async (req, res) => {
 
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null, null);
+                return resSend(res, false, 400, Message.VALID_PARAMETER, null, null);
 
             }
 
@@ -38,14 +40,7 @@ const addPaymentVoucher = async (req, res) => {
 
             const { q, val } = generateQuery(INSERT, PAYMENT_VOUCHER, insertObj);
             const response = await query({ query: q, values: val });
-
-            if (response.affectedRows) {
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            } else {
-                resSend(res, false, 400, "No data inserted", response, null);
-            }
-
-
+            resSend(res, true, 200, "file uploaded!", fileData, null);
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
@@ -92,12 +87,7 @@ const addPaymentAdvise = async (req, res) => {
             const { q, val } = generateQuery(INSERT, PAYMENT_ADVICE2, insertObj);
             const response = await query({ query: q, values: val });
 
-            if (response.affectedRows) {
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            } else {
-                resSend(res, false, 400, "No data inserted", response, null);
-            }
-
+            resSend(res, true, 200, "file uploaded!", fileData, null);
 
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
@@ -132,23 +122,21 @@ const ztfi_bil_deface = async (req, res) => {
             return responseSend(res, "F", 400, "Invalid payload.", null, null);
         }
 
-        const payloadObj = await ztfi_bil_defacePayload(payload);
-        const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", "C_PKEY");
-        // console.log(", ztfi_bil_deface", zdefaceInsertQuery);
-        const response = await query({ query: zdefaceInsertQuery, values: [] });
-        console.log("response", response);
-        if (response.affectedRows) {
-            responseSend(res, "S", 200, "Data inserted successfully", response, null);
+        try {
 
-        } else {
-            // resSend(res, false, 400, "No data inserted", response, null);
-            responseSend(res, "F", 400, "Data inserted failed", response, null);
+            const payloadObj = await ztfi_bil_defacePayload(payload);
+            const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", ["ZREGNUM", "SEQNO", "ZBILLPER"]);
 
+            const response = await query({ query: zdefaceInsertQuery.q, values: zdefaceInsertQuery.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+        } catch (error) {
+            responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
         }
-        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+
+
     } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+
+        responseSend(res, "F", 500, Message.UNEXPECTED_ERROR, err, null);
     }
 }
 const newPaymentAdvice = async (req, res) => {
@@ -166,28 +154,25 @@ const newPaymentAdvice = async (req, res) => {
 
         const { ZFI_PYMT_ADVCE_FINAL, ...obj } = payload;
 
-        const payloadObj = await paymentAviceHeaderPayload(obj);
-        const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", "id");
+        try {
 
-        const response1 = await query({ query: paymentAviceHeaderQuery, values: [] });
+            const payloadObj = await paymentAviceHeaderPayload(obj);
+            const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", ["id"]);
 
-        const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
-        const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", "id");
-        const response2 = await query({ query: paymentAviceLineItemsQuery, values: [] });
+            const response1 = await query({ query: paymentAviceHeaderQuery.q, values: paymentAviceHeaderQuery.val });
 
-        console.log("response", response1, response1);
-        if (response1.affectedRows && response2.affectedRows) {
-            responseSend(res, "S", 200, "Data inserted successfully", { response1, response2 }, null);
-
-        } else {
-            // resSend(res, false, 400, "No data inserted", response, null);
-            responseSend(res, "F", 400, "Data inserted failed", { response1, response2 }, null);
+            const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
+            const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
+            const response2 = await query({ query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, { response1, response2 }, null);
+        } catch (error) {
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error, null);
 
         }
-        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+
     } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+
+        responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
     }
 }
 // const zbts_st = async (req, res) => {
@@ -219,7 +204,7 @@ const newPaymentAdvice = async (req, res) => {
 //         }
 
 //         console.log("response", response1, response1);
-//         if (response1.affectedRows && response2.affectedRows) {
+//         if (response1.rowCount && response2.rowCount) {
 //             responseSend(res, "S", 200, "Data inserted successfully", { response1, response2 }, null);
 
 //         } else {
@@ -247,65 +232,68 @@ const ztfi_bil_deface_report = async (req, res) => {
         let zdefaceInsertQuery =
             `SELECT 
             deface.zregnum         AS btn,
-            deface.zregdate                AS btnDate,
-            deface.zpono                   AS purchesing_doc_no,
-            deface.zvendor                 AS vendor_code,
-            deface.zbscval_m_s             AS matValue,
-            deface.zntsupp_s               AS nogrsrValue,
-            deface.znetvalue_s             AS netValue,
-            deface.zcst_vat_txt            AS taxesAndDutiesText,
-            deface.zcst_vat_s              AS taxesAndDutiesValue,
-            deface.ztotalb_s               AS totalValWithTaxDutiesValue,
-            deface.zadd_othrchrg_txt       AS anyOtherPaybleText,
-            deface.zadd_othrchrg_s         AS anyOtherPaybleValue,
-            deface.ztotala_s               AS grossValue,
-            deface.ZADD_OTHRCHRG_1_S      AS adjustmentOfAdvance,
-            deface.zles_retntn_txt         AS pbgText,
-            deface.zles_retntn_s           AS pbgValue,
-            deface.zles_sd_txt             AS sdText,
-            deface.zles_sd_s               AS sdValue,
-            deface.zles_othr_txt           AS otherText,
-            deface.zles_othr_s             AS otherValue,
-            deface.zles_gross_ret          AS totalRetentions,
-            deface.zles_inctax_txt         AS incomeTaxTDSText,
-            deface.zles_inctax_s           AS incomeTaxTDSValue,
-            deface.zles_wrkcontax_txt      AS gstTdsText,
-            deface.zles_wrkcontax_s        AS gstTdsValue,
-            deface.zles_cstofcon_paint_txt AS costOfConPaintText,
-            deface.zles_cstofcon_paint_s   AS costOfConPaintValue,
-            deface.zles_ld_txt             AS ldText,
-            deface.zles_ld_s               AS ldValue,
-            deface.zles_penalty_txt        AS penaltyText,
-            deface.zles_penalty_s          AS penaltyValue,
-            deface.zles_intsd_txt          AS interestChargeText,
-            deface.zles_intsd_s            AS interestChargeValue,
-            deface.zles_othrded_txt        AS otherDeductionText,
-            deface.zles_othrded_s          AS otherDeductionValue,
-            deface.zles_gross_ded          AS totalDeduction,
-            deface.znet_pymnt1_s           AS netPayment
+            deface.zregdate                AS "btnDate",
+            deface.zpono                   AS "purchesing_doc_no",
+            deface.zvendor                 AS "vendor_code",
+            deface.zbscval_m_s             AS "matValue",
+            deface.zntsupp_s               AS "nogrsrValue",
+            deface.znetvalue_s             AS "netValue",
+            deface.zcst_vat_txt            AS "taxesAndDutiesText",
+            deface.zcst_vat_s              AS "taxesAndDutiesValue",
+            deface.ztotalb_s               AS "totalValWithTaxDutiesValue",
+            deface.zadd_othrchrg_txt       AS "anyOtherPaybleText",
+            deface.zadd_othrchrg_s         AS "anyOtherPaybleValue",
+            deface.ztotala_s               AS "grossValue",
+            deface.ZADD_OTHRCHRG_1_S      AS "adjustmentOfAdvance",
+            deface.zles_retntn_txt         AS "pbgText",
+            deface.zles_retntn_s           AS "pbgValue",
+            deface.zles_sd_txt             AS "sdText",
+            deface.zles_sd_s               AS "sdValue",
+            deface.zles_othr_txt           AS "otherText",
+            deface.zles_othr_s             AS "otherValue",
+            deface.zles_gross_ret          AS "totalRetentions",
+            deface.zles_inctax_txt         AS "incomeTaxTDSText",
+            deface.zles_inctax_s           AS "incomeTaxTDSValue",
+            deface.zles_wrkcontax_txt      AS "gstTdsText",
+            deface.zles_wrkcontax_s        AS "gstTdsValue",
+            deface.zles_cstofcon_paint_txt AS "costOfConPaintText",
+            deface.zles_cstofcon_paint_s   AS "costOfConPaintValue",
+            deface.zles_ld_txt             AS "ldText",
+            deface.zles_ld_s               AS "ldValue",
+            deface.zles_penalty_txt        AS "penaltyText",
+            deface.zles_penalty_s          AS "penaltyValue",
+            deface.zles_intsd_txt          AS "interestChargeText",
+            deface.zles_intsd_s            AS "interestChargeValue",
+            deface.zles_othrded_txt        AS "otherDeductionText",
+            deface.zles_othrded_s          AS "otherDeductionValue",
+            deface.zles_gross_ded          AS "totalDeduction",
+            deface.znet_pymnt1_s           AS "netPayment"
         FROM   
             ztfi_bil_deface AS deface 
         WHERE  1 = 1`;
 
         const val = [];
 
-
-
         if (payload.btn) {
-            zdefaceInsertQuery = zdefaceInsertQuery.concat(" AND deface.ZREGNUM = ?");
+            zdefaceInsertQuery = zdefaceInsertQuery.concat(" AND deface.ZREGNUM = $1");
             val.push(payload.btn)
         }
 
-        const response = await query({ query: zdefaceInsertQuery, values: val });
-        console.log("response", response);
-        if (response) {
-            responseSend(res, "S", 200, "Data inserted successfully", response, null);
+        try {
+            const response = await getQuery({ query: zdefaceInsertQuery, values: val });
+            console.log("response", response);
+
+            responseSend(res, "S", 200, Message.DATA_FETCH_SUCCESSFULL, response, null);
+
+        } catch (error) {
+            responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
 
         }
+
+
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
-    } catch (err) {
-        console.log("Error", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+    } catch (error) {
+        responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null)
     }
 }
 

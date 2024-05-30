@@ -855,8 +855,9 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
-      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${
+                  payload.purchasing_doc_no
+                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -928,13 +929,34 @@ async function sendBgToSap(payload) {
     console.log("wdc_payload -->",);
 
     let modified = await zfi_bgm_1_Payload(payload);
-    console.log('___________modified');
+    console.log("___________modified");
     console.log(modified);
-    console.log('modified_________');
+    console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
+  }
+}
+//27.05.2024
+async function sdbgfilterData(req, res) {
+  const { startDate, endDate } = req.body;
+
+  if (startDate && endDate) {
+    try {
+      let filterdata = `SELECT * FROM sdbg_entry WHERE validity_date BETWEEN ? AND ? 
+      AND status != 'RELEASED'`;
+      const result1 = await query({
+        query: filterdata,
+        values: [startDate, endDate],
+      });
+      res.status(200).json(result1);
+    } catch (error) {
+      console.error("Error executing the query:", error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  } else {
+    res.status(400).json({ error: "startDate and endDate are required" });
   }
 }
 
@@ -947,4 +969,5 @@ module.exports = {
   sdbgUpdateByFinance,
   checkIsDealingOfficer,
   getSDBGData,
+  sdbgfilterData,
 };

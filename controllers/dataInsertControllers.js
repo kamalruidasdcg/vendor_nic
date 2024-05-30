@@ -1,5 +1,5 @@
 // const { query,  } = require("../config/dbConfig");
-const { query, connection } = require("../config/dbConfig");
+// const { query, connection } = require("../config/dbConfig");
 const { INSERT, TRUE } = require("../lib/constant");
 const { responseSend } = require("../lib/resSend");
 const { EKKO } = require("../lib/tableName");
@@ -49,7 +49,7 @@ const insertPOData = async (req, res) => {
             };
             const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, EKKO, ["EBELN"]);
             try {
-                await client.query(ekkoTableInsert);
+                await client.query(ekkoTableInsert.q, ekkoTableInsert.val);
             } catch (error) {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
             }
@@ -61,44 +61,26 @@ const insertPOData = async (req, res) => {
                 console.log("delete_from_zpo_milestoen", error);
             }
 
-
             const insertPromiseFn = [];
-            // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
+
             if (ZPO_MILESTONE?.length) {
 
                 try {
 
                     const zmilestonePayload = await zpo_milestonePayload(ZPO_MILESTONE);
                     const insert_zpo_milestone_table = await generateQueryForMultipleData(zmilestonePayload, "zpo_milestone", ["EBELN", "MID"]);
-                    insertPromiseFn.push(client.query(insert_zpo_milestone_table));
-                    // console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
-                    // const insert_zpo_milestone_table = `INSERT INTO zpo_milestone (EBELN, MID, MTEXT, PLAN_DATE, MO) VALUES ?`;
-                    // console.log("ZPO_MILESTONE", ZPO_MILESTONE);
-                    // console.log('ekpopayload', zmilestonePayload);
-                    // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-                    // console.log("insert_zpo_milestone_table", insert_zpo_milestone_table);
-                    // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
-                    // const zpo_milestone_table_val = zpo_milestoneTableData(ZPO_MILESTONE);
-                    // insertPromiseFn.push(client.query(insert_zpo_milestone_table));
+                    insertPromiseFn.push(client.query(insert_zpo_milestone_table.q, insert_zpo_milestone_table.val));
                 } catch (error) {
                     console.log("error, zpo milestone", error);
                 }
             }
 
-
-
             if (EKPO?.length) {
 
                 try {
-
-
                     const ekpopayload = await ekpoTablePayload(EKPO, obj.EBELN);
-                    // console.log("ekpopayload", ekpopayload);
-                    // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
                     const insert_ekpo_table = await generateQueryForMultipleData(ekpopayload, "ekpo", ["EBELN", "EBELP"]);
-                    // console.log("insert_ekpo_table", insert_ekpo_table);
-                    // console.log("insert_ekpo_table", insert_ekpo_table);
-                    insertPromiseFn.push(client.query(insert_ekpo_table));
+                    insertPromiseFn.push(client.query(insert_ekpo_table.q, insert_ekpo_table.val));
                 } catch (error) {
                     console.log("error, ekpo", error);
                 }
@@ -108,14 +90,11 @@ const insertPOData = async (req, res) => {
                 const insert = await Promise.all(insertPromiseFn);
             }
 
-            // const comm = await client.commit(); // Commit the transaction if everything was successful
-
             await client.query('COMMIT');
 
             transactionSuccessful = true;
 
             if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
-                //console.log("Connectio");
 
                 try {
                     // await sendMail(insertPayload);
@@ -132,13 +111,9 @@ const insertPOData = async (req, res) => {
         }
         finally {
             if (!transactionSuccessful) {
-                // console.log("Connection End" + "--->" + "connection release, FAILED TO SAVE DATA");
-                // await client.rollback();
                 await client.query('ROLLBACK')
             }
-            // const connEnd = await client.end();
             const connEnd = client.release()
-            // console.log("Connection End" + "--->" + "connection release");
         }
     } catch (error) {
         responseSend(res, "F", 400, "Error in database conn!!", error, null);
@@ -201,7 +176,8 @@ const archivePo = async (req, res) => {
     let payload = {};
 
     try {
-        const promiseConnection = await connection();
+        // const promiseConnection = await connection();
+        const client = await poolClient();
         let transactionSuccessful = false;
         if (Array.isArray(req.body)) {
             payload = req.body.length > 0 ? req.body[0] : null;
@@ -218,14 +194,17 @@ const archivePo = async (req, res) => {
 
         try {
 
-            await promiseConnection.beginTransaction();
+            // await promiseConnection.beginTransaction();
+            await client.query('BEGIN');
+
             if (cdhdr_table_data?.length) {
                 try {
                     insertPayload = await archivePoHeaderPayload(cdhdr_table_data)
                     console.log('insertPayload', insertPayload);
-                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', "id");
+                    const cdhdrTableInsert = await generateQueryForMultipleData(insertPayload, 'cdhdr', ["OBJECTCLAS"]);
                     console.log("cdhdrTableInsert", cdhdrTableInsert);
-                    const [results] = await promiseConnection.execute(cdhdrTableInsert);
+                    // const [results] = await promiseConnection.execute(cdhdrTableInsert);
+                    const [results] = await client.query(cdhdrTableInsert.q, cdhdrTableInsert.val);
                     console.log("results 1", results);
                 } catch (error) {
                     return responseSend(res, "F", 502, "Data insert failed !!", error, null);
@@ -237,9 +216,10 @@ const archivePo = async (req, res) => {
                 try {
                     const cdposTablePayload = await archivePoLineItemsPayload(cdpos_table_data);
                     console.log('cdposTablePayload', cdposTablePayload);
-                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", "id");
+                    const insert_cdpos_table = await generateQueryForMultipleData(cdposTablePayload, "cdpos", ["OBJECTCLAS", "OBJECTID", "CHANGENR", "TABNAME", "TABKEY"]);
                     console.log(insert_cdpos_table, "insert_cdpos_table");
-                    const [results] = await promiseConnection.execute(insert_cdpos_table);
+                    // const [results] = await promiseConnection.execute(insert_cdpos_table);
+                    const [results] = await client.query(insert_cdpos_table.q, insert_cdpos_table.val);
                     console.log("results 2", results);
 
                 } catch (error) {
@@ -247,10 +227,9 @@ const archivePo = async (req, res) => {
                 }
             }
 
-            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+            // const comm = await client.commit(); // Commit the transaction if everything was successful
+            await client.query('COMMIT');
             transactionSuccessful = true;
-
-
             if (transactionSuccessful === TRUE) {
                 responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
             }
@@ -261,9 +240,11 @@ const archivePo = async (req, res) => {
         finally {
             if (!transactionSuccessful) {
                 console.log("Connection End" + "--->" + "connection release");
-                await promiseConnection.rollback();
+                // await promiseConnection.rollback();
+                await client.query('ROLLBACK')
             }
-            const connEnd = await promiseConnection.end();
+            // const connEnd = await promiseConnection.end();
+            const connEnd = client.release()
             console.log("Connection End" + "--->" + "connection release archive po");
         }
     } catch (error) {

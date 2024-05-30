@@ -43,7 +43,7 @@ const reservationLineItemPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.RSNUM}-${obj.RSPOS}-${obj.RSART}`,
+    // C_PKEY: `${obj.RSNUM}-${obj.RSPOS}-${obj.RSART}`,
     RSNUM: obj.RSNUM,
     RSPOS: obj.RSPOS,
     RSART: obj.RSART,

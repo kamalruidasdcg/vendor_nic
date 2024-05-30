@@ -43,18 +43,18 @@ const { validatePayload } = require("./validatePayload");
         const search = JSON.parse(req.query.$search);
     
       Object.keys(search).forEach((key) => {
-          q = q.concat(` AND ${key} LIKE "%${search[key]}%"`)
+          q = q.concat(` AND ${key} LIKE '%${search[key]}%'`)
         })  
       }
   console.log(q);
-      const result = await query({
+      const result = await getQuery({
         query: q,
         values: [],
       });
-      if (result.rows.length > 0) {
-        resSend(res, true, 200, "Data fetched successfully", result.rows, null);
+      if (result.length > 0) {
+        resSend(res, true, 200, "Data fetched successfully", result, null);
       } else {
-        resSend(res, false, 200, "No Record Found", result.rows, null);
+        resSend(res, false, 200, "No Record Found", result, null);
       }
     } catch (error) {
       console.log(error);

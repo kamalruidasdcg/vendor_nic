@@ -1,5 +1,4 @@
-// const { query,  } = require("../config/dbConfig");
-const { connection } = require("../../config/dbConfig");
+const { asyncPool, poolQuery } = require("../../config/pgDbConfig");
 const { responseSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
@@ -9,7 +8,7 @@ const zbts_st = async (req, res) => {
 
     try {
 
-        const promiseConnection = await connection();
+        const client = await asyncPool();
         let transactionSuccessful = false;
 
         try {
@@ -29,11 +28,12 @@ const zbts_st = async (req, res) => {
 
             try {
                 const payloadObj = await zbtsHeaderPayload(obj);
-                const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", "zbtno");
-                const [results] = await promiseConnection.execute(btnPaymentHeaderQuery);
+                const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", ["zbtno"]);
+                const results = await poolQuery({ client, query: btnPaymentHeaderQuery.q, values: btnPaymentHeaderQuery.val });
                 console.log("results 1", results);
             } catch (error) {
-                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                console.log("Data insert failed, zbts_st api");
+                return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
             }
             const zbtsmPayload = ZBTSM || zbtsm;
             console.log("zbtsmPayload", zbtsmPayload);
@@ -44,38 +44,41 @@ const zbts_st = async (req, res) => {
 
                 try {
                     const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
-                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", "zbtno");
-                    const [results] = await promiseConnection.execute(btnPaymentLineItemQuery);
+                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno"]);
+                    const results = await poolQuery({ client, query: btnPaymentLineItemQuery.q, values: btnPaymentLineItemQuery.val });
                     console.log("results 2", results);
                 } catch (error) {
-                    return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                    // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                    console.log("Data insert failed, zbts_st api");
+                    return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.toString(), null);
+
                 }
             }
 
             console.log("transactionSuccessful", transactionSuccessful);
-            
-            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+
+            const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
             transactionSuccessful = true;
-            
+
             console.log("transactionSuccessful", transactionSuccessful);
 
 
 
             // console.log("response", response1, response1);
 
-            // responseSend(res, "S", 200, "Data inserted successfully", response, null)
+            responseSend(res, "S", 200, "Data inserted successfully", {}, null)
 
         } catch (error) {
             console.log("errorerrorerrorerror", error);
-            responseSend(res, "F", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, "Data insert failed !!", error.toString(), null);
         }
         finally {
             if (!transactionSuccessful) {
                 console.log("Connection End", transactionSuccessful);
-                await promiseConnection.rollback();
+                await client.query('ROLLBACK')
             }
 
-            const connEnd = await promiseConnection.end();
+            const connEnd = client.release();
             if (transactionSuccessful) {
                 responseSend(res, "S", 200, "Data inserted successfully", null, null)
             }

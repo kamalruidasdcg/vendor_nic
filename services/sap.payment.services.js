@@ -26,7 +26,7 @@ const ztfi_bil_defacePayload = async (obj) => {
     throw new Error("Please send valid payload");
   }
   const pl = {
-    C_PKEY: `${obj.ZREGNUM}-${obj.SEQNO}-${obj.ZBILLPER}`,
+    // C_PKEY: `${obj.ZREGNUM}-${obj.SEQNO}-${obj.ZBILLPER}`,
     ZREGNUM: obj.ZREGNUM,
     SEQNO: obj.SEQNO,
     ZBILLPER: obj.ZBILLPER,
