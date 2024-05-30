@@ -6,7 +6,7 @@ const {
 } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query, getQuery, poolClient, poolQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const {
   INSERT,
@@ -41,309 +41,324 @@ const { deptLogEntry } = require("../../log/deptActivities");
 // add new post
 const submitQAP = async (req, res) => {
   try {
-    const tokenData = { ...req.tokenData };
-    let fileName = (req.files.file && req.files.file[0].filename) ? req.files.file[0].filename : "";
-    let filePath = (req.files.file && req.files.file[0].path) ? req.files.file[0].path : "";
-    let supporting_doc;
-    //console.log(req.files.supporting_doc.length);
-    if(req.files.supporting_doc && req.files.supporting_doc.length > 0) {
-      supporting_doc = req.files.supporting_doc.map( (elem) => {
+
+    const client = await poolClient();
+    try {
+      const tokenData = { ...req.tokenData };
+      let fileName = (req.files.file && req.files.file[0].filename) ? req.files.file[0].filename : "";
+      let filePath = (req.files.file && req.files.file[0].path) ? req.files.file[0].path : "";
+      let supporting_doc;
+      //console.log(req.files.supporting_doc.length);
+      if (req.files.supporting_doc && req.files.supporting_doc.length > 0) {
+        supporting_doc = req.files.supporting_doc.map((elem) => {
           let value = {};
           value.file_name = elem.filename;
           value.file_path = elem.path;
           return value;
-      });
-    }
-    supporting_doc = (supporting_doc) ? JSON.stringify(supporting_doc) : "";
-    //console.log(supporting_doc);
+        });
+      }
+      supporting_doc = (supporting_doc) ? JSON.stringify(supporting_doc) : "";
+      //console.log(supporting_doc);
 
-    let payload = { ...req.body, fileName : fileName, filePath : filePath, supporting_doc : supporting_doc, created_at: getEpochTime() };
+      let payload = { ...req.body, fileName: fileName, filePath: filePath, supporting_doc: supporting_doc, created_at: getEpochTime() };
 
-    payload.updated_by =
-      tokenData.user_type === USER_TYPE_VENDOR ? "VENDOR" : "GRSE";
-    payload.action_by_id = tokenData.vendor_code;
-    const activity_type = payload.status;
-    const purchasing_doc_no = payload.purchasing_doc_no;
-    const verifyStatusForStaff = new Set([
-      REJECTED,
-      ACCEPTED,
-      SAVED,
-      APPROVED,
-      UPDATED,
-    ]);
+      payload.updated_by =
+        tokenData.user_type === USER_TYPE_VENDOR ? "VENDOR" : "GRSE";
+      payload.action_by_id = tokenData.vendor_code;
+      const activity_type = payload.status;
+      const purchasing_doc_no = payload.purchasing_doc_no;
+      const verifyStatusForStaff = new Set([
+        REJECTED,
+        ACCEPTED,
+        SAVED,
+        APPROVED,
+        UPDATED,
+      ]);
 
-    if (
-      !payload.purchasing_doc_no ||
-      !payload.remarks ||
-      payload.remarks.trim() === "" ||
-      !payload.status ||
-      payload.status.trim() === ""
-    ) {
-      return resSend(res, false, 200, "Remarks is mandotory!", null, null);
-    }
-
-    let message = ``;
-
-    // Check if already accepted/rejected/approved and if GRSE
-    if (tokenData?.user_type !== 1 && payload.status !== "ASSIGNED") {
-      const GET_LATEST_QA = await get_latest_QA_with_reference(
-        payload.purchasing_doc_no,
-        payload.reference_no
-      );
       if (
-        GET_LATEST_QA[0].status == APPROVED ||
-        GET_LATEST_QA[0].status == REJECTED
+        !payload.purchasing_doc_no ||
+        !payload.remarks ||
+        payload.remarks.trim() === "" ||
+        !payload.status ||
+        payload.status.trim() === ""
+      ) {
+        return resSend(res, false, 200, "Remarks is mandotory!", null, null);
+      }
+
+      let message = ``;
+
+      // Check if already accepted/rejected/approved and if GRSE
+      if (tokenData?.user_type !== 1 && payload.status !== "ASSIGNED") {
+        const GET_LATEST_QA = await get_latest_QA_with_reference(
+          payload.purchasing_doc_no,
+          payload.reference_no
+        );
+        console.log("###################");
+        console.log(GET_LATEST_QA);
+        console.log("**************");
+        if (
+          GET_LATEST_QA[0].status == APPROVED ||
+          GET_LATEST_QA[0].status == REJECTED
+        ) {
+          return resSend(
+            res,
+            false,
+            200,
+            `The QA is already ${GET_LATEST_QA[0].status}.`,
+            null,
+            null
+          );
+        }
+      }
+
+      // if (
+      //   tokenData.internal_role_id == ASSIGNER &&
+      //   GET_LATEST_QA[0].status == ASSIGNED &&
+      //   obj.status == ASSIGNED &&
+      //   GET_LATEST_QA[0].assigned_to == payload.assigned_to
+      // ) {
+      //   return resSend(
+      //     res,
+      //     true,
+      //     200,
+      //     `This po is already ${ASSIGNED} this person.`,
+      //     null,
+      //     null
+      //   );
+      // }
+
+      ///////// CHECK DEPERTMENT /////////////////
+      if (
+        tokenData.department_id &&
+        tokenData.department_id === USER_TYPE_GRSE_QAP
+      ) {
+        ///////// CHECK ROLE IS ASSIGNER /////////////////
+        if (activity_type === ASSIGNED) {
+          if (tokenData.internal_role_id === ASSIGNER) {
+            const checkAssigneQuery = `SELECT COUNT(is_assign) AS countval FROM qap_submission WHERE purchasing_doc_no = $1 AND is_assign = $2`;
+            const resAssigneQry = await poolQuery({
+              client,
+              query: checkAssigneQuery,
+              values: [purchasing_doc_no, 1],
+            });
+            if (resAssigneQry[0].countval > 0) {
+              const removeOldAssignee = `UPDATE qap_submission SET is_assign = 0 WHERE purchasing_doc_no = $1 AND is_assign = $2`;
+              const resAssigneQry = await poolQuery({
+                client,
+                query: removeOldAssignee,
+                values: [purchasing_doc_no, 1],
+              });
+              // message = `This QAP has already ${ASSIGNED}`;
+              // return resSend(res, true, 200, message, null, null);
+            }
+            payload.is_assign = 1;
+            payload.reference_no = "QAP Assigned";
+            payload.action_type = "QAP Assigned";
+          } else {
+            message = `You don't have permission!`;
+            return resSend(res, true, 200, message, null, null);
+          }
+        }
+        ///////// CHECK ROLE IS ASSIGNER /////////////////
+
+        ///////// CHECK ROLE IS STAFF /////////////////
+        if (verifyStatusForStaff.has(activity_type)) {
+          if (tokenData.internal_role_id === QAP_STAFF) {
+            const checkAssigneStaffQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = $1 AND status = $2  AND assigned_to = $3`;
+            const resAssigneStaffQry = await poolQuery({
+              client,
+              query: checkAssigneStaffQuery,
+              values: [purchasing_doc_no, ASSIGNED, tokenData.vendor_code],
+            });
+            if (resAssigneStaffQry[0].countval === 0) {
+              message = `You don't have permission.`;
+              return resSend(res, true, 200, message, null, null);
+            }
+          }
+        }
+        ///////// CHECK ROLE IS STAFF /////////////////
+
+        ///////// CHECK IS ALLREADY APPROVED /////////////////
+        // const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
+        // const result2 = await getQAPData(
+        //   GET_LATEST_QAP,
+        //   payload.purchasing_doc_no,
+        //   APPROVED
+        // );
+
+        // if (result2 && result2?.length) {
+        //   const data = [
+        //     {
+        //       purchasing_doc_no: result2[0]?.purchasing_doc_no,
+        //       status: result2[0]?.status,
+        //       approvedByName: result2[0]?.created_by_name,
+        //       approvedById: result2[0]?.created_by_id,
+        //       message: "The QAP is already approved!",
+        //     },
+        //   ];
+
+        //   return resSend(
+        //     res,
+        //     false,
+        //     200,
+        //     `This QAP for ${payload.purchasing_doc_no} is already ${APPROVED}`,
+        //     data,
+        //     null
+        //   );
+        // }
+        ///////// CHECK IS ALLREADY APPROVED /////////////////
+      }
+
+      // if (activity_type !== SUBMITTED) {
+      //   const status = activity_type == ASSIGNED ? SUBMITTED : ASSIGNED;
+      //   const qapDetails = await getMailIds(payload.purchasing_doc_no, status);
+
+      //   console.log(qapDetails);
+
+      //   if (!qapDetails.success)
+      //     return resSend(
+      //       res,
+      //       false,
+      //       200,
+      //       "Vendors need to upload the QAP first!",
+      //       null,
+      //       null
+      //     );
+
+      //   if (activity_type == ASSIGNED) {
+      //     payload.vendor_code = qapDetails.data.vendor_code;
+      //     payload.action_type = "ASSIGNED to QA Staff";
+      //     const details = await getNameAndEmail(
+      //       qapDetails.data.vendor_code,
+      //       payload.assigned_from,
+      //       payload.assigned_to
+      //     );
+      //     if (details.success) {
+      //       payload = { ...payload, ...details.data };
+      //     }
+      //   } else {
+      //     payload.vendor_code = qapDetails.data.vendor_code;
+      //     payload.assigned_to = qapDetails.data.assigned_to;
+      //     payload.assigned_from = qapDetails.data.assigned_from;
+      //     payload.created_by_name = qapDetails.data.created_by_name;
+
+      //     payload = { ...payload, ...qapDetails.data };
+      //   }
+      // }
+
+      if (tokenData.user_type === USER_TYPE_VENDOR) {
+        const reference_no = (payload.reference_no && payload.reference_no != "") ? payload.reference_no : await create_reference_no("QAP", tokenData.vendor_code);
+        // const reference_no = await create_reference_no(
+        //   "QAP",
+        //   tokenData.vendor_code
+        // );
+        payload = { ...payload, reference_no };
+      }
+      // else {
+      //   const GET_ref_no = `SELECT reference_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ?`;
+      //   const GET_ref_qry = await query({
+      //     query: GET_ref_no,
+      //     values: [purchasing_doc_no],
+      //   });
+      //   payload = {
+      //     ...payload,
+      //     reference_no: GET_ref_qry[GET_ref_qry.length - 1]?.reference_no || "",
+      //   };
+      // }
+
+      // const GET_Assigner = `SELECT vendor_code,assigned_from, assigned_to FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
+      // const GET_Assigner_Qry = await query({
+      //   query: GET_Assigner,
+      //   values: [purchasing_doc_no, ASSIGNED],
+      // });
+      // console.log(GET_Assigner_Qry);
+      // if (GET_Assigner_Qry.length > 0) {
+      //   payload.vendor_code = GET_Assigner_Qry[0].vendor_code;
+      //   payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
+      //   payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
+      // }
+
+      //////// SET STATUS AND CREATE QAP PAYLOAD /////////
+      let insertObj;
+      // REJECTED, ACCEPTED, SAVED, APPROVED, UPDATED
+
+      switch (activity_type) {
+        case SUBMITTED:
+          insertObj = qapPayload(payload, SUBMITTED);
+          break;
+        case ASSIGNED:
+          insertObj = qapPayload(payload, ASSIGNED);
+          break;
+        case REJECTED:
+          insertObj = qapPayload(payload, REJECTED);
+          break;
+        case RE_SUBMITTED:
+          insertObj = qapPayload(payload, RE_SUBMITTED);
+          break;
+        case ACCEPTED:
+          insertObj = qapPayload(payload, ACCEPTED);
+          break;
+        case SAVED:
+          insertObj = qapPayload(payload, SAVED);
+          break;
+        case APPROVED:
+          insertObj = qapPayload(payload, APPROVED);
+          break;
+        case UPDATED:
+          insertObj = qapPayload(payload, UPDATED);
+          break;
+        default:
+          console.log("other1");
+      }
+      //////// SET STATUS AND CREATE QAP PAYLOAD /////////
+      console.log(activity_type);
+      if (
+        tokenData.user_type === USER_TYPE_VENDOR &&
+        (activity_type != SUBMITTED && activity_type != RE_SUBMITTED)
       ) {
         return resSend(
           res,
           false,
           200,
-          `The QA is already ${GET_LATEST_QA[0].status}.`,
+          `Vendor can only send status for ${SUBMITTED}/${RE_SUBMITTED}`,
           null,
           null
         );
       }
-    }
 
-    // if (
-    //   tokenData.internal_role_id == ASSIGNER &&
-    //   GET_LATEST_QA[0].status == ASSIGNED &&
-    //   obj.status == ASSIGNED &&
-    //   GET_LATEST_QA[0].assigned_to == payload.assigned_to
-    // ) {
-    //   return resSend(
-    //     res,
-    //     true,
-    //     200,
-    //     `This po is already ${ASSIGNED} this person.`,
-    //     null,
-    //     null
-    //   );
-    // }
-
-    ///////// CHECK DEPERTMENT /////////////////
-    if (
-      tokenData.department_id &&
-      tokenData.department_id === USER_TYPE_GRSE_QAP
-    ) {
-      ///////// CHECK ROLE IS ASSIGNER /////////////////
-      if (activity_type === ASSIGNED) {
-        if (tokenData.internal_role_id === ASSIGNER) {
-          const checkAssigneQuery = `SELECT COUNT(is_assign) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND is_assign = ?`;
-          const resAssigneQry = await query({
-            query: checkAssigneQuery,
-            values: [purchasing_doc_no, 1],
-          });
-          if (resAssigneQry[0].countval > 0) {
-            const removeOldAssignee = `UPDATE qap_submission SET is_assign = 0 WHERE purchasing_doc_no = ? AND is_assign = ?`;
-            const resAssigneQry = await query({
-              query: removeOldAssignee,
-              values: [purchasing_doc_no, 1],
-            });
-            // message = `This QAP has already ${ASSIGNED}`;
-            // return resSend(res, true, 200, message, null, null);
-          }
-          payload.is_assign = 1;
-          payload.reference_no = "QAP Assigned";
-          payload.action_type = "QAP Assigned";
-        } else {
-          message = `You don't have permission!`;
-          return resSend(res, true, 200, message, null, null);
+      const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
+      const response = await poolQuery({ client, query: q, values: val });
+      let checkAS = checkActualSub(payload.purchasing_doc_no);
+      if (checkAS) {
+        if (insertObj.status === APPROVED) {
+          const actual_subminission = await setActualSubmissionDate(
+            insertObj,
+            "03",
+            tokenData,
+            SUBMITTED
+          );
+          console.log("actual_subminission", actual_subminission);
         }
       }
-      ///////// CHECK ROLE IS ASSIGNER /////////////////
 
-      ///////// CHECK ROLE IS STAFF /////////////////
-      if (verifyStatusForStaff.has(activity_type)) {
-        if (tokenData.internal_role_id === QAP_STAFF) {
-          const checkAssigneStaffQuery = `SELECT COUNT(status) AS countval FROM qap_submission WHERE purchasing_doc_no = ? AND status = ?  AND assigned_to = ?`;
-          const resAssigneStaffQry = await query({
-            query: checkAssigneStaffQuery,
-            values: [purchasing_doc_no, ASSIGNED, tokenData.vendor_code],
-          });
-          if (resAssigneStaffQry[0].countval === 0) {
-            message = `You don't have permission.`;
-            return resSend(res, true, 200, message, null, null);
-          }
-        }
+      if (response) {
+        payload.insertId = response.insertId;
+        payload.sendAt = new Date(payload.created_at);
+        // handelMail(tokenData, payload);
+        resSend(res, true, 200, "Inserted successfully", response, null);
+      } else {
+        resSend(res, false, 400, "No data inserted", [], null);
       }
-      ///////// CHECK ROLE IS STAFF /////////////////
+    } catch (error) {
+      console.log("QAP Submissio api", error);
 
-      ///////// CHECK IS ALLREADY APPROVED /////////////////
-      // const GET_LATEST_QAP = `SELECT purchasing_doc_no, status, updated_by, created_by_id, created_by_name FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
-      // const result2 = await getQAPData(
-      //   GET_LATEST_QAP,
-      //   payload.purchasing_doc_no,
-      //   APPROVED
-      // );
-
-      // if (result2 && result2?.length) {
-      //   const data = [
-      //     {
-      //       purchasing_doc_no: result2[0]?.purchasing_doc_no,
-      //       status: result2[0]?.status,
-      //       approvedByName: result2[0]?.created_by_name,
-      //       approvedById: result2[0]?.created_by_id,
-      //       message: "The QAP is already approved!",
-      //     },
-      //   ];
-
-      //   return resSend(
-      //     res,
-      //     false,
-      //     200,
-      //     `This QAP for ${payload.purchasing_doc_no} is already ${APPROVED}`,
-      //     data,
-      //     null
-      //   );
-      // }
-      ///////// CHECK IS ALLREADY APPROVED /////////////////
-    }
-
-    // if (activity_type !== SUBMITTED) {
-    //   const status = activity_type == ASSIGNED ? SUBMITTED : ASSIGNED;
-    //   const qapDetails = await getMailIds(payload.purchasing_doc_no, status);
-
-    //   console.log(qapDetails);
-
-    //   if (!qapDetails.success)
-    //     return resSend(
-    //       res,
-    //       false,
-    //       200,
-    //       "Vendors need to upload the QAP first!",
-    //       null,
-    //       null
-    //     );
-
-    //   if (activity_type == ASSIGNED) {
-    //     payload.vendor_code = qapDetails.data.vendor_code;
-    //     payload.action_type = "ASSIGNED to QA Staff";
-    //     const details = await getNameAndEmail(
-    //       qapDetails.data.vendor_code,
-    //       payload.assigned_from,
-    //       payload.assigned_to
-    //     );
-    //     if (details.success) {
-    //       payload = { ...payload, ...details.data };
-    //     }
-    //   } else {
-    //     payload.vendor_code = qapDetails.data.vendor_code;
-    //     payload.assigned_to = qapDetails.data.assigned_to;
-    //     payload.assigned_from = qapDetails.data.assigned_from;
-    //     payload.created_by_name = qapDetails.data.created_by_name;
-
-    //     payload = { ...payload, ...qapDetails.data };
-    //   }
-    // }
-
-    if (tokenData.user_type === USER_TYPE_VENDOR) {
-      const reference_no = (payload.reference_no && payload.reference_no != "") ? payload.reference_no : await create_reference_no("QAP",tokenData.vendor_code);
-      // const reference_no = await create_reference_no(
-      //   "QAP",
-      //   tokenData.vendor_code
-      // );
-      payload = { ...payload, reference_no };
-    }
-    // else {
-    //   const GET_ref_no = `SELECT reference_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ?`;
-    //   const GET_ref_qry = await query({
-    //     query: GET_ref_no,
-    //     values: [purchasing_doc_no],
-    //   });
-    //   payload = {
-    //     ...payload,
-    //     reference_no: GET_ref_qry[GET_ref_qry.length - 1]?.reference_no || "",
-    //   };
-    // }
-
-    // const GET_Assigner = `SELECT vendor_code,assigned_from, assigned_to FROM ${QAP_SUBMISSION} WHERE (purchasing_doc_no = ? AND status = ?) ;`;
-    // const GET_Assigner_Qry = await query({
-    //   query: GET_Assigner,
-    //   values: [purchasing_doc_no, ASSIGNED],
-    // });
-    // console.log(GET_Assigner_Qry);
-    // if (GET_Assigner_Qry.length > 0) {
-    //   payload.vendor_code = GET_Assigner_Qry[0].vendor_code;
-    //   payload.assigned_from = GET_Assigner_Qry[0].assigned_from;
-    //   payload.assigned_to = GET_Assigner_Qry[0].assigned_to;
-    // }
-
-    //////// SET STATUS AND CREATE QAP PAYLOAD /////////
-    let insertObj;
-    // REJECTED, ACCEPTED, SAVED, APPROVED, UPDATED
-
-    switch (activity_type) {
-      case SUBMITTED:
-        insertObj = qapPayload(payload, SUBMITTED);
-        break;
-      case ASSIGNED:
-        insertObj = qapPayload(payload, ASSIGNED);
-        break;
-      case REJECTED:
-        insertObj = qapPayload(payload, REJECTED);
-        break;
-      case RE_SUBMITTED:
-        insertObj = qapPayload(payload, RE_SUBMITTED);
-        break;
-      case ACCEPTED:
-        insertObj = qapPayload(payload, ACCEPTED);
-        break;
-      case SAVED:
-        insertObj = qapPayload(payload, SAVED);
-        break;
-      case APPROVED:
-        insertObj = qapPayload(payload, APPROVED);
-        break;
-      case UPDATED:
-        insertObj = qapPayload(payload, UPDATED);
-        break;
-      default:
-        console.log("other1");
-    }
-    //////// SET STATUS AND CREATE QAP PAYLOAD /////////
-console.log(activity_type);
-    if (
-      tokenData.user_type === USER_TYPE_VENDOR &&
-      (activity_type != SUBMITTED && activity_type != RE_SUBMITTED)
-    ) {
-      return resSend(
-        res,
-        false,
-        200,
-        `Vendor can only send status for ${SUBMITTED}/${RE_SUBMITTED}`,
-        null,
-        null
-      );
-    }
-
-    const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
-    const response = await query({ query: q, values: val });
-    let checkAS = checkActualSub(payload.purchasing_doc_no);
-    if (checkAS) {
-      if (insertObj.status === APPROVED) {
-        const actual_subminission = await setActualSubmissionDate(
-          insertObj,
-          "03",
-          tokenData,
-          SUBMITTED
-        );
-        console.log("actual_subminission", actual_subminission);
-      }
-    }
-
-    if (response.affectedRows) {
-      payload.insertId = response.insertId;
-      payload.sendAt = new Date(payload.created_at);
-      // handelMail(tokenData, payload);
-      resSend(res, true, 200, "Inserted successfully", [], null);
-    } else {
-      resSend(res, false, 400, "No data inserted", response, null);
+      return resSend(res, false, 500, "internal server error", error, null);
+    } finally {
+      client.release();
     }
   } catch (error) {
-    console.log("QAP Submissio api", error);
 
-    return resSend(res, false, 500, "internal server error", error, null);
+    resSend(res, false, 500, "error in db conn!", error, "");
   }
 };
 
@@ -359,33 +374,33 @@ const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
 const list = async (req, res) => {
   try {
     const tokenData = req.tokenData;
-    // const pre = `SELECT qap.* FROM ${QAP_SUBMISSION} AS qap WHERE `;
-    const pre = `
-                SELECT
-                qap.*, 
-                vendor.SMTP_ADDR AS vendor_email, 
-                grse_officers_assignFrom.USRID_LONG AS assigned_from_email,
-                grse_officers_assignTo.USRID_LONG AS assigned_to_email
-                FROM qap_submission 
-                    AS qap
-                LEFT JOIN
-                    adr6 AS vendor
-                ON
-                    vendor.PERSNUMBER = qap.vendor_code
-                LEFT JOIN
-                    pa0105
-                    AS
-                        grse_officers_assignFrom
-                     ON
-                         (grse_officers_assignFrom.PERNR = qap.assigned_from AND grse_officers_assignFrom.SUBTY = "0030")
-                   LEFT JOIN
-                    pa0105
-                    AS
-                        grse_officers_assignTo
-                     ON
-                         (grse_officers_assignTo.PERNR = qap.assigned_to AND grse_officers_assignTo.SUBTY = "0030")
+     const pre = `SELECT * FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = $1 ORDER BY id ASC`;
+    // const pre = `
+    //             SELECT
+    //             qap.*, 
+    //             vendor.SMTP_ADDR AS vendor_email, 
+    //             grse_officers_assignFrom.USRID_LONG AS assigned_from_email,
+    //             grse_officers_assignTo.USRID_LONG AS assigned_to_email
+    //             FROM qap_submission 
+    //                 AS qap
+    //             LEFT JOIN
+    //                 adr6 AS vendor
+    //             ON
+    //                 vendor.PERSNUMBER = qap.vendor_code
+    //             LEFT JOIN
+    //                 pa0105
+    //                 AS
+    //                     grse_officers_assignFrom
+    //                  ON
+    //                      (grse_officers_assignFrom.PERNR = qap.assigned_from AND grse_officers_assignFrom.SUBTY = "0030")
+    //                LEFT JOIN
+    //                 pa0105
+    //                 AS
+    //                     grse_officers_assignTo
+    //                  ON
+    //                      (grse_officers_assignTo.PERNR = qap.assigned_to AND grse_officers_assignTo.SUBTY = "0030")
 
-                    WHERE qap.purchasing_doc_no = ? ORDER BY qap.id ASC`;
+    //                 WHERE qap.purchasing_doc_no = $1 ORDER BY qap.id ASC`;
     // let qry = ``;
     // let valArr = ``;
     // if (tokenData.user_type === USER_TYPE_VENDOR) {
@@ -404,7 +419,8 @@ const list = async (req, res) => {
     // if (finalQuery == "") {
     //     resSend(res, true, 200, "no user type or deperment found.", fileData, null);
     // }
-    const result = await query({ query: pre, values: [req.query.poNo] });
+    console.log(pre);
+    const result = await getQuery({ query: pre, values: [req.query.poNo] });
     if (!result.length) {
       return resSend(res, true, 200, "No QAP found.", null, null);
     }
@@ -446,9 +462,9 @@ async function poContactDetails(purchasing_doc_no) {
 
     
     WHERE 
-        t1.EBELN = ?`;
+        t1.EBELN = $1`;
 
-  const result = await query({
+  const result = await getQuery({
     query: po_contact_details_query,
     values: [purchasing_doc_no],
   });
@@ -483,9 +499,9 @@ const internalDepartmentEmpList = async (req, res) => {
        ON 
        (t3.PERNR = t2.PERNR AND t3.SUBTY = '0030')
         WHERE 
-        t1.sub_dept_id = ?`;
+        t1.sub_dept_id = $1`;
 
-    const response = await query({ query: q, values: [sub_dept_id] });
+    const response = await getQuery({ query: q, values: [sub_dept_id] });
     resSend(res, true, 200, "oded!", response, null);
   } catch (err) {
     console.log("data not fetched", err);
@@ -869,7 +885,7 @@ async function getAssigneeMailId() {
 
     const result = await query({ query: mailIdQuery, values: [1, "0030", 3] });
     return result;
-  } catch (error) {}
+  } catch (error) { }
 }
 
 async function insertQapSave(req, res) {
@@ -891,7 +907,7 @@ async function insertQapSave(req, res) {
     payload.created_by_id = tokenData.vendor_code;
 
     const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
-    const response = await query({ query: q, values: val });
+    const response = await getQuery({ query: q, values: val });
     return resSend(res, true, 200, "Data inserted.", response, null);
   } catch (error) {
     return resSend(res, false, 400, "error.", error, null);
@@ -907,8 +923,8 @@ async function getQapSave(req, res) {
       return resSend(res, true, 200, "Please send valid payload!.", null, null);
     }
 
-    const getQapSaveQuery = `SELECT * FROM ${QAP_SAVE} WHERE purchasing_doc_no = ?`;
-    const resgetQapSave = await query({
+    const getQapSaveQuery = `SELECT * FROM ${QAP_SAVE} WHERE purchasing_doc_no = $1`;
+    const resgetQapSave = await getQuery({
       query: getQapSaveQuery,
       values: [req.query.poNo],
     });
@@ -939,8 +955,8 @@ async function deleteQapSave(req, res) {
       return resSend(res, true, 200, "you dont have permination!.", null, null);
     }
 
-    const deleteQapSaveQuery = `DELETE FROM ${QAP_SAVE} WHERE purchasing_doc_no = ?`;
-    const deleteQapSave = await query({
+    const deleteQapSaveQuery = `DELETE FROM ${QAP_SAVE} WHERE purchasing_doc_no = $1`;
+    const deleteQapSave = await getQuery({
       query: deleteQapSaveQuery,
       values: [req.query.poNo],
     });
@@ -955,9 +971,9 @@ const get_latest_QA_with_reference = async (
   purchasing_doc_no,
   reference_no
 ) => {
-  const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission WHERE purchasing_doc_no = ? and reference_no = ? ORDER BY qap_submission.created_at DESC LIMIT 1`;
+  const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission WHERE purchasing_doc_no = $1 and reference_no = $2 ORDER BY qap_submission.created_at DESC LIMIT 1`;
 
-  const result = await query({
+  const result = await getQuery({
     query: GET_LATEST_QA_query,
     values: [purchasing_doc_no, reference_no],
   });
@@ -966,9 +982,9 @@ const get_latest_QA_with_reference = async (
 };
 
 const checkActualSub = async (purchasing_doc_no) => {
-  const GET_LATEST_QA_query = `SELECT count(*) as count FROM actualsubmissiondate WHERE purchasing_doc_no = ? and milestoneText = ? LIMIT 1`;
+  const GET_LATEST_QA_query = `SELECT count(*) as count FROM actualsubmissiondate WHERE purchasing_doc_no = $1 and milestoneText = $2 LIMIT 1`;
 
-  const result = await query({
+  const result = await getQuery({
     query: GET_LATEST_QA_query,
     values: [purchasing_doc_no, A_QAP_DATE],
   });
