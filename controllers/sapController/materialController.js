@@ -134,14 +134,14 @@ const mkpf = async (req, res) => {
 
             const response = await poolQuery({ client, query: mkpfInsertQuery.q, values: mkpfInsertQuery.val });
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
-        } catch (err) {
-            responseSend(res, "F", 502, Message.SERVER_ERROR, err, null);
+        } catch (error) {
+            responseSend(res, "F", 502, Message.SERVER_ERROR, error.toString(), null);
         } finally {
             client.release();
         }
 
     } catch (error) {
-        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null)
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.toString(), null)
     }
 };
 
