@@ -34,7 +34,7 @@ const { validatePayload } = require("./validatePayload");
       if (req.query.$filter) {
         const flt = JSON.parse(req.query.$filter);
         Object.keys(flt).forEach((key) => {
-          q = q.concat(` AND ${key} = "${flt[key]}"`)
+          q = q.concat(` AND ${key} = '${flt[key]}'`)
         })
       }
 
@@ -46,7 +46,7 @@ const { validatePayload } = require("./validatePayload");
           q = q.concat(` AND ${key} LIKE "%${search[key]}%"`)
         })  
       }
-  
+  console.log(q);
       const result = await query({
         query: q,
         values: [],
