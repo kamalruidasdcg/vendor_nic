@@ -938,8 +938,8 @@ async function sendBgToSap(payload) {
     console.error("Error making the request:", error.message);
   }
 }
-//27.05.2024
-async function sdbgfilterData(req, res) {
+
+async function BGextensionRelease(req, res) {
   const { startDate, endDate } = req.body;
 
   if (startDate && endDate) {
@@ -950,13 +950,205 @@ async function sdbgfilterData(req, res) {
         query: filterdata,
         values: [startDate, endDate],
       });
-      res.status(200).json(result1);
+
+      resSend(res, true, 200, "BG fetched successfully", result1, null);
     } catch (error) {
       console.error("Error executing the query:", error.message);
-      res.status(500).json({ error: "Internal Server Error" });
+      return resSend(res, false, 500, "Internal Server Error", error, null);
     }
   } else {
-    res.status(400).json({ error: "startDate and endDate are required" });
+    return resSend(
+      res,
+      false,
+      400,
+      "startDate and endDate are required",
+      error,
+      null
+    );
+  }
+}
+
+async function UpdateBGextensionRelease(req, res) {
+  const { reference_no, purchasing_doc_no, status, changed_date } = req.body;
+  console.log(
+    "reference_no, purchasing_doc_no, status, changed_date...",
+    reference_no,
+    purchasing_doc_no,
+    status,
+    changed_date
+  );
+
+  try {
+    if (status === "RELEASED") {
+      await handleRelease(
+        res,
+        reference_no,
+        purchasing_doc_no,
+        status,
+        changed_date
+      );
+    } else if (status === "EXTENDED") {
+      await handleExtension(
+        res,
+        reference_no,
+        purchasing_doc_no,
+        changed_date,
+        status
+      );
+    } else {
+      return resSend(res, false, 400, "Invalid status", null, null);
+    }
+  } catch (error) {
+    console.error("Error updating BG extension/release:", error);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+}
+
+async function handleRelease(
+  res,
+  reference_no,
+  purchasing_doc_no,
+  status,
+  changed_date
+) {
+  try {
+    const queryStr = `
+      UPDATE sdbg_entry
+      SET status = ?, release_date = ?
+      WHERE reference_no = ? AND purchasing_doc_no = ?;
+    `;
+    const result1 = await query({
+      query: queryStr,
+      values: [status, changed_date, reference_no, purchasing_doc_no],
+    });
+    return resSend(
+      res,
+      true,
+      200,
+      "Release updated successfully",
+      result1,
+      null
+    );
+  } catch (error) {
+    console.error("Error handling release:", error);
+    return resSend(res, false, 500, "Error handling release", error, null);
+  }
+}
+
+async function handleExtension(
+  res,
+  reference_no,
+  purchasing_doc_no,
+  changed_date,
+  status
+) {
+  try {
+    const queryStr1 = `
+      UPDATE sdbg_entry
+      SET status = ?, validity_date = ?
+      WHERE reference_no = ? AND purchasing_doc_no = ?;
+    `;
+    await query({
+      query: queryStr1,
+      values: [status, changed_date, reference_no, purchasing_doc_no],
+    });
+
+    // Query to check the current state of extension_date columns
+    const selectQuery = `
+      SELECT extension_date1, extension_date2, extension_date3, extension_date4, extension_date5, extension_date6
+      FROM sdbg_entry
+      WHERE reference_no = ? AND purchasing_doc_no = ?;
+    `;
+    const currentDates = await query({
+      query: selectQuery,
+      values: [reference_no, purchasing_doc_no],
+    });
+
+    // Extract the current extension dates
+    const {
+      extension_date1,
+      extension_date2,
+      extension_date3,
+      extension_date4,
+      extension_date5,
+      extension_date6,
+    } = currentDates[0];
+
+    // Determine which extension_date column to update
+    let updateStr = "";
+    if (extension_date1 === 0 || extension_date1 === null) {
+      updateStr = "extension_date1 = ?";
+    } else if (extension_date2 === 0 || extension_date2 === null) {
+      updateStr = "extension_date2 = ?";
+    } else if (extension_date3 === 0 || extension_date3 === null) {
+      updateStr = "extension_date3 = ?";
+    } else if (extension_date4 === 0 || extension_date4 === null) {
+      updateStr = "extension_date4 = ?";
+    } else if (extension_date5 === 0 || extension_date5 === null) {
+      updateStr = "extension_date5 = ?";
+    } else if (extension_date6 === 0 || extension_date6 === null) {
+      updateStr = "extension_date6 = ?";
+    }
+
+    if (updateStr) {
+      const updateQuery = `
+        UPDATE sdbg_entry
+        SET ${updateStr}
+        WHERE reference_no = ? AND purchasing_doc_no = ?;
+      `;
+      await query({
+        query: updateQuery,
+        values: [changed_date, reference_no, purchasing_doc_no],
+      });
+      return resSend(
+        res,
+        true,
+        200,
+        "Extension updated successfully",
+        null,
+        null
+      );
+    } else {
+      return resSend(
+        res,
+        false,
+        200,
+        "This BG is already extended 6 times",
+        null,
+        null
+      );
+    }
+  } catch (error) {
+    console.error("Error handling extension:", error);
+    return resSend(res, false, 500, "Error handling extension", error, null);
+  }
+}
+
+async function GetspecificBG(req, res) {
+  const { reference_no, purchasing_doc_no } = req.body;
+
+  if (reference_no && purchasing_doc_no) {
+    try {
+      let filterdata = `SELECT * FROM sdbg_entry WHERE reference_no = ? AND purchasing_doc_no = ?`;
+      const result1 = await query({
+        query: filterdata,
+        values: [reference_no, purchasing_doc_no],
+      });
+
+      resSend(res, true, 200, "BG fetched successfully", result1, null);
+    } catch (error) {
+      console.error("Error executing the query:", error.message);
+      return resSend(res, false, 500, "Internal Server Error", error, null);
+    }
+  } else {
+    return resSend(
+      res,
+      false,
+      400,
+      "reference_no and purchasing_doc_no are required",
+      error,
+      null
+    );
   }
 }
 
@@ -969,5 +1161,7 @@ module.exports = {
   sdbgUpdateByFinance,
   checkIsDealingOfficer,
   getSDBGData,
-  sdbgfilterData,
+  GetspecificBG,
+  BGextensionRelease,
+  UpdateBGextensionRelease,
 };
