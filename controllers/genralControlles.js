@@ -1,5 +1,7 @@
-const {query} = require("../config/dbConfig");
+//const {query} = require("../config/dbConfig");
 // const connection = require("../config/dbConfig");
+const { query, getQuery, asyncPool, poolQuery } = require("../config/pgDbConfig");
+
 const { UPDATE, INSERT } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
@@ -49,10 +51,10 @@ const { validatePayload } = require("./validatePayload");
         query: q,
         values: [],
       });
-      if (result.length > 0) {
-        resSend(res, true, 200, "Data fetched successfully", result, null);
+      if (result.rows.length > 0) {
+        resSend(res, true, 200, "Data fetched successfully", result.rows, null);
       } else {
-        resSend(res, false, 200, "No Record Found", result, null);
+        resSend(res, false, 200, "No Record Found", result.rows, null);
       }
     } catch (error) {
       console.log(error);
