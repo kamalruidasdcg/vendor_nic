@@ -1,4 +1,5 @@
-const { query } = require("../config/dbConfig");
+// const { query } = require("../config/dbConfig");
+const { getQuery, query } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
 const {
   C_SDBG_DATE,
@@ -39,22 +40,25 @@ const fetchAllBTNs = async (req, res) => {
     );
   }
  
-  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  // let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = $1 ORDER BY created_at DESC`;
  
-  let result = await query({
+  let result = await getQuery({
     query: btnQ,
     values: [id],
   });
  
-  let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  // let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  let btnQ2 = `SELECT * FROM btn_service_hybrid WHERE purchasing_doc_no = $1 ORDER BY created_at DESC`;
  
-  let result2 = await query({
+  let result2 = await getQuery({
     query: btnQ2,
     values: [id],
   });
-  let btnQ3 = `SELECT * FROM btn_advance_bill_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  // let btnQ3 = `SELECT * FROM btn_advance_bill_hybrid WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
+  let btnQ3 = `SELECT * FROM btn_advance_bill_hybrid WHERE purchasing_doc_no = $1 ORDER BY created_at DESC`;
  
-  let result3 = await query({
+  let result3 = await getQuery({
     query: btnQ3,
     values: [id],
   });
@@ -78,9 +82,10 @@ const fetchBTNByNum = async (req, res) => {
     );
   }
  
-  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? and btn_num = ?`;
+  // let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? and btn_num = ?`;
+  let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = $1 and btn_num = $2`;
  
-  let result = await query({
+  let result = await getQuery({
     query: btnQ,
     values: [id, btn_num],
   });
@@ -111,10 +116,11 @@ const fetchBTNByNumForDO = async (req, res) => {
     );
   }
  
-  let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
+  // let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
+  let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = $1`;
   console.log("btn_num", btnDOQ, btn_num);
  
-  let doRes = await query({
+  let doRes = await getQuery({
     query: btnDOQ,
     values: [btn_num],
   });
@@ -132,8 +138,9 @@ const getBTNData = async (req, res) => {
     let c_drawing_date;
     let c_qap_date;
     let c_ilms_date;
-    let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
-    let c_dates = await query({
+    // let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
+    let c_sdbg_date_q = `SELECT plan_date as "PLAN_DATE", mtext as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+    let c_dates = await getQuery({
       query: c_sdbg_date_q,
       values: [id],
     });
@@ -155,8 +162,9 @@ const getBTNData = async (req, res) => {
     let a_drawing_date;
     let a_qap_date;
     let a_ilms_date;
-    let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
-    let a_dates = await query({
+    // let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
+    let a_sdbg_date_q = `SELECT actualsubmissiondate AS "PLAN_DATE", milestonetext AS "MTEXT" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+    let a_dates = await getQuery({
       query: a_sdbg_date_q,
       values: [id],
     });
@@ -280,8 +288,9 @@ const submitBTN = async (req, res) => {
   }
  
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
-  let check_invoice = await query({
+  // let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
+  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = $ and vendor_code = $2`;
+  let check_invoice = await getQuery({
     query: check_invoice_q,
     values: [invoice_no, tokenData.vendor_code],
   });
@@ -361,8 +370,9 @@ const submitBTN = async (req, res) => {
   let c_drawing_date = null;
   let c_qap_date = null;
   let c_ilms_date = null;
-  let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
-  let c_dates = await query({
+  // let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
+  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+  let c_dates = await getQuery({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
   });
@@ -391,8 +401,9 @@ const submitBTN = async (req, res) => {
   let a_drawing_date;
   let a_qap_date;
   let a_ilms_date;
-  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
-  let a_dates = await query({
+  // let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
+  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+  let a_dates = await getQuery({
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
   });
@@ -576,7 +587,7 @@ const submitBTN = async (req, res) => {
     );
   }
  
-  if (result.affectedRows) {
+  if (result.rowCount) {
     return resSend(
       res,
       true,
@@ -662,10 +673,11 @@ const submitBTNByDO = async (req, res) => {
   let btnDOInfo = await getBTNInfoDO(btn_num);
   console.log("result: " + JSON.stringify(btnInfo));
   console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
- 
+  // const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
+  // lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = ?`;
   const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
-  lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = ?`;
-  let result_qq = await query({
+  lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = $1`;
+  let result_qq = await getQuery({
     query: qq,
     values: [btnInfo[0].purchasing_doc_no],
   });
@@ -687,7 +699,7 @@ const submitBTNByDO = async (req, res) => {
     ZRMK1: "Forwared To Finance", // REMARKS
   };
   console.log("result", result);
-  if (result.affectedRows) {
+  if (result.rowCount) {
     btnSaveToSap(btn_payload);
     return resSend(res, true, 200, "BTN has been updated!", null, null);
   } else {
@@ -721,12 +733,14 @@ const getGrnIcrenPenelty = async (req, res) => {
         null
       );
     }
- 
+    // const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
+    // ZMBLNR AS grn_no, EBELP as po_lineitem,
+    // INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no, EBELP as po_lineitem,
-    INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+    INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = $1 AND INVNO = $2`;
  
-    let gate_entry_v = await query({
+    let gate_entry_v = await getQuery({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
     });
@@ -752,10 +766,11 @@ const getGrnIcrenPenelty = async (req, res) => {
     }
     gate_entry_v = gate_entry_v[0];
     console.log("gate_entry_v", gate_entry_v);
- 
+    // const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity
+    // FROM qals WHERE MBLNR = ?`; //
     const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity
-    FROM qals WHERE MBLNR = ?`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
-    let icgrn_no = await query({
+    FROM qals WHERE MBLNR = $1`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+    let icgrn_no = await getQuery({
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
@@ -767,8 +782,8 @@ const getGrnIcrenPenelty = async (req, res) => {
  
     await Promise.all(
       await icgrn_no.map(async (item) => {
-        const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = ? and EBELN = ? and EBELP = ?`;
-        let unit_price = await query({
+        const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = $1 and EBELN = $2 and EBELP = $3`;
+        let unit_price = await getQuery({
           query: price_q,
           values: [item?.mat_no, purchasing_doc_no, gate_entry_v.po_lineitem],
         });

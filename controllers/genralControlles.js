@@ -5,7 +5,7 @@ const { UPDATE, INSERT } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
-const { validatePayload } = require("./validatePayload");
+// const { validatePayload } = require("./validatePayload");
 
 const getFilteredData = async (req, res) => {
 
@@ -46,6 +46,7 @@ const getFilteredData = async (req, res) => {
       })
     }
 
+    
     const result = await getQuery({
       query: q,
       values: [],

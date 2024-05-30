@@ -25,7 +25,7 @@ const wbsPayload = async (payload) => {
         throw new Error("Please send valid payload");
     }
     const pl = payload.map((obj) => ({
-        C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
+        // C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
         EBELN: obj.EBELN,
         EBELP: obj.EBELP,
         WBS_ELEMENT: obj.WBS_ELEMENT || null,

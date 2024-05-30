@@ -33,7 +33,7 @@ const zbts_st = async (req, res) => {
                 console.log("results 1", results);
             } catch (error) {
                 console.log("Data insert failed, zbts_st api");
-                // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
             }
             const zbtsmPayload = ZBTSM || zbtsm;
             console.log("zbtsmPayload", zbtsmPayload);
@@ -42,15 +42,17 @@ const zbts_st = async (req, res) => {
 
                 // response2 = await query({ query: btnPaymentLineItemQuery, values: [] });
 
-                const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
-                const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno"]);
-                const results = await poolQuery({ client, query: btnPaymentLineItemQuery.q, values: btnPaymentLineItemQuery.val });
-                console.log("results 2", results);
-                // try {
-                // } catch (error) {
-                //     // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
-                //     console.log("Data insert failed, zbts_st api");
-                // }
+                try {
+                    const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
+                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno"]);
+                    const results = await poolQuery({ client, query: btnPaymentLineItemQuery.q, values: btnPaymentLineItemQuery.val });
+                    console.log("results 2", results);
+                } catch (error) {
+                    // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                    console.log("Data insert failed, zbts_st api");
+                    return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.toString(), null);
+
+                }
             }
 
             console.log("transactionSuccessful", transactionSuccessful);
@@ -64,11 +66,11 @@ const zbts_st = async (req, res) => {
 
             // console.log("response", response1, response1);
 
-            // responseSend(res, "S", 200, "Data inserted successfully", response, null)
+            responseSend(res, "S", 200, "Data inserted successfully", {}, null)
 
         } catch (error) {
             console.log("errorerrorerrorerror", error);
-            responseSend(res, "F", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, "Data insert failed !!", error.toString(), null);
         }
         finally {
             if (!transactionSuccessful) {

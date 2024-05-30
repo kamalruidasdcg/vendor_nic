@@ -1,10 +1,10 @@
 const express = require("express");
-const {
-  fetchpo,
-  fetchOfficers,
-  addBill,
-  fetchBills,
-} = require("../controllers/allControllers");
+// const {
+//   fetchpo,
+//   fetchOfficers,
+//   addBill,
+//   fetchBills,
+// } = require("../controllers/allControllers");
 
 const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
 // const { auth } = require("../controllers/authConroller/auth");
@@ -64,11 +64,11 @@ router.get("/userping", veifyAccessToken, async (req, res) => {
 
 // VENDOR BILL APIS
 
-router.get("/po", [veifyAccessToken, authorizeRoute], fetchpo);
+// router.get("/po", [veifyAccessToken, authorizeRoute], fetchpo);
 // router.get("/vendor/:po", fetchVenders);
-router.get("/officers", [veifyAccessToken, authorizeRoute], fetchOfficers);
-router.post("/addBill", [veifyAccessToken, authorizeRoute], addBill);
-router.post("/fetchBills", [veifyAccessToken, authorizeRoute], fetchBills);
+// router.get("/officers", [veifyAccessToken, authorizeRoute], fetchOfficers);
+// router.post("/addBill", [veifyAccessToken, authorizeRoute], addBill);
+// router.post("/fetchBills", [veifyAccessToken, authorizeRoute], fetchBills);
 // router.post("/login", auth);
 
 // GENERAL GET AND UPDATE ROUTE

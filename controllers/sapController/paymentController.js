@@ -10,6 +10,7 @@ const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryFor
 const path = require('path');
 const fs = require('fs');
 const { query, getQuery } = require("../../config/pgDbConfig");
+const Message = require("../../utils/messages");
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -30,7 +31,7 @@ const addPaymentVoucher = async (req, res) => {
 
                 // const directory = path.join(__dirname, '..', 'uploads', 'drawing');
                 // const isDel = handleFileDeletion(directory, req.file.filename);
-                return resSend(res, false, 400, "Please send valid payload", null, null);
+                return resSend(res, false, 400, Message.VALID_PARAMETER, null, null);
 
             }
 
@@ -39,12 +40,7 @@ const addPaymentVoucher = async (req, res) => {
 
             const { q, val } = generateQuery(INSERT, PAYMENT_VOUCHER, insertObj);
             const response = await query({ query: q, values: val });
-
-            
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            
-
-
+            resSend(res, true, 200, "file uploaded!", fileData, null);
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
         }
@@ -91,10 +87,7 @@ const addPaymentAdvise = async (req, res) => {
             const { q, val } = generateQuery(INSERT, PAYMENT_ADVICE2, insertObj);
             const response = await query({ query: q, values: val });
 
-    
-                resSend(res, true, 200, "file uploaded!", fileData, null);
-            
-
+            resSend(res, true, 200, "file uploaded!", fileData, null);
 
         } else {
             resSend(res, false, 400, "Please upload a valid File", fileData, null);
@@ -129,16 +122,21 @@ const ztfi_bil_deface = async (req, res) => {
             return responseSend(res, "F", 400, "Invalid payload.", null, null);
         }
 
-        const payloadObj = await ztfi_bil_defacePayload(payload);
-        const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", ["ZREGNUM", "SEQNO", "ZBILLPER"]);
+        try {
 
-        const response = await query({ query: zdefaceInsertQuery.q, values: zdefaceInsertQuery.val });
-       
-        responseSend(res, "S", 200, "Data inserted successfully", response, null);
+            const payloadObj = await ztfi_bil_defacePayload(payload);
+            const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", ["ZREGNUM", "SEQNO", "ZBILLPER"]);
+
+            const response = await query({ query: zdefaceInsertQuery.q, values: zdefaceInsertQuery.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+        } catch (error) {
+            responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
+        }
+
 
     } catch (err) {
 
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+        responseSend(res, "F", 500, Message.UNEXPECTED_ERROR, err, null);
     }
 }
 const newPaymentAdvice = async (req, res) => {
@@ -156,28 +154,25 @@ const newPaymentAdvice = async (req, res) => {
 
         const { ZFI_PYMT_ADVCE_FINAL, ...obj } = payload;
 
-        const payloadObj = await paymentAviceHeaderPayload(obj);
-        const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", ["id"]);
+        try {
 
-        const response1 = await query({ query: paymentAviceHeaderQuery.q, values: paymentAviceHeaderQuery.val });
+            const payloadObj = await paymentAviceHeaderPayload(obj);
+            const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", ["id"]);
 
-        const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
-        const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
-        const response2 = await query({ query: paymentAviceLineItemsQuery.q, values:paymentAviceLineItemsQuery.val });
+            const response1 = await query({ query: paymentAviceHeaderQuery.q, values: paymentAviceHeaderQuery.val });
 
-        console.log("response", response1, response1);
-        if (response1.rowCount && response2.rowCount) {
-            responseSend(res, "S", 200, "Data inserted successfully", { response1, response2 }, null);
-
-        } else {
-            // resSend(res, false, 400, "No data inserted", response, null);
-            responseSend(res, "F", 400, "Data inserted failed", { response1, response2 }, null);
+            const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
+            const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
+            const response2 = await query({ query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, { response1, response2 }, null);
+        } catch (error) {
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error, null);
 
         }
-        // responseSend(res, "S", 200, "Data inserted successfully", response, null);
+
     } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+
+        responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
     }
 }
 // const zbts_st = async (req, res) => {
@@ -284,16 +279,21 @@ const ztfi_bil_deface_report = async (req, res) => {
             val.push(payload.btn)
         }
 
-        const response = await getQuery({ query: zdefaceInsertQuery, values: val });
-        console.log("response", response);
+        try {
+            const response = await getQuery({ query: zdefaceInsertQuery, values: val });
+            console.log("response", response);
 
-        responseSend(res, "S", 200, "Data inserted successfully", response, null);
+            responseSend(res, "S", 200, Message.DATA_FETCH_SUCCESSFULL, response, null);
+
+        } catch (error) {
+            responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
+
+        }
 
 
         // responseSend(res, "S", 200, "Data inserted successfully", response, null);
-    } catch (err) {
-        console.log("Error", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+    } catch (error) {
+        responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null)
     }
 }
 

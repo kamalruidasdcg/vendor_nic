@@ -5,7 +5,7 @@ const { responseSend } = require("../../lib/resSend");
 const { generateQueryForMultipleData } = require("../../lib/utils");
 const { lfa1Payload, addUserPayload } = require('../../services/sap.masterData.services');
 const { query } = require('../../config/pgDbConfig');
-
+const Message = require('../../utils/messages');
 
 const lfa1 = async (req, res) => {
 
@@ -27,23 +27,25 @@ const lfa1 = async (req, res) => {
 
 
         if (!payload || !Array.isArray(payload)) {
-            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
         }
 
-        const payloadObj = await lfa1Payload(payload);
-        console.log("payloadObj", payloadObj);
-        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, ["LIFNR"]);
-        const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
-        console.log('response', response);
-        if (response.rows) {
-            responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
-        } else {
-            responseSend(res, "F", 400, "data insert filed !!", response, null);
+        try {
+            const payloadObj = await lfa1Payload(payload);
+            console.log("payloadObj", payloadObj);
+            const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, ["LIFNR"]);
+            const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
+            console.log('response', response);
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+
+        } catch (error) {
+
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.toString(), null);
         }
+
 
     } catch (error) {
-        console.log("data not inserted", error);
-        responseSend(res, "F", 500, "Internal server errorR", error, null);
+        responseSend(res, "F", 500, Message.SERVER_ERROR, error, null);
     }
 
 
@@ -94,22 +96,24 @@ const addUser = async (req, res) => {
 
 
         if (!payload || !Array.isArray(payload)) {
-            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
         }
 
-        const payloadObj = await addUserPayload(payload);
-        console.log("payloadObj", payloadObj);
-        const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, ["PERNR"]);
-        const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
 
-        if (response.rowCount) {
-            responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
-        } else {
-            responseSend(res, "F", 400, "data insert filed !!", response, null);
+
+        try {
+            const payloadObj = await addUserPayload(payload);
+            console.log("payloadObj", payloadObj);
+            const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, ["PERNR"]);
+            let response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+        } catch (error) {
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
         }
-    } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
+
+    } catch (error) {
+        console.log("data not inserted", error);
+        responseSend(res, "F", 500, Message.UNEXPECTED_ERROR, error, null);
     }
 };
 

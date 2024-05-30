@@ -48,7 +48,7 @@ const makt = async (req, res) => {
                 console.log("results", results);
 
             } catch (error) {
-                return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error, null);
+                return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.toString(), null);
             }
             try {
 
@@ -61,7 +61,7 @@ const makt = async (req, res) => {
                 const results = await poolQuery({ client, query: maraTableInsert.q, values: maraTableInsert.val });
 
             } catch (error) {
-                return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error, null);
+                return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error, null);
             }
 
             // await client.commit(); // Commit the transaction if everything was successful
@@ -101,7 +101,7 @@ const mseg = async (req, res) => {
             const response = await poolQuery({ client, query: ekkoTableInsert.q, values: ekkoTableInsert.val });
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
         } catch (err) {
-            responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, err, null);
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, err, null);
         } finally {
             client.release();
         }

@@ -23,4 +23,5 @@ module.exports = {
     VALID_PARAMETER: "please send valid parameters",
     SEND_VALID_CONDITION_TEXT:"Please send whereCondition",
     MANDATORY_PARAMETR: "Plese send mandatory parameter.",
+    UNEXPECTED_ERROR: "Unexpected error : "
 }

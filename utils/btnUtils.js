@@ -1,12 +1,13 @@
 const { query } = require("../config/dbConfig");
+const { getQuery } = require("../config/pgDbConfig");
 const { ACTION_SDBG, ACTION_PBG } = require("../lib/constant");
 const { APPROVED } = require("../lib/status");
 const { checkTypeArr } = require("./smallFun");
 
 exports.getSDBGApprovedFiles = async (po) => {
   // GET Approved SDBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
-  let result = await query({
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+  let result = await getQuery({
     query: q,
     values: [po, APPROVED, ACTION_SDBG],
   });
@@ -15,8 +16,8 @@ exports.getSDBGApprovedFiles = async (po) => {
 
 exports.getPBGApprovedFiles = async (po) => {
   // GET Approved PBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
-  let result = await query({
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+  let result = await getQuery({
     query: q,
     values: [po, APPROVED, ACTION_PBG],
   });
@@ -24,8 +25,8 @@ exports.getPBGApprovedFiles = async (po) => {
 };
 
 exports.getGateEntry = async (po) => {
-  let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = ?`;
-  let result = await query({
+  let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = $1`;
+  let result = await getQuery({
     query: q,
     values: [po],
   });
@@ -35,8 +36,8 @@ exports.getGateEntry = async (po) => {
 // EBELN
 
 exports.getGRNs = async (po) => {
-  let q = `SELECT grn_no FROM store_grn WHERE purchasing_doc_no = ?`;
-  let result = await query({
+  let q = `SELECT grn_no FROM store_grn WHERE purchasing_doc_no = $1`;
+  let result = await getQuery({
     query: q,
     values: [po],
   });
@@ -49,9 +50,9 @@ exports.getICGRNs = async (body) => {
 
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no, EBELP as po_lineitem,
-    INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
+    INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = $1 AND INVNO = $2`;
 
-    let gate_entry_v = await query({
+    let gate_entry_v = await getQuery({
       query: gate_entry_q,
       values: [purchasing_doc_no, invoice_no],
     });
@@ -62,8 +63,8 @@ exports.getICGRNs = async (body) => {
     console.log("gate_entry_v", gate_entry_v)
 
   const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity 
-  FROM qals WHERE MBLNR = ?`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
-    let icgrn_no = await query({
+  FROM qals WHERE MBLNR = $1`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+    let icgrn_no = await getQuery({
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
@@ -75,8 +76,8 @@ exports.getICGRNs = async (body) => {
     if(checkTypeArr(icgrn_no)){
       await Promise.all(
         await icgrn_no.map(async (item) => {
-          const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = ? and EBELN = ? and EBELP = ?`;
-          let unit_price = await query({
+          const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = $1 and EBELN = $2 and EBELP = $3`;
+          let unit_price = await getQuery({
             query: price_q,
             values: [item?.mat_no, purchasing_doc_no, gate_entry_v.po_lineitem],
           });
@@ -115,8 +116,9 @@ exports.getICGRNs = async (body) => {
 };
 
 exports.checkBTNRegistered = async (btn_num) => {
-  let q = `SELECT count("btn_num") as count FROM btn_do WHERE btn_num = ?`;
-  let result = await query({
+  // let q = `SELECT count("btn_num") as count FROM btn_do WHERE btn_num = ?`;
+  let q = `SELECT count(btn_num) as count FROM btn_do WHERE btn_num = $1`;
+  let result = await getQuery({
     query: q,
     values: [btn_num],
   });
@@ -127,16 +129,16 @@ exports.checkBTNRegistered = async (btn_num) => {
   return false;
 };
 exports.getBTNInfo = async (btn_num) => {
-  let q = `SELECT * FROM btn WHERE btn_num = ?`;
-  let result = await query({
+  let q = `SELECT * FROM btn WHERE btn_num = $1`;
+  let result = await getQuery({
     query: q,
     values: [btn_num],
   });
   return result;
 };
 exports.getBTNInfoDO = async (btn_num) => {
-  let q = `SELECT * FROM btn_do WHERE btn_num = ?`;
-  let result = await query({
+  let q = `SELECT * FROM btn_do WHERE btn_num = $1`;
+  let result = await getQuery({
     query: q,
     values: [btn_num],
   });
@@ -145,8 +147,8 @@ exports.getBTNInfoDO = async (btn_num) => {
 
 exports.getVendorCodeName = async (po_no) => {
   const vendor_q = `SELECT t1.lifnr AS vendor_code,t2.name1 AS vendor_name FROM ekko as t1
-    LEFT JOIN lfa1 as t2 ON t1.lifnr = t2.lifnr WHERE t1.ebeln = ? LIMIT 1`;
-  let result = await query({
+    LEFT JOIN lfa1 as t2 ON t1.lifnr = t2.lifnr WHERE t1.ebeln = $1 LIMIT 1`;
+  let result = await getQuery({
       query: vendor_q,
       values: [po_no],
     });
