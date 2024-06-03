@@ -452,7 +452,7 @@ const poList = async (req, res) => {
     let Query = "";
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      Query = `SELECT DISTINCT(EBELN) from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+      Query = `SELECT DISTINCT(EBELN) as "EBELN" from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
     } else {
       switch (tokenData.department_id) {
         case USER_TYPE_GRSE_QAP:
@@ -535,6 +535,10 @@ const poList = async (req, res) => {
     //  wbs.wbs_id AS wbs_id,
     //  left join wbs
     //  ON  wbs.purchasing_doc_no = ekko.ebeln
+
+    console.log("strVal", strVal
+      
+    );
 
     const poArr = await getQuery({ query: poQuery, values: [] });
     if (!poArr) {
