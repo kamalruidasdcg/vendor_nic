@@ -1,4 +1,4 @@
-const { query } = require("../config/dbConfig");
+const { query, getQuery } = require("../config/pgDbConfig");
 const { USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 
@@ -19,8 +19,8 @@ const currentStageHandler = async (id) => {
   let finalStage = "Not Started";
   let stage = "Not Started";
   for (const item of dbs) {
-    let q = `SELECT count(*) as count FROM ${item} WHERE purchasing_doc_no = ? AND updated_by = "VENDOR"`;
-    let res = await query({
+    let q = `SELECT count(*) as count FROM ${item} WHERE purchasing_doc_no = $1 AND updated_by = 'VENDOR'`;
+    let res = await getQuery({
       query: q,
       values: [id],
     });
