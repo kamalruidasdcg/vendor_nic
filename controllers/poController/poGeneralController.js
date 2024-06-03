@@ -66,6 +66,7 @@ const details = async (req, res) => {
     t1.ebeln as "EBELN",
     t1.aedat as "AEDAT",
     t1.lifnr as "LIFNR", 
+    t1.ernam as "ERNAM", 
     t3.EMAIL AS "USRID_LONG", t4.NAME1 as "NAME1", t4.ORT01 as "ORT01"
       FROM 
       ekko AS t1 
