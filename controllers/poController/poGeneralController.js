@@ -62,22 +62,26 @@ const details = async (req, res) => {
     }
 
     let q = `
-        SELECT 
-          t1.*, t2.*, t3.EMAIL AS "USRID_LONG", t4.NAME1 as "NAME1", t4.ORT01
-        FROM 
-            ekko AS t1 
+    SELECT 
+    t1.*, t3.EMAIL AS "USRID_LONG", t4.NAME1 as "NAME1", t4.ORT01
+      FROM 
+      ekko AS t1 
         LEFT JOIN 
-            pa0002 AS t3 
+      pa0002 AS t3 
         ON 
-            (t2.PERNR = t3.PERNR) 
-        LEFT JOIN 
-            lfa1 AS t4 
-        ON 
-            t1.LIFNR = t4.LIFNR 
+      (t3.PERNR :: character varying = t1.ERNAM) 
+  LEFT JOIN 
+      lfa1 AS t4 
+  ON 
+      t1.LIFNR = t4.LIFNR 
         WHERE 
             t1.EBELN = $1`;
 
+            console.log("dddddddddddd", q);
+
     const result = await getQuery({ query: q, values: [queryParams.id] });
+
+    console.log('resultresultresult', result);
 
     if (!result?.length)
       return resSend(res, false, 404, "No PO number found !!", [], null);
@@ -93,13 +97,13 @@ const details = async (req, res) => {
          FROM   zpo_milestone AS a
                 LEFT JOIN actualsubmissiondate AS act
                        ON ( act.purchasing_doc_no = a.ebeln
-                            AND act.milestoneid = "01" )
+                            AND act.milestoneid = '01' )
                 INNER JOIN (SELECT Max(id) AS id,
                                    purchasing_doc_no,
                                    status
                             FROM   sdbg) AS b
                         ON ( b.purchasing_doc_no = a.ebeln )
-         WHERE  a.mid = "01"
+         WHERE  a.mid = '01'
                 AND a.ebeln = ?)
         UNION
         (SELECT a.*,
@@ -194,6 +198,9 @@ const details = async (req, res) => {
       values: [queryParams.id, queryParams.id, queryParams.id, queryParams.id],
     });
 
+
+    console.log('timelinetimelinetimelinetimelinetimeline', timeline);
+
     const getLatest = `
         (SELECT purchasing_doc_no, status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
 
@@ -207,7 +214,7 @@ const details = async (req, res) => {
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1);`;
+        (SELECT purchasing_doc_no, status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
 
     const curret_data = await getQuery({
       query: getLatest,
@@ -300,6 +307,7 @@ const details = async (req, res) => {
     result[0]["doInfo"] = DO.length > 0 ? DO[0] : null;
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
+    console.log("error.toString()", error.toString());
     return resSend(res, false, 500, error.toString(), [], null);
   }
 };
@@ -537,7 +545,7 @@ const poList = async (req, res) => {
     //  ON  wbs.purchasing_doc_no = ekko.ebeln
 
     console.log("strVal", strVal
-      
+
     );
 
     const poArr = await getQuery({ query: poQuery, values: [] });
@@ -599,12 +607,12 @@ const poList = async (req, res) => {
           AND milestoneId = '01'
       ORDER BY purchasing_doc_no, actualSubmissionDate`;
 
-      let SdbgActualSubmissionDateArr = await getQuery({
-        query: SdbgActualSubmissionDate,
-        values: [],
-      });
-      
-      console.log("SdbgActualSubmissionDateArr", SdbgActualSubmissionDateArr);
+    let SdbgActualSubmissionDateArr = await getQuery({
+      query: SdbgActualSubmissionDate,
+      values: [],
+    });
+
+    console.log("SdbgActualSubmissionDateArr", SdbgActualSubmissionDateArr);
 
     // let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
     let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no, MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '01'  group by EBELN, MTEXT, PLAN_DATE`;
@@ -652,7 +660,7 @@ const poList = async (req, res) => {
     let qapLastStatusArr = await getQuery({ query: qapLastStatus, values: [] });
 
     let qapActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '03' group by purchasing_doc_no`;
-    
+
     qapActualSubmissionDate =
       `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
@@ -681,7 +689,7 @@ const poList = async (req, res) => {
     let ilmsLastStatusArr = await getQuery({ query: ilmsLastStatus, values: [] });
 
     let ilmsActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '04' group by purchasing_doc_no`;
-    
+
     ilmsActualSubmissionDate =
       `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
@@ -857,7 +865,7 @@ const doDetails = async (str) => {
         LEFT JOIN 
         pa0002 AS t1 
         ON 
-            (t1.PERNR= t2.ERNAM)  WHERE t2.EBELN = $1`;
+            (t1.PERNR::character varying = t2.ERNAM)  WHERE t2.EBELN = $1`;
 
   const doArr = await getQuery({ query: doQry, values: [str] });
 

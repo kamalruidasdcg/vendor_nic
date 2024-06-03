@@ -61,6 +61,8 @@ const currentStageHandler = async (id) => {
     }
   }
 
+  console.log("finalStage", finalStage);
+
   return finalStage;
 };
 
