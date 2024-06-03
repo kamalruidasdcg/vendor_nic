@@ -2,7 +2,7 @@ const { asyncPool, poolQuery } = require("../../config/pgDbConfig");
 const { responseSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
-const Measage = require("../../utils/messages");
+const Message = require("../../utils/messages");
 
 const zbts_st = async (req, res) => {
 
