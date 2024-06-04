@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query, getQuery, asyncPool, poolQuery } = require("../../config/pgDbConfig");
+const { query, getQuery, poolClient, poolQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, UPDATE, USER_TYPE_PPNC_DEPARTMENT } = require("../../lib/constant");
 const { DEMAND_MANAGEMENT, EKPO, EKKO } = require("../../lib/tableName");
@@ -9,6 +9,7 @@ const path = require('path');
 const { create_reference_no, get_latest_activity } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
+const { Console } = require("console");
 
 
 const insert = async (req, res) => {
@@ -173,7 +174,7 @@ const list = async (req, res) => {
 const getRestAmount = async (req, res) => {
     try {
 
-        const client = await asyncPool();
+        const client = await poolClient();
         try {
             const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1 AND EBELP = $2`;
             let get_data_result = await poolQuery( {client, query:get_data_query, values: [req.query.po_no, req.query.line_item_no]});
@@ -182,7 +183,7 @@ const getRestAmount = async (req, res) => {
             const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = $1 AND EBELP = $2`;
             let total_amount_result = await poolQuery({client, query : total_amount_query, values : [req.query.po_no, req.query.line_item_no]});
             console.log(total_amount_result);
-           // total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
+           total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
             console.log("total_amount_result :" , total_amount_result);
 
             // const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
@@ -191,7 +192,7 @@ const getRestAmount = async (req, res) => {
             // console.log("target_amount :" + target_amount_result);
 
             let target_amount_result = (get_data_result[0].target_amount) ? get_data_result[0].target_amount : 0;
-
+console.log('target_amount_result', target_amount_result);
             // const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
             // let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
             // total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
@@ -215,24 +216,32 @@ const getRestAmount = async (req, res) => {
             //     } 
             // });
 
+target_amount_result = parseFloat(target_amount_result).toFixed(3);
+total_amount_result = parseFloat(total_amount_result).toFixed(3);
+console.log(target_amount_result);
+console.log(total_amount_result);
             //const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(recived_amount_from_dm_table));
-            const rest_amount = parseInt(target_amount_result) - parseInt(total_amount_result);
+            let rest_amount = target_amount_result - total_amount_result;
+            rest_amount = rest_amount.toFixed(3);
+            console.log(rest_amount);
 
-            if (rest_amount) {
+            // if (rest_amount) {
                 const resData = get_data_result[0];
-                resData.rest_amount = (rest_amount < 0) ? 0 : rest_amount;
-                return resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
-            } else {
-                return resSend(res, false, 200, "something went wrong!", null, null);
-            }
+                resData.rest_amount = rest_amount;
+                console.log(resData);
+                resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
+            // } else {
+            //     return resSend(res, false, 200, "something went wrong!", null, null);
+            // }
         } catch (err) {
             console.log("data not fetched", err);
-            return resSend(res, false, 500, "Internal server error", null, "");
+            resSend(res, false, 500, "Internal server error", null, "");
         } finally {
             client.release();
         }
     } catch (error) {
-        return resSend(res, false, 500, "error in db conn!", error, "");
+        console.log(error);
+        //return resSend(res, false, 500, "error in db conn!", error, "");
     }
 }
 

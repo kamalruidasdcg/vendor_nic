@@ -53,6 +53,7 @@ const { getQuery } = require("../../config/pgDbConfig");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
+ // console.log(99999999999999);
   try {
     const queryParams = req.query;
     const tokenData = { ...req.tokenData };
@@ -305,6 +306,9 @@ const details = async (req, res) => {
     result[0]["timeline"] = timelineData || [];
     result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
     result[0]["doInfo"] = DO.length > 0 ? DO[0] : null;
+    console.log("################");
+    console.log(result);
+    console.log("***********");
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
     console.log("error.toString()", error.toString());
