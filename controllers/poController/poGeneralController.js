@@ -64,7 +64,11 @@ const details = async (req, res) => {
 
     let q = `
     SELECT 
-    t1.*, t3.EMAIL AS "USRID_LONG", t4.NAME1 as "NAME1", t4.ORT01
+    t1.ebeln as "EBELN",
+    t1.aedat as "AEDAT",
+    t1.lifnr as "LIFNR", 
+    t1.ernam as "ERNAM", 
+    t3.EMAIL AS "USRID_LONG", t4.NAME1 as "NAME1", t4.ORT01 as "ORT01"
       FROM 
       ekko AS t1 
         LEFT JOIN 
@@ -265,19 +269,22 @@ const details = async (req, res) => {
             mat.MEINS AS material_unit,
             mat.EINDT AS contractual_delivery_date,
             mat.LOEKZ AS isDeleted, 
-            materialMaster.*, 
-            materialMaster.MTART AS materialType,
+            materialMaster.MATNR as "MATNR", 
+            materialMaster.MTART as "MTART", 
+            materialMaster.MTART AS "materialType",
             mat.TXZ01 as mat_description
             FROM ${EKPO} AS  mat 
                 LEFT JOIN mara AS materialMaster 
                     ON (materialMaster.MATNR = mat.MATNR)
             WHERE 1 = 1 AND mat.EBELN = $1`;
 
+            console.log("materialQuery", materialQuery);
     let materialResult = await getQuery({
       query: materialQuery,
       values: [queryParams.id],
     });
 
+    console.log("materialResult", materialResult);
     if (materialResult && materialResult?.length) {
 
 
@@ -538,7 +545,7 @@ const poList = async (req, res) => {
                         left join mara
                                ON ekpo.matnr = mara.matnr
                        
-                        left join lfa1
+                        left join lfa1 as lfa1
                                ON ekko.lifnr = lfa1.lifnr
                  WHERE  ekko.ebeln IN (${strVal})`;
 
@@ -652,11 +659,15 @@ const poList = async (req, res) => {
       values: [],
     });
 
+    console.log("DrawingActualSubmissionDate", DrawingActualSubmissionDate, DrawingActualSubmissionDateArr);
+
     let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '02'  group by EBELN, MTEXT, PLAN_DATE`;
     let DrawingContractualSubmissionDateArr = await getQuery({
       query: DrawingContractualSubmissionDate,
       values: [],
     });
+
+    console.log();
     // DRAWING
 
     // QAP
@@ -670,7 +681,7 @@ const poList = async (req, res) => {
           purchasing_doc_no,
           milestoneId AS "milestoneId",
           milestoneText AS "milestoneText",
-          actualSubmissionDate AS "actualSubmissionDate"
+          actualSubmissionDate  AS "actualSubmissionDate"
       FROM actualsubmissiondate
       WHERE
           purchasing_doc_no IN (${str})
@@ -770,7 +781,7 @@ const poList = async (req, res) => {
           ? SdbgContractualSubmission.contractual_submission_date
           : null;
         SDVGObj.SdActualSubmissionDate = SdbgActualSubmission
-          ? SdbgActualSubmission.actualSubmissionDate
+          ? parseInt(SdbgActualSubmission.actualSubmissionDate)
           : null;
         SDVGObj.SdLastStatus = SdgbLast ? SdgbLast.status : null;
         obj.SD = SDVGObj;
@@ -794,7 +805,7 @@ const poList = async (req, res) => {
             ? DrawingContractualSubmission.contractual_submission_date
             : null;
         DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission
-          ? DrawingActualSubmission.actualSubmissionDate
+          ? parseInt(DrawingActualSubmission.actualSubmissionDate)
           : null;
         DrawingObj.DrawingLastStatus = DrawingLast ? DrawingLast.status : null;
         ////////////// DRAWING /////////////////
@@ -816,7 +827,7 @@ const poList = async (req, res) => {
           ? qapContractualSubmission.contractual_submission_date
           : null;
         qapObj.qapActualSubmissionDate = qapActualSubmission
-          ? qapActualSubmission.actualSubmissionDate
+          ? parseInt(qapActualSubmission.actualSubmissionDate)
           : null;
         qapObj.qapLastStatus = qapLast ? qapLast.status : null;
         ////////////// QAP /////////////////
@@ -838,7 +849,7 @@ const poList = async (req, res) => {
           ? ilmsContractualSubmission.contractual_submission_date
           : null;
         ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission
-          ? ilmsActualSubmission.actualSubmissionDate
+          ? parseInt(ilmsActualSubmission.actualSubmissionDate)
           : null;
         ilmsObj.ilmsLastStatus = ilmsLast ? ilmsLast.status : null;
         ////////////// ILMS /////////////////
