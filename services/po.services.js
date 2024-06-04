@@ -153,23 +153,23 @@ const hrCompliancePayload = (payload) => {
   return payloadObj;
 };
 const wdcPayload = (payload,line_item_array) => {
- // let line_item = JSON.parse(payload.line_item_array);
-  let line_item =  [
-    {
-      line_item_no:15,
-    contractual_start_date:"1234",
-    Contractual_completion_date:"5678",
-    delay:"10",
-    status:ACCEPTED
-    },
-    {
-      line_item_no:20,
-      contractual_start_date:"12qqqq34",
-      Contractual_completion_date:"qqqq5678",
-      delay:"qqq0",
-      status:REJECTED
-      }
-  ];
+  let line_item = JSON.parse(payload.line_item_array);
+  // let line_item =  [
+  //   {
+  //     line_item_no:15,
+  //   contractual_start_date:"1234",
+  //   Contractual_completion_date:"5678",
+  //   delay:"10",
+  //   status:ACCEPTED
+  //   },
+  //   {
+  //     line_item_no:20,
+  //     contractual_start_date:"12qqqq34",
+  //     Contractual_completion_date:"qqqq5678",
+  //     delay:"qqq0",
+  //     status:REJECTED
+  //     }
+  // ];
  // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
   let last_data_line_item_array = JSON.parse(line_item_array);
 

@@ -131,11 +131,12 @@ exports.wdc = async (req, res) => {
         //     );
         //   }
         // }
-        console.log(obj);
-        console.log("4567876543");
+        // console.log(obj);
+        // console.log("4567876543");
         payload = wdcPayload(obj, last_data.line_item_array);
-        console.log(payload);
-        return;
+        // console.log("$%^&*(*&^%");
+        // console.log(payload);
+        //return;
         payload = {
           //...obj,
           ...last_data,
