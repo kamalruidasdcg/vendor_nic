@@ -1,0 +1,52 @@
+{
+    "SDBG_VENDOR_MAIL_BODY": {
+        "users": [
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "vendor",
+                "email_body": "PO_UPLOAD_IN_LAN"
+            },
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "do",
+                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+            },
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "indentor",
+                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+            }
+        ],
+        "email_subject": "PO upload in LAN",
+        "cc_users": [
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "vendor"
+            }
+        ],
+        "data": {}
+    },
+    "TNC_MINUTE_UPLOAD": {
+        "users": [
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "ric",
+                "email_body": "PO_UPLOAD_IN_LAN"
+            },
+            {
+                "c_id": "",
+                "c_email": "",
+                "user_type": "qa",
+                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+            }
+        ],
+        "email_subject": "TNC MINUTE UPLOAD",
+        "cc_users": [],
+        "data": {}
+    }
+}
