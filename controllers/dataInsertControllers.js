@@ -8,7 +8,8 @@ const { generateQuery, formatDate, generateInsertUpdateQuery, generateQueryForMu
 const { mailTrigger } = require("./sendMailController");
 const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
 const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archivePoLineItemsPayload } = require("../services/sap.po.services");
-const { poolClient } = require("../config/pgDbConfig");
+const { poolClient, getQuery } = require("../config/pgDbConfig");
+const { query } = require("../config/dbConfig");
 
 // require("dotenv").config();
 
@@ -152,6 +153,57 @@ async function sendMail(data) {
         await mailTrigger(payload, PO_UPLOAD_IN_LAN_NIC);
     }
 
+}
+
+
+async function sendMail(data) {
+    const getDetails = 
+    
+ }
+
+
+async function getUserDetails(type, poNo, vendor_code, userid) {
+    let getquery = "";
+
+    switch (type) {
+        case 'vendor':
+            getquery =
+                `SELECT po.lifnr       AS vendor_code,
+                vendor_t.email AS vendor_email,
+                po.ebeln       AS purchising_doc_no
+          FROM      ekko           AS po
+
+          LEFT JOIN lfa1 AS vendor_t
+          ON        (po.lifnr = vendor_t.lifnr)
+          WHERE     po.ebeln = $1`
+            break;
+        case 'do':
+            break;
+        case 'do_and_vendor':
+            getquery =
+                `SELECT    
+                    po.ernam       AS d_officer_id,
+                    user_t.cname   AS d_officer_name,
+                    po.lifnr       AS vendor_code,
+                    user_t.email   AS d_officer_email,
+                    vendor_t.email AS vendor_email,
+                    vendor_t.name1 AS vendor_name,
+                    po.ebeln       AS purchising_doc_no
+                FROM      ekko           AS po
+                LEFT JOIN pa0002         AS user_t
+                ON        (
+                              po.ernam = user_t.pernr :: CHARACTER varying)
+                LEFT JOIN lfa1 AS vendor_t
+                ON        (
+                              po.lifnr = vendor_t.lifnr)
+                WHERE     po.ebeln = $1`
+            break;
+
+        default:
+            break;
+    }
+
+    return getQuery()
 }
 
 

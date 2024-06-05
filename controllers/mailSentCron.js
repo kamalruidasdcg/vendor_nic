@@ -3,7 +3,7 @@ const { NEW, FAILED, SENT } = require("../lib/status");
 const mailBody = require("../lib/mailBody");
 const SENDMAIL = require("../lib/mailSend");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
-const { updateMailStatus, mailInsert, archiveEmails } = require("../services/mai.services");
+const { updateMailStatus, mailInsert, archiveEmails } = require("../services/mail.services");
 const { ARCHIVE } = require("../lib/constant");
 
 
