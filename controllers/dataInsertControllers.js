@@ -10,6 +10,7 @@ const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
 const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archivePoLineItemsPayload } = require("../services/sap.po.services");
 const { poolClient, getQuery } = require("../config/pgDbConfig");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
+const { query } = require("../config/dbConfig");
 
 // require("dotenv").config();
 
