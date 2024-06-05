@@ -4,23 +4,21 @@ const { connection } = require("../../config/dbConfig");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryForMultipleData, generateInsertUpdateQuery } = require("../../lib/utils");
 const { getFilteredData } = require('../genralControlles');
-const { msegPayload, makfPayload } = require("../../services/sap.material.services")
+const { msegPayload, makfPayload } = require("../../services/sap.material.services");
+const { poolQuery, poolClient } = require('../../config/pgDbConfig');
+const Message = require('../../utils/messages');
 
 
 const makt = async (req, res) => {
-    let insertPayload = {};
 
     try {
 
-        const promiseConnection = await connection();
+        let insertPayload = {};
+        const client = await poolClient();
         let transactionSuccessful = false;
-
         try {
 
             let payload;
-
-            console.log("payload ---makt", req.body);
-
             if (req.body && Array.isArray(req.body)) {
                 payload = req.body.length > 0 ? req.body[0] : null;
             } else if (req.body && typeof req.body === 'object') {
@@ -29,10 +27,11 @@ const makt = async (req, res) => {
 
 
             if (!payload || typeof payload !== 'object' || !Object.keys(payload)?.length || !payload.MATNR) {
-                return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+                return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
             }
 
-            await promiseConnection.beginTransaction();
+            // await client.beginTransaction();
+            await client.query('BEGIN');
 
 
             insertPayload = {
@@ -42,17 +41,14 @@ const makt = async (req, res) => {
                 MAKTG: payload.MAKTG || null,
             };
 
-            const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, MAKT, "MATNR");
-
-            console.log(ekkoTableInsert, 'ekkoTableInsert');
-            // const ekkoTableInsert = generateQuery(INSERT, MAKT, insertPayload);
+            const ekkoTableInsert = await generateInsertUpdateQuery(insertPayload, MAKT, ["MATNR"]);
 
             try {
-                const [results] = await promiseConnection.execute(ekkoTableInsert);
+                const results = await poolQuery({ client, query: ekkoTableInsert.q, values: ekkoTableInsert.val });
                 console.log("results", results);
 
             } catch (error) {
-                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.toString(), null);
             }
             try {
 
@@ -60,121 +56,93 @@ const makt = async (req, res) => {
                     MTART: payload.MTART,
                     MATNR: payload.MATNR
                 };
-                const maraTableInsert = await generateInsertUpdateQuery(maraTablePayload, MARA, "MATNR");
+                const maraTableInsert = await generateInsertUpdateQuery(maraTablePayload, MARA, ["MATNR"]);
 
-                const [results] = await promiseConnection.execute(maraTableInsert);
-                console.log("results", results);
+                const results = await poolQuery({ client, query: maraTableInsert.q, values: maraTableInsert.val });
 
             } catch (error) {
-                return responseSend(res, "F", 502, "Data insert failed !!", error, null);
+                return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error, null);
             }
 
-            await promiseConnection.commit(); // Commit the transaction if everything was successful
+            // await client.commit(); // Commit the transaction if everything was successful
+
+            await client.query('COMMIT');
+
             transactionSuccessful = true;
 
-            return responseSend(res, "1", 200, "data insert succeed.", [], null);
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, [], null);
 
         } catch (error) {
-            console.log("[[[1]]]]");
-            responseSend(res, "F", 502, "Data insert failed !!", error, null);
+            responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error, null);
         }
         finally {
             if (!transactionSuccessful) {
-
-                console.log("[[[2]]]]");
-                await promiseConnection.rollback();
+                await client.query('ROLLBACK')
             }
-            const connEnd = await promiseConnection.end();
-            console.log("Connection End" + "--->" + "connection release");
+            client.release();
         }
     } catch (error) {
-
-        console.log("[[[3]]]]");
-
-        responseSend(res, "F", 400, "Error in database conn!!", error, null);
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null);
     }
 };
 
 
 const mseg = async (req, res) => {
 
-    const promiseConnection = await connection();
     try {
-        if (!req.body) {
-            responseSend(res, "F", 400, "Please send a valid payload.", null, null);
-        }
-        const payload = req.body;
-        console.log("payload mseg", payload);
-
-
-        // insertPayload = await msegPayload (obj);
-        // console.log(insertPayload, "jjjjjjjjjjjjj");
-
-
-        const payloadObj = await msegPayload(payload);
-        const ekkoTableInsert = await generateQueryForMultipleData(payloadObj, "mseg", "C_PKEY");
-        // const { q, val } = await generateQueryArray(INSERT, MSEG, payloadObj);
-
-        const [response] = await promiseConnection.query(ekkoTableInsert);
-        console.log("response", response);
-
-        if (response.affectedRows) {
+        const client = await poolClient();
+        try {
+            if (!req.body) {
+                responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
+            }
+            const payload = req.body;
+            const payloadObj = await msegPayload(payload);
+            const ekkoTableInsert = await generateQueryForMultipleData(payloadObj, "mseg", ["MBLNR", "MJAHR", "ZEILE"]);
+            const response = await poolQuery({ client, query: ekkoTableInsert.q, values: ekkoTableInsert.val });
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
-        } else {
-            responseSend(res, "F", 400, "data insert filed !!", response, null);
+        } catch (err) {
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, err, null);
+        } finally {
+            client.release();
         }
-
-        // responseSend(res, "1", 200, "Data inserted successfully", response, null);
-    } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
-    } finally {
-        await promiseConnection.end();
+    } catch (error) {
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null)
     }
 
 
 };
 const mkpf = async (req, res) => {
 
-    const promiseConnection = await connection();
     try {
-        if (!req.body) {
-            responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+        const client = await poolClient();
+        try {
+            if (!req.body) {
+                responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
+            }
+            // const payload = req.body;
+
+            let payload = [];
+            if (req.body && Array.isArray(req.body)) {
+                payload = req.body;
+            } else if (payload && typeof req.body === 'object') {
+                payload.push(req.body);
+            }
+            const payloadObj = await makfPayload(payload);
+            console.log("payloadObj mkpf", payloadObj);
+
+            const mkpfInsertQuery = await generateQueryForMultipleData(payloadObj, MKPF, ["MBLNR", "MJAHR"]);
+
+            const response = await poolQuery({ client, query: mkpfInsertQuery.q, values: mkpfInsertQuery.val });
+            responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+        } catch (error) {
+            responseSend(res, "F", 502, Message.SERVER_ERROR, error.toString(), null);
+        } finally {
+            client.release();
         }
-        // const payload = req.body;
 
-        let payload = [];
-        if (req.body && Array.isArray(req.body)) {
-            payload = req.body;
-        } else if (payload && typeof req.body === 'object') {
-            payload.push(req.body);
-        }
-
-        console.log("mkpf", req.body);
-
-
-
-        const payloadObj = await makfPayload(payload);
-        console.log("payloadObj mkpf", payloadObj);
-
-        const mkpfInsertQuery = await generateQueryForMultipleData(payloadObj, MKPF, "C_PKEY");
-
-        const [response] = await promiseConnection.query(mkpfInsertQuery);
-        console.log("response mkpf", response);
-        if (response.affectedRows) {
-            responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
-        } else {
-            responseSend(res, "F", 400, "data insert filed !!", response, null);
-        }
-        // responseSend(res, "1", 200, "Data inserted successfully", response, null);
-    } catch (err) {
-        console.log("data not inserted", err);
-        responseSend(res, "F", 500, "Internal server errorR", err, null);
-    } finally {
-        await promiseConnection.end();
+    } catch (error) {
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.toString(), null)
     }
-
-
 };
 
 

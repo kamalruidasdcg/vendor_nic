@@ -1,4 +1,4 @@
-const { query } = require("../config/dbConfig");
+const { query } = require("../config/pgDbConfig");
 const { INSERT } = require("../lib/constant");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 
@@ -12,8 +12,13 @@ const apiLog = async (req, res, next) => {
     res.send = async function (body) {
         // Log response status code
         res.send = originalSend;
-
-        await saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, body, "apilog" );
+        const jsonBody = JSON.parse(body);
+        // console.log(jsonBody);
+        // console.log(jsonBody.message);
+        // console.log(jsonBody.data);
+        const msg = res.statusCode >= 200 && res.statusCode < 300 ? jsonBody.message : jsonBody.data;
+        console.log("msg", msg);
+        await saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, msg, "apilog");
 
         // console.log(
         //     `Request from : ${req.ip},
@@ -28,7 +33,7 @@ const apiLog = async (req, res, next) => {
     next();
 }
 
-async function saveLogInDb(source="", req_url="", req_method="", status_code="", msg="", stack="") {
+async function saveLogInDb(source = "", req_url = "", req_method = "", status_code = "", msg = "", stack = "") {
     const logPaylaod = {
         source,
         req_url,

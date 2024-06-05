@@ -264,10 +264,10 @@ const qavePayloadFn = async (obj) => {
   // }
   // const pl = payload.map((obj) => (
     const pl = {
-    c_pkey: `${obj.PRUEFLOS}-${obj.KZART}-${obj.ZAEHLER}`,
-    prueflos: obj.prueflos || obj.PRUEFLOS || null,
-    kzart: obj.kzart || obj.KZART || null,
-    zaehler: obj.zaehler || obj.ZAEHLER || null,
+    // c_pkey: `${obj.PRUEFLOS}-${obj.KZART}-${obj.ZAEHLER}`,
+    prueflos: obj.prueflos || obj.PRUEFLOS || "",
+    kzart: obj.kzart || obj.KZART || "",
+    zaehler: obj.zaehler || obj.ZAEHLER || "",
     vkatart: obj.vkatart || obj.VKATART || null,
     vwerks: obj.vwerks || obj.VWERKS || null,
     vauswahlmg: obj.vauswahlmg || obj.VAUSWAHLMG || null,
@@ -297,7 +297,7 @@ const qavePayloadFn = async (obj) => {
 
 const qalsPayload = async (obj) => {
   const pl = {
-    PRUEFLOS: obj.PRUEFLOS || null,
+    PRUEFLOS: obj.PRUEFLOS || "",
     WERK: obj.WERK || null,
     ART: obj.ART || null,
     HERKUNFT: obj.HERKUNFT || null,

@@ -11,7 +11,7 @@ const gateEntryHeaderPayload = async (obj) => {
     throw new Error("Please send valid payload");
   }
   const pl = {
-    C_PKEY: `${obj.ENTRY_NO}-${obj.W_YEAR}`,
+    // C_PKEY: `${obj.ENTRY_NO}-${obj.W_YEAR}`,
     ENTRY_NO: obj.ENTRY_NO,
     W_YEAR: obj.W_YEAR,
     ENTRY_DATE: formatDate(obj.ENTRY_DATE),
@@ -36,7 +36,7 @@ const gateEntryDataPayload = async (payload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    C_PKEY: `${obj.ENTRY_NO}-${obj.EBELN}-${obj.EBELP}-${obj.W_YEAR}`,
+    // C_PKEY: `${obj.ENTRY_NO}-${obj.EBELN}-${obj.EBELP}-${obj.W_YEAR}`,
     ENTRY_NO: obj.ENTRY_NO,
     EBELN: obj.EBELN,
     EBELP: obj.EBELP,

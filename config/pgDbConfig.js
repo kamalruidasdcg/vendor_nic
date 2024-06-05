@@ -1,64 +1,74 @@
-// const { Pool, Client } = require("pg");
+const { Pool } = require("pg");
 
-// const connObj = {
-//   user: process.env.PGUSER || "postgres",
-//   host: process.env.PGHOST || "localhost",
-//   database: process.env.PGDATABASE || "grse_btn",
-//   port: process.env.PGPORT || 5432,
-//   password: process.env.PGPASSWORD || "postgres",
-// };
+const pgDbConfig = {
+    user: process.env.PG_DB_USER || "postgres",
+    host: process.env.PG_DB_HOST || "localhost",
+    database: process.env.PG_DB_DATABASE_NAME || "grse_btn",
+    password: process.env.PG_DB_PASSWORD || "postgres",
+    port: process.env.PG_DB_PORT || 5432,
+    max: process.env.PG_DB_MAX_CONNECTIONS || 20,
+    idleTimeoutMillis: process.env.PG_DB_IDLE_TIMEOUT || 30000,
+    connectionTimeoutMillis: process.env.PG_DB_CONNECTION_TIMEOUT || 2000,
+};
 
-// const connectAndQuery = async (text, values) => {
-//   const client = new Client(connObj);
-//   // console.log(client);
-//   try {
-//     console.log("connObj", connObj);
-//     const connection = await client.connect();
-//     console.log("connect", connection);
-//     const result = await client.query(text, values);
-//     console.log("result", result);
-//   } catch (error) {
-//     console.warn("connectAndQuery function error -> ", error);
-//   } finally {
-//     console.log("<><><> finally block");
-//     client.end();
-//   }
+const asyncPool = async () => {
+    try {
+        const pool = new Pool(pgDbConfig);
+        return pool;
+    } catch (error) {
+        throw new Error(`Error creating connection pool: ${error.message}`);
+    }
+};
 
-//   console.log("<><><> finally block", q, val);
-// };
+const query = async ({ query, values }) => {
+    const pool = await asyncPool();
+    try {
+        const result = await pool.query(query, values);
+        return result;
+    } catch (error) {
+        // console.log("error", error.toString())
+        // return error;
+        throw new Error(`Error executing query: ${error}`);
+    } finally {
+        // Consider using pool.end() for graceful shutdown on application exit
+        // but not necessary for each query execution
+        pool.end();
+    }
+};
 
+const getQuery = async ({ query, values }) => {
+    const pool = await asyncPool();
+    try {
+        const { rows } = await pool.query(query, values);
+        return rows;
+    } catch (error) {
+        // return error;
+        throw new Error(`Error fetching rows: ${error.message}`);
+    } finally {
+        // Consider using pool.end() for graceful shutdown on application exit
+        // but not necessary for each query execution
+        pool.end();
+    }
+};
 
+const poolClient = async () => {
+    const pool = await asyncPool();
+    try {
+        const client = await pool.connect();
+        // client.release() Must need to Release
+        return client;
+    } catch (error) {
+        throw new Error(`Error connecting to database: ${error.message}`);
+    }
+};
 
-// const connectAndGetData = async (text, values) => {
-//   const client = new Client(connObj);
-//   // console.log(client);
-//   try {
-//     console.log("connObj", connObj);
-//     const connection = await client.connect();
-//     console.log("connect", connection);
-//     const result = await client.query({
-//       rowMode: 'array',
-//       text,
-//     });
-//     console.log("result", result.fields[0]);
-//     console.log(result.fields[0].name) // one
-// console.log(result.fields[1].name) // two
-//     console.log("ooooooooooooo", result.rows)
-//   } catch (error) {
-//     console.warn("connectAndQuery function error -> ", error);
-//   } finally {
-//     console.log("<><><> finally block");
-//     client.end();
-//   }
+const poolQuery = async ({ client, query, values }) => {
+    try {
+        const { rows } = await client.query(query, values);
+        return rows;
+    } catch (error) {
+        throw new Error(`Error executing query: ${error.message}`);
+    }
+}
 
-//   console.log("<><><> finally block");
-// };
-
-
-// async function fn() {
-
-//   await connectAndGetData('select * from adr6', []);
-// }
-
-
-// // module.exports = { connectAndQuery, connectAndGetData };
+module.exports = { query, poolClient, getQuery, asyncPool, poolQuery };

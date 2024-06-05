@@ -1,5 +1,7 @@
-const {query} = require("../config/dbConfig");
+//const {query} = require("../config/dbConfig");
 // const connection = require("../config/dbConfig");
+const { query, getQuery, asyncPool, poolQuery } = require("../config/pgDbConfig");
+
 const { UPDATE, INSERT } = require("../lib/constant");
 const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
@@ -32,7 +34,7 @@ const { validatePayload } = require("./validatePayload");
       if (req.query.$filter) {
         const flt = JSON.parse(req.query.$filter);
         Object.keys(flt).forEach((key) => {
-          q = q.concat(` AND ${key} = "${flt[key]}"`)
+          q = q.concat(` AND ${key} = '${flt[key]}'`)
         })
       }
 
@@ -41,11 +43,11 @@ const { validatePayload } = require("./validatePayload");
         const search = JSON.parse(req.query.$search);
     
       Object.keys(search).forEach((key) => {
-          q = q.concat(` AND ${key} LIKE "%${search[key]}%"`)
+          q = q.concat(` AND ${key} LIKE '%${search[key]}%'`)
         })  
       }
-  
-      const result = await query({
+  console.log(q);
+      const result = await getQuery({
         query: q,
         values: [],
       });

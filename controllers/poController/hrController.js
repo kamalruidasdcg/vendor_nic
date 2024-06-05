@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query, getQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT, USER_TYPE_GRSE_HR } = require("../../lib/constant");
 const { HR } = require("../../lib/tableName");
@@ -58,13 +58,13 @@ const hrComplianceUpload = async (req, res) => {
         const { q, val } = generateQuery(INSERT, HR, insertObj);
         const response = await query({ query: q, values: val });
 
-        if (response.affectedRows) {
+        if (response.rowCount) {
 
             // await handleEmail();
 
-            resSend(res, true, 200, "HR Compliance Uploaded successfully !", null, null);
+            resSend(res, true, 200, "HR Compliance Uploaded successfully !", response, null);
         } else {
-            resSend(res, false, 400, "No data inserted", response, null);
+            resSend(res, false, 400, "No data inserted", null, null);
         }
 
 
@@ -93,8 +93,8 @@ const complianceUploadedList = async (req, res) => {
             `SELECT *
             FROM   ${HR} 
             WHERE  ( 1 = 1
-                     AND purchasing_doc_no = ? ) ORDER BY created_at ASC`;
-        const result = await query({ query: get_query, values: [req.query.poNo] })
+                     AND purchasing_doc_no = $1 ) ORDER BY created_at ASC`;
+        const result = await getQuery({ query: get_query, values: [req.query.poNo] })
 
         resSend(res, true, 200, "HR Compliance Uploaded List fetched", result, "");
 

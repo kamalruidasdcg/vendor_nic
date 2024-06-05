@@ -5,6 +5,7 @@ const { responseSend, resSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { reservationLineItemPayload, reservationHeaderPayload, serviceEntryPayload } = require('../../services/sap.user.services');
 const { TRUE, FALSE } = require('../../lib/constant');
+const { poolClient, poolQuery } = require('../../config/pgDbConfig');
 
 // PAYLOAD //
 
@@ -12,7 +13,7 @@ const reservation = async (req, res) => {
     let payload = {};
 
     try {
-        const promiseConnection = await connection();
+        const client = await poolClient();
         let transactionSuccessful = false;
         if (Array.isArray(req.body)) {
             payload = req.body.length > 0 ? req.body[0] : null;
@@ -29,13 +30,15 @@ const reservation = async (req, res) => {
             if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.RSNUM) {
                 return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
             }
-            await promiseConnection.beginTransaction();
+            // await client.beginTransaction();
+
+            await client.query('BEGIN');
 
             try {
                 const rkpfPayload = await reservationHeaderPayload(obj);
-                const rkpfTableInsert = await generateInsertUpdateQuery(rkpfPayload, RESERVATION_RKPF_TABLE, "RSNUM");
+                const rkpfTableInsert = await generateInsertUpdateQuery(rkpfPayload, RESERVATION_RKPF_TABLE, ["RSNUM"]);
                 console.log("rkpfTableInsert", rkpfTableInsert);
-                const [results] = await promiseConnection.execute(rkpfTableInsert);
+                const results = await poolQuery({client, query:rkpfTableInsert.q, values: rkpfTableInsert.val});
                 console.log("results", results);
             } catch (error) {
                 return responseSend(res, "F", 502, "Data insert failed !!", error, null);
@@ -45,16 +48,19 @@ const reservation = async (req, res) => {
                 try {
                     const resbPayload = await reservationLineItemPayload(TAB_RESB);
                     console.log('ekpopayload', resbPayload);
-                    const insert_resb_table = await generateQueryForMultipleData(resbPayload, RESERVATION_RESB_TABLE, "C_PKEY");
-                    const [results] = await promiseConnection.execute(insert_resb_table);
+                    const insert_resb_table = await generateQueryForMultipleData(resbPayload, RESERVATION_RESB_TABLE, ["RSNUM", "RSPOS", "RSART"]);
+                    const results = await poolQuery({ client, query: insert_resb_table.q, values: insert_resb_table.val });
                     console.log("results", results);
 
                 } catch (error) {
                     console.log("error, resb milestone", error);
+                    return responseSend(res, "F", 502, "Data insert failed !!", error.toString(), null);
                 }
             }
 
-            const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
+            await client.query('COMMIT');
+
+            // const comm = await client.commit(); // Commit the transaction if everything was successful
             transactionSuccessful = true;
 
         } catch (error) {
@@ -63,9 +69,10 @@ const reservation = async (req, res) => {
         finally {
             if (transactionSuccessful === FALSE) {
                 console.log("transactionSuccessful End" + "--->", transactionSuccessful);
-                await promiseConnection.rollback();
+                // await client.rollback();
+                await client.query('ROLLBACK');
             }
-            const connEnd = await promiseConnection.end();
+            const connEnd = client.release();
 
             if (transactionSuccessful === TRUE) {
                 responseSend(res, "S", 200, "data insert succeed", null, null);
@@ -130,7 +137,7 @@ const reservationList = async (req, res) => {
         console.log(req.body);
 
         let q =
-        `SELECT 
+            `SELECT 
         rkpf.RSNUM as reservationNumber,
 		rkpf.RSDAT as reservationDate,
         rkpf.USNAM as userName,

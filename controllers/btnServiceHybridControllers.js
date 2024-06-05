@@ -1,4 +1,4 @@
-const { query } = require("../config/dbConfig");
+// const { query } = require("../config/dbConfig");
 const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
 const {EKPO, BTN_SERVICE_HYBRID } = require("../lib/tableName");
 
@@ -7,22 +7,23 @@ const { APPROVED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 
 const { checkTypeArr } = require("../utils/smallFun");
+const { getQuery, query } = require("../config/pgDbConfig");
 
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
       const { purchasing_doc_no, reference_no } = req.query;
 
-      const q = `SELECT line_item_array FROM wdc WHERE reference_no = ? LIMIT 1`;
-      let result = await query({
+      const q = `SELECT line_item_array FROM wdc WHERE reference_no = $1 LIMIT 1`;
+      let result = await getQuery({
           query: q,
           values: [reference_no],
         });
         console.log(reference_no);
         result = JSON.parse(result[0].line_item_array);
 
-      const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS matarial_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = ?`;
-      let get_line_item_ekpo = await query({ query: line_item_ekpo_q, values: [purchasing_doc_no] });
+      const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS matarial_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
+      let get_line_item_ekpo = await getQuery({ query: line_item_ekpo_q, values: [purchasing_doc_no] });
       console.log(get_line_item_ekpo);
       //
               const data = result.map((el2) => {
@@ -87,8 +88,9 @@ const submitBtnServiceHybrid = async (req, res) => {
   }
 
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(invoice_no) as count FROM ${BTN_SERVICE_HYBRID} WHERE invoice_no = ? and vendor_code = ?`;
-  let check_invoice = await query({query: check_invoice_q, values: [invoice_no, tokenData.vendor_code],});
+  // let check_invoice_q = `SELECT count(invoice_no) as count FROM ${BTN_SERVICE_HYBRID} WHERE invoice_no = ? and vendor_code = ?`;
+  let check_invoice_q = `SELECT count(invoice_no) as count FROM ${BTN_SERVICE_HYBRID} WHERE invoice_no = $1 and vendor_code = $1`;
+  let check_invoice = await getQuery({query: check_invoice_q, values: [invoice_no, tokenData.vendor_code],});
 
   if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
     return resSend(res, false, 200, "BTN is already created under the invoice number.", null, null);

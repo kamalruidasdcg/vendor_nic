@@ -1,4 +1,5 @@
-const { query } = require("../config/dbConfig");
+// const { query } = require("../config/dbConfig");
+const { getQuery, query } = require("../config/pgDbConfig");
 const { INSERT } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { TNC_MINUTES } = require("../lib/tableName");
@@ -73,10 +74,10 @@ const uploadTNCMinuts = async (req, res) => {
       created_at: getEpochTime(),
       purchasing_doc_no: req.body.purchasing_doc_no,
     };
+    // const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = ?`;
+    const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = $1`;
 
-    const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = ?`;
-
-    const isExist = await query({
+    const isExist = await getQuery({
       query: checkQuery,
       values: [req.body.purchasing_doc_no],
     });
@@ -88,7 +89,7 @@ const uploadTNCMinuts = async (req, res) => {
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
     const result = await query({ query: q, values: val });
 
-    if (result.affectedRows > 0)
+    if (result.rowCount > 0)
       return resSend(res, true, 200, "file uploaded!", fileData, null);
 
     resSend(res, false, 400, "Please upload a valid input", fileData, null);
@@ -99,8 +100,9 @@ const uploadTNCMinuts = async (req, res) => {
 
 
 async function isDealingOfficers(purchasing_doc_no, loginId) {
-  const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = ?  AND ERNAM = ?;`
-  const result = await query({ query: q, values: [purchasing_doc_no, loginId] });
+  // const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = ?  AND ERNAM = ?;`
+  const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = $1  AND ERNAM = $2;`
+  const result = await getQuery({ query: q, values: [purchasing_doc_no, loginId] });
 
   if (result && result.length) {
     return result[0]["count"] > 0;

@@ -1,5 +1,5 @@
 const { json } = require("express");
-const { query } = require("../config/dbConfig");
+const { query, getQuery } = require("../config/pgDbConfig");
 const { INSERT } = require("../lib/constant");
 const { SUBMITTED, ACCEPTED, REJECTED } = require("../lib/status");
 const {
@@ -230,7 +230,6 @@ const shippingDocumentsPayload = (payload, status) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
-    file_type_name: payload.file_type_name,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
@@ -485,7 +484,7 @@ const get_latest_activity = async (
   reference_no
 ) => {
   try {
-    const get_query = `SELECT * FROM ${table_name} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY created_at DESC LIMIT 1`;
+    const get_query = `SELECT * FROM ${table_name} WHERE reference_no = $1 AND purchasing_doc_no = $2 ORDER BY created_at DESC LIMIT 1`;
     const result = await query({
       query: get_query,
       values: [reference_no, purchasing_doc_no],
@@ -493,7 +492,7 @@ const get_latest_activity = async (
     //console.log("__get_latest_activity__");
     // console.log(result);
     // console.log("__get_latest_activity_22_");
-    return result[0];
+    return result.rows[0];
   } catch (error) {
     console.log("error into get_latest_activity function :"`${error}`);
   }
