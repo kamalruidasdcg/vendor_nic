@@ -115,7 +115,7 @@ async function sendMail(data) {
   let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
   const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
   console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN, mail_details);
-  const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0].u_name };
+  const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
 
   await prepareForEmail(GATE_ENTRY_DOC_CREATE, dataObj, { }, GATE_ENTRY_DOC_CREATE);
 }

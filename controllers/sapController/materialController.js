@@ -5,8 +5,11 @@ const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryForMultipleData, generateInsertUpdateQuery } = require("../../lib/utils");
 const { getFilteredData } = require('../genralControlles');
 const { msegPayload, makfPayload } = require("../../services/sap.material.services");
-const { poolQuery, poolClient } = require('../../config/pgDbConfig');
+const { poolQuery, poolClient, getQuery } = require('../../config/pgDbConfig');
 const Message = require('../../utils/messages');
+const { getUserDetailsQuery } = require('../../utils/mailFunc');
+const { prepareForEmail } = require('../../services/mail.services');
+const { GRN_DOC_GENERATE_LAN } = require('../../lib/event');
 
 
 const makt = async (req, res) => {
@@ -99,6 +102,7 @@ const mseg = async (req, res) => {
             const payloadObj = await msegPayload(payload);
             const ekkoTableInsert = await generateQueryForMultipleData(payloadObj, "mseg", ["MBLNR", "MJAHR", "ZEILE"]);
             const response = await poolQuery({ client, query: ekkoTableInsert.q, values: ekkoTableInsert.val });
+            sendMail(payloadObj[0]);
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
         } catch (err) {
             responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, err, null);
@@ -111,6 +115,24 @@ const mseg = async (req, res) => {
 
 
 };
+
+
+async function sendMail(data) {
+
+    try {
+
+
+        let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
+        const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
+        const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
+
+        console.log("dataObj", dataObj, mail_details);
+        await prepareForEmail(GRN_DOC_GENERATE_LAN, dataObj, { users: mail_details }, GRN_DOC_GENERATE_LAN);
+    } catch (error) {
+        console.log(error.toString(), error.stack);
+    }
+}
+
 const mkpf = async (req, res) => {
 
     try {

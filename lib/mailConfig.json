@@ -114,5 +114,38 @@
         }],
         "bcc_users": [],
         "data": {}
+    },
+    "GRN_DOC_GENERATE_LAN": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.main@grse.co.in",
+                "user_type": "ric_main",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.foj@grse.co.in",
+                "user_type": "ric_foj",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.rbd@grse.co.in",
+                "user_type": "ric_rbd",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            }
+        ],
+        "email_subject": "GRN DOC GENERATE IN LAN",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }
