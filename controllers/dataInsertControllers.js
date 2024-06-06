@@ -12,7 +12,6 @@ const { poolClient, getQuery } = require("../config/pgDbConfig");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { query } = require("../config/dbConfig");
 const { prepareForEmail } = require("../services/mail.services");
-const { PO_UPLOAD_IN_LAN } = require("../lib/mailBody");
 
 // require("dotenv").config();
 
@@ -167,12 +166,11 @@ async function sendMail(data) {
     try {
 
         let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
-        console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN);
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
         const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0].u_name }
-        await prepareForEmail( PO_UPLOAD_IN_LAN , dataObj, mail_details, );
+        await prepareForEmail("PO_UPLOAD_IN_LAN", dataObj, { users: mail_details }, "PO_UPLOAD_IN_LAN");
     } catch (error) {
-        console.log(error.toString());
+        console.log(error.toString(), error.stack);
     }
 }
 

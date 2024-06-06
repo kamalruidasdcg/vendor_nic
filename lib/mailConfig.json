@@ -26,9 +26,10 @@
             {
                 "u_id": "",
                 "u_email": "",
-                "user_type": "vendor"
+                "user_type": ""
             }
         ],
+        "bcc_users": [],
         "data": {}
     },
     "TNC_MINUTE_UPLOAD": {
@@ -67,6 +68,51 @@
         "email_subject": "TNC MINUTE UPLOAD",
         "email_heading": "MAIL",
         "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "GATE_ENTRY_DOC_CREATE": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.main@grse.co.in",
+                "user_type": "store_main",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.foj@grse.co.in",
+                "user_type": "store_foj",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.rbd@grse.co.in",
+                "user_type": "store_rbd",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "qa@grse.co.in",
+                "user_type": "qa",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            }
+        ],
+        "email_subject": "GATE ENTRY_DOC CREATE",
+        "email_heading": "MAIL",
+        "cc_users": [{
+            "u_id": "",
+            "u_email": "qa@grse.co.in",
+            "user_type": "qa",
+            "email_body": "GATE_ENTRY_DOC_CREATE"
+        }],
+        "bcc_users": [],
         "data": {}
     }
 }

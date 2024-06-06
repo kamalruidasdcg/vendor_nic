@@ -58,20 +58,22 @@ const mailjson = require("../lib/mailConfig.json");
 //     }
 // }
 
-const prepareForEmail = async ( eventName, data, userInfo, activity_name )=> {
+const prepareForEmail = async (eventName, data, userInfo, activity_name) => {
     try {
         if (!data || !eventName) {
             throw new Error("recipent, email_subject and event required");
         }
-        const mailjsonConfig  = mailjson[eventName];
-        mailjsonConfig.data = data; 
-        mailjsonConfig.users = replaceUserValues(userInfo, mailjsonConfig.users);
-        await mailInsert(mailjsonConfig, eventName, eventName, '')
-        
+        const mailjsonConfig = mailjson[eventName];
+        mailjsonConfig.data = data;
+        mailjsonConfig.users = replaceUserValues(userInfo.users || [], mailjsonConfig.users);
+        mailjsonConfig.cc_users = replaceUserValues(userInfo.cc_users || [], mailjsonConfig.cc_users);
+        mailjsonConfig.bcc_users = replaceUserValues(userInfo.bcc_users || [], mailjsonConfig.bcc_users);
+        await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
+
     } catch (error) {
-        
-        console.log("prepareForEmail", error.toString());
-    }   
+        console.log("prepareForEmail", error.toString(), error.stack);
+        throw error;
+    }
 }
 
 
@@ -113,19 +115,20 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             "activity_name": activity_name || ""
         }
 
-        console.log("mailBody[event]", mailBody[event]);
+        // console.log("mailBody[event]", mailBody[event]);
 
         const mailArr = data.users.map((el) => ({
             ...mailPayload,
             email_to: el.u_email,
-            email_cc: data.cc_users.map((mail) => mail.u_email).join(","),
+            email_cc: data.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
+            email_bcc: data.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
             email_body: mailBody[event] ? mailBody[event].replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
         }));
 
         const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
         const response = await query({ query: q, values: val });
         // console.log("response", response);
-        console.log(" q, val q, val q, val q, val q, val",  q, val);
+        console.log(" q, val q, val q, val q, val q, val", q, val);
     } catch (error) {
         console.log("mailInsert function", error.toString());
         throw error;
