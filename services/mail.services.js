@@ -7,7 +7,7 @@ const { generateQuery, getEpochTime, getDateTime, generateQueryForMultipleData }
 const mailBody = require("../lib/mailBody");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
 const { query } = require("../config/pgDbConfig");
-
+const mailjson = require("../lib/mailConfig.json");
 /**
  * Insert mail in to db with new status
  * @param {Object} data 
@@ -58,54 +58,80 @@ const { query } = require("../config/pgDbConfig");
 //     }
 // }
 
+const prepareForEmail = async ( data, userInfo, eventName, activity_name )=> {
+    try {
+        if (!data || !eventName) {
+            throw new Error("recipent, email_subject and event required");
+        }
+        const mailjsonConfig  = mailjson[eventName];
+        mailjsonConfig.data = data; 
+        mailjsonConfig.users = replaceUserValues(userInfo, mailjsonConfig.users);
+        await mailInsert(mailjsonConfig, eventName, eventName, '')
+        
+    } catch (error) {
+        
+        console.log("prepareForEmail", error.toString());
+    }   
+}
+
+
+function replaceUserValues(dataArray, usersArray) {
+    const dataMap = new Map(dataArray.map(user => [user.user_type, user]));
+    return usersArray.map(user => {
+        const matchingData = dataMap.get(user.user_type);
+        if (matchingData) {
+            return {
+                ...user,
+                u_id: matchingData.u_id,
+                u_email: matchingData.u_email
+            };
+        }
+        return user;
+    });
+}
+
 const mailInsert = async (data, event, activity_name, heading = "") => {
 
     try {
-
-        if (!data || !event) {
-            throw new Error("recipent, email_subject and event required");
-        }
-        const mail_body = mailBody[event].replace(/{{(.*?)}}/g, (match, p1) => data[p1.trim()] || match);
-
-        if (!mailBody) {
-            throw new Error("PLEASE ADD EVENT IN MAIL BODY FILE");
-        }
 
         const dd = data.created_at ? new Date(data.created_at) : new Date();
         const now = getDateTime(dd);
 
         const mailPayload = {
             "event_name": event,
-            "email_to": data.email,
+            "email_to": "",
             "email_subject": data.email_subject || "",
             "email_cc": data.email_cc || "",
             "email_bcc": data.email_bcc || "",
-            "email_body": mail_body,
+            "email_body": "",
             "email_send_on": now.dateTime,
             "created_on": now.date,
             "created_by": data.created_by_id || data.created_by || "",
             "modified_by": data.modified_by || "",
-            "modified_on": data.modified_on || "",
-            "attachemnt_path": data.attachemnt_path ? data.attachemnt_path : "",
+            "modified_on": data.modified_on || null,
+            "attachment_path": data.attachment_path || "",
             "activity_name": activity_name || ""
         }
 
         const mailArr = data.users.map((el) => ({
             ...mailPayload,
-            email_to: el.email,
-            email_cc: data.cc_users.map((mail) => mail.email).join(","),
+            email_to: el.u_email,
+            email_cc: data.cc_users.map((mail) => mail.u_email).join(","),
             email_body: mailBody[event] ? mailBody[event].replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
         }));
 
         const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
-
-        await query({ query: q, values: val });
-
+        const response = await query({ query: q, values: val });
+        console.log("response", response);
     } catch (error) {
-        console.log("mailInsert function", error);
+        console.log("mailInsert function", error.toString());
         throw error;
     }
 }
+
+
+
+
 const archiveEmails = async (data) => {
 
     try {
@@ -142,4 +168,4 @@ const updateMailStatus = async (data) => {
     }
 }
 
-module.exports = { mailInsert, updateMailStatus, archiveEmails };
+module.exports = { mailInsert, updateMailStatus, archiveEmails, prepareForEmail };

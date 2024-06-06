@@ -11,6 +11,7 @@ const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archiveP
 const { poolClient, getQuery } = require("../config/pgDbConfig");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { query } = require("../config/dbConfig");
+const { prepareForEmail } = require("../services/mail.services");
 
 // require("dotenv").config();
 
@@ -162,12 +163,16 @@ const insertPOData = async (req, res) => {
 
 async function sendMail(data) {
 
-    let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
-    console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN);
-    const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
-    
+    try {
 
-    console.log("mail_details", mail_details);
+        let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
+        console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN);
+        const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
+        const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0].u_name }
+        await prepareForEmail(dataObj, mail_details, 'PO_UPLOAD_IN_LAN');
+    } catch (error) {
+        console.log(error.toString());
+    }
 }
 
 

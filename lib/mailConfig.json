@@ -1,30 +1,31 @@
 {
-    "SDBG_VENDOR_MAIL_BODY": {
+    "PO_UPLOAD_IN_LAN": {
         "users": [
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "vendor",
                 "email_body": "PO_UPLOAD_IN_LAN"
             },
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "do",
                 "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
             },
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "indentor",
                 "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
             }
         ],
         "email_subject": "PO upload in LAN",
+        "email_heading": "MAIL",
         "cc_users": [
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "vendor"
             }
         ],
@@ -33,19 +34,20 @@
     "TNC_MINUTE_UPLOAD": {
         "users": [
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "ric",
                 "email_body": "PO_UPLOAD_IN_LAN"
             },
             {
-                "c_id": "",
-                "c_email": "",
+                "u_id": "",
+                "u_email": "",
                 "user_type": "qa",
                 "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
             }
         ],
         "email_subject": "TNC MINUTE UPLOAD",
+        "email_heading": "MAIL",
         "cc_users": [],
         "data": {}
     }
