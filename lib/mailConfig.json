@@ -34,16 +34,34 @@
     "TNC_MINUTE_UPLOAD": {
         "users": [
             {
-                "u_id": "",
-                "u_email": "",
-                "user_type": "ric",
-                "email_body": "PO_UPLOAD_IN_LAN"
+                "u_id": "432240",
+                "u_email": "Mondal.PK@grse.co.in",
+                "user_type": "assinor",
+                "email_body": "TNC_MINUTE_UPLOAD"
             },
             {
                 "u_id": "",
-                "u_email": "",
+                "u_email": "ric.main@grse.co.in",
+                "user_type": "ric_main",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.foj@grse.co.in",
+                "user_type": "ric_foj",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.rbd@grse.co.in",
+                "user_type": "ric_rbd",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "qa@grse.co.in",
                 "user_type": "qa",
-                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+                "email_body": "TNC_MINUTE_UPLOAD"
             }
         ],
         "email_subject": "TNC MINUTE UPLOAD",

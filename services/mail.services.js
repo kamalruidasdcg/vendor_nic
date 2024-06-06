@@ -58,7 +58,7 @@ const mailjson = require("../lib/mailConfig.json");
 //     }
 // }
 
-const prepareForEmail = async ( data, userInfo, eventName, activity_name )=> {
+const prepareForEmail = async ( eventName, data, userInfo, activity_name )=> {
     try {
         if (!data || !eventName) {
             throw new Error("recipent, email_subject and event required");
@@ -113,6 +113,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             "activity_name": activity_name || ""
         }
 
+        console.log("mailBody[event]", mailBody[event]);
+
         const mailArr = data.users.map((el) => ({
             ...mailPayload,
             email_to: el.u_email,
@@ -122,7 +124,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
 
         const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
         const response = await query({ query: q, values: val });
-        console.log("response", response);
+        // console.log("response", response);
+        console.log(" q, val q, val q, val q, val q, val",  q, val);
     } catch (error) {
         console.log("mailInsert function", error.toString());
         throw error;
