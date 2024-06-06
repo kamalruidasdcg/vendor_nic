@@ -79,14 +79,14 @@ const uploadTNCMinuts = async (req, res) => {
     // const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = ?`;
     const checkQuery = `SELECT COUNT(purchasing_doc_no) AS count FROM tnc_minutes WHERE purchasing_doc_no = $1`;
 
-    // const isExist = await getQuery({
-    //   query: checkQuery,
-    //   values: [req.body.purchasing_doc_no],
-    // });
+    const isExist = await getQuery({
+      query: checkQuery,
+      values: [req.body.purchasing_doc_no],
+    });
 
-    // if (isExist && isExist[0].count > 0) {
-    //   return resSend(res, true, 200, "Already upload a file !!.", null, null);
-    // }
+    if (isExist && isExist[0].count > 0) {
+      return resSend(res, true, 200, "Already upload a file !!.", null, null);
+    }
 
 
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
@@ -111,7 +111,7 @@ const uploadTNCMinuts = async (req, res) => {
 
 async function sendMail(payload) {
   console.log("TNC_MINUTE_UPLOAD", TNC_MINUTE_UPLOAD, TNC_MINUTE_UPLOAD);
-  await prepareForEmail(payload, [], TNC_MINUTE_UPLOAD)
+  await prepareForEmail(TNC_MINUTE_UPLOAD, payload, {})
 }
 
 
