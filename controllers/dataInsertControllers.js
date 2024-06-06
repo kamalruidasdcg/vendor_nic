@@ -167,7 +167,7 @@ async function sendMail(data) {
 
         let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
-        const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0].u_name }
+        const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name }
         await prepareForEmail("PO_UPLOAD_IN_LAN", dataObj, { users: mail_details }, "PO_UPLOAD_IN_LAN");
     } catch (error) {
         console.log(error.toString(), error.stack);
