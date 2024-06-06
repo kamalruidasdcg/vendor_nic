@@ -4,6 +4,7 @@ const { INSERT } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { TNC_MINUTES } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
+const { prepareForEmail } = require("../services/mail.services");
 
 const uploadImage = (req, res) => {
   // Handle Image Upload
@@ -86,17 +87,31 @@ const uploadTNCMinuts = async (req, res) => {
       return resSend(res, true, 200, "Already upload a file !!.", null, null);
     }
 
+    
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
     const result = await query({ query: q, values: val });
+    console.log("q, val ", q, val );
 
-    if (result.rowCount > 0)
+    if (result.rowCount > 0) {
       return resSend(res, true, 200, "file uploaded!", fileData, null);
 
-    resSend(res, false, 400, "Please upload a valid input", fileData, null);
+      sendMail(payload)
+
+    } else {
+      resSend(res, false, 400, "Please upload a valid input", fileData, null);
+
+    }
+
   } else {
     resSend(res, false, 400, "Please upload a valid image", fileData, null);
   }
 };
+
+
+
+async function sendMail(payload) {
+  prepareForEmail()
+}
 
 
 async function isDealingOfficers(purchasing_doc_no, loginId) {
