@@ -1,0 +1,167 @@
+{
+    "PO_UPLOAD_IN_LAN": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "PO_UPLOAD_IN_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "do",
+                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+            },
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "indentor",
+                "email_body": "VENDOR_PO_UPLOAD_IN_LAN_NIC"
+            }
+        ],
+        "email_subject": "PO upload in LAN",
+        "email_heading": "MAIL",
+        "cc_users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": ""
+            }
+        ],
+        "bcc_users": [],
+        "data": {}
+    },
+    "TNC_MINUTE_UPLOAD": {
+        "users": [
+            {
+                "u_id": "432240",
+                "u_email": "Mondal.PK@grse.co.in",
+                "user_type": "assinor",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.main@grse.co.in",
+                "user_type": "ric_main",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.foj@grse.co.in",
+                "user_type": "ric_foj",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.rbd@grse.co.in",
+                "user_type": "ric_rbd",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            },
+            {
+                "u_id": "",
+                "u_email": "qa@grse.co.in",
+                "user_type": "qa",
+                "email_body": "TNC_MINUTE_UPLOAD"
+            }
+        ],
+        "email_subject": "TNC MINUTE UPLOAD",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "GATE_ENTRY_DOC_CREATE": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.main@grse.co.in",
+                "user_type": "store_main",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.foj@grse.co.in",
+                "user_type": "store_foj",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "store.rbd@grse.co.in",
+                "user_type": "store_rbd",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            },
+            {
+                "u_id": "",
+                "u_email": "qa@grse.co.in",
+                "user_type": "qa",
+                "email_body": "GATE_ENTRY_DOC_CREATE"
+            }
+        ],
+        "email_subject": "GATE ENTRY_DOC CREATE",
+        "email_heading": "MAIL",
+        "cc_users": [{
+            "u_id": "",
+            "u_email": "qa@grse.co.in",
+            "user_type": "qa",
+            "email_body": "GATE_ENTRY_DOC_CREATE"
+        }],
+        "bcc_users": [],
+        "data": {}
+    },
+    "GRN_DOC_GENERATE_LAN": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.main@grse.co.in",
+                "user_type": "ric_main",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.foj@grse.co.in",
+                "user_type": "ric_foj",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            },
+            {
+                "u_id": "",
+                "u_email": "ric.rbd@grse.co.in",
+                "user_type": "ric_rbd",
+                "email_body": "GRN_DOC_GENERATE_LAN"
+            }
+        ],
+        "email_subject": "GRN DOC GENERATE IN LAN",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "ICGRN_DOC_FROM_SAP": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "ICGRN_DOC_FROM_SAP"
+            }
+            
+        ],
+        "email_subject": "ICGRN DOC FROM SAP",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    }
+}

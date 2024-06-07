@@ -7,6 +7,8 @@ const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQu
 const { qalsPayload, qavePayloadFn } = require('../../services/sap.qa.services');
 const { poolClient, poolQuery, getQuery } = require('../../config/pgDbConfig');
 const Message = require("../../utils/messages");
+const { ICGRN_DOC_FROM_SAP } = require('../../lib/event');
+const { prepareForEmail } = require('../../services/mail.services');
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -32,12 +34,15 @@ const qals = async (req, res) => {
             const payloadObj = await qalsPayload(payload);
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, ["PRUEFLOS"]);
             const response = await poolQuery({ client, query: qalsInsertQuery.q, values: qalsInsertQuery.val });
-
+            let mailPayload = { ...payloadObj };
             if (QAVE && typeof QAVE === 'object' && Object.keys(QAVE)?.length) {
                 const qavePayload = await qavePayloadFn(QAVE);
+                mailPayload = { ...mailPayload, qavePayload };
                 const qaveInsertQuery = await generateInsertUpdateQuery(qavePayload, QAVE_TABLE, ["PRUEFLOS", "KZART", "ZAEHLER"]);
                 const resp = await poolQuery({ client, query: qaveInsertQuery.q, values: qaveInsertQuery.val });
             }
+
+            sendMail(mailPayload);
 
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (err) {
@@ -47,10 +52,27 @@ const qals = async (req, res) => {
             client.release();
         }
     } catch (error) {
-        responseSend(res, "F", 500, "DB CONN ERROR", error, null);
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null);
     }
 
 };
+
+
+
+async function sendMail(data) {
+
+    try {
+        let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
+        const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
+        const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
+        console.log("dataObj", dataObj, mail_details);
+        await prepareForEmail(ICGRN_DOC_FROM_SAP, dataObj, { users: mail_details }, ICGRN_DOC_FROM_SAP);
+    } catch (error) {
+        console.log(error.toString(), error.stack);
+    }
+}
+
+
 
 const qalsReport = async (req, res) => {
     console.log("qalssss");

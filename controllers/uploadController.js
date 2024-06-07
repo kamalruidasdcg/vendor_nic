@@ -1,9 +1,11 @@
 // const { query } = require("../config/dbConfig");
 const { getQuery, query } = require("../config/pgDbConfig");
 const { INSERT } = require("../lib/constant");
+const { TNC_MINUTE_UPLOAD } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const { TNC_MINUTES } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
+const { prepareForEmail } = require("../services/mail.services");
 
 const uploadImage = (req, res) => {
   // Handle Image Upload
@@ -86,17 +88,31 @@ const uploadTNCMinuts = async (req, res) => {
       return resSend(res, true, 200, "Already upload a file !!.", null, null);
     }
 
+
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
     const result = await query({ query: q, values: val });
+    console.log("q, val ", q, val);
 
-    if (result.rowCount > 0)
-      return resSend(res, true, 200, "file uploaded!", fileData, null);
+    if (result.rowCount > 0) {
+      await sendMail(payload);
+      resSend(res, true, 200, "file uploaded!", fileData, null);
 
-    resSend(res, false, 400, "Please upload a valid input", fileData, null);
+    } else {
+      resSend(res, false, 400, "Please upload a valid input", fileData, null);
+
+    }
+
   } else {
     resSend(res, false, 400, "Please upload a valid image", fileData, null);
   }
 };
+
+
+
+async function sendMail(payload) {
+  console.log("TNC_MINUTE_UPLOAD", TNC_MINUTE_UPLOAD, TNC_MINUTE_UPLOAD);
+  await prepareForEmail(TNC_MINUTE_UPLOAD, payload, {})
+}
 
 
 async function isDealingOfficers(purchasing_doc_no, loginId) {
