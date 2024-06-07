@@ -147,5 +147,21 @@
         "cc_users": [],
         "bcc_users": [],
         "data": {}
+    },
+    "ICGRN_DOC_FROM_SAP": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "ICGRN_DOC_FROM_SAP"
+            }
+            
+        ],
+        "email_subject": "ICGRN DOC FROM SAP",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }
