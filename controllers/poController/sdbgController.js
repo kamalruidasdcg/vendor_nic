@@ -149,47 +149,6 @@ const submitSDBG = async (req, res) => {
       const response = await getQuery({ query: q, values: val });
 
       if (response.length) {
-        // mail setup
-
-        // if (payload.status === PENDING) {
-
-        //     if (payload.updated_by == "VENDOR") {
-
-        //         const result = await poContactDetails(payload.purchasing_doc_no);
-        //         payload.delingOfficerName = result[0]?.dealingOfficerName;
-        //         payload.mailSendTo = result[0]?.dealingOfficerMail;
-        //         payload.vendor_name = result[0]?.vendor_name;
-        //         payload.vendor_code = result[0]?.vendor_code;
-        //         payload.sendAt = new Date(payload.created_at);
-        //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_VENDOR);
-
-        //     } else if (payload.updated_by == "GRSE") {
-
-        //         const result = await poContactDetails(payload.purchasing_doc_no);
-        //         payload.vendor_name = result[0]?.vendor_name;
-        //         payload.vendor_code = result[0]?.vendor_code;
-        //         payload.mailSendTo = result[0]?.vendor_mail_id;
-        //         payload.delingOfficerName = result[0]?.dealingOfficerName;
-        //         payload.sendAt = new Date(payload.created_at);
-
-        //         mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
-
-        //     }
-        // }
-        // if (payload.status === ACKNOWLEDGED && payload.updated_by == "GRSE") {
-
-        //     const result = await poContactDetails(payload.purchasing_doc_no);
-        //     payload.vendor_name = result[0]?.vendor_name;
-        //     payload.vendor_code = result[0]?.vendor_code;
-        //     payload.mailSendTo = result[0]?.vendor_mail_id;
-        //     payload.delingOfficerName = result[0]?.dealingOfficerName;
-        //     payload.sendAt = new Date(payload.created_at);
-        //     mailTrigger({ ...payload }, SDBG_SUBMIT_BY_GRSE);
-
-        // }
-
-        // await handelEmail(payload);
-
         resSend(res, true, 200, "file uploaded!", fileData, null);
       } else {
         resSend(res, false, 400, "No data inserted", response, null);
@@ -1086,18 +1045,15 @@ const assigneeList = async (req, res) => {
     );
   }
 
-  const sdbgQuery = `SELECT t1.*, t2.CNAME, t3.USRID_LONG FROM emp_department_list AS t1
+  const sdbgQuery = `SELECT t1.emp_id, t2.* FROM emp_department_list AS t1
         LEFT JOIN 
             pa0002 AS t2 
         ON 
-            t1.emp_id= t2.PERNR 
-        LEFT JOIN 
-            pa0105 AS t3 
-        ON 
-            (t2.PERNR = t3.PERNR AND t3.SUBTY = '0030') WHERE t1.dept_id = $1 AND t1.internal_role_id = $2`;
+            t1.emp_id= t2.pernr  :: character varying WHERE
+         t1.dept_id = $1 AND t1.internal_role_id = $2`;
 
   const result = await getQuery({ query: sdbgQuery, values: [FINANCE, 2] });
-
+console.table(result);
   return resSend(
     res,
     true,
@@ -1423,16 +1379,16 @@ async function handleExtension(
 
 async function GetspecificBG(req, res) {
   const { reference_no, purchasing_doc_no } = req.body;
-
+ 
   if (reference_no && purchasing_doc_no) {
     try {
-      let filterdata = `SELECT * FROM sdbg_entry WHERE reference_no = ? AND purchasing_doc_no = ?`;
-      const result1 = await query({
+      let filterdata = `SELECT * FROM sdbg_entry WHERE reference_no = $1 AND purchasing_doc_no = $2`;
+      const { rows } = await query({
         query: filterdata,
         values: [reference_no, purchasing_doc_no],
       });
-
-      resSend(res, true, 200, "BG fetched successfully", result1, null);
+ 
+      resSend(res, true, 200, "BG fetched successfully", rows, null);
     } catch (error) {
       console.error("Error executing the query:", error.message);
       return resSend(res, false, 500, "Internal Server Error", error, null);
