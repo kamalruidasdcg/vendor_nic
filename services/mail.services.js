@@ -1,6 +1,6 @@
 // const { query } = require("../config/dbConfig");
 const { insertTableData } = require("../controllers/genralControlles");
-const { INSERT, ARCHIVE } = require("../lib/constant");
+const { INSERT, ARCHIVE, MAIL_SEND_DEFAULT_RETRY_COUNT } = require("../lib/constant");
 const { NEW } = require("../lib/status");
 const { EMAILS, ARCHIVE_EMAILS } = require("../lib/tableName");
 const { generateQuery, getEpochTime, getDateTime, generateQueryForMultipleData } = require("../lib/utils");
@@ -68,6 +68,8 @@ const prepareForEmail = async (eventName, data, userInfo, activity_name) => {
         mailjsonConfig.users = replaceUserValues(userInfo.users || [], mailjsonConfig.users);
         mailjsonConfig.cc_users = replaceUserValues(userInfo.cc_users || [], mailjsonConfig.cc_users);
         mailjsonConfig.bcc_users = replaceUserValues(userInfo.bcc_users || [], mailjsonConfig.bcc_users);
+
+        console.log("mailjsonConfig", mailjsonConfig);
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
     } catch (error) {
@@ -112,7 +114,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             "modified_by": data.modified_by || "",
             "modified_on": data.modified_on || null,
             "attachment_path": data.attachment_path || "",
-            "activity_name": activity_name || ""
+            "activity_name": activity_name || "",
+            "retry_count": MAIL_SEND_DEFAULT_RETRY_COUNT
         }
 
         // console.log("mailBody[event]", mailBody[event]);
@@ -127,8 +130,7 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
 
         const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
         const response = await query({ query: q, values: val });
-        // console.log("response", response);
-        console.log(" q, val q, val q, val q, val q, val", q, val);
+    
     } catch (error) {
         console.log("mailInsert function", error.toString());
         throw error;
@@ -141,37 +143,26 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
 const archiveEmails = async (data) => {
 
     try {
-        const mailObj = {
-            id: data.id,
-            event: data.event,
-            sender: data.sender,
-            subject: data.subject,
-            body: data.body,
-            status: data.status,
-            message: JSON.stringify(data.message),
-            created_at: getEpochTime(),
-            creatd_by_name: data.creatd_by_name,
-            created_by_id: data.created_by_id,
-        }
-        const { q, val } = generateQuery(INSERT, ARCHIVE_EMAILS, mailObj)
+        const archiveEmailPayload = { ...data };
+        delete archiveEmailPayload.email_send_on;
+        const { q, val } = generateQuery(INSERT, ARCHIVE_EMAILS, archiveEmailPayload)
         const response = await query({ query: q, values: val });
         return response;
-
     } catch (error) {
-        console.log(error);
+        throw error;
     }
 }
 
 
 
-const updateMailStatus = async (data) => {
-    try {
+// const updateMailStatus = async (data) => {
+//     try {
 
-        const updatedQuery = `UPDATE emails SET status = ? , message = ? WHERE id = ?`
-        await query({ query: updatedQuery, values: [data.status, data.message, data.id] });
-    } catch (error) {
-        console.log("updateMailStatus", error);
-    }
-}
+//         const updatedQuery = `UPDATE emails SET status = ? , message = ? WHERE id = ?`
+//         await query({ query: updatedQuery, values: [data.status, data.message, data.id] });
+//     } catch (error) {
+//         console.log("updateMailStatus", error);
+//     }
+// }
 
-module.exports = { mailInsert, updateMailStatus, archiveEmails, prepareForEmail };
+module.exports = { mailInsert,  archiveEmails, prepareForEmail };

@@ -41,7 +41,7 @@ const {
   DRAWING_SUBMIT_MAIL_TEMPLATE,
 } = require("../../templates/mail-template");
 const SENDMAIL = require("../../lib/mailSend");
-const { mailTrigger } = require("../sendMailController");
+// const { mailTrigger } = require("../sendMailController");
 const {
   DRAWING_SUBMIT_BY_VENDOR,
   DRAWING_SUBMIT_BY_GRSE,
