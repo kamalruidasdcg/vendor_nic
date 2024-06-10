@@ -378,8 +378,8 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
 
   const st = status || SUBMITTED;
 
-  const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = ? AND status = ? ) ORDER BY id DESC LIMIT 1`;
-  const result = await query({
+  const getlatestData = `SELECT created_at FROM ${tableName} WHERE (purchasing_doc_no = $1 AND status = $2 ) ORDER BY id DESC LIMIT 1`;
+  const result = await getQuery({
     query: getlatestData,
     values: [payload.purchasing_doc_no, st],
   });
