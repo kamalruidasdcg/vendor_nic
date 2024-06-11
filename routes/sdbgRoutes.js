@@ -49,4 +49,10 @@ router.post("/getspecificbg", [veifyAccessToken], (req, res) => {
   sdbgController.GetspecificBG(req, res);
 });
 
+
+
+router.get("/getCurrentAssignee", [veifyAccessToken], (req, res) => {
+  sdbgController.getCurrentAssignee(req, res);
+});
+
 module.exports = router;

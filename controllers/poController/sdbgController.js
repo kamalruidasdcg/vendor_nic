@@ -130,7 +130,7 @@ const submitSDBG = async (req, res) => {
           null
         );
       }
-      const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
+      //const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
 
       // if (GET_LATEST_SDBG.length > 0) {
       //   if (GET_LATEST_SDBG[0].status == APPROVED) {
@@ -838,7 +838,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         console.log(update_assign_touery);
         return resSend(
           res,
-          false,
+          true,
           200,
           `The BG is ASSIGNED successfully.`,
           null,
@@ -1457,6 +1457,30 @@ async function GetspecificBG(req, res) {
   }
 }
 
+const getCurrentAssignee = async (req, res) => {
+  try {
+    if (!req.query.poNo) {
+      return resSend(res, true, 200, "Please send PO Number.", null, null);
+    }
+    let filterdata = `SELECT assigned_to FROM ${SDBG} WHERE purchasing_doc_no = $1 AND last_assigned = $2`;
+    console.log(filterdata);
+    const result = await getQuery({
+      query: filterdata,
+      values: [req.query.poNo,1],
+    });
+
+    if(result.length > 0) {
+      resSend(res, true, 200, "BG fetched successfully", result[0].assigned_to, null);
+    } else {
+      resSend(res, true, 200, "no record found", null, null);
+    }
+    
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+}
+
 module.exports = {
   submitSDBG,
   getSdbgEntry,
@@ -1469,4 +1493,5 @@ module.exports = {
   GetspecificBG,
   BGextensionRelease,
   UpdateBGextensionRelease,
+  getCurrentAssignee,
 };
