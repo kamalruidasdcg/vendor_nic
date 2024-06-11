@@ -163,5 +163,21 @@
         "cc_users": [],
         "bcc_users": [],
         "data": {}
+    },
+    "SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE"
+            }
+            
+        ],
+        "email_subject": "Reminder mail",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }

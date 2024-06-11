@@ -35,7 +35,7 @@ const {
   QAP_ASSIGN_BY_GRSE,
   QAP_APPROVED_BY_GRSE,
 } = require("../../lib/event");
-const { mailTrigger } = require("../sendMailController");
+// const { mailTrigger } = require("../sendMailController");
 const { deptLogEntry } = require("../../log/deptActivities");
 
 // add new post
@@ -608,7 +608,7 @@ const mailSendToAssignee = async (payload) => {
   payload.delingOfficerName = payload.assigned_from_name;
   payload.mailSendTo = payload.assigned_from_email;
 
-  await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+  // await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 };
 
 const mailSendToAssigneeAndStaff = async (payload) => {
@@ -622,10 +622,10 @@ const mailSendToAssigneeAndStaff = async (payload) => {
   const pl_2 = { ...payload };
 
   // await mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR);
-  await Promise.all([
-    mailTrigger(pl_1, QAP_SUBMIT_BY_VENDOR),
-    mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR),
-  ]);
+  // await Promise.all([
+  //   mailTrigger(pl_1, QAP_SUBMIT_BY_VENDOR),
+  //   mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR),
+  // ]);
 };
 
 const mailSendToStaffAndVendor = async (payload) => {
@@ -649,10 +649,10 @@ const mailSendToStaffAndVendor = async (payload) => {
 
   // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
 
-  await Promise.all([
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE),
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
-  ]);
+  // await Promise.all([
+  //   mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE),
+  //   mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
+  // ]);
 };
 
 const mailSendToAssigneeAndVendor = async (payload) => {
@@ -676,10 +676,10 @@ const mailSendToAssigneeAndVendor = async (payload) => {
   const pl_2 = { ...payload };
   // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
 
-  await Promise.all([
-    mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE),
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
-  ]);
+  // await Promise.all([
+  //   mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE),
+  //   mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
+  // ]);
 };
 
 const mailSendToVendor = async (payload) => {
@@ -703,7 +703,7 @@ const mailSendToVendor = async (payload) => {
   ];
   const log = await deptLogEntry(logPayload);
 
-  mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+  // mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 };
 
 async function getMailIds(purchasing_doc_no, status) {
