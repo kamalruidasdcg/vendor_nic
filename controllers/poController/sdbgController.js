@@ -130,7 +130,7 @@ const submitSDBG = async (req, res) => {
           null
         );
       }
-      // const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
+      const GET_LATEST_SDBG = await get_latest_sdbg(payload.purchasing_doc_no);
 
       // if (GET_LATEST_SDBG.length > 0) {
       //   if (GET_LATEST_SDBG[0].status == APPROVED) {
@@ -191,6 +191,23 @@ const get_latest_sdbg_with_reference = async (
   console.log(result);
   return result;
 };
+
+const get_action_type_with_vendor_code = async (
+  purchasing_doc_no
+) => {
+  const GET_LATEST_SDBG = `SELECT action_type,vendor_code FROM sdbg WHERE purchasing_doc_no = '4700026717' ORDER BY sdbg.created_at DESC LIMIT 1`;
+  console.log(GET_LATEST_SDBG);
+  const result = await getQuery({
+    query: GET_LATEST_SDBG,
+    values: [],
+  });
+
+  console.log("@@@@@@@@@@@");
+  console.log(result);
+  console.log("##########");
+  return result;
+};
+
 
 const getSDBGData = async (req, res) => {
   try {
@@ -778,7 +795,59 @@ const sdbgUpdateByFinance = async (req, res) => {
       if (tokenData.department_id != FINANCE) {
         return resSend(res, false, 200, "please login as finance!", null, null);
       }
+      if (tokenData.internal_role_id == ASSIGNER && obj.assigned_to && obj.status == ASSIGNED) {
+        const aa = await get_action_type_with_vendor_code(obj.purchasing_doc_no);
+        // console.log(aa);
+        // console.log(11111111111111);
+        
+        const insertPayloadForSdbg = {
+          
+          //...sdbgDataResult,
+          reference_no: "SDBG ASSIGNED",
+          purchasing_doc_no: obj.purchasing_doc_no,
+          remarks: obj.remarks,
+          status: obj.status,
+          action_type: aa[0].action_type,
+          vendor_code: aa[0].vendor_code,
+          assigned_from:tokenData.vendor_code,
+          assigned_to:obj.assigned_to,
+          last_assigned: 1,
+          created_at: getEpochTime(),
+          created_by_name: "finance dept",
+          created_by_id: tokenData.vendor_code,
+          updated_by: "GRSE",
+        };
+        console.log(insertPayloadForSdbg);
+       
+        let {q, val}= generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+        console.log(q);
+        let count_res = await poolQuery({
+          client,
+          query: q,
+          values: val,
+        });
+        console.log(count_res);
+        console.log(11111111111111);
+        const update_assign_to = `UPDATE ${SDBG} SET last_assigned = 0 WHERE purchasing_doc_no = $1 AND assigned_to != $2`;
+        let update_assign_touery = await poolQuery({
+          client,
+          query: update_assign_to,
+          values: [obj.purchasing_doc_no, obj.assigned_to],
+        });
+        console.log(update_assign_touery);
+        return resSend(
+          res,
+          false,
+          200,
+          `The BG is ASSIGNED successfully.`,
+          null,
+          null
+        );
+       // return;
 
+      }
+      // console.log(123456);
+      // return;
       if (tokenData.internal_role_id == STAFF) {
         const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${SDBG} WHERE reference_no = $1 AND purchasing_doc_no = $2 AND assigned_to = $3 AND last_assigned = $4`;
         const check_assign_to_query = await poolQuery({

@@ -6,7 +6,7 @@ const errorHandler = async (error, request, response, next) => {
       response,
       false,
       200,
-      "File size should be below 1MB!",
+      "File size should be below 100MB!",
       null,
       null
     );
