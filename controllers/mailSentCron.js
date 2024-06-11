@@ -3,43 +3,69 @@ const { NEW, FAILED, SENT } = require("../lib/status");
 // const mailBody = require("../lib/mailBody");
 const SENDMAIL = require("../lib/mailSend");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
-const { updateMailStatus, mailInsert, archiveEmails } = require("../services/mail.services");
-const { ARCHIVE } = require("../lib/constant");
+const { archiveEmails } = require("../services/mail.services");
+const { ARCHIVE, UPDATE, MAIL_SEND_MAX_RETRY_COUNT } = require("../lib/constant");
 const { getQuery, query } = require("../config/pgDbConfig");
+const { EMAILS } = require("../lib/tableName");
+const { generateQuery } = require("../lib/utils");
 
 
 const mailSentCornJob = async () => {
 
-    const getMailQuery = `SELECT * FROM t_email_to_send ORDER BY created_on ASC LIMIT 10`;
+    const getMailQuery = `SELECT * FROM ${EMAILS} ORDER BY created_on ASC LIMIT 10`;
 
-    const emails = await getQuery({ query: getMailQuery, values: [] });
+    let emails = await getQuery({ query: getMailQuery, values: [] });
+
+    // emails = []
     console.log("emails", emails);
     if (emails.length) {
         for (let i = 0; i < emails.length; i++) {
             const mailDetails = {
                 to: emails[i]["email_to"],
+                // cc:  emails[i]["email_cc"],
+                // bcc:  emails[i]["email_bcc"],
                 subject: emails[i]["email_subject"],
                 html: EMAIL_TEMPLAE(emails[i]["email_body"]),
-                
+
             };
-
-            // console.log("mailDetails", mailDetails);
-
-            await SENDMAIL(mailDetails, async function (err, data) {
-                if (!err) {
-                    await Promise.all([
-                        // query({ query: `DELETE FROM t_email_to_send WHERE id = ?`, values: [emails[i]["id"]] }),
-                        // archiveEmails({ ...emails[i], status: FAILED, message: err })
-                    ])
-                    console.log("Error Occurs ('_') !", err);
+ 
+            try {
+                const email_response = await SENDMAIL(mailDetails);
+                await query({ query: `DELETE FROM ${EMAILS} WHERE id = $1`, values: [emails[i]["id"]] });
+                await archiveEmails({ ...emails[i] });
+                console.log(`Email sent successfully ('_') !!${emails[i]["email_to"]}`);
+            } catch (error) {
+                if (emails[i]["retry_count"] == MAIL_SEND_MAX_RETRY_COUNT) {
+                    await archiveEmails({ ...emails[i] });
+                    await query({ query: `DELETE FROM ${EMAILS}  WHERE retry_count = $1 `, values: [MAIL_SEND_MAX_RETRY_COUNT] });
                 } else {
-                    await Promise.all([
-                        // query({ query: `DELETE FROM emails WHERE id = ?`, values: [emails[i]["id"]] }),
-                        // archiveEmails({ ...emails[i], status: SENT, message: data })
-                    ])
-                    console.log(`Email sent successfully ('_') !!${emails[i]["sender"]}`);
+                    const { q, val } = generateQuery(UPDATE, EMAILS, { retry_count: ++emails[i]["retry_count"] }, { id: emails[i]["id"] });
+                    await query({ query: q, values: val });
+                    console.log("Error Occurs to mail send ('_') !", error.message);
                 }
-            });
+            }
+
+
+            // await SENDMAIL(mailDetails, async function (err, data) {
+            //     if (!err) {
+            //         // await Promise.all([
+            //         // ])
+
+            //         if (emails[i]["retry_count"] == MAIL_SEND_MAX_RETRY_COUNT) {
+            //             await archiveEmails({ ...emails[i] });
+            //             await query({ query: `DELETE FROM ${EMAILS}  WHERE retry_count = $1 `, values: [MAIL_SEND_MAX_RETRY_COUNT] });
+            //         } else {
+            //             const { q, val } = generateQuery(UPDATE, ARCHIVE_EMAILS, { retry_count: ++emails[i]["retry_count"] }, { id: emails[i]["id"] });
+            //             await query({ query: q, values: val }),
+            //                 console.log("qqqqq", q, val);
+            //             console.log("Error Occurs ('_') !");
+            //         }
+            //     } else {
+            //         await query({ query: `DELETE FROM ${EMAILS} WHERE id = $1`, values: [emails[i]["id"]] }),
+            //             await archiveEmails({ ...emails[i] })
+            //         console.log(`Email sent successfully ('_') !!${emails[i]["email_to"]}`);
+            //     }
+            // });
         }
     }
 }

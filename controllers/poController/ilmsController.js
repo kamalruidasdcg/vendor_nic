@@ -13,7 +13,7 @@ const { getFilteredData } = require("../genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
 const { SDBG_SUBMIT_MAIL_TEMPLATE } = require("../../templates/mail-template");
 const { mailInsert } = require("../../services/mail.services");
-const { mailTrigger } = require("../sendMailController");
+// const { mailTrigger } = require("../sendMailController");
 
 
 // add new post
