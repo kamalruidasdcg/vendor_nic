@@ -1,3 +1,4 @@
+const { USER_TYPE_GRSE_DRAWING, ASSIGNER } = require("../lib/constant");
 
 
 
@@ -68,11 +69,43 @@ const getUserDetailsQuery = (type, valueParameter) => {
                LEFT JOIN lfa1                          AS vendor_t
                ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter})`;
 
-               break;
+            break;
 
+
+        case 'cdo_and_do':
+            getDeatilsQuery =`
+            (
+                select 
+                  vendor_code as u_id, 
+                  users.cname as u_name, 
+                  users.email as u_email, 
+                  'cdo' as user_type 
+                from 
+                  auth as auth 
+                  left join pa0002 as users on (
+                    users.pernr :: character varying = auth.vendor_code
+                  ) 
+                  where 
+                  department_id = ${USER_TYPE_GRSE_DRAWING} AND internal_role_id = ${ASSIGNER}
+              ) 
+              UNION ALL 
+                (
+                  SELECT 
+                    po.ernam AS u_id, 
+                    user_t.cname AS u_name, 
+                    user_t.email AS u_email,
+                    'do' AS user_type 
+                  FROM 
+                    ekko AS po 
+                    LEFT JOIN pa0002 AS user_t ON (
+                      po.ernam = user_t.pernr :: CHARACTER varying
+                    ) 
+                  where 
+                    po.ebeln = ${valueParameter})`;
+            break;
         default:
-            getDeatilsQuery = 
-            `(
+            getDeatilsQuery =
+                `(
                 SELECT    user_t.pernr       AS u_id,
                           user_t.cname       AS u_name,
                           user_t.email       AS u_email,

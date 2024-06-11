@@ -106,12 +106,9 @@
         ],
         "email_subject": "GATE ENTRY_DOC CREATE",
         "email_heading": "MAIL",
-        "cc_users": [{
-            "u_id": "",
-            "u_email": "qa@grse.co.in",
-            "user_type": "qa",
-            "email_body": "GATE_ENTRY_DOC_CREATE"
-        }],
+        "cc_users": [
+           
+        ],
         "bcc_users": [],
         "data": {}
     },
@@ -156,7 +153,6 @@
                 "user_type": "vendor",
                 "email_body": "ICGRN_DOC_FROM_SAP"
             }
-            
         ],
         "email_subject": "ICGRN DOC FROM SAP",
         "email_heading": "MAIL",
@@ -172,9 +168,44 @@
                 "user_type": "vendor",
                 "email_body": "SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE"
             }
-            
         ],
         "email_subject": "Reminder mail",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "DRAWING_ACKNOWLEDGE_RECEIPT": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "vendor",
+                "email_body": "DRAWING_ACKNOWLEDGE_RECEIPT"
+            }
+        ],
+        "email_subject": "Drawing acknowledge",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "DRAWING_UPLOAD_TO_CDO": {
+        "users": [
+            {
+                "u_id": "",
+                "u_email": "cdo@grse.co.in",
+                "user_type": "cdo_general",
+                "email_body": "DRAWING_UPLOAD_TO_CDO"
+            },
+            {
+                "u_id": "",
+                "u_email": "",
+                "user_type": "cdo",
+                "email_body": "DRAWING_UPLOAD_TO_CDO"
+            }
+        ],
+        "email_subject": "Drawing uplod",
         "email_heading": "MAIL",
         "cc_users": [],
         "bcc_users": [],

@@ -58,22 +58,22 @@ const mailjson = require("../lib/mailConfig.json");
 //     }
 // }
 
-const prepareForEmail = async (eventName, data, userInfo, activity_name) => {
+const sendMail = async (eventName, data, userInfo, activity_name) => {
     try {
         if (!data || !eventName) {
             throw new Error("recipent, email_subject and event required");
         }
         const mailjsonConfig = mailjson[eventName];
         mailjsonConfig.data = data;
-        mailjsonConfig.users = replaceUserValues(userInfo.users || [], mailjsonConfig.users);
-        mailjsonConfig.cc_users = replaceUserValues(userInfo.cc_users || [], mailjsonConfig.cc_users);
+        mailjsonConfig.users = replaceUserValues([...userInfo.users, ...mailjsonConfig.users] || [], mailjsonConfig.users);
+        mailjsonConfig.cc_users = replaceUserValues([...userInfo.cc_users, ...mailjsonConfig.cc_users] || [], mailjsonConfig.cc_users);
         mailjsonConfig.bcc_users = replaceUserValues(userInfo.bcc_users || [], mailjsonConfig.bcc_users);
 
         console.log("mailjsonConfig", mailjsonConfig);
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
     } catch (error) {
-        console.log("prepareForEmail", error.toString(), error.stack);
+        console.log("sendMail", error.toString(), error.stack);
         throw error;
     }
 }
@@ -130,7 +130,7 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
 
         const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
         const response = await query({ query: q, values: val });
-    
+
     } catch (error) {
         console.log("mailInsert function", error.toString());
         throw error;
@@ -165,4 +165,4 @@ const archiveEmails = async (data) => {
 //     }
 // }
 
-module.exports = { mailInsert,  archiveEmails, prepareForEmail };
+module.exports = { mailInsert, archiveEmails, sendMail };

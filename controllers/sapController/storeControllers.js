@@ -7,7 +7,7 @@ const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const Measage = require("../../utils/messages");
 const { poolClient, poolQuery, getQuery, query } = require("../../config/pgDbConfig");
-const { prepareForEmail } = require("../../services/mail.services");
+const { sendMail } = require("../../services/mail.services");
 const { GATE_ENTRY_DOC_CREATE } = require("../../lib/event");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
@@ -79,7 +79,7 @@ const insertGateEntryData = async (req, res) => {
         }
       }
 
-      await sendMail(ITEM_TAB[0]);
+      await handelMail(ITEM_TAB[0]);
       await insertRecurcionFn(payload, index + 1)
     }
 
@@ -110,14 +110,14 @@ const insertGateEntryData = async (req, res) => {
   }
 };
 
-async function sendMail(data) {
+async function handelMail(data) {
   console.log(data);
   let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
   const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
   console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN, mail_details);
   const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
 
-  await prepareForEmail(GATE_ENTRY_DOC_CREATE, dataObj, { }, GATE_ENTRY_DOC_CREATE);
+  await sendMail(GATE_ENTRY_DOC_CREATE, dataObj, { }, GATE_ENTRY_DOC_CREATE);
 }
 
 
