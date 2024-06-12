@@ -10,6 +10,9 @@ const { create_reference_no, get_latest_activity } = require("../../services/po.
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 const { Console } = require("console");
+const { DEMAND_UPLOAD_BY_BEARTH } = require("../../lib/event");
+const { sendMail } = require("../../services/mail.services");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
 
 const insert = async (req, res) => {
@@ -96,7 +99,10 @@ const insert = async (req, res) => {
         const response = await query({ query: q, values: val });
         if (response) {
 
-            // await handleEmail();
+            if (obj.status == SUBMITTED) {
+                 handleEmail(payload);
+            }
+
 
             return resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.status} successfully !`, response, null);
         } else {
@@ -246,8 +252,23 @@ console.log(total_amount_result);
 }
 
 
-async function handleEmail() {
-    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+// async function handleEmail() {
+//     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+// }
+
+async function handleEmail(data) {
+    // Maill trigger to VENDOR.
+
+    try {
+        
+        const getDoQuery = getUserDetailsQuery('vendor', '$1');
+        const doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
+        const dataObj = { ...data };
+        await sendMail(DEMAND_UPLOAD_BY_BEARTH, dataObj, { users: doDetails }, DEMAND_UPLOAD_BY_BEARTH);
+    } catch (error) {
+        console.log("handleEmail", error.toString(), error.stack)
+    }
+
 }
 
 module.exports = { insert, list, getRestAmount }

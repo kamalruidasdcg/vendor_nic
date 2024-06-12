@@ -1,4 +1,4 @@
-const { USER_TYPE_GRSE_DRAWING, ASSIGNER } = require("../lib/constant");
+const { USER_TYPE_GRSE_DRAWING, ASSIGNER, USER_TYPE_GRSE_QAP } = require("../lib/constant");
 
 
 
@@ -73,7 +73,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
 
 
         case 'cdo_and_do':
-            getDeatilsQuery =`
+            getDeatilsQuery = `
             (
                 select 
                   vendor_code as u_id, 
@@ -104,7 +104,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                     po.ebeln = ${valueParameter})`;
             break;
 
-            case 'vendor_by_po' :
+        case 'vendor_by_po':
 
             getDeatilsQuery = `
             (
@@ -116,6 +116,24 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 LEFT JOIN lfa1                          AS vendor_t
                 ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter}
             )`
+            break;
+
+        case 'nodal_officers':
+            getDeatilsQuery = `(select 
+              vendor_code as u_id, 
+              users.cname as u_name, 
+              users.email as u_email, 
+              'nodal_officers' as u_type 
+            from 
+              auth as auth 
+              left join pa0002 as users on (
+                users.pernr :: character varying = auth.vendor_code
+              ) 
+              where 
+              department_id = ${USER_TYPE_GRSE_QAP} AND internal_role_id = ${ASSIGNER}
+          ) `
+
+
             break;
         default:
             getDeatilsQuery =
