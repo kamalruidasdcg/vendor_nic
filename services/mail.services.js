@@ -6,7 +6,7 @@ const { EMAILS, ARCHIVE_EMAILS } = require("../lib/tableName");
 const { generateQuery, getEpochTime, getDateTime, generateQueryForMultipleData } = require("../lib/utils");
 const mailBody = require("../lib/mailBody");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
-const { query } = require("../config/pgDbConfig");
+const { query, getQuery } = require("../config/pgDbConfig");
 const mailjson = require("../lib/mailConfig.json");
 /**
  * Insert mail in to db with new status
@@ -63,13 +63,17 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
         if (!data || !eventName) {
             throw new Error("recipent, email_subject and event required");
         }
+
+        const email_info = await getEmailInfo(eventName);
         const mailjsonConfig = mailjson[eventName];
         mailjsonConfig.data = data;
-        mailjsonConfig.users = replaceUserValues([...userInfo.users, ...mailjsonConfig.users] || [], mailjsonConfig.users);
-        mailjsonConfig.cc_users = replaceUserValues([...userInfo.cc_users, ...mailjsonConfig.cc_users] || [], mailjsonConfig.cc_users);
-        mailjsonConfig.bcc_users = replaceUserValues(userInfo.bcc_users || [], mailjsonConfig.bcc_users);
+        const m_user = userInfo.users || [];
+        mailjsonConfig.users = replaceUserValues(email_info, m_user);
+        // const m_cc_user = userInfo.cc_users || [];
+        // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
+        // const m_bcc_user = userInfo.bcc_users || [];
+        // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
 
-        console.log("mailjsonConfig", mailjsonConfig);
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
     } catch (error) {
@@ -79,20 +83,60 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
 }
 
 
-function replaceUserValues(dataArray, usersArray) {
-    const dataMap = new Map(dataArray.map(user => [user.user_type, user]));
-    return usersArray.map(user => {
-        const matchingData = dataMap.get(user.user_type);
-        if (matchingData) {
-            return {
-                ...user,
-                u_id: matchingData.u_id,
-                u_email: matchingData.u_email
-            };
-        }
-        return user;
-    });
+const getEmailInfo = async (event_name) => {
+    const q =
+        `SELECT e_info.event_name,
+                e_info.u_id,
+                e_info.u_name,
+                e_info.u_type,
+                e_info.u_email,
+                e_body.email_body
+         FROM   email_send_info AS e_info
+                LEFT JOIN email_body AS e_body
+                       ON( e_body.email_body_name = e_info.email_body_name )
+         WHERE  e_info.event_name = $1`;
+    return await getQuery({ query: q, values: [event_name] })
 }
+function replaceUserValues(email_info, m_user) {
+    const result = [];
+    m_user.forEach(darr => {
+        const matchingData = email_info.find(user => user.u_type === darr.u_type);
+        if (matchingData) {
+            result.push({ ...matchingData, u_id: darr.u_id, u_name: darr.u_name, u_email: darr.u_email })
+        }
+    });
+    return result; // Return the updated users array
+}
+
+// function replaceUserValues(users, data_arr) {
+//     users.forEach(user => {
+//         const matchingData = data_arr.find(data => data.u_type === user.u_type);
+//         if (matchingData) {
+//             user.u_id = matchingData.u_id;
+//             user.u_name = matchingData.u_name;
+//             user.u_email = matchingData.u_email;
+//         }
+//     });
+
+//     return users; // Return the updated users array
+// }
+
+
+
+// function replaceUserValues(dataArray, usersArray) {
+//     const dataMap = new Map(dataArray.map(user => [user.user_type, user]));
+//     return usersArray.map(user => {
+//         const matchingData = dataMap.get(user.user_type);
+//         if (matchingData) {
+//             return {
+//                 ...user,
+//                 u_id: matchingData.u_id,
+//                 u_email: matchingData.u_email
+//             };
+//         }
+//         return user;
+//     });
+// }
 
 const mailInsert = async (data, event, activity_name, heading = "") => {
 
@@ -105,8 +149,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             "event_name": event,
             "email_to": "",
             "email_subject": data.email_subject || "",
-            "email_cc": data.email_cc || "",
-            "email_bcc": data.email_bcc || "",
+            "email_cc": "",
+            "email_bcc": "",
             "email_body": "",
             "email_send_on": now.dateTime,
             "created_on": now.date,
@@ -118,18 +162,16 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             "retry_count": MAIL_SEND_DEFAULT_RETRY_COUNT
         }
 
-        // console.log("mailBody[event]", mailBody[event]);
-
         const mailArr = data.users.map((el) => ({
             ...mailPayload,
             email_to: el.u_email,
-            email_cc: data.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
-            email_bcc: data.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
-            email_body: mailBody[event] ? mailBody[event].replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
+            email_cc: el.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
+            email_bcc: el.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
+            email_body: el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) || "Mail from GRSE"
         }));
 
-        const { q, val } = await generateQueryForMultipleData(mailArr, 't_email_to_send', ['id']);
-        const response = await query({ query: q, values: val });
+        const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, ['id']);
+        await query({ query: q, values: val });
 
     } catch (error) {
         console.log("mailInsert function", error.toString());

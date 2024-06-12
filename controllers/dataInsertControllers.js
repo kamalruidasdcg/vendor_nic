@@ -100,7 +100,7 @@ const insertPOData = async (req, res) => {
             if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
 
                 try {
-                    await handelMail(insertPayload);
+                    handelMail(insertPayload);
                     responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
                 } catch (error) {
                     responseSend(res, "F", 201, "Data insert but mail not send !!", error.toString(), null);
@@ -167,7 +167,12 @@ async function handelMail(data) {
 
         let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
-        const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name }
+        const dataObj = { ...data, 
+            purchasing_doc_no: data.EBELN, 
+            vendor_name: mail_details[0]?.u_name, 
+            do_name: mail_details[1]?.u_name,
+            upload_date: new Date().toDateString()
+         }
         await sendMail(PO_UPLOAD_IN_LAN, dataObj, { users: mail_details }, PO_UPLOAD_IN_LAN);
     } catch (error) {
         console.log(error.toString(), error.stack);
