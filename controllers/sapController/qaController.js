@@ -8,7 +8,7 @@ const { qalsPayload, qavePayloadFn } = require('../../services/sap.qa.services')
 const { poolClient, poolQuery, getQuery } = require('../../config/pgDbConfig');
 const Message = require("../../utils/messages");
 const { ICGRN_DOC_FROM_SAP } = require('../../lib/event');
-const { prepareForEmail } = require('../../services/mail.services');
+const { sendMail } = require('../../services/mail.services');
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -59,14 +59,14 @@ const qals = async (req, res) => {
 
 
 
-async function sendMail(data) {
+async function handelMail(data) {
 
     try {
         let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
         const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
         console.log("dataObj", dataObj, mail_details);
-        await prepareForEmail(ICGRN_DOC_FROM_SAP, dataObj, { users: mail_details }, ICGRN_DOC_FROM_SAP);
+        await sendMail(ICGRN_DOC_FROM_SAP, dataObj, { users: mail_details }, ICGRN_DOC_FROM_SAP);
     } catch (error) {
         console.log(error.toString(), error.stack);
     }

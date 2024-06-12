@@ -45,8 +45,12 @@ const SENDMAIL = require("../../lib/mailSend");
 const {
   DRAWING_SUBMIT_BY_VENDOR,
   DRAWING_SUBMIT_BY_GRSE,
+  DRAWING_UPLOAD_TO_CDO,
+  DRAWING_ACKNOWLEDGE_RECEIPT,
 } = require("../../lib/event");
 const { Console } = require("console");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
 
 // add new post
 function poTypeCheck(materialData) {
@@ -264,6 +268,11 @@ const submitDrawing = async (req, res) => {
       const response = await poolQuery({ client, query: q, values: val });
 
       if (payload.status === APPROVED) {
+
+        // CDO APPROVED DRAWING . . 
+
+        sendMailToVendor(payload)
+
         const actual_subminission = await setActualSubmissionDate(
           payload,
           "02",
@@ -377,5 +386,37 @@ async function poContactDetails(purchasing_doc_no) {
 
   return result;
 }
+
+
+
+
+async function sendMailToCDOandDO(data) {
+
+  try {
+
+      let vendorDetails= getUserDetailsQuery('cdo_and_do', '$1');
+      const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
+      const dataObj = { ...data };
+      await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
+  } catch (error) {
+      console.log(error.toString(), error.stack);
+  }
+}
+async function sendMailToVendor(data) {
+
+  try {
+
+      let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
+      const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
+      const dataObj = { ...data };
+      await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
+  } catch (error) {
+      console.log(error.toString(), error.stack);
+  }
+}
+
+
+
+
 
 module.exports = { submitDrawing, list };

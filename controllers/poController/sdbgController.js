@@ -1433,7 +1433,6 @@ const getCurrentAssignee = async (req, res) => {
     } else {
       resSend(res, true, 200, "no record found", "not assigend.", null);
     }
-
   } catch (error) {
     console.error("Error executing the query:", error.message);
     return resSend(res, false, 500, "Internal Server Error", error, null);
