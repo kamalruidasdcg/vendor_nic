@@ -1470,9 +1470,9 @@ const getCurrentAssignee = async (req, res) => {
     });
 
     if(result.length > 0) {
-      resSend(res, true, 200, "BG fetched successfully", result[0].assigned_to, null);
+      resSend(res, true, 200, "assigne fetched successfully", result[0], null);
     } else {
-      resSend(res, true, 200, "no record found", null, null);
+      resSend(res, true, 200, "no record found", "not assigend.", null);
     }
     
   } catch (error) {
