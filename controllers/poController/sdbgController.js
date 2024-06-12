@@ -797,38 +797,32 @@ const sdbgUpdateByFinance = async (req, res) => {
       }
       const action_type_with_vendor_code = await get_action_type_with_vendor_code(obj.purchasing_doc_no);
       if (tokenData.internal_role_id == ASSIGNER && obj.assigned_to && obj.status == ASSIGNED) {
-        
-        // console.log(aa);
-        // console.log(11111111111111);
-        
+
         const insertPayloadForSdbg = {
-          
-          //...sdbgDataResult,
           reference_no: "SDBG ASSIGNED",
           purchasing_doc_no: obj.purchasing_doc_no,
           remarks: obj.remarks,
           status: obj.status,
           action_type: action_type_with_vendor_code[0].action_type,
           vendor_code: action_type_with_vendor_code[0].vendor_code,
-          assigned_from:tokenData.vendor_code,
-          assigned_to:obj.assigned_to,
+          assigned_from: tokenData.vendor_code,
+          assigned_to: obj.assigned_to,
           last_assigned: 1,
           created_at: getEpochTime(),
           created_by_name: "finance dept",
           created_by_id: tokenData.vendor_code,
           updated_by: "GRSE",
         };
-        console.log(insertPayloadForSdbg);
-       
-        let {q, val}= generateQuery(INSERT, SDBG, insertPayloadForSdbg);
-        console.log(q);
+        //console.log(insertPayloadForSdbg);
+
+        let { q, val } = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+
         let count_res = await poolQuery({
           client,
           query: q,
           values: val,
         });
-        console.log(count_res);
-        console.log(11111111111111);
+
         const update_assign_to = `UPDATE ${SDBG} SET last_assigned = 0 WHERE purchasing_doc_no = $1 AND assigned_to != $2`;
         let update_assign_touery = await poolQuery({
           client,
@@ -844,14 +838,12 @@ const sdbgUpdateByFinance = async (req, res) => {
           null,
           null
         );
-       // return;
 
       }
-      // console.log(123456);
-      // return;
+
       if (tokenData.internal_role_id == STAFF) {
         const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${SDBG} WHERE purchasing_doc_no = $1 AND assigned_to = $2 AND last_assigned = $3`;
-        
+
         const check_assign_to_query = await poolQuery({
           client,
           query: check_assign_to_str,
@@ -875,7 +867,6 @@ const sdbgUpdateByFinance = async (req, res) => {
           );
         }
       }
-    //  obj.reference_no = 'SD-1717749822630-7545';
 
       const check = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4 OR status = $5)`;
       const resAssigneQry = await poolQuery({
@@ -883,12 +874,11 @@ const sdbgUpdateByFinance = async (req, res) => {
         query: check,
         values: [obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED, RETURN_TO_DO],
       });
-      //console.log(resAssigneQry);
-      if(resAssigneQry[0].count_val > 0) {
+console.log('resAssigneQry[0].count_val');
+console.log(resAssigneQry[0].count_val);
+      if (resAssigneQry[0].count_val > 0) {
         return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
       }
-
-      console.log(9999999999999);
 
       // if (
       //   tokenData.internal_role_id == ASSIGNER &&
@@ -908,13 +898,13 @@ const sdbgUpdateByFinance = async (req, res) => {
 
 
       const check_it_forward_to_finance = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND status = $2`;
-      
+
       const result = await poolQuery({
         client,
         query: check_it_forward_to_finance,
         values: [obj.purchasing_doc_no, FORWARD_TO_FINANCE],
       });
-     
+
       if (result[0].count_val == 0) {
         return resSend(
           res,
@@ -929,53 +919,44 @@ const sdbgUpdateByFinance = async (req, res) => {
       // const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE reference_no = ? AND purchasing_doc_no = ? ORDER BY id DESC LIMIT 1`;
       // let sdbgResult = await query({ query: Q, values: [obj.reference_no, obj.purchasing_doc_no] });
 
-     // let sdbgDataResult = GET_LATEST_SDBG[0]; // sdbgResult[0];
+      // let sdbgDataResult = GET_LATEST_SDBG[0]; // sdbgResult[0];
       // console.log("sdbgDataResult");
       // console.log(sdbgDataResult);
       // return;
-      let q = `SELECT count(actualSubmissionDate) as count FROM ${ACTUAL_SUBMISSION_DB} WHERE purchasing_doc_no = $1 AND milestoneId = $2`;
-      let count_res = await poolQuery({
-        client,
-        query: q,
-        values: [obj.purchasing_doc_no, 1],
-      });
-      console.log(count_res);
-      if (count_res[0].count > 0) {
-        return resSend(
-          res,
-          false,
-          201,
-          "actualSubmissionDate already preasent in the table!!",
-          null,
-          null
-        );
-      }
+      // let q = `SELECT count(actualSubmissionDate) as count FROM ${ACTUAL_SUBMISSION_DB} WHERE purchasing_doc_no = $1 AND milestoneId = $2`;
+      // let count_res = await poolQuery({
+      //   client,
+      //   query: q,
+      //   values: [obj.purchasing_doc_no, 1],
+      // });
+      // console.log(count_res);
+      // if (count_res[0].count > 0) {
+      //   return resSend(
+      //     res,
+      //     false,
+      //     201,
+      //     "actualSubmissionDate already preasent in the table!!",
+      //     null,
+      //     null
+      //   );
+      // }
 
       const insertPayloadForSdbg = {
-          reference_no: obj.reference_no,
-          purchasing_doc_no: obj.purchasing_doc_no,
-          remarks: obj.remarks,
-          status: obj.status,
-          action_type: action_type_with_vendor_code[0].action_type,
-          vendor_code: action_type_with_vendor_code[0].vendor_code,
-         
-          last_assigned: 0,
-          created_at: getEpochTime(),
-          created_by_name: "finance dept",
-          created_by_id: tokenData.vendor_code,
-          updated_by: "GRSE",
+        reference_no: obj.reference_no,
+        purchasing_doc_no: obj.purchasing_doc_no,
+        remarks: obj.remarks,
+        status: obj.status,
+        action_type: action_type_with_vendor_code[0].action_type,
+        vendor_code: action_type_with_vendor_code[0].vendor_code,
+
+        last_assigned: 0,
+        created_at: getEpochTime(),
+        created_by_name: "finance dept",
+        created_by_id: tokenData.vendor_code,
+        updated_by: "GRSE",
       };
-      console.log("####################################");
-      console.log(insertPayloadForSdbg);
-      //return;
 
       const insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
-
-     // console.log(insertsdbg_q);
-      // let sdbgQuery = await query({
-      //   query: insertsdbg_q["q"],
-      //   values: insertsdbg_q["val"],
-      // });
 
       let sdbgQuery = await poolQuery({
         client,
@@ -983,27 +964,32 @@ const sdbgUpdateByFinance = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-      console.log(sdbgQuery);
-//return;
-
-      // console.log(sdbgDataResult);
-      // console.log("ACCEPTED1");
-      // console.log(insertPayloadForSdbg);
-      //return;
       if (
         insertPayloadForSdbg.status == APPROVED &&
         (action_type_with_vendor_code[0].action_type == ACTION_SDBG ||
           action_type_with_vendor_code[0].action_type == ACTION_IB ||
           action_type_with_vendor_code[0].action_type == ACTION_DD)
       ) {
-        console.log("ACCEPTED2");
-        // const actual_subminission = await setActualSubmissionDateSdbg(insertPayloadForSdbg, tokenData);
+
         const actual_subminission = await setActualSubmissionDate(
           insertPayloadForSdbg,
           "01",
           tokenData,
           SUBMITTED
         );
+        if (actual_subminission === false) {
+          return resSend(
+            res,
+            false,
+            200,
+            `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `,
+            null,
+            null
+          );
+        }
+      }
+      if (insertPayloadForSdbg.status == APPROVED || insertPayloadForSdbg.status == "HOLD") {
+
         try {
           const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
           let get_sdbg_entry_data = await poolQuery({
@@ -1012,59 +998,33 @@ const sdbgUpdateByFinance = async (req, res) => {
             values: [obj.purchasing_doc_no, obj.reference_no],
           });
 
-          const get_po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE EBELN = $1`;
+          const get_po_date_query = `SELECT aedat FROM ${EKKO} WHERE EBELN = $1`;
           let get_po_date_data = await poolQuery({
             client,
             query: get_po_date_query,
             values: [obj.purchasing_doc_no],
           });
-          // console.log('get_po_date_query_____________');
-          // console.log(get_po_date_data);
-          const utcTimeString = get_po_date_data[0].AEDAT.toString();
-          const date = new Date(utcTimeString);
-          //console.log(date);
-          const yyyyMMdd = date.toISOString().slice(0, 10);
-
-          let po_date = yyyyMMdd.split("-").join("");
 
           get_sdbg_entry_data[0].po_date = getDateString(
-            get_po_date_data[0].AEDAT
+            get_po_date_data[0].aedat
           );
+          if (insertPayloadForSdbg.status == "HOLD") {
+            get_sdbg_entry_data[0].confirmation = `No`;
+          }
 
           await sendBgToSap(get_sdbg_entry_data[0]);
         } catch (error) {
           console.error(error);
         }
-
-        if (actual_subminission === false) {
-          return resSend(
-            res,
-            false,
-            200,
-            `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `,
-            null,
-            null
-          );
-        }
-
-        if (actual_subminission === false) {
-          return resSend(
-            res,
-            false,
-            200,
-            `error into data insertion taable ${ACTUAL_SUBMISSION_DB} `,
-            null,
-            null
-          );
-        }
       }
-      console.log("ACCEPTED3");
+
+
       return resSend(
         res,
         true,
         200,
         `This po is ${obj.status}.`,
-        sdbgQuery.rows[0],
+        sdbgQuery,
         null
       );
     } catch (error) {
@@ -1105,7 +1065,7 @@ const assigneeList = async (req, res) => {
          t1.dept_id = $1 AND t1.internal_role_id = $2`;
 
   const result = await getQuery({ query: sdbgQuery, values: [FINANCE, 2] });
-console.table(result);
+  console.table(result);
   return resSend(
     res,
     true,
@@ -1160,9 +1120,8 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${
-                  payload.purchasing_doc_no
-                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
+      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -1431,7 +1390,7 @@ async function handleExtension(
 
 async function GetspecificBG(req, res) {
   const { reference_no, purchasing_doc_no } = req.body;
- 
+
   if (reference_no && purchasing_doc_no) {
     try {
       let filterdata = `SELECT * FROM sdbg_entry WHERE reference_no = $1 AND purchasing_doc_no = $2`;
@@ -1439,7 +1398,7 @@ async function GetspecificBG(req, res) {
         query: filterdata,
         values: [reference_no, purchasing_doc_no],
       });
- 
+
       resSend(res, true, 200, "BG fetched successfully", rows, null);
     } catch (error) {
       console.error("Error executing the query:", error.message);
@@ -1466,15 +1425,15 @@ const getCurrentAssignee = async (req, res) => {
     console.log(filterdata);
     const result = await getQuery({
       query: filterdata,
-      values: [req.query.poNo,1],
+      values: [req.query.poNo, 1],
     });
 
-    if(result.length > 0) {
+    if (result.length > 0) {
       resSend(res, true, 200, "assigne fetched successfully", result[0], null);
     } else {
       resSend(res, true, 200, "no record found", "not assigend.", null);
     }
-    
+
   } catch (error) {
     console.error("Error executing the query:", error.message);
     return resSend(res, false, 500, "Internal Server Error", error, null);
