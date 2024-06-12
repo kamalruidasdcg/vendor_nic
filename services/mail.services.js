@@ -68,12 +68,16 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
         const mailjsonConfig = mailjson[eventName];
         mailjsonConfig.data = data;
         const m_user = userInfo.users || [];
+        console.log("userInfo.users", userInfo.users);
         mailjsonConfig.users = replaceUserValues(email_info, m_user);
         // const m_cc_user = userInfo.cc_users || [];
         // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
         // const m_bcc_user = userInfo.bcc_users || [];
         // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
+        console.log("mailjsonConfig", mailjsonConfig);
 
+        if(!mailjsonConfig.users.length) return;
+        
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
     } catch (error) {
@@ -98,14 +102,17 @@ const getEmailInfo = async (event_name) => {
     return await getQuery({ query: q, values: [event_name] })
 }
 function replaceUserValues(email_info, m_user) {
-    const result = [];
+    let result = [];
     m_user.forEach(darr => {
         const matchingData = email_info.find(user => user.u_type === darr.u_type);
         if (matchingData) {
             result.push({ ...matchingData, u_id: darr.u_id, u_name: darr.u_name, u_email: darr.u_email })
         }
     });
-    return result; // Return the updated users array
+    const u_typeArr = new Set([...result.map((inf) => inf.u_type)]);
+    const restOfUsers = email_info.filter((info) => !u_typeArr.has(info.u_type));
+    result = result.concat(restOfUsers)
+    return result;
 }
 
 // function replaceUserValues(users, data_arr) {

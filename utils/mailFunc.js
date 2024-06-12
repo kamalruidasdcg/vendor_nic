@@ -31,7 +31,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                         vendor_t.email                AS u_email,
                         '${type}'                     AS u_type
                     FROM      lfa1   AS vendor_t
-                     where  vendor_t.lifnr = ${valueParameter};
+                     where  vendor_t.lifnr = ${valueParameter}
                 )`;
 
             break;
@@ -43,7 +43,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                               user_t.email       AS u_email,
                               '${type}'               AS u_type
                     FROM pa0002             AS user_t
-                    user_t.pernr = ${valueParameter};
+                    user_t.pernr = ${valueParameter}
                 )`
             break;
 
