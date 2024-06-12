@@ -77,7 +77,7 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
         console.log("mailjsonConfig", mailjsonConfig);
 
         if(!mailjsonConfig.users.length) return;
-        
+
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
     } catch (error) {
@@ -176,6 +176,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             email_bcc: el.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
             email_body: el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) || "Mail from GRSE"
         }));
+
+        console.log("mailArr", mailArr);
 
         const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, ['id']);
         await query({ query: q, values: val });

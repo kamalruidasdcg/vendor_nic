@@ -103,6 +103,20 @@ const getUserDetailsQuery = (type, valueParameter) => {
                   where 
                     po.ebeln = ${valueParameter})`;
             break;
+
+            case 'vendor_by_po' :
+
+            getDeatilsQuery = `
+            (
+                SELECT    po.lifnr            AS u_id,
+                vendor_t.name1                AS u_name,
+                vendor_t.email                AS u_email,
+                          'vendor'                      AS u_type
+                FROM      ekko                          AS po
+                LEFT JOIN lfa1                          AS vendor_t
+                ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter}
+            )`
+            break;
         default:
             getDeatilsQuery =
                 `(

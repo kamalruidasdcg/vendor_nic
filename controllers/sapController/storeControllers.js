@@ -61,9 +61,9 @@ const insertGateEntryData = async (req, res) => {
         // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
       }
 
-      
+
       if (ITEM_TAB && ITEM_TAB?.length) {
-        
+
         try {
           const zmilestonePayload = await gateEntryDataPayload(ITEM_TAB);
           // console.log('ekpopayload', zmilestonePayload);
@@ -111,13 +111,19 @@ const insertGateEntryData = async (req, res) => {
 };
 
 async function handelMail(data) {
-  console.log(data);
-  let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
-  const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
-  console.log("vendorAndDoDetails", vendorAndDoDetails, data.EBELN, mail_details);
-  const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
 
-  await sendMail(GATE_ENTRY_DOC_CREATE, dataObj, { }, GATE_ENTRY_DOC_CREATE);
+  try {
+
+
+    console.log(data);
+    let vendorDetails = getUserDetailsQuery('vendor_by_po', '$1');
+    const mail_details = await getQuery({ query: vendorDetails, values: [data.EBELN] });
+    console.log("vendorAndDoDetails", vendorDetails, data.EBELN);
+    const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
+    await sendMail(GATE_ENTRY_DOC_CREATE, dataObj, { users: mail_details }, GATE_ENTRY_DOC_CREATE);
+  } catch (error) {
+    console.log('handelMail', error.toString());
+  }
 }
 
 

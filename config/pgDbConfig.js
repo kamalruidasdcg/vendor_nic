@@ -28,7 +28,7 @@ const query = async ({ query, values }) => {
     } catch (error) {
         // console.log("error", error.toString())
         // return error;
-        throw new Error(`Error executing query: ${error}`);
+        throw new Error(`Error executing query (query fn): ${error}`);
     } finally {
         // Consider using pool.end() for graceful shutdown on application exit
         // but not necessary for each query execution
@@ -43,7 +43,7 @@ const getQuery = async ({ query, values }) => {
         return rows;
     } catch (error) {
         // return error;
-        throw new Error(`Error fetching rows: ${error.message}`);
+        throw new Error(`Error fetching rows (getQuery fn): ${error.message}`);
     } finally {
         // Consider using pool.end() for graceful shutdown on application exit
         // but not necessary for each query execution
@@ -67,7 +67,7 @@ const poolQuery = async ({ client, query, values }) => {
         const { rows } = await client.query(query, values);
         return rows;
     } catch (error) {
-        throw new Error(`Error executing query: ${error.message}`);
+        throw new Error(`Error executing query(poolQuery fn): ${error.message}`);
     }
 }
 
