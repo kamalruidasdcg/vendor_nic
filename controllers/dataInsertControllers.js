@@ -6,12 +6,12 @@ const { EKKO } = require("../lib/tableName");
 const { generateQuery, formatDate, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../lib/utils");
 // const mysql = require("mysql2/promise");
 // const { mailTrigger } = require("./sendMailController");
-const { PO_UPLOAD_IN_LAN_NIC } = require("../lib/event");
+const { PO_UPLOAD_IN_LAN_NIC, PO_UPLOAD_IN_LAN } = require("../lib/event");
 const { ekpoTablePayload, zpo_milestonePayload, archivePoHeaderPayload, archivePoLineItemsPayload } = require("../services/sap.po.services");
 const { poolClient, getQuery } = require("../config/pgDbConfig");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { query } = require("../config/dbConfig");
-const { prepareForEmail } = require("../services/mail.services");
+const { sendMail } = require("../services/mail.services");
 
 // require("dotenv").config();
 
@@ -100,7 +100,7 @@ const insertPOData = async (req, res) => {
             if (insertPayload.LIFNR && transactionSuccessful === TRUE) {
 
                 try {
-                    await sendMail(insertPayload);
+                    handelMail(insertPayload);
                     responseSend(res, "S", 200, "data insert succeed with mail trigere", [], null);
                 } catch (error) {
                     responseSend(res, "F", 201, "Data insert but mail not send !!", error.toString(), null);
@@ -161,14 +161,19 @@ const insertPOData = async (req, res) => {
 
 
 
-async function sendMail(data) {
+async function handelMail(data) {
 
     try {
 
         let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
-        const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name }
-        await prepareForEmail("PO_UPLOAD_IN_LAN", dataObj, { users: mail_details }, "PO_UPLOAD_IN_LAN");
+        const dataObj = { ...data, 
+            purchasing_doc_no: data.EBELN, 
+            vendor_name: mail_details[0]?.u_name, 
+            do_name: mail_details[1]?.u_name,
+            upload_date: new Date().toDateString()
+         }
+        await sendMail(PO_UPLOAD_IN_LAN, dataObj, { users: mail_details }, PO_UPLOAD_IN_LAN);
     } catch (error) {
         console.log(error.toString(), error.stack);
     }

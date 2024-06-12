@@ -5,7 +5,7 @@ const { TNC_MINUTE_UPLOAD } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const { TNC_MINUTES } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
-const { prepareForEmail } = require("../services/mail.services");
+const { sendMail } = require("../services/mail.services");
 
 const uploadImage = (req, res) => {
   // Handle Image Upload
@@ -94,7 +94,7 @@ const uploadTNCMinuts = async (req, res) => {
     console.log("q, val ", q, val);
 
     if (result.rowCount > 0) {
-      await sendMail(payload);
+      await handelMail(payload);
       resSend(res, true, 200, "file uploaded!", fileData, null);
 
     } else {
@@ -109,9 +109,9 @@ const uploadTNCMinuts = async (req, res) => {
 
 
 
-async function sendMail(payload) {
+async function handelMail(payload) {
   console.log("TNC_MINUTE_UPLOAD", TNC_MINUTE_UPLOAD, TNC_MINUTE_UPLOAD);
-  await prepareForEmail(TNC_MINUTE_UPLOAD, payload, {})
+  await sendMail(TNC_MINUTE_UPLOAD, payload, {}, TNC_MINUTE_UPLOAD)
 }
 
 

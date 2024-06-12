@@ -1,7 +1,7 @@
 const { query, getQuery } = require("../../config/pgDbConfig");
 const { VENDOR_REMINDER_EMAIL, SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE } = require("../../lib/event");
 const { resSend } = require("../../lib/resSend");
-const { prepareForEmail } = require("../../services/mail.services");
+const { sendMail } = require("../../services/mail.services");
 const { mailTrigger } = require("../sendMailController");
 
 const sendReminderMail = async (req, res) => {
@@ -12,7 +12,7 @@ const sendReminderMail = async (req, res) => {
         for (const data of timeLineData) {
             console.log("data", data);
             const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, user_type: data.user_type }] }
-            await prepareForEmail(SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE,
+            await sendMail(SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE,
                 data,
                 obj,
                 SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE)
