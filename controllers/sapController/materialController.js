@@ -5,8 +5,11 @@ const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryForMultipleData, generateInsertUpdateQuery } = require("../../lib/utils");
 const { getFilteredData } = require('../genralControlles');
 const { msegPayload, makfPayload } = require("../../services/sap.material.services");
-const { poolQuery, poolClient } = require('../../config/pgDbConfig');
+const { poolQuery, poolClient, getQuery } = require('../../config/pgDbConfig');
 const Message = require('../../utils/messages');
+const { getUserDetailsQuery } = require('../../utils/mailFunc');
+const { sendMail } = require('../../services/mail.services');
+const { GRN_DOC_GENERATE_LAN } = require('../../lib/event');
 
 
 const makt = async (req, res) => {
@@ -100,17 +103,37 @@ const mseg = async (req, res) => {
             const ekkoTableInsert = await generateQueryForMultipleData(payloadObj, "mseg", ["MBLNR", "MJAHR", "ZEILE"]);
             const response = await poolQuery({ client, query: ekkoTableInsert.q, values: ekkoTableInsert.val });
             responseSend(res, "S", 200, "Data inserted successfully !!", response, null);
+            handelMail(payloadObj[0]);
         } catch (err) {
-            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, err, null);
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, err.toString(), null);
         } finally {
             client.release();
         }
     } catch (error) {
-        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null)
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.toString(), null)
     }
 
 
 };
+
+
+async function handelMail(data) {
+
+    try {
+
+
+        let vendorAndDoDetails = getUserDetailsQuery('vendor', '$1');
+        const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.LIFNR] });
+        console.log("mail_details", mail_details);
+        const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
+
+        console.log("dataObj", dataObj, mail_details);
+        await sendMail(GRN_DOC_GENERATE_LAN, dataObj, { users: mail_details }, GRN_DOC_GENERATE_LAN);
+    } catch (error) {
+        console.log("handelMail", error.toString(), error.stack);
+    }
+}
+
 const mkpf = async (req, res) => {
 
     try {

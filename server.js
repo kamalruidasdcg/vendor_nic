@@ -27,14 +27,14 @@ const { YES } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
 const { syncCron, syncFileCron } = require("./controllers/syncControllers");
 
-// const task = cron.schedule('*/1 * * * *', () => {
-//   console.log('running a task every two minutes');
-//   mailSentCornJob()
-// }, {
-//   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
-// });
+const task = cron.schedule('*/1 * * * *', () => {
+  console.log('running a task every two minutes');
+  mailSentCornJob()
+}, {
+  scheduled: process.env.MAIL_TURN_ON === YES ? true : false
+});
 
-// app.use(apiLog);
+app.use(apiLog);
 
 // use routes
 app.use("/api/v1", allRoutes);

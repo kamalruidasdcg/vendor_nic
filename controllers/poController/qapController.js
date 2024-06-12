@@ -35,7 +35,7 @@ const {
   QAP_ASSIGN_BY_GRSE,
   QAP_APPROVED_BY_GRSE,
 } = require("../../lib/event");
-const { mailTrigger } = require("../sendMailController");
+// const { mailTrigger } = require("../sendMailController");
 const { deptLogEntry } = require("../../log/deptActivities");
 
 // add new post
@@ -88,27 +88,36 @@ const submitQAP = async (req, res) => {
       let message = ``;
 
       // Check if already accepted/rejected/approved and if GRSE
-      if (tokenData?.user_type !== 1 && payload.status !== "ASSIGNED") {
-        const GET_LATEST_QA = await get_latest_QA_with_reference(
-          payload.purchasing_doc_no,
-          payload.reference_no
-        );
-        console.log("###################");
-        console.log(GET_LATEST_QA);
-        console.log("**************");
-        if (
-          GET_LATEST_QA[0].status == APPROVED ||
-          GET_LATEST_QA[0].status == REJECTED
-        ) {
-          return resSend(
-            res,
-            false,
-            200,
-            `The QA is already ${GET_LATEST_QA[0].status}.`,
-            null,
-            null
-          );
+
+      if (tokenData?.user_type !== USER_TYPE_VENDOR && payload.status !== "ASSIGNED") {
+        
+        if(!payload.reference_no || payload.reference_no == "") {
+          return resSend(res, false, 200, "reference_no is mandotory!", null, null);
         }
+        let count_val = await checkIsApprovedOrRejected(client, purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
+        if (count_val > 0) {
+          return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+        }
+        
+          // const GET_LATEST_QA = await get_latest_QA_with_reference(
+        //   client,
+        //   payload.purchasing_doc_no,
+        //   payload.reference_no
+        // );
+        // console.log("###################");
+        // console.log(GET_LATEST_QA);
+        // console.log("**************");
+//         const checkIsApprovedOrRejected = `SELECT COUNT(status) AS count_val FROM qap_submission WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
+//         const resAssigneQry = await poolQuery({
+//           client,
+//           query: checkIsApprovedOrRejected,
+//           values: [purchasing_doc_no, payload.reference_no, APPROVED, REJECTED],
+//         });
+// //console.log(resAssigneQry);
+//        // return;
+//         if (resAssigneQry[0].count_val > 0) {
+//           return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+//         }
       }
 
       // if (
@@ -247,6 +256,15 @@ const submitQAP = async (req, res) => {
       // }
 
       if (tokenData.user_type === USER_TYPE_VENDOR) {
+
+        if(payload.reference_no || payload.reference_no != "") {
+          let count_val = await checkIsApprovedOrRejected(client, purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
+          if (count_val > 0) {
+            return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+          }
+        }
+        
+
         const reference_no = (payload.reference_no && payload.reference_no != "") ? payload.reference_no : await create_reference_no("QAP", tokenData.vendor_code);
         // const reference_no = await create_reference_no(
         //   "QAP",
@@ -328,7 +346,7 @@ const submitQAP = async (req, res) => {
 
       const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
       const response = await poolQuery({ client, query: q, values: val });
-      let checkAS = checkActualSub(payload.purchasing_doc_no);
+      let checkAS = await checkActualSub(payload.purchasing_doc_no,client);
       if (checkAS) {
         if (insertObj.status === APPROVED) {
           const actual_subminission = await setActualSubmissionDate(
@@ -361,6 +379,21 @@ const submitQAP = async (req, res) => {
     resSend(res, false, 500, "error in db conn!", error, "");
   }
 };
+
+const checkIsApprovedOrRejected = async (client, purchasing_doc_no, reference_no, status1, status2) => {
+
+        const check = `SELECT COUNT(status) AS count_val FROM qap_submission WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
+        const resAssigneQry = await poolQuery({
+          client,
+          query: check,
+          values: [purchasing_doc_no, reference_no, status1, status2],
+        });
+        //console.log(resAssigneQry);
+       return resAssigneQry[0].count_val;
+        // if (resAssigneQry[0].count_val > 0) {
+        //   return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+        // }
+}
 
 const getQAPData = async (getQuery, purchasing_doc_no, drawingStatus) => {
   // const Q = `SELECT purchasing_doc_no FROM ${QAP_SUBMISSION} WHERE purchasing_doc_no = ? AND status = ?`;
@@ -486,18 +519,15 @@ const internalDepartmentList = async (req, res) => {
 const internalDepartmentEmpList = async (req, res) => {
   const sub_dept_id = req.query.sub_dept_id;
   try {
-    const q = `SELECT t1.emp_id, t1. sub_dept_name, t1.dept_name, t2.CNAME as empName, t3.USRID_LONG as empEmail
+    const q = `SELECT t1.emp_id, t1. sub_dept_name, t1.dept_name, t2.cname as empName
 	FROM emp_department_list 
     	AS t1 
       LEFT JOIN 
       	pa0002 
        AS t2 
        ON 
-       	t1.emp_id = t2.PERNR 
-       LEFT JOIN pa0105 
-       	AS t3 
-       ON 
-       (t3.PERNR = t2.PERNR AND t3.SUBTY = '0030')
+       	t1.emp_id = t2.PERNR :: character varying
+      
         WHERE 
         t1.sub_dept_id = $1`;
 
@@ -578,7 +608,7 @@ const mailSendToAssignee = async (payload) => {
   payload.delingOfficerName = payload.assigned_from_name;
   payload.mailSendTo = payload.assigned_from_email;
 
-  await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+  // await mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 };
 
 const mailSendToAssigneeAndStaff = async (payload) => {
@@ -592,10 +622,10 @@ const mailSendToAssigneeAndStaff = async (payload) => {
   const pl_2 = { ...payload };
 
   // await mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR);
-  await Promise.all([
-    mailTrigger(pl_1, QAP_SUBMIT_BY_VENDOR),
-    mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR),
-  ]);
+  // await Promise.all([
+  //   mailTrigger(pl_1, QAP_SUBMIT_BY_VENDOR),
+  //   mailTrigger(pl_2, QAP_SUBMIT_BY_VENDOR),
+  // ]);
 };
 
 const mailSendToStaffAndVendor = async (payload) => {
@@ -619,10 +649,10 @@ const mailSendToStaffAndVendor = async (payload) => {
 
   // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
 
-  await Promise.all([
-    mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE),
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
-  ]);
+  // await Promise.all([
+  //   mailTrigger({ ...payload }, QAP_SUBMIT_BY_GRSE),
+  //   mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
+  // ]);
 };
 
 const mailSendToAssigneeAndVendor = async (payload) => {
@@ -646,10 +676,10 @@ const mailSendToAssigneeAndVendor = async (payload) => {
   const pl_2 = { ...payload };
   // await mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE);
 
-  await Promise.all([
-    mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE),
-    mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
-  ]);
+  // await Promise.all([
+  //   mailTrigger({ ...payload }, QAP_APPROVED_BY_GRSE),
+  //   mailTrigger({ ...payload }, QAP_ASSIGN_BY_GRSE),
+  // ]);
 };
 
 const mailSendToVendor = async (payload) => {
@@ -673,7 +703,7 @@ const mailSendToVendor = async (payload) => {
   ];
   const log = await deptLogEntry(logPayload);
 
-  mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
+  // mailTrigger({ ...payload }, QAP_SUBMIT_BY_VENDOR);
 };
 
 async function getMailIds(purchasing_doc_no, status) {
@@ -908,8 +938,10 @@ async function insertQapSave(req, res) {
 
     const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
     const response = await getQuery({ query: q, values: val });
+    
     return resSend(res, true, 200, "Data inserted.", response, null);
   } catch (error) {
+    console.log(error);
     return resSend(res, false, 400, "error.", error, null);
   }
 }
@@ -968,12 +1000,13 @@ async function deleteQapSave(req, res) {
 }
 
 const get_latest_QA_with_reference = async (
+  client,
   purchasing_doc_no,
   reference_no
 ) => {
   const GET_LATEST_QA_query = `SELECT file_name,file_path,action_type,vendor_code,assigned_from,assigned_to,created_at,status FROM qap_submission WHERE purchasing_doc_no = $1 and reference_no = $2 ORDER BY qap_submission.created_at DESC LIMIT 1`;
 
-  const result = await getQuery({
+  const result = await poolQuery({client,
     query: GET_LATEST_QA_query,
     values: [purchasing_doc_no, reference_no],
   });
@@ -981,10 +1014,10 @@ const get_latest_QA_with_reference = async (
   return result;
 };
 
-const checkActualSub = async (purchasing_doc_no) => {
+const checkActualSub = async (purchasing_doc_no,client) => {
   const GET_LATEST_QA_query = `SELECT count(*) as count FROM actualsubmissiondate WHERE purchasing_doc_no = $1 and milestoneText = $2 LIMIT 1`;
 
-  const result = await getQuery({
+  const result = await poolQuery({client,
     query: GET_LATEST_QA_query,
     values: [purchasing_doc_no, A_QAP_DATE],
   });

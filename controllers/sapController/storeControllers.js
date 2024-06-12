@@ -7,6 +7,9 @@ const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const Measage = require("../../utils/messages");
 const { poolClient, poolQuery, getQuery, query } = require("../../config/pgDbConfig");
+const { sendMail } = require("../../services/mail.services");
+const { GATE_ENTRY_DOC_CREATE } = require("../../lib/event");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
 
 const insertGateEntryData = async (req, res) => {
@@ -58,6 +61,7 @@ const insertGateEntryData = async (req, res) => {
         // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
       }
 
+
       if (ITEM_TAB && ITEM_TAB?.length) {
 
         try {
@@ -75,7 +79,7 @@ const insertGateEntryData = async (req, res) => {
         }
       }
 
-
+      await handelMail(ITEM_TAB[0]);
       await insertRecurcionFn(payload, index + 1)
     }
 
@@ -105,6 +109,22 @@ const insertGateEntryData = async (req, res) => {
     responseSend(res, "F", 500, Measage.SERVER_ERROR, error, null);
   }
 };
+
+async function handelMail(data) {
+
+  try {
+
+
+    console.log(data);
+    let vendorDetails = getUserDetailsQuery('vendor_by_po', '$1');
+    const mail_details = await getQuery({ query: vendorDetails, values: [data.EBELN] });
+    console.log("vendorAndDoDetails", vendorDetails, data.EBELN);
+    const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
+    await sendMail(GATE_ENTRY_DOC_CREATE, dataObj, { users: mail_details }, GATE_ENTRY_DOC_CREATE);
+  } catch (error) {
+    console.log('handelMail', error.toString());
+  }
+}
 
 
 const storeActionList = async (req, res) => {

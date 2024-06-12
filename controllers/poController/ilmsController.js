@@ -12,8 +12,8 @@ const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
 const { SDBG_SUBMIT_MAIL_TEMPLATE } = require("../../templates/mail-template");
-const { mailInsert } = require("../../services/mai.services");
-const { mailTrigger } = require("../sendMailController");
+const { mailInsert } = require("../../services/mail.services");
+// const { mailTrigger } = require("../sendMailController");
 
 
 // add new post
@@ -81,14 +81,16 @@ const submitILMS = async (req, res) => {
 
             const { q, val } = generateQuery(INSERT, ILMS, payload);
             console.log(q);
+            console.log(val);
 
             if (payload.status === APPROVED || payload.status === ACCEPTED || payload.status === ACKNOWLEDGED) {
                 const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
                 console.log("actual_subminission", actual_subminission);
             }
             const response = await poolQuery({ client, query: q, values: val });
-
-            if (response.affectedRows) {
+            console.log(response);
+            console.log('#$%^&*&^%$#$%^&');
+           
                 // mail setup
 
                 // if (payload.status === PENDING) {
@@ -130,12 +132,10 @@ const submitILMS = async (req, res) => {
 
                 // await handelEmail(payload);
 
-                return resSend(res, true, 200, `ILMS ${payload.status}!`, fileData, null);
-            } else {
-                return resSend(res, false, 200, "No data inserted", response, null);
-            }
+                 resSend(res, true, 200, `ILMS ${payload.status}!`, fileData, null);
+            
         } catch (error) {
-            console.log("ILMS Submission api", error);
+            console.log("ILMS Submission api", error.toString());
 
             return resSend(res, false, 500, "internal server error", [], null);
         } finally {

@@ -37,9 +37,22 @@ router.get("/getSDBGData", [veifyAccessToken], (req, res) => {
 router.get("/assigneeList", [veifyAccessToken], (req, res) => {
   sdbgController.assigneeList(req, res);
 });
-//27.05.2024
-router.post("/sdbgfilterData", [veifyAccessToken], (req, res) => {
-  sdbgController.sdbgfilterData(req, res);
+
+router.post("/bger", [veifyAccessToken], (req, res) => {
+  sdbgController.BGextensionRelease(req, res);
+});
+
+router.post("/updatebger", [veifyAccessToken], (req, res) => {
+  sdbgController.UpdateBGextensionRelease(req, res);
+});
+router.post("/getspecificbg", [veifyAccessToken], (req, res) => {
+  sdbgController.GetspecificBG(req, res);
+});
+
+
+
+router.get("/getCurrentAssignee", [veifyAccessToken], (req, res) => {
+  sdbgController.getCurrentAssignee(req, res);
 });
 
 module.exports = router;
