@@ -25,7 +25,7 @@ const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
-const { syncCron } = require("./controllers/syncControllers");
+const { syncCron, syncFileCron } = require("./controllers/syncControllers");
 
 // const task = cron.schedule('*/1 * * * *', () => {
 //   console.log('running a task every two minutes');
@@ -67,6 +67,7 @@ cron.schedule("05 00 * * *", async () => {
     );
   }
 });
+syncFileCron();
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);

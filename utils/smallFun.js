@@ -5,3 +5,10 @@ exports.checkTypeArr = (data) => {
 exports.generateUnique = () => {
   return new Date().getTime();
 };
+
+const path = require("path");
+
+exports.isZipFile = (filePath) => {
+  const ext = path.extname(filePath);
+  return ext === ".zip";
+};

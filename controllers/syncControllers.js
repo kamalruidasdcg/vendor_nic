@@ -1,16 +1,29 @@
 const path = require("path");
 const fs = require("fs");
+const util = require("util");
 const archiver = require("archiver");
 const csv = require("csv-parser");
+const cron = require("node-cron");
 
+const access = util.promisify(fs.access);
 const pool = require("../config/pgDBConfigSync");
-const { generateUnique } = require("../utils/smallFun");
+const { generateUnique, isZipFile } = require("../utils/smallFun");
 const { synced_tables } = require("../config/configTable");
 const { convertToCSV } = require("../utils/converts");
 const { formatDateSync, convertToEpoch } = require("../utils/dateTime");
 const { resSend } = require("../utils/resSend");
 const unzipper = require("unzipper");
+const {
+  CSV_DATA_PATH,
+  ZIP_DATA_PATH,
+  OTHER_SERVER_DATA_PATH,
+  UNZIP_DATA_PATH,
+  UNSYNCED_FILES,
+  OTHER_SERVER_FILE_PATH,
+} = require("../lib/constant");
+const todayDate = formatDateSync(new Date());
 
+// SYNCRONISATION OF DATA
 const syncDownloadMain = async () => {
   let resData = {};
   await Promise.all(
@@ -35,9 +48,8 @@ const syncDownloadMain = async () => {
 
 const syncCompressMain = async () => {
   // GET Folder Path
-  const todayDate = formatDateSync(new Date());
   const parentDir = path.resolve(__dirname, "..");
-  const syncFolderPath = path.join(parentDir, "sync/csvFile", todayDate);
+  const syncFolderPath = path.join(parentDir, CSV_DATA_PATH, todayDate);
 
   // Check if the today's date folder exists
   if (!fs.existsSync(syncFolderPath)) {
@@ -67,8 +79,8 @@ const syncCompressMain = async () => {
     );
   }
 
-  const downloadDir = path.join(parentDir, `sync/zipFile`, todayDate);
-  const zipFilePath = path.join(downloadDir, "sync_data.zip");
+  const downloadDir = path.join(parentDir, ZIP_DATA_PATH, todayDate);
+  const zipDataPath = path.join(downloadDir, "sync_data.zip");
   // Store in zip file inside a file
 
   // Ensure download directory exists
@@ -77,7 +89,7 @@ const syncCompressMain = async () => {
   }
 
   // Create a file to stream archive data to
-  const output = fs.createWriteStream(zipFilePath);
+  const output = fs.createWriteStream(zipDataPath);
   const archive = archiver("zip", {
     zlib: { level: 9 },
   });
@@ -88,7 +100,7 @@ const syncCompressMain = async () => {
     console.log(
       "Archiver has been finalized and the output file descriptor has closed."
     );
-    // res.download(zipFilePath);
+    // res.download(zipDataPath);
   });
 
   // Good practice to catch warnings (ie stat failures and other non-blocking errors)
@@ -115,7 +127,7 @@ const syncCompressMain = async () => {
 
   // Finalize the archive
   archive.finalize();
-  return zipFilePath;
+  return zipDataPath;
 };
 
 exports.syncDownload = async (req, res) => {
@@ -130,8 +142,8 @@ exports.syncDownload = async (req, res) => {
 
 exports.syncCompress = async (req, res) => {
   try {
-    let zipFilePath = await syncCompressMain();
-    resSend(res, 200, true, zipFilePath, "Compressed file downloaded!", null);
+    let zipDataPath = await syncCompressMain();
+    resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
   } catch (err) {
     console.error(err);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
@@ -140,36 +152,52 @@ exports.syncCompress = async (req, res) => {
 
 exports.syncUnzip = async (req, res) => {
   try {
-    // Ensure the "unzipcspfiles" directory exists
-    const todayDate = formatDateSync(new Date());
+    // Ensure the "unzipcsvfiles" directory exists
     const parentDir = path.resolve(__dirname, "..");
-    const outputDir = path.join(parentDir, "sync/unzipFiles", todayDate);
+    const outputDir = path.join(parentDir, UNZIP_DATA_PATH, todayDate);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
     // GET THE ZIP FILE
-    const zipFilePath = path.join(parentDir, "sync/zipFile", todayDate);
+    const zipDataPath = path.join(parentDir, OTHER_SERVER_DATA_PATH, todayDate);
 
     // Check if the today's date folder exists
-    if (!fs.existsSync(zipFilePath)) {
+    if (!fs.existsSync(zipDataPath)) {
       return resSend(
         res,
         200,
         false,
-        zipFilePath,
+        zipDataPath,
         "No zip file found for today's date",
+        null
+      );
+    }
+
+    // Check if the file exists inside the today's date folder
+    const filePath = path.join(zipDataPath, "sync_data.zip");
+    try {
+      await access(filePath, fs.constants.F_OK);
+      console.log("sync_data.zip exists in the uploads folder.");
+    } catch (err) {
+      console.error("sync_data.zip does not exist in the uploads folder.");
+      return resSend(
+        res,
+        200,
+        false,
+        zipDataPath,
+        "sync_data.zip does not exist in the today's date folder.",
         null
       );
     }
 
     // Create a read stream from the zip file and pipe it to unzipper
     await fs
-      .createReadStream(path.join(zipFilePath, "sync_data.zip"))
+      .createReadStream(path.join(zipDataPath, "sync_data.zip"))
       .pipe(unzipper.Extract({ path: outputDir }))
       .promise();
 
-    resSend(res, 200, true, zipFilePath, "Compressed file unziped!", null);
+    resSend(res, 200, true, zipDataPath, "Compressed file unziped!", null);
   } catch (err) {
     console.error("Error unzipping file:", err);
     resSend(
@@ -185,9 +213,8 @@ exports.syncUnzip = async (req, res) => {
 
 exports.syncDataUpload = async (req, res) => {
   try {
-    const todayDate = formatDateSync(new Date());
     const parentDir = path.resolve(__dirname, "..");
-    const folderPath = path.join(parentDir, "sync/unzipFiles", todayDate);
+    const folderPath = path.join(parentDir, UNZIP_DATA_PATH, todayDate);
 
     if (!fs.existsSync(folderPath)) {
       resSend(res, 200, false, null, "Today's folder does not exist!", null);
@@ -202,10 +229,10 @@ exports.syncDataUpload = async (req, res) => {
 
     for (const folder of tableFolders) {
       const tableName = folder;
-      const csvFilePath = path.join(folderPath, folder, "data.csv");
+      const csvDataPath = path.join(folderPath, folder, "data.csv");
 
       // Check if the CSV file exists
-      if (!fs.existsSync(csvFilePath)) {
+      if (!fs.existsSync(csvDataPath)) {
         console.error(`CSV file not found for table ${tableName}`);
         continue;
       }
@@ -213,7 +240,7 @@ exports.syncDataUpload = async (req, res) => {
       // Read and parse the CSV file
       const rData = [];
       await new Promise((resolve, reject) => {
-        fs.createReadStream(csvFilePath)
+        fs.createReadStream(csvDataPath)
           .pipe(csv())
           .on("data", (row) => rData.push(row))
           .on("end", resolve)
@@ -299,4 +326,214 @@ exports.syncCron = async () => {
     compresedRes = await syncCompressMain();
   }
   console.log(downloadRes, compresedRes);
+};
+
+// SYNCRONISATION OF FILES
+const UPLOADS_DIR = path.join(__dirname, "../", "uploads");
+
+// Function to create zip file
+const createZipForFiles = async (folderName, files) => {
+  const DOWNLOAD_DIR = path.join(__dirname, "../", UNSYNCED_FILES);
+  console.log(DOWNLOAD_DIR);
+  // Ensure download directory exists
+  const syncFolderPath = path.join(DOWNLOAD_DIR, todayDate);
+  if (!fs.existsSync(syncFolderPath)) {
+    fs.mkdirSync(syncFolderPath, { recursive: true });
+  }
+
+  const zipFilePath = path.join(syncFolderPath, `${folderName}.zip`);
+  const output = fs.createWriteStream(zipFilePath);
+  const archive = archiver("zip", { zlib: { level: 9 } });
+
+  output.on("close", () => {
+    console.log(`${archive.pointer()} total bytes`);
+    console.log(
+      "Archiver Finalized and the output file descriptor has closed."
+    );
+  });
+
+  archive.on("error", (err) => {
+    throw err;
+  });
+
+  archive.pipe(output);
+
+  files.forEach((file) => {
+    const filePath = path.join(UPLOADS_DIR, folderName, file);
+    archive.file(filePath, { name: file });
+  });
+
+  await archive.finalize();
+};
+
+// Function to get files added in the last 24 hours
+const getRecentFiles = async () => {
+  const folders = fs
+    .readdirSync(UPLOADS_DIR)
+    .filter((file) => fs.lstatSync(path.join(UPLOADS_DIR, file)).isDirectory());
+  const recentFiles = {};
+
+  const now = Date.now();
+  const dayAgo = now - 24 * 60 * 60 * 1000;
+
+  for (const folder of folders) {
+    const folderPath = path.join(UPLOADS_DIR, folder);
+    const stats = await fs.lstatSync(folderPath);
+
+    if (stats.isDirectory()) {
+      const files = await fs.readdirSync(folderPath);
+
+      for (const file of files) {
+        const filePath = path.join(folderPath, file);
+        const fileStats = await fs.statSync(filePath);
+
+        if (fileStats.mtimeMs >= dayAgo) {
+          if (!recentFiles[folder]) {
+            recentFiles[folder] = [];
+          }
+          recentFiles[folder].push(file);
+        }
+      }
+    }
+  }
+
+  return recentFiles;
+};
+
+// Function to get unsynced files and compressed to ZIP
+const getAndZipFileHandler = async () => {
+  const recentFiles = await getRecentFiles();
+  for (const folderName in recentFiles) {
+    if (recentFiles[folderName].length > 0) {
+      await createZipForFiles(folderName, recentFiles[folderName]);
+      console.log(`Created zip for folder: ${folderName}`);
+    }
+  }
+};
+
+// API CONTROLLER TO COMPRESS ZIP FILE FOR FILES THAT ARE UPLOADED IN LAST 24 MINUTES
+exports.unsyncFileCompressed = async (req, res, next) => {
+  await getAndZipFileHandler();
+  resSend(res, 200, true, null, "Unsyncd File Compressed successfully!", null);
+};
+
+// CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
+exports.syncFileCron = async () => {
+  cron.schedule("20 00 * * *", async () => {
+    console.log("Running the scheduled task 12:20 AM");
+
+    try {
+      await getAndZipFileHandler();
+    } catch (error) {
+      console.error("Error during the scheduled task:", error);
+    }
+  });
+};
+
+const unzipAndMove = async (zipFilePath, uploadsFolderPath, file) => {
+  try {
+    // Open the zip file as a directory
+    const directory = await unzipper.Open.file(zipFilePath);
+    console.log("zipFilePath", zipFilePath);
+    console.log("uploadsFolderPath", uploadsFolderPath);
+
+    // Process each file entry
+    for (const file of directory.files) {
+      let relativeFileName = file.path;
+      console.log("relativeFileName", relativeFileName);
+      let relativeFolderName = path.basename(
+        zipFilePath,
+        path.extname(zipFilePath)
+      );
+      console.log("relativeFolderName", relativeFolderName);
+
+      let destinationPath = path.join(
+        uploadsFolderPath,
+        relativeFolderName,
+        relativeFileName
+      );
+      console.log("destinationPath", destinationPath);
+
+      // Ensure the destination directory exists
+      let dir = path.dirname(destinationPath);
+      console.log(dir, destinationPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      // Extract the file to the destination path
+      file
+        .stream()
+        .pipe(fs.createWriteStream(destinationPath))
+        .on("finish", () => {
+          console.log(`Extracted ${file.path} to ${destinationPath}`);
+        });
+    }
+
+    console.log("Files have been successfully unzipped and moved.");
+  } catch (err) {
+    console.error("An error occurred:", err);
+  }
+};
+
+exports.uploadRecentFilesController = async (req, res, next) => {
+  try {
+    const parentDir = path.resolve(__dirname, "..");
+
+    // GET THE ZIP FILE
+    const zipFilePath = path.join(parentDir, OTHER_SERVER_FILE_PATH, todayDate);
+
+    // Check if the today's date folder exists
+    if (!fs.existsSync(zipFilePath)) {
+      return resSend(
+        res,
+        200,
+        false,
+        zipFilePath,
+        "No zip file found for today's date",
+        null
+      );
+    }
+
+    // UPLOAD FILE PATH
+    const uploadsFolderPath = path.join(parentDir, "uploads");
+
+    // Ensure the uploads folder exists
+    if (!fs.existsSync(uploadsFolderPath)) {
+      fs.mkdirSync(uploadsFolderPath, { recursive: true });
+    }
+
+    // GET ALL FILES FROM A FOLDER
+    let files = fs
+      .readdirSync(zipFilePath)
+      .filter((item, i) => isZipFile(item));
+
+    console.log(files);
+
+    // let stats = fs.statSync(zipFilePath);
+    // if (!stats.isFile()) {
+    //   return resSend(
+    //     res,
+    //     200,
+    //     false,
+    //     zipFilePath,
+    //     `Provided path is not a file: ${zipFilePath}`,
+    //     null
+    //   );
+    // }
+    files.forEach(async (file) => {
+      let zipFilePath = path.join(
+        parentDir,
+        OTHER_SERVER_FILE_PATH,
+        todayDate,
+        file
+      );
+      console.log(zipFilePath);
+      await unzipAndMove(zipFilePath, uploadsFolderPath, file);
+    });
+
+    resSend(res, 200, true, null, "File transferred successfully.", null);
+  } catch (error) {
+    console.log("An error occurred in uploadRecentFilesController:", error);
+  }
 };
