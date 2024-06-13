@@ -111,8 +111,7 @@ const submitDrawing = async (req, res) => {
                     ON mat_desc.MATNR = mat.MATNR
             WHERE mat.EBELN = $1`;
 
-      let materialResult = await poolQuery({
-        client,
+      let materialResult = await poolQuery({ client,
         query: materialQuery,
         values: [payload.purchasing_doc_no],
       });
@@ -120,6 +119,10 @@ const submitDrawing = async (req, res) => {
       const isMaterialTypePO = poTypeCheck(materialResult);
 
       const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
+
+      if(poType === "SERVICE" && tokenData.user_type != USER_TYPE_VENDOR && ) {
+
+      }
 
       if(poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
         return resSend(
@@ -131,7 +134,7 @@ const submitDrawing = async (req, res) => {
           null
         );
       }
-      
+
       if (
         poType === "MATERIAL" &&
         tokenData.department_id == USER_TYPE_GRSE_DRAWING &&
@@ -185,8 +188,7 @@ const submitDrawing = async (req, res) => {
         }
         const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = $1 AND LIFNR = $2`;
 
-        const poArr = await poolQuery({
-          client,
+        const poArr = await poolQuery({ client,
           query: Query,
           values: [obj.purchasing_doc_no, tokenData.vendor_code],
         });
@@ -296,14 +298,6 @@ const submitDrawing = async (req, res) => {
         console.log("actual_subminission", actual_subminission);
       }
 
-      if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {
-        sendMailToCDOandDO(payload)
-
-      }
-      if (payload.status === SUBMITTED && tokenData.user_type !== USER_TYPE_VENDOR) {
-        sendMailToVendor(payload)
-      }
-
       console.log("%_&&_((((_$");
       console.log(response);
       //return;
@@ -329,14 +323,14 @@ const submitDrawing = async (req, res) => {
   }
 };
 
-// const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
-//   const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, vendor_code,  created_by_id FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
-//   const acknowledgeResult = await query({
-//     query: isSDBGAcknowledge,
-//     values: [purchasing_doc_no, drawingStatus],
-//   });
-//   return acknowledgeResult;
-// };
+const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
+  const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, vendor_code,  created_by_id FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
+  const acknowledgeResult = await query({
+    query: isSDBGAcknowledge,
+    values: [purchasing_doc_no, drawingStatus],
+  });
+  return acknowledgeResult;
+};
 
 const list = async (req, res) => {
   try {
@@ -370,44 +364,44 @@ const list = async (req, res) => {
   }
 };
 
-// async function poContactDetails(purchasing_doc_no) {
-//   const po_contact_details_query = `SELECT 
-//         t1.EBELN, 
-//         t1.ERNAM AS dealingOfficerId, 
-//         t1.LIFNR AS vendor_code, 
-//         t2.CNAME AS dealingOfficerName, 
-//         t3.USRID_LONG AS dealingOfficerMail, 
-//         t4.NAME1 as vendor_name, 
-//         t4.ORT01 as vendor_address, 
-//         t5.SMTP_ADDR as vendor_mail_id
-//     FROM 
-//         ekko AS t1 
-//     LEFT JOIN 
-//         pa0002 AS t2 
-//     ON 
-//         t1.ERNAM= t2.PERNR 
-//     LEFT JOIN 
-//         pa0105 AS t3 
-//     ON 
-//         (t2.PERNR = t3.PERNR AND t3.SUBTY = '0030') 
-//     LEFT JOIN 
-//         lfa1 AS t4 
-//     ON 
-//         t1.LIFNR = t4.LIFNR 
-//     LEFT JOIN 
-//         adr6 AS t5
-//        ON
-//       t1.LIFNR = t5.PERSNUMBER
-//     WHERE 
-//         t1.EBELN = ?`;
+async function poContactDetails(purchasing_doc_no) {
+  const po_contact_details_query = `SELECT 
+        t1.EBELN, 
+        t1.ERNAM AS dealingOfficerId, 
+        t1.LIFNR AS vendor_code, 
+        t2.CNAME AS dealingOfficerName, 
+        t3.USRID_LONG AS dealingOfficerMail, 
+        t4.NAME1 as vendor_name, 
+        t4.ORT01 as vendor_address, 
+        t5.SMTP_ADDR as vendor_mail_id
+    FROM 
+        ekko AS t1 
+    LEFT JOIN 
+        pa0002 AS t2 
+    ON 
+        t1.ERNAM= t2.PERNR 
+    LEFT JOIN 
+        pa0105 AS t3 
+    ON 
+        (t2.PERNR = t3.PERNR AND t3.SUBTY = '0030') 
+    LEFT JOIN 
+        lfa1 AS t4 
+    ON 
+        t1.LIFNR = t4.LIFNR 
+    LEFT JOIN 
+        adr6 AS t5
+       ON
+      t1.LIFNR = t5.PERSNUMBER
+    WHERE 
+        t1.EBELN = ?`;
 
-//   const result = await query({
-//     query: po_contact_details_query,
-//     values: [purchasing_doc_no],
-//   });
+  const result = await query({
+    query: po_contact_details_query,
+    values: [purchasing_doc_no],
+  });
 
-//   return result;
-// }
+  return result;
+}
 
 
 
@@ -416,24 +410,24 @@ async function sendMailToCDOandDO(data) {
 
   try {
 
-    let vendorDetails = getUserDetailsQuery('cdo_and_do', '$1');
-    const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
-    const dataObj = { ...data };
-    await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
+      let vendorDetails= getUserDetailsQuery('cdo_and_do', '$1');
+      const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
+      const dataObj = { ...data };
+      await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
   } catch (error) {
-    console.log(error.toString(), error.stack);
+      console.log(error.toString(), error.stack);
   }
 }
 async function sendMailToVendor(data) {
 
   try {
 
-    let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
-    const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
-    const dataObj = { ...data };
-    await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
+      let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
+      const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
+      const dataObj = { ...data };
+      await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
   } catch (error) {
-    console.log(error.toString(), error.stack);
+      console.log(error.toString(), error.stack);
   }
 }
 
