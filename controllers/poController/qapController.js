@@ -166,7 +166,7 @@ const submitQAP = async (req, res) => {
               // return resSend(res, true, 200, message, null, null);
             }
             payload.is_assign = 1;
-            payload.reference_no = "QAP Assigned";
+            payload.reference_no = "QAP ASSIGNED";
             payload.action_type = "QAP Assigned";
           } else {
             message = `You don't have permission!`;

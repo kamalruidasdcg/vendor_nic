@@ -39,7 +39,7 @@ const router = express.Router();
 const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
-const statRoutes = require("./statRoutes");
+
 const drawingRoutes = require("./drawingRoutes");
 const wdcRoutes = require("./WdcRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
@@ -138,7 +138,6 @@ router.use(poPrefix + "/sdbg", sdbgRoutes);
 router.use(poPrefix + "/drawing", drawingRoutes);
 router.use(poPrefix + "/wdc", wdcRoutes);
 router.use(poPrefix + "/ilms", ilmsRoutes);
-router.use(poPrefix + "/stat", statRoutes);
 
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);
