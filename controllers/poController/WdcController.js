@@ -26,6 +26,9 @@ const {
 const { Verify } = require("crypto");
 const { VENDOR } = require("../../lib/depertmentMaster");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
+const { WDC_APPROVAL_REJECT, WDC_UPLOADING } = require("../../lib/event");
 require("dotenv").config();
 
 exports.wdc = async (req, res) => {
@@ -183,14 +186,14 @@ exports.wdc = async (req, res) => {
           ? (invoice_filename = payloadFiles["file_attendance_report"][0]?.filename)
           : null;
 
-     // obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
+      // obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
       let line_item_array = JSON.parse(obj.line_item_array);
       obj.total_amount = 0;
 
       if (obj.action_type == 'JCC' && obj.line_item_array != "") {
 
         const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1`;
-        let get_data_result =await getQuery({ query: line_item_array_q, values: [obj.purchasing_doc_no] });
+        let get_data_result = await getQuery({ query: line_item_array_q, values: [obj.purchasing_doc_no] });
 
         obj.line_item_array = line_item_array.map((el2) => {
           const DOObj = get_data_result.find((elms) => elms.line_item_no == el2.line_item_no);
@@ -224,9 +227,20 @@ exports.wdc = async (req, res) => {
     response = response[0];
 
     if (response) {
+
+      handelMail(tokenData, payload)
+
+
+      if (payload.status === SUBMITTED) {
+        // handel email
+      }
+      if (payload.status === REJECTED) {
+        // handel email
+      }
+
       if (payload.status === APPROVED) {
         try {
-
+          // handel email
           payload = { ...payload, slno: response.id };
           console.log(payload);
           console.log("payload$%^&*(");
@@ -255,6 +269,45 @@ exports.wdc = async (req, res) => {
   }
 };
 
+
+
+
+async function handelMail(tokenData, payload, event) {
+
+
+  try {
+
+    let emailUserDetailsQuery;
+    let emailUserDetails;
+    let dataObj = payload;
+
+
+    if ( payload.status == SUBMITTED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('user_dept');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [] });
+      await sendMail(WDC_UPLOADING, dataObj, { users: emailUserDetails }, WDC_UPLOADING);
+    }
+
+    if ( payload.status == REJECTED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      await sendMail(WDC_APPROVAL_REJECT, dataObj, { users: emailUserDetails }, WDC_APPROVAL_REJECT);
+    }
+    if (payload.status == APPROVED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      await sendMail(WDC_APPROVAL_REJECT, dataObj, { users: emailUserDetails }, WDC_APPROVAL_REJECT);
+    }
+
+  } catch (error) {
+    console.log("handelMail qap", error.toString(), error.stack);
+  }
+}
+
+
 exports.list = async (req, res) => {
   // req.query.$tableName = `wdc`;
   // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
@@ -275,7 +328,7 @@ exports.list = async (req, res) => {
     try {
       const line_item_array_q = `SELECT EBELP AS line_item_no, TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount from ${EKPO} WHERE EBELN = $1`;
       let line_item_array = await poolQuery({ client, query: line_item_array_q, values: [req.query.poNo] });
-      
+
       //return;
       let line_item_array2 = [];
       await Promise.all(
@@ -293,11 +346,11 @@ exports.list = async (req, res) => {
 
       );
 
-      
+
       //return;
       const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = $1`;
       let get_data_result = await poolQuery({ client, query: get_data_query, values: [req.query.poNo] });
-      
+
       let modfResult = get_data_result.map((el) => {
         let line_item = JSON.parse(el.line_item_array);
         let line_item2;
@@ -311,17 +364,17 @@ exports.list = async (req, res) => {
         return el;
       })
       modfResult = JSON.stringify(modfResult);
-       resSend(res, true, 200, "WDC data fetched!", modfResult, null);
+      resSend(res, true, 200, "WDC data fetched!", modfResult, null);
     } catch (err) {
-      
-       resSend(res, false, 500, "internal server error", err, null);
+
+      resSend(res, false, 500, "internal server error", err, null);
     } finally {
       client.release();
     }
 
   } catch (error) {
-    
-     resSend(res, false, 500, "error in db conn!", error, "");
+
+    resSend(res, false, 500, "error in db conn!", error, "");
   }
 
 };
