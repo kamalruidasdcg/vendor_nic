@@ -1,7 +1,6 @@
 const express = require("express");
 const { veifyAccessToken, authorizeRoute } = require("../services/jwt.services");
 const router = express.Router();
-const sdbgController = require("../controllers/poController/sdbgController");
 const drawingController = require("../controllers/poController/drawingController");
 
 const { uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
@@ -14,7 +13,9 @@ router.post("/submitDrawing", [veifyAccessToken, dynamicallyUpload.single("file"
 router.get("/drawingList", [veifyAccessToken], drawingController.list);
 // 
 
-
+router.get("/assigneeList", [veifyAccessToken], (req, res) => {
+    drawingController.assigneeList(req, res);
+  });
 
 
 module.exports = router;

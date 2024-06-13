@@ -15,6 +15,7 @@ const { query, getQuery, poolClient, poolQuery } = require("../../config/pgDbCon
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const {
   INSERT,
+  ASSIGNER,
   UPDATE,
   USER_TYPE_VENDOR,
   USER_TYPE_GRSE_DRAWING,
@@ -129,6 +130,7 @@ const submitDrawing = async (req, res) => {
           null
         );
       }
+      
       if (
         poType === "MATERIAL" &&
         tokenData.department_id == USER_TYPE_GRSE_DRAWING &&
@@ -426,7 +428,43 @@ async function sendMailToVendor(data) {
 }
 
 
+const assigneeList = async (req, res) => {
+  console.log(req.tokenData);
+  const tokenData = { ...req.tokenData };
+
+  if (
+    tokenData.department_id != USER_TYPE_GRSE_DRAWING ||
+    tokenData.internal_role_id != ASSIGNER
+  ) {
+    return resSend(
+      res,
+      true,
+      200,
+      "Please Login as Drawing Assigner.",
+      null,
+      null
+    );
+  }
+
+  const drawingQuery = `SELECT t1.emp_id, t2.* FROM emp_department_list AS t1
+        LEFT JOIN 
+            pa0002 AS t2 
+        ON 
+            t1.emp_id= t2.pernr  :: character varying WHERE
+         t1.dept_id = $1 AND t1.internal_role_id = $2`;
+
+  const result = await getQuery({ query: drawingQuery, values: [USER_TYPE_GRSE_DRAWING, 2] });
+  console.table(result);
+  return resSend(
+    res,
+    true,
+    200,
+    "DRAWING assigneeList fetch successfully!",
+    result,
+    null
+  );
+ 
+};
 
 
-
-module.exports = { submitDrawing, list };
+module.exports = { submitDrawing, list, assigneeList };
