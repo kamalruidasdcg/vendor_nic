@@ -120,9 +120,9 @@ const submitDrawing = async (req, res) => {
 
       const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
 
-      if(poType === "SERVICE" && tokenData.user_type != USER_TYPE_VENDOR && ) {
+      // if(poType === "SERVICE" && tokenData.user_type != USER_TYPE_VENDOR && ) {
 
-      }
+      // }
 
       if(poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
         return resSend(
