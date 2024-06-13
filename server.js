@@ -34,6 +34,13 @@ const task = cron.schedule('*/1 * * * *', () => {
   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
 });
 
+// const task2 = cron.schedule('*/1 * * * *', () => {
+//   console.log('running a task every two minutes');
+//   mailSentCornJob()
+// }, {
+//   scheduled: process.env.MAIL_TURN_ON === YES ? true : false
+// });
+
 app.use(apiLog);
 
 // use routes

@@ -42,7 +42,7 @@ const qals = async (req, res) => {
                 const resp = await poolQuery({ client, query: qaveInsertQuery.q, values: qaveInsertQuery.val });
             }
 
-            sendMail(mailPayload);
+            handelMail(mailPayload);
 
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (err) {

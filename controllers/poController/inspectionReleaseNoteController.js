@@ -9,6 +9,9 @@ const path = require('path');
 const { inspectionReleaseNotePayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
+const {  INSP_RELEASE_NOTE_UPLOAD } = require("../../lib/event");
 
 
 const inspectionReleaseNote = async (req, res) => {
@@ -67,7 +70,7 @@ const inspectionReleaseNote = async (req, res) => {
 
         if (response.rowCount) {
 
-            // await handleEmail();
+            handleEmail(insertObj);
 
             resSend(res, true, 200, "Ispection Release Note inserted successfully !", response, null);
         } else {
@@ -120,8 +123,21 @@ const getIclData = async (purchasing_doc_no, drawingStatus) => {
 }
 
 
-async function handleEmail() {
-    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
-}
 
+async function handleEmail(data) {
+    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+
+    // QA, USER DEPT AND DEALING OFFICER
+
+    try {
+        
+        const getDoQuery = getUserDetailsQuery('do', '$1');
+        const doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
+        const dataObj = { ...data };
+        await sendMail(INSP_RELEASE_NOTE_UPLOAD, dataObj, { users: doDetails }, INSP_RELEASE_NOTE_UPLOAD);
+    } catch (error) {
+        console.log("handleEmail", error.toString(), error.stack)
+    }
+
+}
 module.exports = { inspectionReleaseNote, list }
