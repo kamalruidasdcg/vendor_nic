@@ -611,34 +611,50 @@ async function handelMail(tokenData, payload, event) {
   try {
 
     let emailUserDetailsQuery;
-    let emailUserDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
+    let emailUserDetails;
     let dataObj = payload;
 
 
-
-    switch (event) {
-      case QAP_UPLOAD_BY_VENDOR:
-        if (tokenData.user_type === USER_TYPE_VENDOR && payload.status === SUBMITTED) {
-          // QA NODAL OFFICERS
-          emailUserDetailsQuery = getUserDetailsQuery('nodal_officers');
-          emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [] });
-          await sendMail(QAP_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, QAP_UPLOAD_BY_VENDOR);
-        }
-
-        break;
-      case QAP_ASSIGNMENT:
-
-        break;
-      case QAP_APPROVE_REJECT:
-
-        break;
-
-      default:
-        break;
+    if (tokenData.user_type == USER_TYPE_VENDOR && payload.status == SUBMITTED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('nodal_officers');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [] });
+      await sendMail(QAP_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, QAP_UPLOAD_BY_VENDOR);
     }
 
+    if (tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == ASSIGNER && payload.status == ASSIGNED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('qa_officers');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [] });
+      await sendMail(QAP_ASSIGNMENT, dataObj, { users: emailUserDetails }, QAP_ASSIGNMENT);
+    }
+    if (tokenData.internal_role_id == ASSIGNER && payload.status == APPROVED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      await sendMail(QAP_ASSIGNMENT, dataObj, { users: emailUserDetails }, QAP_ASSIGNMENT);
+    }
+    // switch (event) {
+    //   case QAP_UPLOAD_BY_VENDOR:
+
+    //     break;
+    //   case QAP_ASSIGNMENT:
+
+
+    //     break;
+    //   case QAP_APPROVE_REJECT:
+
+
+
+
+    //     break;
+
+    //   default:
+    //     break;
+    // }
+
   } catch (error) {
-    console.log("handelMail qap",error.toString(), error.stack);
+    console.log("handelMail qap", error.toString(), error.stack);
   }
 }
 
@@ -803,7 +819,7 @@ async function handelMail(tokenData, payload, event) {
 //             assignTo_detail
 //         ON
 //             assignTo_detail.PERNR = qap.assigned_to
-        
+
 //         WHERE 
 //             qap.purchasing_doc_no = ? AND status = ? LIMIT 1;`;
 

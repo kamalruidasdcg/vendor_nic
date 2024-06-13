@@ -132,6 +132,21 @@ const getUserDetailsQuery = (type, valueParameter) => {
               where 
               department_id = ${USER_TYPE_GRSE_QAP} AND internal_role_id = ${ASSIGNER}
           ) `
+            break;
+        case 'qa_officers':
+            getDeatilsQuery = `(select 
+              vendor_code as u_id, 
+              users.cname as u_name, 
+              users.email as u_email, 
+              'nodal_officers' as u_type 
+            from 
+              auth as auth 
+              left join pa0002 as users on (
+                users.pernr :: character varying = auth.vendor_code
+              ) 
+              where 
+              department_id = ${USER_TYPE_GRSE_QAP} AND internal_role_id = ${ASSIGNER}
+          ) `
 
 
             break;
