@@ -35,6 +35,7 @@ const {
   RE_SUBMITTED,
   APPROVED,
   REJECTED,
+  ASSIGNED,
 } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
@@ -52,6 +53,7 @@ const {
 const { Console } = require("console");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
+const { getLastAssignee, getAssigneeList } = require("../../services/lastassignee.servces");
 
 // add new post
 function poTypeCheck(materialData) {
@@ -94,6 +96,18 @@ const submitDrawing = async (req, res) => {
       const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
       const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED];
 
+      if (!payload.purchasing_doc_no || !payload.status) {
+        return resSend(res, false, 400, "Please send valid payload", null, null);
+      }
+
+      if (
+        tokenData.user_type != USER_TYPE_VENDOR &&
+        tokenData.department_id != USER_TYPE_GRSE_DRAWING
+      ) {
+        return resSend(res, true, 200, "please login as Valid user!", null, null);
+      }
+
+
       let materialQuery = `SELECT
             mat.EBELP AS material_item_number,
             mat.KTMNG AS material_quantity, 
@@ -111,7 +125,8 @@ const submitDrawing = async (req, res) => {
                     ON mat_desc.MATNR = mat.MATNR
             WHERE mat.EBELN = $1`;
 
-      let materialResult = await poolQuery({ client,
+      let materialResult = await poolQuery({
+        client,
         query: materialQuery,
         values: [payload.purchasing_doc_no],
       });
@@ -120,11 +135,51 @@ const submitDrawing = async (req, res) => {
 
       const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
 
-      // if(poType === "SERVICE" && tokenData.user_type != USER_TYPE_VENDOR && ) {
 
-      // }
+      const action_type_with_vendor_code = await get_action_type_with_vendor_code(payload.purchasing_doc_no);
 
-      if(poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
+
+      if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == ASSIGNER && payload.status == ASSIGNED) {
+        if (!payload.assign_to || payload.assign_to == "") {
+          return resSend(res, false, 200, "please send assign_to.", payload, null);
+        }
+        payload.vendor_code = action_type_with_vendor_code[0].vendor_code;
+        payload.actiontype = action_type_with_vendor_code[0].vendor_code;
+        payload.updated_by = `GRSE`;
+        payload.last_assigned = 1;
+        payload.created_by_id = tokenData.vendor_code;
+        payload.assign_from = tokenData.vendor_code;
+        payload.reference_no = `Drawing ${ASSIGNED}`;
+        // return resSend(res,false,200,"This is activity.",payload,null);
+
+        const { q, val } = generateQuery(INSERT, DRAWING, payload);
+        const response = await poolQuery({ client, query: q, values: val });
+        console.log(response);
+
+        console.log(payload.purchasing_doc_no);
+        console.log(2222222222222);
+        console.log(payload.assign_to);
+
+        const update_assign_to = `UPDATE ${DRAWING} SET last_assigned = 0 WHERE purchasing_doc_no = $1 AND assign_to != $2`;
+        let update_assign_touery = await poolQuery({
+          client,
+          query: update_assign_to,
+          values: [payload.purchasing_doc_no, payload.assign_to],
+        });
+        console.log(update_assign_touery);
+        return resSend(
+          res,
+          true,
+          200,
+          `The DRAWING is ASSIGNED successfully.`,
+          null,
+          null
+        );
+
+      }
+      console.log(4444444444444);
+      //return;
+      if (poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
         return resSend(
           res,
           false,
@@ -164,16 +219,7 @@ const submitDrawing = async (req, res) => {
         );
       }
 
-      if (!payload.purchasing_doc_no || !payload.status) {
-        return resSend(res, false, 400, "Please send valid payload", null, null);
-      }
 
-      if (
-        tokenData.user_type != USER_TYPE_VENDOR &&
-        tokenData.department_id != USER_TYPE_GRSE_DRAWING
-      ) {
-        return resSend(res, true, 200, "please login as Valid user!", null, null);
-      }
 
       if (tokenData.user_type === USER_TYPE_VENDOR) {
         if (payload.status == APPROVED || payload.status == REJECTED) {
@@ -188,7 +234,8 @@ const submitDrawing = async (req, res) => {
         }
         const Query = `SELECT COUNT(EBELN) AS po_count from ekko WHERE EBELN = $1 AND LIFNR = $2`;
 
-        const poArr = await poolQuery({ client,
+        const poArr = await poolQuery({
+          client,
           query: Query,
           values: [obj.purchasing_doc_no, tokenData.vendor_code],
         });
@@ -323,6 +370,23 @@ const submitDrawing = async (req, res) => {
   }
 };
 
+const get_action_type_with_vendor_code = async (
+  purchasing_doc_no
+) => {
+  const GET_LATEST_SDBG = `SELECT actiontype,vendor_code FROM ${DRAWING} WHERE purchasing_doc_no = $1 ORDER BY ${DRAWING}.created_at ASC LIMIT 1`;
+  console.log(GET_LATEST_SDBG);
+  const result = await getQuery({
+    query: GET_LATEST_SDBG,
+    values: [purchasing_doc_no],
+  });
+
+  console.log("@@@@@@@@@@@");
+  console.log(result);
+  console.log("##########");
+  return result;
+};
+
+
 const getDrawingData = async (purchasing_doc_no, drawingStatus) => {
   const isSDBGAcknowledge = `SELECT purchasing_doc_no, status, updated_by, vendor_code,  created_by_id FROM ${DRAWING} WHERE purchasing_doc_no = ? AND status = ?`;
   const acknowledgeResult = await query({
@@ -410,65 +474,82 @@ async function sendMailToCDOandDO(data) {
 
   try {
 
-      let vendorDetails= getUserDetailsQuery('cdo_and_do', '$1');
-      const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
-      const dataObj = { ...data };
-      await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
+    let vendorDetails = getUserDetailsQuery('cdo_and_do', '$1');
+    const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
+    const dataObj = { ...data };
+    await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
   } catch (error) {
-      console.log(error.toString(), error.stack);
+    console.log(error.toString(), error.stack);
   }
 }
 async function sendMailToVendor(data) {
 
   try {
 
-      let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
-      const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
-      const dataObj = { ...data };
-      await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
+    let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
+    const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
+    const dataObj = { ...data };
+    await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
   } catch (error) {
-      console.log(error.toString(), error.stack);
+    console.log(error.toString(), error.stack);
   }
 }
 
 
 const assigneeList = async (req, res) => {
-  console.log(req.tokenData);
-  const tokenData = { ...req.tokenData };
+  // console.log(req.tokenData);
+  try {
+    const tokenData = { ...req.tokenData };
 
-  if (
-    tokenData.department_id != USER_TYPE_GRSE_DRAWING ||
-    tokenData.internal_role_id != ASSIGNER
-  ) {
+    if (
+      tokenData.department_id != USER_TYPE_GRSE_DRAWING ||
+      tokenData.internal_role_id != ASSIGNER
+    ) {
+      return resSend(
+        res,
+        true,
+        200,
+        "Please Login as Drawing Assigner.",
+        null,
+        null
+      );
+    }
+    const dept_id = USER_TYPE_GRSE_DRAWING;
+    const internal_role_id = 2;
+    let result = await getAssigneeList(dept_id, internal_role_id);
+    console.table(result);
     return resSend(
       res,
       true,
       200,
-      "Please Login as Drawing Assigner.",
-      null,
+      "DRAWING assigneeList fetch successfully!",
+      result,
       null
     );
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
   }
 
-  const drawingQuery = `SELECT t1.emp_id, t2.* FROM emp_department_list AS t1
-        LEFT JOIN 
-            pa0002 AS t2 
-        ON 
-            t1.emp_id= t2.pernr  :: character varying WHERE
-         t1.dept_id = $1 AND t1.internal_role_id = $2`;
-
-  const result = await getQuery({ query: drawingQuery, values: [USER_TYPE_GRSE_DRAWING, 2] });
-  console.table(result);
-  return resSend(
-    res,
-    true,
-    200,
-    "DRAWING assigneeList fetch successfully!",
-    result,
-    null
-  );
- 
 };
 
+const getCurrentAssignee = async (req, res) => {
+  try {
+    if (!req.query.poNo) {
+      return resSend(res, true, 200, "Please send PO Number.", null, null);
+    }
+    const assign = `assign_to`;
+    let result = await getLastAssignee(DRAWING, req.query.poNo, assign);
 
-module.exports = { submitDrawing, list, assigneeList };
+    if (result.length > 0) {
+      resSend(res, true, 200, "assigne fetched successfully", result[0], null);
+    } else {
+      resSend(res, true, 200, "no record found", "not assigend.", null);
+    }
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+}
+
+module.exports = { submitDrawing, list, assigneeList, getCurrentAssignee };
