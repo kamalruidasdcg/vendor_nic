@@ -868,11 +868,11 @@ const sdbgUpdateByFinance = async (req, res) => {
         }
       }
 
-      const check = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4 OR status = $5)`;
+      const check = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
       const resAssigneQry = await poolQuery({
         client,
         query: check,
-        values: [obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED, RETURN_TO_DO],
+        values: [obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED],
       });
 console.log('resAssigneQry[0].count_val');
 console.log(resAssigneQry[0].count_val);
