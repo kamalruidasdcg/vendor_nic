@@ -19,6 +19,7 @@ const {
   UPDATE,
   USER_TYPE_VENDOR,
   USER_TYPE_GRSE_DRAWING,
+  STAFF,
 } = require("../../lib/constant");
 
 const {
@@ -53,7 +54,7 @@ const {
 const { Console } = require("console");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
-const { getLastAssignee, getAssigneeList } = require("../../services/lastassignee.servces");
+const { getLastAssignee, getAssigneeList, checkIsAssigned } = require("../../services/lastassignee.servces");
 
 // add new post
 function poTypeCheck(materialData) {
@@ -138,6 +139,20 @@ const submitDrawing = async (req, res) => {
 
       const action_type_with_vendor_code = await get_action_type_with_vendor_code(payload.purchasing_doc_no);
 
+      if(poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR) {
+        const check = `SELECT COUNT(status) AS count_val FROM ${DRAWING} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
+        const resAssigneQry = await poolQuery({
+          client,
+          query: check,
+          values: [payload.purchasing_doc_no, payload.reference_no, APPROVED, REJECTED],
+        });
+          console.log('resAssigneQry[0].count_val');
+          console.log(resAssigneQry[0].count_val);
+        if (resAssigneQry[0].count_val > 0) {
+          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+        }
+      }
+      
 
       if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == ASSIGNER && payload.status == ASSIGNED) {
         if (!payload.assign_to || payload.assign_to == "") {
@@ -149,7 +164,7 @@ const submitDrawing = async (req, res) => {
         payload.last_assigned = 1;
         payload.created_by_id = tokenData.vendor_code;
         payload.assign_from = tokenData.vendor_code;
-        payload.reference_no = `Drawing ${ASSIGNED}`;
+        payload.reference_no = `DRAWING ${ASSIGNED}`;
         // return resSend(res,false,200,"This is activity.",payload,null);
 
         const { q, val } = generateQuery(INSERT, DRAWING, payload);
@@ -177,8 +192,42 @@ const submitDrawing = async (req, res) => {
         );
 
       }
-      console.log(4444444444444);
-      //return;
+      
+      if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == STAFF) {
+        console.log(payload.status);
+        
+        if(payload.status != APPROVED && payload.status != REJECTED) {
+          return resSend(res,true,200,"Staff can only APPROVED or rejected.",null,null);
+        }
+        if (!payload.reference_no) {
+          return resSend(res,true,200,"Please send valid reference_no.",null,null);
+        }
+        const assign = `assign_to`;
+        let checkAssig = await checkIsAssigned(DRAWING, payload.purchasing_doc_no, tokenData.vendor_code, assign);
+
+        if (checkAssig != 1) {
+          return resSend( res,true,200,"This PO is not assigned to you!",null,null);
+        }
+
+        payload.vendor_code = action_type_with_vendor_code[0].vendor_code;
+        payload.actiontype = action_type_with_vendor_code[0].vendor_code;
+        payload.updated_by = `GRSE`;
+        payload.last_assigned = 0;
+        payload.created_by_id = tokenData.vendor_code;
+        // payload.assign_from = tokenData.vendor_code;
+        // payload.reference_no = `Drawing ${ASSIGNED}`;
+        // return resSend(res,false,200,"This is activity.",payload,null);
+
+        const { q, val } = generateQuery(INSERT, DRAWING, payload);
+        const response = await poolQuery({ client, query: q, values: val });
+        console.log(response);
+        if(response) {
+          return resSend(res, true, 200, `Drawing is ${payload.status}`, response, null);
+        }
+
+      }
+
+
       if (poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
         return resSend(
           res,
@@ -204,20 +253,7 @@ const submitDrawing = async (req, res) => {
           null
         );
       }
-      if (
-        poType === "SERVICE" &&
-        tokenData.user_type == USER_TYPE_VENDOR &&
-        (!payload.reference_no || payload.reference_no == "")
-      ) {
-        return resSend(
-          res,
-          false,
-          200,
-          "Please send valid reference_no by vendor.",
-          null,
-          null
-        );
-      }
+     
 
 
 
@@ -237,7 +273,7 @@ const submitDrawing = async (req, res) => {
         const poArr = await poolQuery({
           client,
           query: Query,
-          values: [obj.purchasing_doc_no, tokenData.vendor_code],
+          values: [payload.purchasing_doc_no, tokenData.vendor_code],
         });
         console.log(poArr);
         if (poArr[0].po_count == 0) {
@@ -245,30 +281,8 @@ const submitDrawing = async (req, res) => {
         }
       }
       payload.vendor_code = tokenData.vendor_code;
-      const last_data = await get_latest_activity(
-        DRAWING,
-        payload.purchasing_doc_no,
-        payload.reference_no
-      );
-
-      if (tokenData.user_type != USER_TYPE_VENDOR && poType === "MATERIAL") {
-        payload.vendor_code = last_data.vendor_code;
-      }
-      if (
-        last_data &&
-        typeof last_data == "object" &&
-        Object.keys(last_data).length &&
-        (last_data.status == REJECTED || last_data.status == APPROVED)
-      ) {
-        return resSend(
-          res,
-          false,
-          200,
-          `This Drawing is already ${last_data.status}.`,
-          null,
-          null
-        );
-      }
+      
+      
 
       payload.updated_by =
         tokenData.user_type === USER_TYPE_VENDOR ? "VENDOR" : "GRSE";
@@ -281,52 +295,12 @@ const submitDrawing = async (req, res) => {
         );
       }
 
-      // console.log("-----payload.reference_no----");
-      // console.log(payload);
-      // return;
-      // const result2 = await getDrawingData(payload.purchasing_doc_no, APPROVED);
-      // console.log("result", result2);
-
-      // if (result2 && result2?.length) {
-
-      //     const data = [{
-      //         purchasing_doc_no: result2[0]?.purchasing_doc_no,
-      //         status: result2[0]?.status,
-      //         approvedName: result2[0]?.created_by_name,
-      //         approvedById: result2[0]?.created_by_id,
-      //         message: "The Drawing is already approved. If you want to reopen, please contact with senior management."
-      //     }];
-
-      //     return resSend(res, true, 200, `This drawing aleready ${APPROVED} [ PO - ${payload.purchasing_doc_no} ]`, data, null);
-      // }
-
+    
       let insertObj;
 
-      // if (payload.status === SUBMIT) {
-      //     payload.vendor_code = tokenData.vendor_code;
-      //     insertObj = drawingPayload(payload, SUBMIT);
-      // } else if (payload.status === RE_SUBMITTED) {
-      //     payload.vendor_code = tokenData.vendor_code;
-      //     // insertObj = drawingPayload(payload, RE_SUBMITTED);
-      // } else if (payload.status === APPROVED) {
-      //     // payload.vendor_code = payload.vendor_code;
-
-      //     const drawingData = await getDrawingData(payload.purchasing_doc_no, SUBMIT);
-
-      //     console.log("drawingData", drawingData);
-      //     if (drawingData && drawingData.length) {
-      //         payload.vendor_code = drawingData[0].vendor_code;
-      //     }
-      //     console.log("payload", payload);
-      //     insertObj = drawingPayload(payload, payload.status);
-      // }
+     
       insertObj = drawingPayload(payload, payload.status);
-      // console.log("%******************");
-      // console.log(payload);
-      // console.log("%_&&_((((_$");
-      // console.log(insertObj);
-      // return;
-
+     
       const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
       const response = await poolQuery({ client, query: q, values: val });
 
@@ -343,10 +317,6 @@ const submitDrawing = async (req, res) => {
           SUBMITTED
         );
         console.log("actual_subminission", actual_subminission);
-      }
-
-      if( payload.status === SUBMITTED) {
-        sendMailToCDOandDO(payload)
       }
 
       console.log("%_&&_((((_$");

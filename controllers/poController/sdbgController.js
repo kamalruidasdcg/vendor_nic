@@ -63,7 +63,7 @@ const {
 } = require("../../lib/event");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
-const { getLastAssignee, getAssigneeList } = require("../../services/lastassignee.servces");
+const { getLastAssignee, getAssigneeList, checkIsAssigned } = require("../../services/lastassignee.servces");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -843,21 +843,24 @@ const sdbgUpdateByFinance = async (req, res) => {
       }
 
       if (tokenData.internal_role_id == STAFF) {
-        const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${SDBG} WHERE purchasing_doc_no = $1 AND assigned_to = $2 AND last_assigned = $3`;
+        const assign = `assigned_to`;
+        let checkAssig = await checkIsAssigned(SDBG, obj.purchasing_doc_no, tokenData.vendor_code, assign);
 
-        const check_assign_to_query = await poolQuery({
-          client,
-          query: check_assign_to_str,
-          values: [
-            obj.purchasing_doc_no,
-            tokenData.vendor_code,
-            1,
-          ],
-        });
-        let check_assign_to_result = check_assign_to_query[0].assign_count;
+        // const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${SDBG} WHERE purchasing_doc_no = $1 AND assigned_to = $2 AND last_assigned = $3`;
 
-        console.log(check_assign_to_result);
-        if (check_assign_to_result != 1) {
+        // const check_assign_to_query = await poolQuery({
+        //   client,
+        //   query: check_assign_to_str,
+        //   values: [
+        //     obj.purchasing_doc_no,
+        //     tokenData.vendor_code,
+        //     1,
+        //   ],
+        // });
+        // let check_assign_to_result = check_assign_to_query[0].assign_count;
+
+        // console.log(check_assign_to_result);
+        if (checkAssig != 1) {
           return resSend(
             res,
             false,
