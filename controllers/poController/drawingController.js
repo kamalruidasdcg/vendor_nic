@@ -345,6 +345,10 @@ const submitDrawing = async (req, res) => {
         console.log("actual_subminission", actual_subminission);
       }
 
+      if( payload.status === SUBMITTED) {
+        sendMailToCDOandDO(payload)
+      }
+
       console.log("%_&&_((((_$");
       console.log(response);
       //return;

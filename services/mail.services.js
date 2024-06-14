@@ -76,7 +76,7 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
         // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
         console.log("mailjsonConfig", mailjsonConfig);
 
-        if(!mailjsonConfig.users.length) return;
+        if (!mailjsonConfig.users.length) return;
 
         await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
 
@@ -196,6 +196,9 @@ const archiveEmails = async (data) => {
     try {
         const archiveEmailPayload = { ...data };
         delete archiveEmailPayload.email_send_on;
+        delete archiveEmailPayload.sync_id;
+        delete archiveEmailPayload.sync;
+        delete archiveEmailPayload.sync_updated_at;
         const { q, val } = generateQuery(INSERT, ARCHIVE_EMAILS, archiveEmailPayload)
         const response = await query({ query: q, values: val });
         return response;
