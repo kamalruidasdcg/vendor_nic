@@ -4,12 +4,12 @@ const { USER_TYPE_GRSE_DRAWING, ASSIGNER, USER_TYPE_GRSE_QAP } = require("../lib
 
 
 const getUserDetailsQuery = (type, valueParameter) => {
-    let getDeatilsQuery = "";
+  let getDeatilsQuery = "";
 
-    switch (type) {
-        case 'do':
-            getDeatilsQuery =
-                ` (
+  switch (type) {
+    case 'do':
+      getDeatilsQuery =
+        ` (
                 SELECT    
                 po.ernam           AS u_id,
                 user_t.cname       AS u_name,
@@ -20,11 +20,11 @@ const getUserDetailsQuery = (type, valueParameter) => {
                     LEFT JOIN pa0002             AS user_t
                 ON   ( po.ernam = user_t.pernr :: CHARACTER varying) where po.ebeln = ${valueParameter}
                 )`;
-            break;
-        case 'vendor':
+      break;
+    case 'vendor':
 
-            getDeatilsQuery =
-                `(
+      getDeatilsQuery =
+        `(
                     SELECT    
                         vendor_t.lifnr                AS u_id,
                         vendor_t.name1                AS u_name,
@@ -34,10 +34,10 @@ const getUserDetailsQuery = (type, valueParameter) => {
                      where  vendor_t.lifnr = ${valueParameter}
                 )`;
 
-            break;
-        case 'drawing_assigner':
-            getDeatilsQuery =
-                `(
+      break;
+    case 'drawing_assigner':
+      getDeatilsQuery =
+        `(
                     SELECT    po.ernam           AS u_id,
                               user_t.cname       AS u_name,
                               user_t.email       AS u_email,
@@ -45,10 +45,10 @@ const getUserDetailsQuery = (type, valueParameter) => {
                     FROM pa0002             AS user_t
                     user_t.pernr = ${valueParameter}
                 )`;
-            break;
+      break;
 
-        case 'vendor_and_do':
-            getDeatilsQuery = `        
+    case 'vendor_and_do':
+      getDeatilsQuery = `        
  
             (
                 SELECT    po.ernam           AS u_id,
@@ -69,11 +69,11 @@ const getUserDetailsQuery = (type, valueParameter) => {
                LEFT JOIN lfa1                          AS vendor_t
                ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter})`;
 
-            break;
+      break;
 
 
-        case 'cdo_and_do':
-            getDeatilsQuery = `
+    case 'cdo_and_do':
+      getDeatilsQuery = `
             (
                 select 
                   vendor_code as u_id, 
@@ -102,11 +102,11 @@ const getUserDetailsQuery = (type, valueParameter) => {
                     ) 
                   where 
                     po.ebeln = ${valueParameter})`;
-            break;
+      break;
 
-        case 'vendor_by_po':
+    case 'vendor_by_po':
 
-            getDeatilsQuery = `
+      getDeatilsQuery = `
             (
                 SELECT    po.lifnr            AS u_id,
                 vendor_t.name1                AS u_name,
@@ -116,10 +116,10 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 LEFT JOIN lfa1                          AS vendor_t
                 ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter}
             )`;
-            break;
+      break;
 
-        case 'nodal_officers':
-            getDeatilsQuery = `(select 
+    case 'nodal_officers':
+      getDeatilsQuery = `(select 
               vendor_code as u_id, 
               users.cname as u_name, 
               users.email as u_email, 
@@ -132,9 +132,9 @@ const getUserDetailsQuery = (type, valueParameter) => {
               where 
               department_id = ${USER_TYPE_GRSE_QAP} AND internal_role_id = ${ASSIGNER}
           ) `
-            break;
-        case 'qa_officers':
-            getDeatilsQuery = `(select 
+      break;
+    case 'qa_officers':
+      getDeatilsQuery = `(select 
               vendor_code as u_id, 
               users.cname as u_name, 
               users.email as u_email, 
@@ -149,22 +149,33 @@ const getUserDetailsQuery = (type, valueParameter) => {
           ) `;
 
 
-            break;
-        default:
-            getDeatilsQuery =
-                `(
+      break;
+
+    case 'wdc_certifing_authrity':
+      getDeatilsQuery =
+        `(
                 SELECT    user_t.pernr       AS u_id,
                           user_t.cname       AS u_name,
                           user_t.email       AS u_email,
                           '${type || ""}'    AS u_type
                 FROM     pa0002  as user_t where  user_t.pernr = ${valueParameter}
             )`;
-            break;
+      break;
+    default:
+      getDeatilsQuery =
+        `(
+                SELECT    user_t.pernr       AS u_id,
+                          user_t.cname       AS u_name,
+                          user_t.email       AS u_email,
+                          '${type || ""}'    AS u_type
+                FROM     pa0002  as user_t where  user_t.pernr = ${valueParameter}
+            )`;
+      break;
 
 
-    }
+  }
 
-    return getDeatilsQuery;
+  return getDeatilsQuery;
 
 }
 

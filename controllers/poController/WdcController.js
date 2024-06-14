@@ -284,8 +284,8 @@ async function handelMail(tokenData, payload, event) {
 
     if ( payload.status == SUBMITTED) {
       // QA NODAL OFFICERS
-      emailUserDetailsQuery = getUserDetailsQuery('user_dept');
-      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [] });
+      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity',' $1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [parseInt(payload.assigned_to)] });
       await sendMail(WDC_UPLOADING, dataObj, { users: emailUserDetails }, WDC_UPLOADING);
     }
 
