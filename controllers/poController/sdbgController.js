@@ -63,6 +63,7 @@ const {
 } = require("../../lib/event");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
+const { getLastAssignee, getAssigneeList } = require("../../services/lastassignee.servces");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -1040,7 +1041,7 @@ console.log(resAssigneQry[0].count_val);
 };
 
 const assigneeList = async (req, res) => {
-  console.log(req.tokenData);
+  try {
   const tokenData = { ...req.tokenData };
 
   if (
@@ -1057,15 +1058,10 @@ const assigneeList = async (req, res) => {
     );
   }
 
-  const sdbgQuery = `SELECT t1.emp_id, t2.* FROM emp_department_list AS t1
-        LEFT JOIN 
-            pa0002 AS t2 
-        ON 
-            t1.emp_id= t2.pernr  :: character varying WHERE
-         t1.dept_id = $1 AND t1.internal_role_id = $2`;
-
-  const result = await getQuery({ query: sdbgQuery, values: [FINANCE, 2] });
-  console.table(result);
+  const dept_id = FINANCE;
+    const internal_role_id = 2;
+    let result = await getAssigneeList(dept_id, internal_role_id);
+    console.table(result);
   return resSend(
     res,
     true,
@@ -1074,20 +1070,11 @@ const assigneeList = async (req, res) => {
     result,
     null
   );
-  // req.query.$tableName = NEW_SDBG;
+} catch (error) {
+  console.error("Error executing the query:", error.message);
+  return resSend(res, false, 500, "Internal Server Error", error, null);
+}
 
-  // req.query.$filter = `{ "purchasing_doc_no" :  ${req.query.poNo}}`;
-  // try {
-
-  //     if (!req.query.poNo) {
-  //         return resSend(res, false, 400, "Please send po number", null, null);
-  //     }
-
-  //     getFilteredData(req, res);
-  // } catch (err) {
-  //     console.log("data not fetched", err);
-  //     resSend(res, false, 500, "Internal server error", null, null);
-  // }
 };
 
 const unlock = async (req, res) => {
@@ -1421,12 +1408,8 @@ const getCurrentAssignee = async (req, res) => {
     if (!req.query.poNo) {
       return resSend(res, true, 200, "Please send PO Number.", null, null);
     }
-    let filterdata = `SELECT assigned_to FROM ${SDBG} WHERE purchasing_doc_no = $1 AND last_assigned = $2`;
-    console.log(filterdata);
-    const result = await getQuery({
-      query: filterdata,
-      values: [req.query.poNo, 1],
-    });
+    const assign = `assigned_to`;
+    let result = await getLastAssignee(SDBG, req.query.poNo, assign);
 
     if (result.length > 0) {
       resSend(res, true, 200, "assigne fetched successfully", result[0], null);
@@ -1438,7 +1421,7 @@ const getCurrentAssignee = async (req, res) => {
     return resSend(res, false, 500, "Internal Server Error", error, null);
   }
 }
-
+// last_assigned
 module.exports = {
   submitSDBG,
   getSdbgEntry,
