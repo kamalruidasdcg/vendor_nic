@@ -33,6 +33,22 @@ const getAssigneeList = async(dept_id, internal_role_id) => {
 
 }
 
+const checkIsAssigned = async(tableName, poNo, userCode, assign) => {
+    const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${tableName} WHERE purchasing_doc_no = $1 AND ${assign} = $2 AND last_assigned = $3`;
+
+    const check_assign_to_query = await getQuery({
+      query: check_assign_to_str,
+      values: [
+        poNo,
+        userCode,
+        1,
+      ],
+    });
+    let check_assign_to_result = check_assign_to_query[0].assign_count;
+
+   // console.log(check_assign_to_result);
+    return check_assign_to_result;
+}
 
 
-module.exports = { getLastAssignee, getAssigneeList }
+module.exports = { getLastAssignee, getAssigneeList, checkIsAssigned }
