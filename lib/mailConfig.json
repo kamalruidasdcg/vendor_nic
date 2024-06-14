@@ -127,6 +127,31 @@
         "bcc_users": [],
         "data": {}
     },
+    "BG_UPLOAD_BY_VENDOR": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+
+    },
+    "BG_ENTRY_BY_DO": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_ACCEPT_REJECT": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
     "WDC_UPLOADING": {
         "users": [],
         "email_subject": "WDC",

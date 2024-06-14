@@ -55,15 +55,19 @@ const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
 const { SDBG_SUBMIT_MAIL_TEMPLATE } = require("../../templates/mail-template");
-const { mailInsert } = require("../../services/mail.services");
-// const { mailTrigger } = require("../sendMailController");
+const { mailInsert, sendMail } = require("../../services/mail.services");
+// const {   } = require("../sendMailController");
 const {
   SDBG_SUBMIT_BY_VENDOR,
   SDBG_SUBMIT_BY_GRSE,
+  BG_UPLOAD_BY_VENDOR,
+  BG_ACCEPT_REJECT,
+  BG_ENTRY_BY_DO,
 } = require("../../lib/event");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
 const { getLastAssignee, getAssigneeList } = require("../../services/lastassignee.servces");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -150,6 +154,9 @@ const submitSDBG = async (req, res) => {
       const response = await getQuery({ query: q, values: val });
 
       if (response.length) {
+
+        handelEmail(payload, tokenData)
+
         resSend(res, true, 200, "file uploaded!", fileData, null);
       } else {
         resSend(res, false, 400, "No data inserted", response, null);
@@ -751,6 +758,11 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
+      if (obj.status === FORWARD_TO_FINANCE) {
+        // BG_ENTRY_BY_DO
+        handelEmail(obj, tokenData);
+      }
+
       // console.log("rt67898uygy");
       // console.log(sdbgQuery);
       let msg =
@@ -875,8 +887,8 @@ const sdbgUpdateByFinance = async (req, res) => {
         query: check,
         values: [obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED],
       });
-console.log('resAssigneQry[0].count_val');
-console.log(resAssigneQry[0].count_val);
+      console.log('resAssigneQry[0].count_val');
+      console.log(resAssigneQry[0].count_val);
       if (resAssigneQry[0].count_val > 0) {
         return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
       }
@@ -965,6 +977,8 @@ console.log(resAssigneQry[0].count_val);
         values: insertsdbg_q["val"],
       });
 
+      handelEmail(insertPayloadForSdbg, tokenData)
+
       if (
         insertPayloadForSdbg.status == APPROVED &&
         (action_type_with_vendor_code[0].action_type == ACTION_SDBG ||
@@ -989,6 +1003,8 @@ console.log(resAssigneQry[0].count_val);
           );
         }
       }
+
+
       if (insertPayloadForSdbg.status == APPROVED || insertPayloadForSdbg.status == "HOLD") {
 
         try {
@@ -1042,38 +1058,38 @@ console.log(resAssigneQry[0].count_val);
 
 const assigneeList = async (req, res) => {
   try {
-  const tokenData = { ...req.tokenData };
+    const tokenData = { ...req.tokenData };
 
-  if (
-    tokenData.department_id != FINANCE ||
-    tokenData.internal_role_id != ASSIGNER
-  ) {
+    if (
+      tokenData.department_id != FINANCE ||
+      tokenData.internal_role_id != ASSIGNER
+    ) {
+      return resSend(
+        res,
+        true,
+        200,
+        "Please Login as Finance Assigner.",
+        null,
+        null
+      );
+    }
+
+    const dept_id = FINANCE;
+    const internal_role_id = 2;
+    let result = await getAssigneeList(dept_id, internal_role_id);
+    console.table(result);
     return resSend(
       res,
       true,
       200,
-      "Please Login as Finance Assigner.",
-      null,
+      "SDBG assigneeList fetch successfully!",
+      result,
       null
     );
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
   }
-
-  const dept_id = FINANCE;
-    const internal_role_id = 2;
-    let result = await getAssigneeList(dept_id, internal_role_id);
-    console.table(result);
-  return resSend(
-    res,
-    true,
-    200,
-    "SDBG assigneeList fetch successfully!",
-    result,
-    null
-  );
-} catch (error) {
-  console.error("Error executing the query:", error.message);
-  return resSend(res, false, 500, "Internal Server Error", error, null);
-}
 
 };
 
@@ -1160,15 +1176,47 @@ async function poContactDetails(purchasing_doc_no) {
   return result;
 }
 
-async function handelEmail(payload) {
-  if (payload.status === PENDING) {
-    const result = await poContactDetails(payload.purchasing_doc_no);
-    payload.delingOfficerName = result[0]?.dealingOfficerName;
-    payload.mailSendTo = result[0]?.dealingOfficerMail;
-    payload.vendor_name = result[0]?.vendor_name;
-    payload.vendor_code = result[0]?.vendor_code;
-    payload.sendAt = new Date(payload.created_at);
-    await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
+// async function handelEmail(payload) {
+//   if (payload.status === PENDING) {
+//     const result = await poContactDetails(payload.purchasing_doc_no);
+//     payload.delingOfficerName = result[0]?.dealingOfficerName;
+//     payload.mailSendTo = result[0]?.dealingOfficerMail;
+//     payload.vendor_name = result[0]?.vendor_name;
+//     payload.vendor_code = result[0]?.vendor_code;
+//     payload.sendAt = new Date(payload.created_at);
+//     await mailInsert(payload, SDBG_SUBMIT_BY_VENDOR, "New SDBG submitted");
+//   }
+// }
+
+async function handelEmail(payload, tokenData) {
+
+
+  let emailUserDetailsQuery;
+  let emailUserDetails;
+  let dataObj = payload;
+  if (tokenData.user_type === USER_TYPE_VENDOR && payload.status == SUBMITTED) {
+    // BG_UPLOAD_BY_VENDOR
+    emailUserDetailsQuery = getUserDetailsQuery('do', '$1');
+    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+    await sendMail(BG_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, BG_UPLOAD_BY_VENDOR);
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == APPROVED) {
+    // BG_ACCEPT_REJECT
+    emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+    await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == REJECTED) {
+    // BG_ACCEPT_REJECT
+    emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+    await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == FORWARD_TO_FINANCE) {
+    // BG_ACCEPT_REJECT
+    // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+    // emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+    await sendMail(BG_ENTRY_BY_DO, dataObj, { users: [] }, BG_ENTRY_BY_DO);
   }
 }
 
