@@ -632,8 +632,19 @@ async function handelMail(tokenData, payload, event) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      await sendMail(QAP_ASSIGNMENT, dataObj, { users: emailUserDetails }, QAP_ASSIGNMENT);
+      dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name };
+      console.log("dataObj", dataObj);
+      await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
     }
+
+    if (tokenData.internal_role_id == ASSIGNER && payload.status == REJECTED) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name };
+      await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
+    }
+
     // switch (event) {
     //   case QAP_UPLOAD_BY_VENDOR:
 

@@ -111,6 +111,14 @@
         "bcc_users": [],
         "data": {}
     },
+    "QAP_APPROVE_REJECT": {
+        "users": [],
+        "email_subject": "QAP Current Status",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
     "WDC_APPROVAL_REJECT": {
         "users": [],
         "email_subject": "WDC",
