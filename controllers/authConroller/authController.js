@@ -299,7 +299,7 @@ const login = async (req, res) => {
         }
 
     } catch (error) {
-        resSend(res, false, 500, Message.DB_CONN_ERROR, JSON.stringify(error));
+        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
     }
 };
 
