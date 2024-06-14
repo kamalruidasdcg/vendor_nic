@@ -89,7 +89,7 @@
     },
     "DEMAND_UPLOAD_BY_BEARTH": {
         "users": [],
-        "email_subject": "Demand raised upload",
+        "email_subject": "Demand raised",
         "email_heading": "MAIL",
         "cc_users": [],
         "bcc_users": [],

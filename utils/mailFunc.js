@@ -18,7 +18,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 '${type}'               AS u_type
                 FROM      ekko               AS po
                     LEFT JOIN pa0002             AS user_t
-                ON   ( po.ernam = user_t.pernr :: CHARACTER varying) where po.ebeln = ${valueParameter};
+                ON   ( po.ernam = user_t.pernr :: CHARACTER varying) where po.ebeln = ${valueParameter}
                 )`;
             break;
         case 'vendor':
@@ -44,7 +44,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                               '${type}'               AS u_type
                     FROM pa0002             AS user_t
                     user_t.pernr = ${valueParameter}
-                )`
+                )`;
             break;
 
         case 'vendor_and_do':
@@ -115,7 +115,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 FROM      ekko                          AS po
                 LEFT JOIN lfa1                          AS vendor_t
                 ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter}
-            )`
+            )`;
             break;
 
         case 'nodal_officers':
@@ -146,7 +146,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
               ) 
               where 
               department_id = ${USER_TYPE_GRSE_QAP} AND internal_role_id = ${ASSIGNER}
-          ) `
+          ) `;
 
 
             break;
