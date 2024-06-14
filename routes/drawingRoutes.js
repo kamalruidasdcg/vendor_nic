@@ -17,5 +17,8 @@ router.get("/assigneeList", [veifyAccessToken], (req, res) => {
     drawingController.assigneeList(req, res);
   });
 
+  router.get("/getCurrentAssignee", [veifyAccessToken], (req, res) => {
+    drawingController.getCurrentAssignee(req, res);
+  });
 
 module.exports = router;
