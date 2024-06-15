@@ -159,5 +159,13 @@
         "cc_users": [],
         "bcc_users": [],
         "data": {}
+    },
+    "PAYMENT_ADVICE_DOC_GENERATE": {
+        "users": [],
+        "email_subject": "Payment advice",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }
