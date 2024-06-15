@@ -40,11 +40,7 @@ const {
 } = require("../../lib/status");
 const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../../controllers/genralControlles");
-const {
-  DRAWING_SUBMIT_MAIL_TEMPLATE,
-} = require("../../templates/mail-template");
-const SENDMAIL = require("../../lib/mailSend");
-// const { mailTrigger } = require("../sendMailController");
+
 const {
   DRAWING_SUBMIT_BY_VENDOR,
   DRAWING_SUBMIT_BY_GRSE,

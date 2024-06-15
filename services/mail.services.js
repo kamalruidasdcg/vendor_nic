@@ -4,8 +4,8 @@ const { INSERT, ARCHIVE, MAIL_SEND_DEFAULT_RETRY_COUNT } = require("../lib/const
 const { NEW } = require("../lib/status");
 const { EMAILS, ARCHIVE_EMAILS } = require("../lib/tableName");
 const { generateQuery, getEpochTime, getDateTime, generateQueryForMultipleData } = require("../lib/utils");
-const mailBody = require("../lib/mailBody");
-const { EMAIL_TEMPLAE } = require("../templates/mail-template");
+// const mailBody = require("../lib/mailBody");
+// const { EMAIL_TEMPLAE } = require("../templates/mail-template");
 const { query, getQuery } = require("../config/pgDbConfig");
 const mailjson = require("../lib/mailConfig.json");
 /**
