@@ -12,8 +12,10 @@ const fileDetails = require("../../lib/filePath");
 const { getFilteredData } = require("../genralControlles");
 const SENDMAIL = require("../../lib/mailSend");
 const { SDBG_SUBMIT_MAIL_TEMPLATE } = require("../../templates/mail-template");
-const { mailInsert } = require("../../services/mail.services");
+const { mailInsert, sendMail } = require("../../services/mail.services");
 const { checkIsApprovedRejected, getFristRow } = require("../../services/lastassignee.servces");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { ILMS_ACKNOWLEDGE_RECEIPT, ILMS_UPLOAD_TO_CDO } = require("../../lib/event");
 // const { mailTrigger } = require("../sendMailController");
 
 
@@ -72,12 +74,22 @@ const submitILMS = async (req, res) => {
             console.log(q);
             console.log(val);
 
-            if (payload.status === APPROVED || payload.status === REJECTED) {
-                const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
-                console.log("actual_subminission", actual_subminission);
-            }
+            // if (payload.status === APPROVED || payload.status === REJECTED) {
+            //     const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
+            //     console.log("actual_subminission", actual_subminission);
+            // }
             const response = await poolQuery({ client, query: q, values: val });
             console.log(response);
+            if (payload.status === APPROVED ) {
+                const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
+                sendMailToVendor(payload)
+                console.log("actual_subminission", actual_subminission);
+            }
+            if (payload.status === SUBMITTED && tokenData.user_type == USER_TYPE_VENDOR ) {
+                sendMailToCDOandDO(payload);
+            }
+
+
             console.log('#$%^&*&^%$#$%^&');
 
             // mail setup
@@ -155,6 +167,37 @@ const list = async (req, res) => {
         return resSend(res, false, 400, "Data not fetch!!", error, null);
     }
 };
+
+
+
+async function sendMailToCDOandDO(data) {
+    console.log("datadatadata", data);
+
+    try {
+  
+      let vendorDetails = getUserDetailsQuery('cdo_and_do', '$1');
+      const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
+      const dataObj = { ...data };
+      console.log("ILMS_UPLOAD_TO_CDO, dataObj, { users: mail_details }, ILMS_UPLOAD_TO_CDO", ILMS_UPLOAD_TO_CDO, dataObj, { users: mail_details }, ILMS_UPLOAD_TO_CDO);
+      await sendMail(ILMS_UPLOAD_TO_CDO, dataObj, { users: mail_details }, ILMS_UPLOAD_TO_CDO);
+    } catch (error) {
+      console.log("sendMailToCDOandDO", error.toString(), error.stack);
+    }
+  }
+  async function sendMailToVendor(data) {
+  
+    try {
+  
+      let vendorDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+  
+      const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.purchasing_doc_no] });
+      console.log(vendorDetailsQuery, data, "ruid");
+      const dataObj = { ...data };
+      await sendMail(ILMS_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, ILMS_ACKNOWLEDGE_RECEIPT);
+    } catch (error) {
+      console.log(error.toString(), error.stack);
+    }
+  }
 
 
 module.exports = {

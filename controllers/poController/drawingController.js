@@ -93,18 +93,18 @@ const submitDrawing = async (req, res) => {
       }
 
       const poType = await checkPoType(payload.purchasing_doc_no);
-      
+
       const star = `vendor_code,actiontype`;
       const action_type_with_vendor_code = await getFristRow(DRAWING, star, payload.purchasing_doc_no); // await get_action_type_with_vendor_code(payload.purchasing_doc_no);
 
-      if(poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR) {
-       
+      if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR) {
+
         const check = await checkIsApprovedRejected(DRAWING, payload.purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
-                if (check > 0) {
-                    return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
-                }
+        if (check > 0) {
+          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+        }
       }
-      
+
       if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == ASSIGNER && payload.status == ASSIGNED) {
         if (!payload.assign_to || payload.assign_to == "") {
           return resSend(res, false, 200, "please send assign_to.", payload, null);
@@ -140,21 +140,21 @@ const submitDrawing = async (req, res) => {
         );
 
       }
-      
+
       if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == STAFF) {
         console.log(payload.status);
-        
-        if(payload.status != APPROVED && payload.status != REJECTED) {
-          return resSend(res,true,200,"Staff can only APPROVED or rejected.",null,null);
+
+        if (payload.status != APPROVED && payload.status != REJECTED) {
+          return resSend(res, true, 200, "Staff can only APPROVED or rejected.", null, null);
         }
         if (!payload.reference_no) {
-          return resSend(res,true,200,"Please send valid reference_no.",null,null);
+          return resSend(res, true, 200, "Please send valid reference_no.", null, null);
         }
         const assign = `assign_to`;
         let checkAssig = await checkIsAssigned(DRAWING, payload.purchasing_doc_no, tokenData.vendor_code, assign);
 
         if (checkAssig != 1) {
-          return resSend( res,false,200,"This PO is not assigned to you!",null,null);
+          return resSend(res, false, 200, "This PO is not assigned to you!", null, null);
         }
 
         payload.vendor_code = action_type_with_vendor_code.vendor_code;
@@ -162,21 +162,35 @@ const submitDrawing = async (req, res) => {
         payload.updated_by = `GRSE`;
         payload.last_assigned = 0;
         payload.created_by_id = tokenData.vendor_code;
-        
-        if(payload.file) {
-            delete payload.file;
+
+        if (payload.file) {
+          delete payload.file;
         }
-        if(payload.mailSendTo) {
+        if (payload.mailSendTo) {
           delete payload.mailSendTo;
         }
-        
+
         let insertObj;
         insertObj = drawingPayload(payload, payload.status);
 
         const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
         const response = await poolQuery({ client, query: q, values: val });
         console.log(response);
-        if(response) {
+        if (response) {
+          if (payload.status === APPROVED) {
+
+            // CDO APPROVED DRAWING . . 
+
+            sendMailToVendor(payload)
+
+            const actual_subminission = await setActualSubmissionDate(
+              payload,
+              "02",
+              tokenData,
+              SUBMITTED
+            );
+            console.log("actual_subminission", actual_subminission);
+          }
           return resSend(res, true, 200, `Drawing is ${payload.status}`, response, null);
         }
 
@@ -207,7 +221,7 @@ const submitDrawing = async (req, res) => {
           null
         );
       }
-     
+
 
 
 
@@ -235,8 +249,8 @@ const submitDrawing = async (req, res) => {
         }
       }
       payload.vendor_code = tokenData.vendor_code;
-      
-      
+
+
 
       payload.updated_by =
         tokenData.user_type === USER_TYPE_VENDOR ? "VENDOR" : "GRSE";
@@ -249,31 +263,36 @@ const submitDrawing = async (req, res) => {
         );
       }
 
-    
+
       let insertObj;
 
-     
+
       insertObj = drawingPayload(payload, payload.status);
-     
+
       const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
       const response = await poolQuery({ client, query: q, values: val });
 
-      if (payload.status === APPROVED) {
+      console.log("payload", payload);
+      // if (payload.status === APPROVED) {
 
-        // CDO APPROVED DRAWING . . 
+      //   // CDO APPROVED DRAWING . . 
 
-        sendMailToVendor(payload)
+      //   sendMailToVendor(payload)
 
-        const actual_subminission = await setActualSubmissionDate(
-          payload,
-          "02",
-          tokenData,
-          SUBMITTED
-        );
-        console.log("actual_subminission", actual_subminission);
+      //   const actual_subminission = await setActualSubmissionDate(
+      //     payload,
+      //     "02",
+      //     tokenData,
+      //     SUBMITTED
+      //   );
+      //   console.log("actual_subminission", actual_subminission);
+      // }
+
+      if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {
+        sendMailToCDOandDO(payload)
       }
 
-     
+
       if (response) {
         resSend(res, true, 200, `Drawing ${payload.status}`, response[0], null);
       } else {
@@ -405,8 +424,10 @@ async function sendMailToVendor(data) {
 
   try {
 
-    let vendorDetailsQuery = getUserDetailsQuery('vendor', '$1');
-    const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.vendor_code] });
+    let vendorDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+
+    const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.purchasing_doc_no] });
+    console.log(vendorDetailsQuery, data, "ruid");
     const dataObj = { ...data };
     await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
   } catch (error) {
