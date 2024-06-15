@@ -54,27 +54,12 @@ const {
 const { Console } = require("console");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
-const { getLastAssignee, getAssigneeList, checkIsAssigned } = require("../../services/lastassignee.servces");
+const { getLastAssignee, getAssigneeList, checkIsAssigned, getFristRow, checkIsApprovedRejected, checkPoType } = require("../../services/lastassignee.servces");
 
-// add new post
-function poTypeCheck(materialData) {
-  const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
-  // const regex = /ZDIN/;   // NOT USE FOR IDENTIFY SERVICE PO
-  // regex.test(materialType);
-  let isMatched = true;
 
-  for (let i = 0; i < materialData.length; i++) {
-    isMatched = regex.test(materialData[i]?.MTART);
-    if (isMatched === false) break;
-  }
-
-  return isMatched;
-}
 
 const submitDrawing = async (req, res) => {
-  // console.log("%^&*&^%%^&*(*&^%$");
-  // console.log("tokenData");
-  // return;
+
   try {
 
     const client = await poolClient();
@@ -95,7 +80,6 @@ const submitDrawing = async (req, res) => {
       }
 
       const payload = { ...req.body, ...fileData, created_at: getEpochTime() };
-      const verifyStatus = [SUBMITTED, RE_SUBMITTED, APPROVED];
 
       if (!payload.purchasing_doc_no || !payload.status) {
         return resSend(res, false, 400, "Please send valid payload", null, null);
@@ -108,72 +92,36 @@ const submitDrawing = async (req, res) => {
         return resSend(res, true, 200, "please login as Valid user!", null, null);
       }
 
-
-      let materialQuery = `SELECT
-            mat.EBELP AS material_item_number,
-            mat.KTMNG AS material_quantity, 
-            mat.MATNR AS material_code,
-            mat.MEINS AS material_unit,
-
-            mat.EINDT as contractual_delivery_date, 
-            materialMaster.*, 
-            mat_desc.MAKTX as mat_description
-            FROM ${EKPO} AS  mat
-                
-                LEFT JOIN mara AS materialMaster 
-                    ON (materialMaster.MATNR = mat.MATNR)
-                LEFT JOIN makt AS mat_desc
-                    ON mat_desc.MATNR = mat.MATNR
-            WHERE mat.EBELN = $1`;
-
-      let materialResult = await poolQuery({
-        client,
-        query: materialQuery,
-        values: [payload.purchasing_doc_no],
-      });
-
-      const isMaterialTypePO = poTypeCheck(materialResult);
-
-      const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
-
-
-      const action_type_with_vendor_code = await get_action_type_with_vendor_code(payload.purchasing_doc_no);
+      const poType = await checkPoType(payload.purchasing_doc_no);
+      
+      const star = `vendor_code,actiontype`;
+      const action_type_with_vendor_code = await getFristRow(DRAWING, star, payload.purchasing_doc_no); // await get_action_type_with_vendor_code(payload.purchasing_doc_no);
 
       if(poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR) {
-        const check = `SELECT COUNT(status) AS count_val FROM ${DRAWING} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
-        const resAssigneQry = await poolQuery({
-          client,
-          query: check,
-          values: [payload.purchasing_doc_no, payload.reference_no, APPROVED, REJECTED],
-        });
-          console.log('resAssigneQry[0].count_val');
-          console.log(resAssigneQry[0].count_val);
-        if (resAssigneQry[0].count_val > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
-        }
+       
+        const check = await checkIsApprovedRejected(DRAWING, payload.purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
+                if (check > 0) {
+                    return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+                }
       }
       
-
       if (poType === "MATERIAL" && tokenData.user_type != USER_TYPE_VENDOR && tokenData.internal_role_id == ASSIGNER && payload.status == ASSIGNED) {
         if (!payload.assign_to || payload.assign_to == "") {
           return resSend(res, false, 200, "please send assign_to.", payload, null);
         }
-        payload.vendor_code = action_type_with_vendor_code[0].vendor_code;
-        payload.actiontype = action_type_with_vendor_code[0].vendor_code;
+        payload.vendor_code = action_type_with_vendor_code.vendor_code;
+        payload.actiontype = action_type_with_vendor_code.actiontype;
         payload.updated_by = `GRSE`;
         payload.last_assigned = 1;
         payload.created_by_id = tokenData.vendor_code;
         payload.assign_from = tokenData.vendor_code;
         payload.reference_no = `DRAWING ${ASSIGNED}`;
-        // return resSend(res,false,200,"This is activity.",payload,null);
 
-        const { q, val } = generateQuery(INSERT, DRAWING, payload);
+        let insertObj;
+        insertObj = drawingPayload(payload, payload.status);
+
+        const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
         const response = await poolQuery({ client, query: q, values: val });
-        console.log(response);
-
-        console.log(payload.purchasing_doc_no);
-        console.log(2222222222222);
-        console.log(payload.assign_to);
 
         const update_assign_to = `UPDATE ${DRAWING} SET last_assigned = 0 WHERE purchasing_doc_no = $1 AND assign_to != $2`;
         let update_assign_touery = await poolQuery({
@@ -206,19 +154,26 @@ const submitDrawing = async (req, res) => {
         let checkAssig = await checkIsAssigned(DRAWING, payload.purchasing_doc_no, tokenData.vendor_code, assign);
 
         if (checkAssig != 1) {
-          return resSend( res,true,200,"This PO is not assigned to you!",null,null);
+          return resSend( res,false,200,"This PO is not assigned to you!",null,null);
         }
 
-        payload.vendor_code = action_type_with_vendor_code[0].vendor_code;
-        payload.actiontype = action_type_with_vendor_code[0].vendor_code;
+        payload.vendor_code = action_type_with_vendor_code.vendor_code;
+        payload.actiontype = action_type_with_vendor_code.actiontype;
         payload.updated_by = `GRSE`;
         payload.last_assigned = 0;
         payload.created_by_id = tokenData.vendor_code;
-        // payload.assign_from = tokenData.vendor_code;
-        // payload.reference_no = `Drawing ${ASSIGNED}`;
-        // return resSend(res,false,200,"This is activity.",payload,null);
+        
+        if(payload.file) {
+            delete payload.file;
+        }
+        if(payload.mailSendTo) {
+          delete payload.mailSendTo;
+        }
+        
+        let insertObj;
+        insertObj = drawingPayload(payload, payload.status);
 
-        const { q, val } = generateQuery(INSERT, DRAWING, payload);
+        const { q, val } = generateQuery(INSERT, DRAWING, insertObj);
         const response = await poolQuery({ client, query: q, values: val });
         console.log(response);
         if(response) {
@@ -226,7 +181,6 @@ const submitDrawing = async (req, res) => {
         }
 
       }
-
 
       if (poType === "SERVICE" && tokenData.user_type == USER_TYPE_VENDOR) {
         return resSend(
@@ -319,18 +273,13 @@ const submitDrawing = async (req, res) => {
         console.log("actual_subminission", actual_subminission);
       }
 
-      console.log("%_&&_((((_$");
-      console.log(response);
-      //return;
+     
       if (response) {
         resSend(res, true, 200, `Drawing ${payload.status}`, response[0], null);
       } else {
         resSend(res, false, 400, "No data inserted", null, null);
       }
 
-      // } else {
-      //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
-      // }
     } catch (error) {
       console.log("Drawing submission api", error);
 
@@ -353,10 +302,6 @@ const get_action_type_with_vendor_code = async (
     query: GET_LATEST_SDBG,
     values: [purchasing_doc_no],
   });
-
-  console.log("@@@@@@@@@@@");
-  console.log(result);
-  console.log("##########");
   return result;
 };
 

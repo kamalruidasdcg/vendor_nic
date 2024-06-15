@@ -484,7 +484,7 @@ const get_latest_activity = async (
   reference_no
 ) => {
   try {
-    const get_query = `SELECT * FROM ${table_name} WHERE reference_no = $1 AND purchasing_doc_no = $2 ORDER BY created_at DESC LIMIT 1`;
+    const get_query = `SELECT * FROM ${table_name} WHERE reference_no = $1 AND purchasing_doc_no = $2 ORDER BY created_at ASC LIMIT 1`;
     const result = await query({
       query: get_query,
       values: [reference_no, purchasing_doc_no],
