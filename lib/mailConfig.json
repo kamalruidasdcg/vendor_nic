@@ -159,5 +159,69 @@
         "cc_users": [],
         "bcc_users": [],
         "data": {}
+    },
+    "PAYMENT_ADVICE_DOC_GENERATE": {
+        "users": [],
+        "email_subject": "Payment advice",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_UPLOAD_CHECKLIST": {
+        "users": [],
+        "email_subject": "BTN UPLOAD CHECKLIST",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_FORWORD_FINANCE": {
+        "users": [],
+        "email_subject": "BTN FORWORD FINANCE",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_RETURN_DO": {
+        "users": [],
+        "email_subject": "BTN RETURN DO",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "PAYMENT_RELEASE_REVERSAL": {
+        "users": [],
+        "email_subject": "PAYMENT RELEASE REVERSAL",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "CLAIM_LETTER_APPROVE_REJECT": {
+        "users": [],
+        "email_subject": "CLAIM LETTER",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "CLAIM_LETTER_UPLOAD": {
+        "users": [],
+        "email_subject": "CLAIM LETTER UPLOAD",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_2MONTH_PRIOR": {
+        "users": [],
+        "email_subject": "BG remindr email",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }
