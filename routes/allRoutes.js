@@ -61,9 +61,6 @@ const MirRoutes = require("./MirRoutes");
 const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
-const {
-  sendReminderMail,
-} = require("../controllers/sapController/remaiderMailSendController");
 const { createTable } = require("../lib/createTableFromJson");
 
 // FOR CHECHING SERVER IS RUNNING ...
@@ -98,7 +95,7 @@ router.get("/getFilteredData", getFilteredData);
 router.post("/updatTableData", updatTableData);
 router.post("/insertTableData", insertTableData);
 
-router.get("/reminder", sendReminderMail);
+// router.get("/reminder", sendReminderMail);
 
 // VENDOR BILL RECEIVE, CERTIFIED REJECT FORWARD
 
