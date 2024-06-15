@@ -63,6 +63,22 @@
         "bcc_users": [],
         "data": {}
     },
+    "ILMS_ACKNOWLEDGE_RECEIPT": {
+        "users": [],
+        "email_subject": "ilms acknowledge",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "ILMS_UPLOAD_TO_CDO": {
+        "users": [],
+        "email_subject": "Drawing uplod",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
     "INSP_CALL_LETTER_UPLOAD": {
         "users": [],
         "email_subject": "Inspection Call letter upload",
