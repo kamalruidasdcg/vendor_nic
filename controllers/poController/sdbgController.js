@@ -655,6 +655,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
           depertment: obj.depertment ? obj.depertment : null,
+          man_no:tokenData.vendor_code,
           status: obj.status,
           created_at: getEpochTime(),
           created_by: tokenData.vendor_code,
@@ -1575,6 +1576,7 @@ async function insertSdbgSave(req, res) {
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
           depertment: obj.depertment ? obj.depertment : null,
+          man_no:tokenData.vendor_code,
           status: obj.status,
           created_at: getEpochTime(),
           created_by: tokenData.vendor_code,
@@ -1676,10 +1678,10 @@ async function getSdbgSave(req, res) {
       return resSend(res, false, 200, "Please login as valid user!.", null, null);
     }
 
-    const getSSdbgSaveQuery = `SELECT * FROM ${SDBG_SAVE} WHERE reference_no = $1`;
+    const getSSdbgSaveQuery = `SELECT * FROM ${SDBG_SAVE} WHERE reference_no = $1 AND man_no = $2`;
     const resgetSdbgSave = await getQuery({
       query: getSSdbgSaveQuery,
-      values: [req.query.reference_no],
+      values: [req.query.reference_no, tokenData.vendor_code],
     });
 
     return resSend(
