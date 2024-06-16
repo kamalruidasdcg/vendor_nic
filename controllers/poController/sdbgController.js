@@ -654,6 +654,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           check_list_reference: obj.reference_no ? obj.reference_no : null,
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
+          depertment: obj.depertment ? obj.depertment : null,
           status: obj.status,
           created_at: getEpochTime(),
           created_by: tokenData.vendor_code,
@@ -710,7 +711,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
             res,
             false,
             201,
-            "Data not inserted in sdbg_entry1 table!!",
+            "Data not inserted in sdbg_entry table!!",
             sdbgEntryQuery.error,
             null
           );
@@ -760,6 +761,12 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 
       if (obj.status === FORWARD_TO_FINANCE) {
         // BG_ENTRY_BY_DO
+        const deleteSdbgSaveQuery = `DELETE FROM ${SDBG_SAVE} WHERE reference_no = $1`;
+        const deleteSdbgSave = await poolQuery({
+          client,
+          query: deleteSdbgSaveQuery,
+          values: [obj.reference_no],
+        });
         handelEmail(obj, tokenData);
       }
 
@@ -1567,6 +1574,7 @@ async function insertSdbgSave(req, res) {
           check_list_reference: obj.reference_no ? obj.reference_no : null,
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
+          depertment: obj.depertment ? obj.depertment : null,
           status: obj.status,
           created_at: getEpochTime(),
           created_by: tokenData.vendor_code,
@@ -1656,6 +1664,38 @@ async function insertSdbgSave(req, res) {
 }
 }
 
+
+async function getSdbgSave(req, res) {
+  try {
+    const tokenData = req.tokenData;
+
+    if (!req.query.reference_no) {
+      return resSend(res, false, 200, "Please send valid reference_no!.", null, null);
+    }
+    if (tokenData.user_type === USER_TYPE_VENDOR) {
+      return resSend(res, false, 200, "Please login as valid user!.", null, null);
+    }
+
+    const getSSdbgSaveQuery = `SELECT * FROM ${SDBG_SAVE} WHERE reference_no = $1`;
+    const resgetSdbgSave = await getQuery({
+      query: getSSdbgSaveQuery,
+      values: [req.query.reference_no],
+    });
+
+    return resSend(
+      res,
+      true,
+      200,
+      "data fetched successfully.",
+      resgetSdbgSave,
+      null
+    );
+  } catch (err) {
+    console.log("data not fetched", err);
+    resSend(res, false, 500, "Internal server error", null, null);
+  }
+}
+
 module.exports = {
   submitSDBG,
   getSdbgEntry,
@@ -1670,4 +1710,5 @@ module.exports = {
   UpdateBGextensionRelease,
   getCurrentAssignee,
   insertSdbgSave,
+  getSdbgSave
 };
