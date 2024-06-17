@@ -22,7 +22,7 @@ router.post("/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
   });
 
   router.post("/addByXLS",
-  [veifyAccessToken, authorizeRoute],
+  [],
   uploadExcelFile.single("file"),
   paymentControllers.updoadExcelFileController);
 

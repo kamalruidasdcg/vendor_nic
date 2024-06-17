@@ -11,7 +11,12 @@
 //     CERTIFIED,
 //     STATUS_ACTIVE,
 // } = require("../lib/status");
-// const xlsx = require("xlsx");
+const xlsx = require("xlsx");
+
+const { poolClient, poolQuery } = require("../config/pgDbConfig");
+const { resSend } = require("../lib/resSend");
+const { generateQueryForMultipleData, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
+const { INSERT } = require("../lib/constant");
 
 // require("dotenv").config();
 
@@ -80,7 +85,7 @@
 //             resSend(res, true, 200, "No Record Found", result, null);
 //         }
 //     } catch (error) {
-   
+
 //         return resSend(res, false, 500, "Internal server error", [], null);
 //     }
 // };
@@ -261,111 +266,121 @@
 //     }
 // };
 
-// const updoadExcelFileController = async (req, res) => {
+const updoadExcelFileController = async (req, res) => {
 
 
-//     try {
+    try {
 
-//         const connObj = {
-//             host: process.env.DB_HOST_ADDRESS,
-//             port: process.env.DB_CONN_PORT,
-//             user: process.env.DB_USER,
-//             password: "",
-//             database: process.env.DB_NAME,
-//             multipleStatements: true,
-//         }
-//         const connection = mysql2.createConnection(connObj);
+        const client = await poolClient();
 
-//         try {
-//             let fileData = {};
-//             const { created_by_name, created_by_id } = req.body;
+        try {
+            let fileData = {};
+            const { created_by_name, created_by_id } = req.body;
 
-//             if (req.file) {
-//                 fileData = {
-//                     fileName: req.file.filename,
-//                     filePath: req.file.path,
-//                     fileType: req.file.mimetype,
-//                     fileSize: req.file.size,
-//                 };
+            if (req.file) {
+                fileData = {
+                    fileName: req.file.filename,
+                    filePath: req.file.path,
+                    fileType: req.file.mimetype,
+                    fileSize: req.file.size,
+                };
 
-//                 if (req.file == undefined) {
-//                     resSend(res, false, 400, "Please upload an excel file!", fileData, null);
-//                 }
+                if (req.file == undefined) {
+                    resSend(res, false, 400, "Please upload an excel file!", fileData, null);
+                }
 
-//                 const workbook = xlsx.readFile(req.file.path);
+                const workbook = xlsx.readFile(req.file.path);
 
-//                 const data = [];
-//                 const sheets = workbook.SheetNames;
+                const data = [];
+                const sheets = workbook.SheetNames;
 
-//                 for (let i = 0; i < sheets.length; i++) {
-//                     const temp = xlsx.utils.sheet_to_json(
-//                         workbook.Sheets[workbook.SheetNames[i]]
-//                     );
-//                     temp.forEach((res) => {
-//                         data.push({ ...res, created_by_name, created_by_id });
-//                     });
-//                 }
+                for (let i = 0; i < sheets.length; i++) {
+                    const temp = xlsx.utils.sheet_to_json(
+                        workbook.Sheets[workbook.SheetNames[i]]
+                    );
+                    temp.forEach((res) => {
+                        data.push({ ...res });
+                    });
+                }
 
-//                 const query = `INSERT INTO ${NEW_PAYMENTS} ( venor_code, contactors_name, po_no, MAIN, FOJ, RBD, COL_61P, TU, TTC, G_HOUSE, BELUR, NSSY, IHQ_DELHI,  WAGES_PAID_UPTO,  PF_DEPOSIT_UPTO, ESI_DEPISIT_UPTO, REMARKS, created_by_name, created_by_id, status) VALUES ?`;
+                // console.log("excel data", data);
+
+                // const query = `INSERT INTO ${NEW_PAYMENTS} ( venor_code, contactors_name, po_no, MAIN, FOJ, RBD, COL_61P, TU, TTC, G_HOUSE, BELUR, NSSY, IHQ_DELHI,  WAGES_PAID_UPTO,  PF_DEPOSIT_UPTO, ESI_DEPISIT_UPTO, REMARKS, created_by_name, created_by_id, status) VALUES ?`;
 
 
-//                 const values = data.map((obj) => [
-//                     obj.venor_code,
-//                     obj.contactors_name,
-//                     obj.po_no,
-//                     obj.MAIN,
-//                     obj.FOJ,
-//                     obj.RBD,
-//                     obj.COL_61P,
-//                     obj.TU,
-//                     obj.TTC,
-//                     obj.G_HOUSE,
-//                     obj.BELUR,
-//                     obj.NSSY,
-//                     obj.IHQ_DELHI,
-//                     obj.WAGES_PAID_UPTO,
-//                     obj.PF_DEPOSIT_UPTO,
-//                     obj.ESI_DEPISIT_UPTO,
-//                     obj.REMARKS,
-//                     obj.created_by_name,
-//                     obj.created_by_id,
-//                     "1",
-//                 ]);
+                // const values = data.map((obj) => [
+                //     obj.venor_code,
+                //     obj.contactors_name,
+                //     obj.po_no,
+                //     obj.MAIN,
+                //     obj.FOJ,
+                //     obj.RBD,
+                //     obj.COL_61P,
+                //     obj.TU,
+                //     obj.TTC,
+                //     obj.G_HOUSE,
+                //     obj.BELUR,
+                //     obj.NSSY,
+                //     obj.IHQ_DELHI,
+                //     obj.WAGES_PAID_UPTO,
+                //     obj.PF_DEPOSIT_UPTO,
+                //     obj.ESI_DEPISIT_UPTO,
+                //     obj.REMARKS,
+                //     obj.created_by_name,
+                //     obj.created_by_id,
+                //     "1",
+                // ]);
 
 
-//                 // const value = [ [1, "name"], [2, "name2"]]
+                // const value = [ [1, "name"], [2, "name2"]]
 
-//                 connection.query(query, [values], (err, results) => {
-//                     if (err) {
-//                         console.error('Error inserting data: ' + err);
-//                         resSend(res, false, 500, "'Failed to insert data'", data, null);
-//                     } else {
-//                         resSend(res, true, 200, "Data insert succussfully", data, null);
+                // connection.query(query, [values], (err, results) => {
+                //     if (err) {
+                //         console.error('Error inserting data: ' + err);
+                //         resSend(res, false, 500, "'Failed to insert data'", data, null);
+                //     } else {
+                //         resSend(res, true, 200, "Data insert succussfully", data, null);
 
-//                     }
-//                 });
+                //     }
+                // });
 
-//                 // connection.end();
+                // connection.end();
 
-//             } else {
-//                 resSend(res, false, 400, "Please upload a valid Excel File", fileData, null);
-//             }
-
-//         } catch (error) {
-//             console.error('Error inserting data: ' + error);
-//             resSend(res, false, 500, "Failed to insert data", [], null);
-//         } finally {
-//             connection.end();
-//         }
-//     } catch (error) {
-//         console.log("err", error);
-//         resSend(res, false, 500, "Failed to insert data", [], null);
-//     }
-
-// };
+                // const {q, val } = await generateQueryForMultipleData(data, 'mara', ['MATNR']);
+                const errorData = [];
+                for (const element of data) {
+                    const { q, val } = await generateInsertUpdateQuery(element, 'makt', ['MATNR']);
+                    console.log("jjjj", q, val);
+                    try {
+                        await poolQuery({ client, query: q, values: val });
+                    } catch (error) {
+                        console.log("error", error.message);
+                        errorData.push(element);
+                    }
+                }
 
 
 
+                resSend(res, true, 200, "succeddd", data, null);
+            } else {
+                resSend(res, false, 400, "Please upload a valid Excel File", [], null);
+            }
 
+        } catch (error) {
+            console.error('Error inserting data: ' + error);
+            resSend(res, false, 500, "Failed to insert data", [], null);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.log("err", error);
+        resSend(res, false, 500, "Failed to insert data", [], null);
+    }
+
+};
+
+
+
+module.exports = { updoadExcelFileController };
 
 // module.exports = { newPayment, updatePayment, deletePayment, allPaymentList, newPaymentEXCEL, updoadExcelFileController };

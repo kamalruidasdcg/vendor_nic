@@ -37,7 +37,7 @@ const {
 // const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 const billRoutes = require("./billRoutes");
-// const paymentRoutes = require("./paymentRouter");
+const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
 
 const drawingRoutes = require("./drawingRoutes");
@@ -225,7 +225,7 @@ router.get(poPrefix + "/ListOfPaymentAdvise", paymentAdviseController.List);
 // router.post(poPrefix + "/sdbg", [veifyAccessToken, uploadSDBGFile.single("file")], (req, res) => {
 //   sdbgController.submitSDBG(req, res);
 // });
-// router.use(poPrefix + "/sdbg", paymentRoutes);
+router.use(poPrefix + "/sdbg", paymentRoutes);
 
 // router.post(poPrefix + "/sdbgUnlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
 //   sdbgController.unlock(req, res);
