@@ -8,7 +8,6 @@ const {
   submitBTNByDO,
   fetchBTNByNumForDO,
   getGrnIcrenPenelty,
-
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
@@ -18,15 +17,21 @@ const {
 
 const { btnmw, btnAdvanceBillHybridUploadFile } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
-const { submitAdvanceBillHybrid, getAdvBillHybridData, submitAdvBillBTNByDO, getAdvBillHybridDataForDO, getAdvBillHybridBTN } = require("../controllers/poController/advanceBillBTNController");
+const {
+  submitAdvanceBillHybrid,
+  getAdvBillHybridData,
+  submitAdvBillBTNByDO,
+  getAdvBillHybridDataForDO,
+  getAdvBillHybridBTN,
+} = require("../controllers/poController/advanceBillBTNController");
 
+// HYBRID MATERIAL BTN
 router.get("/", [], (req, res) => {
   fetchAllBTNs(req, res);
 });
 router.get("/getBTNData", [veifyAccessToken], (req, res) => {
   getBTNData(req, res);
 });
-
 router.get("/btn_num", [veifyAccessToken], (req, res) => {
   fetchBTNByNum(req, res);
 });
@@ -47,17 +52,19 @@ router.post(
   }
 );
 
-router.post(
-  "/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
-    getGrnIcrenPenelty(req, res);
-  }
-);
+router.post("/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
+  getGrnIcrenPenelty(req, res);
+});
 
 //// Btn Service Hybrid ////
 ///////////////////////////
-router.post("/submitBtnServiceHybrid", [veifyAccessToken, upload], (req, res) => {
-  submitBtnServiceHybrid(req, res);
-})
+router.post(
+  "/submitBtnServiceHybrid",
+  [veifyAccessToken, upload],
+  (req, res) => {
+    submitBtnServiceHybrid(req, res);
+  }
+);
 router.get("/getBTNDataServiceHybrid", [veifyAccessToken], (req, res) => {
   getBTNDataServiceHybrid(req, res);
 });
@@ -72,45 +79,36 @@ router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
 
-
-
 //// Btn Service Hybrid ////
 ///////////////////////////
 
-router.post("/submitAdvBillHybrid",
-  [ veifyAccessToken,
-    btnAdvanceBillHybridUploadFile()
-  ], (req, res) => {
+router.post(
+  "/submitAdvBillHybrid",
+  [veifyAccessToken, btnAdvanceBillHybridUploadFile()],
+  (req, res) => {
     // submitAdvanceBillHybrid(req, res);
-    submitAdvanceBillHybrid(req, res)
-
-  });
+    submitAdvanceBillHybrid(req, res);
+  }
+);
 router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridData(req, res)
-
+  getAdvBillHybridData(req, res);
 });
 router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridData(req, res)
-
+  getAdvBillHybridData(req, res);
 });
 router.post("/getAdvBillHybridForDO", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridDataForDO(req, res)
-
+  getAdvBillHybridDataForDO(req, res);
 });
 router.post("/submitAdvBillBTNByDO", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
-  submitAdvBillBTNByDO(req, res)
-
+  submitAdvBillBTNByDO(req, res);
 });
 router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridBTN(req, res)
-
+  getAdvBillHybridBTN(req, res);
 });
-
-
 
 module.exports = router;
