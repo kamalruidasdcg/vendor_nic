@@ -992,20 +992,20 @@ async function insertQapSave(req, res) {
   // return resSend(res, true, 200, "qapSave!", req.query, null);
   try {
     const tokenData = { ...req.tokenData };
-    let fileData = {};
-    if (req.file) {
-      fileData = {
-        file_name: req.file.filename,
-        file_path: req.file.path,
-        // fileType: req.file.mimetype,
-        // fileSize: req.file.size,
-      };
+   
+    let payload = { ...req.body, created_at: getEpochTime() };
+
+    if (!req.body.reference_no) {
+      return resSend(res, false, 200, "Please send valid reference_no!.", null, null);
     }
-    let payload = { ...req.body, ...fileData, created_at: getEpochTime() };
+    if (tokenData.user_type === USER_TYPE_VENDOR) {
+      return resSend(res, false, 200, "Please login as valid user!.", null, null);
+    }
 
-    // payload.updated_by = (tokenData.user_type === USER_TYPE_VENDOR) ? "VENDOR" : "GRSE";
+    
     payload.created_by_id = tokenData.vendor_code;
-
+    payload.man_no = tokenData.vendor_code;
+    console.log(payload);
     const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
     const response = await getQuery({ query: q, values: val });
 
@@ -1021,14 +1021,14 @@ async function getQapSave(req, res) {
   try {
     const tokenData = req.tokenData;
 
-    if (!req.query.poNo || tokenData.department_id != USER_TYPE_GRSE_QAP) {
+    if (!req.query.reference_no || tokenData.department_id != USER_TYPE_GRSE_QAP) {
       return resSend(res, true, 200, "Please send valid payload!.", null, null);
     }
 
-    const getQapSaveQuery = `SELECT * FROM ${QAP_SAVE} WHERE purchasing_doc_no = $1`;
+    const getQapSaveQuery = `SELECT * FROM ${QAP_SAVE} WHERE reference_no = $1 AND man_no = $2`;
     const resgetQapSave = await getQuery({
       query: getQapSaveQuery,
-      values: [req.query.poNo],
+      values: [req.query.reference_no, tokenData.vendor_code],
     });
 
     if (!resgetQapSave.length) {
@@ -1053,14 +1053,14 @@ async function deleteQapSave(req, res) {
   try {
     const tokenData = req.tokenData;
 
-    if (!req.query.poNo || tokenData.department_id != USER_TYPE_GRSE_QAP) {
+    if (!req.query.reference_no || tokenData.department_id != USER_TYPE_GRSE_QAP) {
       return resSend(res, true, 200, "you dont have permination!.", null, null);
     }
 
-    const deleteQapSaveQuery = `DELETE FROM ${QAP_SAVE} WHERE purchasing_doc_no = $1`;
+    const deleteQapSaveQuery = `DELETE FROM ${QAP_SAVE} WHERE reference_no = $1`;
     const deleteQapSave = await getQuery({
       query: deleteQapSaveQuery,
-      values: [req.query.poNo],
+      values: [req.query.reference_no],
     });
 
     return resSend(res, true, 200, "delete successfully.", deleteQapSave, null);
