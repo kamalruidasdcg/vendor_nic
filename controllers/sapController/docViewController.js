@@ -380,7 +380,7 @@ const icgrnReport = async (req, res) => {
                 invoiceDate: resp.invoiceDate,
                 gateEntryNo: resp.gateEntryNo,
                 gateEntryDate: resp.gateEntryDate,
-                lineItems: response[0]
+                lineItems: response
 
             }
             resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
