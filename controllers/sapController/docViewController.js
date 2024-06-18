@@ -60,20 +60,20 @@ const grnReport = async (req, res) => {
     try {
         let grnQuery =
             `SELECT 
-                mseg.MBLNR as matDocNo,
-                mseg.MATNR as materialNumber,
-                mseg.BWART as moment,
-                mseg.EBELN as purchasing_doc_no,
-                mseg.EBELP as poItemNumber,
-                mseg.LIFNR as vendor_code,
-                vendor_details.NAME1 as vendor_name,
-                mkpf.XBLNR as refferecnce,
-                mkpf.BKTXT as headerText,
-                mkpf.FRBNR as billOfLoading,
-                mkpf.BLDAT as documentDate,
-                mkpf.BUDAT as postingDate,
-                mkpf.CPUDT as entryDate,
-                makt.MAKTX as materialDesc
+                mseg.MBLNR as "matDocNo",
+                mseg.MATNR as "materialNumber",
+                mseg.BWART as "moment",
+                mseg.EBELN as "purchasing_doc_no",
+                mseg.EBELP as "poItemNumber",
+                mseg.LIFNR as "vendor_code",
+                vendor_details.NAME1 as "vendor_name",
+                mkpf.XBLNR as "refferecnce",
+                mkpf.BKTXT as "headerText",
+                mkpf.FRBNR as "billOfLoading",
+                mkpf.BLDAT as "documentDate",
+                mkpf.BUDAT as "postingDate",
+                mkpf.CPUDT as "entryDate",
+                makt.MAKTX as "materialDesc"
             FROM mseg AS mseg
                 LEFT JOIN mkpf AS mkpf
                     ON( mseg.MBLNR = mkpf.MBLNR)
