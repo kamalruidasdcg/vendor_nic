@@ -24,7 +24,7 @@ const { getQuery, poolClient } = require("../../config/pgDbConfig");
 
 
 
-const MAX_AGE = 24 * 60 * 60 * 1000;
+const MAX_AGE = 12 * 60 * 60 * 1000;
 
 
 const login = async (req, res) => {
