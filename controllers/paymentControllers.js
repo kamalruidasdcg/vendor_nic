@@ -275,7 +275,7 @@ const updoadExcelFileController = async (req, res) => {
 
         try {
             let fileData = {};
-            const { created_by_name, created_by_id } = req.body;
+            const { tableName, primayKeysArr } = req.body;
 
             if (req.file) {
                 fileData = {
@@ -288,6 +288,7 @@ const updoadExcelFileController = async (req, res) => {
                 if (req.file == undefined) {
                     resSend(res, false, 400, "Please upload an excel file!", fileData, null);
                 }
+                let pks = JSON.parse(primayKeysArr);
 
                 const workbook = xlsx.readFile(req.file.path);
 
@@ -369,9 +370,9 @@ const updoadExcelFileController = async (req, res) => {
                 const errorData = [];
                 let successData = 0;
                 for (const element of data) {
-                    const { q, val } = await generateInsertUpdateQuery(element, 'zfi_bgm_1', ['FILE_NO', 'REF_NO']);
+                    const { q, val } = await generateInsertUpdateQuery(element, tableName, pks);
                     // console.log("query", q, val);
-                    console.log("query", successData);
+                    console.log("query", q, val);
                     try {
                         await poolQuery({ client, query: q, values: val });
                         successData++;
