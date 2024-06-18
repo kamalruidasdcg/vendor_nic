@@ -110,6 +110,7 @@ exports.checkBTNRegistered = async (btn_num, po) => {
   }
   return false;
 };
+
 exports.getBTNInfo = async (btn_num) => {
   let q = `SELECT * FROM btn WHERE btn_num = $1`;
   let result = await getQuery({

@@ -9,6 +9,7 @@ const {
   fetchBTNByNumForDO,
   getGrnIcgrnByInvoice,
   fetchBTNList,
+  assignToFiStaffHandler,
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
@@ -55,6 +56,10 @@ router.post(
 
 router.post("/getGrnIcgrnByInvoice", [veifyAccessToken], (req, res) => {
   getGrnIcgrnByInvoice(req, res);
+});
+
+router.post("/assignToFiStaff", [veifyAccessToken], (req, res) => {
+  assignToFiStaffHandler(req, res);
 });
 
 //// Btn Service Hybrid ////
