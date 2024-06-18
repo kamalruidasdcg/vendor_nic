@@ -299,9 +299,28 @@ const updoadExcelFileController = async (req, res) => {
                         workbook.Sheets[workbook.SheetNames[i]]
                     );
                     temp.forEach((res) => {
-                        data.push({ ...res });
+                    console.log("res" ,res);
+                        data.push({
+                            ...res
+                        });
                     });
                 }
+
+
+                            // BG_DATE: convertDate(res.BG_DATE, `res.BG_DATE`),
+                            // PO_DATE: convertDate(res.PO_DATE, `res.PO_DATE`),
+                            // VALIDITY_DATE: convertDate(res.VALIDITY_DATE, `VALIDITY_DATE`),
+                            // CLAIM_PERIOD: convertDate(res.CLAIM_PERIOD, 'CLAIM_PERIOD'),
+                            // CHECKLIST_DATE: convertDate(res.CHECKLIST_DATE, 'CHECKLIST_DATE'),
+                            // EXTENTION_DATE1: convertDate(res.EXTENTION_DATE1, 'EXTENTION_DATE1'),
+                            // EXTENTION_DATE2: convertDate(res.EXTENTION_DATE2, 'EXTENTION_DATE2'),
+                            // EXTENTION_DATE3: convertDate(res.EXTENTION_DATE3, 'EXTENTION_DATE3'),
+                            // EXTENTION_DATE4: convertDate(res.EXTENTION_DATE4, 'EXTENTION_DATE4'),
+                            // EXTENTION_DATE5: convertDate(res.EXTENTION_DATE5, 'EXTENTION_DATE5'),
+                            // EXTENTION_DATE6: convertDate(res.EXTENTION_DATE6, 'EXTENTION_DATE6'),
+                            // RELEASE_DATE: convertDate(res.RELEASE_DATE, 'RELEASE_DATE'),
+                            // DEM_NOTICE_DATE: convertDate(res.DEM_NOTICE_DATE, 'DEM_NOTICE_DATE'),
+                            // EXT_LETTER_DATE: convertDate(res.EXT_LETTER_DATE, 'EXT_LETTER_DATE')
 
                 // console.log("excel data", data);
 
@@ -348,11 +367,14 @@ const updoadExcelFileController = async (req, res) => {
 
                 // const {q, val } = await generateQueryForMultipleData(data, 'mara', ['MATNR']);
                 const errorData = [];
+                let successData = 0;
                 for (const element of data) {
-                    const { q, val } = await generateInsertUpdateQuery(element, 'makt', ['MATNR']);
-                    console.log("jjjj", q, val);
+                    const { q, val } = await generateInsertUpdateQuery(element, 'zfi_bgm_1', ['FILE_NO', 'REF_NO']);
+                    // console.log("query", q, val);
+                    console.log("query", successData);
                     try {
                         await poolQuery({ client, query: q, values: val });
+                        successData++;
                     } catch (error) {
                         console.log("error", error.message);
                         errorData.push(element);
@@ -361,7 +383,7 @@ const updoadExcelFileController = async (req, res) => {
 
 
 
-                resSend(res, true, 200, "succeddd", data, null);
+                resSend(res, true, 200, "succeddd", { success: successData, errorData }, null);
             } else {
                 resSend(res, false, 400, "Please upload a valid Excel File", [], null);
             }
@@ -379,6 +401,29 @@ const updoadExcelFileController = async (req, res) => {
 
 };
 
+function convertDate(dateStr, fieldname) {
+    // Check if the input is empty
+    if (!dateStr) {
+        return null;
+    }
+
+    console.log("dateStr", dateStr, fieldname);
+
+    // Regular expression to match the date format dd-mm-yyyy
+    const regex = /^(\d{2}).(\d{2}).(\d{4})$/;
+    const match = dateStr.match(regex);
+
+    // Check if the input matches the date format
+    if (!match) {
+        return null;
+    }
+    const [, dd, mm, yyyy] = match;
+
+    // Construct the new date format yyyy-mm-dd
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    return formattedDate;
+}
 
 
 module.exports = { updoadExcelFileController };
