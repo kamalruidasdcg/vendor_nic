@@ -20,13 +20,7 @@ const {
   BTN_UPLOAD_CHECKLIST,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
-const {
-  APPROVED,
-  SUBMITTED,
-  FORWARD_TO_FINANCE,
-  REJECTED,
-  ASSIGNED,
-} = require("../lib/status");
+const { APPROVED, SUBMITTED, FORWARD_TO_FINANCE, REJECTED, ASSIGNED, FORWARDED_TO_FI_STAFF, SUBMIT_BY_DO } = require("../lib/status");
 const {
   BTN_MATERIAL,
   BTN_LIST,
@@ -614,6 +608,8 @@ const submitBTN = async (req, res) => {
   // console.log("result", result);
 
   if (result.length > 0) {
+
+    handelMail(tokenData, {...payload, status: SUBMITTED});
     return resSend(
       res,
       true,
@@ -714,7 +710,7 @@ const submitBTNByDO = async (req, res) => {
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
   let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: q, values: val });
-
+  handelMail(tokenData, {...payload, status: SUBMIT_BY_DO })
   console.log(result);
 
   if (result.length > 0) {
@@ -874,26 +870,17 @@ async function handelMail(tokenData, payload, event) {
     let emailUserDetails;
     let dataObj = payload;
 
-    if (
-      tokenData.user_type == USER_TYPE_VENDOR &&
-      payload.status == SUBMITTED
-    ) {
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do");
-      emailUserDetails = await getQuery({
-        query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
-      });
-      console.log(
-        "emailUserDetailsQuery",
-        emailUserDetailsQuery,
-        emailUserDetails
-      );
-      await sendMail(
-        BTN_UPLOAD_CHECKLIST,
-        dataObj,
-        { users: emailUserDetails },
-        BTN_UPLOAD_CHECKLIST
-      );
+    console.log("876567890987656789", tokenData, payload);
+
+
+    if (tokenData.user_type == USER_TYPE_VENDOR && payload.status == SUBMITTED) {
+
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_and_do', '$1');
+
+      console.log("emailUserDetails", emailUserDetails);
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      console.log("emailUserDetailsQuery", emailUserDetailsQuery, emailUserDetails);
+      await sendMail(BTN_UPLOAD_CHECKLIST, dataObj, { users: emailUserDetails }, BTN_UPLOAD_CHECKLIST);
     }
 
     if (
@@ -911,6 +898,11 @@ async function handelMail(tokenData, payload, event) {
         { users: emailUserDetails },
         BTN_FORWORD_FINANCE
       );
+    }
+    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == FORWARDED_TO_FI_STAFF) {
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
     }
 
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
@@ -949,8 +941,24 @@ async function handelMail(tokenData, payload, event) {
         BTN_RETURN_DO
       );
     }
+    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMIT_BY_DO) {
+      // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetailsQuery = 'SELECT * FROM ('
+      buildQuery +=  getUserDetailsQuery('vendor_by_po', '$1');
+      buildQuery += 'UNION';
+      buildQuery += getUserDetailsQuery('finance_authority', '$2');
+      buildQuery += ') AS mail_info';
+
+      console.log("payload.purchasing_doc_no, payload.assign_to", payload.purchasing_doc_no, payload.assign_to);
+      console.log("emailUserDetailsQuery", emailUserDetailsQuery);
+
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no, payload.assign_to] });
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      await sendMail(BTN_RETURN_DO, dataObj, { users: emailUserDetails }, BTN_RETURN_DO);
+    }
+
   } catch (error) {
-    console.log("handelMail qap", error.toString(), error.stack);
+    console.log("handelMail btn", error.toString(), error.stack);
   }
 }
 
@@ -1025,9 +1033,10 @@ const assignToFiStaffHandler = async (req, res) => {
       btn_type: btn_list?.btn_type,
     };
 
-    let result = await addToBTNList(data, "FORWARDED_TO_FI_STAFF");
+    let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
 
     if (result?.status) {
+      handelMail(tokenData, {...req.body, status: FORWARDED_TO_FI_STAFF})
       resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
     } else {
       resSend(res, false, 200, "Something went wrong in BTN List", null, null);
