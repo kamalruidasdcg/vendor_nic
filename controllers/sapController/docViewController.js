@@ -10,18 +10,18 @@ const serviceEntryReport = async (req, res) => {
 
         let serviceEntryReportQ =
             `SELECT
-                essr.lblni as serviceEntryNumber,
-                essr.ebeln as purchising_doc_no,
-                essr.ebelp as po_lineitem,
-                essr.txz01 as sortText,
-                essr.comp_date as completionDate,
-                essr.lwert as unitPriceINR,
-                essr.netwr as netValueINR,
-                vendorDetails.NAME1 as vendorName,
-                ekko.LIFNR as vendor_code,
-                vendorDetails.ORT01 as vendorCity,
-                vendorDetails.ORT02 as vendorDistrict,
-                vendorDetails.PFACH as vendorPinCode
+                essr.lblni as "serviceEntryNumber",
+                essr.ebeln as "purchising_doc_no",
+                essr.ebelp as "po_lineitem",
+                essr.txz01 as "sortText",
+                essr.comp_date as "completionDate",
+                essr.lwert as "unitPriceINR",
+                essr.netwr as "netValueINR",
+                vendorDetails.NAME1 as "vendorName",
+                ekko.LIFNR as "vendor_code",
+                vendorDetails.ORT01 as "vendorCity",
+                vendorDetails.ORT02 as "vendorDistrict",
+                vendorDetails.PFACH as "vendorPinCode"
             FROM essr as essr
             	LEFT JOIN ekko as ekko
                 	ON( ekko.EBELN = essr.ebeln)
@@ -60,20 +60,20 @@ const grnReport = async (req, res) => {
     try {
         let grnQuery =
             `SELECT 
-                mseg.MBLNR as matDocNo,
-                mseg.MATNR as materialNumber,
-                mseg.BWART as moment,
-                mseg.EBELN as purchasing_doc_no,
-                mseg.EBELP as poItemNumber,
-                mseg.LIFNR as vendor_code,
-                vendor_details.NAME1 as vendor_name,
-                mkpf.XBLNR as refferecnce,
-                mkpf.BKTXT as headerText,
-                mkpf.FRBNR as billOfLoading,
-                mkpf.BLDAT as documentDate,
-                mkpf.BUDAT as postingDate,
-                mkpf.CPUDT as entryDate,
-                makt.MAKTX as materialDesc
+                mseg.MBLNR as "matDocNo",
+                mseg.MATNR as "materialNumber",
+                mseg.BWART as "moment",
+                mseg.EBELN as "purchasing_doc_no",
+                mseg.EBELP as "poItemNumber",
+                mseg.LIFNR as "vendor_code",
+                vendor_details.NAME1 as "vendor_name",
+                mkpf.XBLNR as "refferecnce",
+                mkpf.BKTXT as "headerText",
+                mkpf.FRBNR as "billOfLoading",
+                mkpf.BLDAT as "documentDate",
+                mkpf.BUDAT as "postingDate",
+                mkpf.CPUDT as "entryDate",
+                makt.MAKTX as "materialDesc"
             FROM mseg AS mseg
                 LEFT JOIN mkpf AS mkpf
                     ON( mseg.MBLNR = mkpf.MBLNR)
@@ -89,28 +89,28 @@ const grnReport = async (req, res) => {
         grnQuery =
 
             `SELECT 
-                        mseg.MBLNR as matDocNo,
-                        mseg.ZEILE as matDocNoLineItem,
-                        mseg.MATNR as materialNumber,
-                        mseg.BWART as momentType,
-                        mseg.EBELN as purchasing_doc_no,
-                        mseg.EBELP as poItemNumber,
-                        mseg.LIFNR as vendor_code,
-                        mseg.WERKS as plant,
-                        mseg.ERFMG as quantity,
-                        mseg.ERFME as unit,
-                        mseg.MAT_PSPNR as accountingAssegnment,
-                        vendor_details.NAME1 as vendor_name,
-                        mkpf.XBLNR as refferecnce,
-                        mkpf.BKTXT as headerText,
-                        mkpf.FRBNR as billOfLoading,
-                        mkpf.BLDAT as documentDate,
-                        mkpf.BUDAT as postingDate,
-                        mkpf.CPUDT as entryDate,    
-                        ekpo.TXZ01 as materialDesc,
-                        zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
-                        zmm_gate_entry_d.INVNO as invoiceNo,
-                        zmm_gate_entry_h.CHALAN_NO as chalanNo
+                        mseg.MBLNR as "matDocNo",
+                        mseg.ZEILE as "matDocNoLineItem",
+                        mseg.MATNR as "materialNumber",
+                        mseg.BWART as "momentType",
+                        mseg.EBELN as "purchasing_doc_no",
+                        mseg.EBELP as "poItemNumber",
+                        mseg.LIFNR as "vendor_code",
+                        mseg.WERKS as "plant",
+                        mseg.ERFMG as "quantity",
+                        mseg.ERFME as "unit",
+                        mseg.MAT_PSPNR as "accountingAssegnment",
+                        vendor_details.NAME1 as "vendor_name",
+                        mkpf.XBLNR as "refferecnce",
+                        mkpf.BKTXT as "headerText",
+                        mkpf.FRBNR as "billOfLoading",
+                        mkpf.BLDAT as "documentDate",
+                        mkpf.BUDAT as "postingDate",
+                        mkpf.CPUDT as "entryDate",    
+                        ekpo.TXZ01 as "materialDesc",
+                        zmm_gate_entry_d.ENTRY_NO as "gateEntryNo",
+                        zmm_gate_entry_d.INVNO as "invoiceNo",
+                        zmm_gate_entry_h.CHALAN_NO as "chalanNo"
                     FROM mseg AS mseg
                         LEFT JOIN mkpf AS mkpf
                             ON( mseg.MBLNR = mkpf.MBLNR)
@@ -175,22 +175,22 @@ const materialIssue = async (req, res) => {
     try {
         let q =
             `SELECT 
-                        mseg.MBLNR as issueNo,
-                        mseg.WERKS as plantName,
-                        mseg.MJAHR as issueYear,
-                        mseg.MATNR as materialNumber,
-                        makt.MAKTX as materialDescription,
-                        mseg.MEINS as unit,
-                        mseg.CHARG as batchNo,
-                        mseg.ERFMG as issueQty,
-                        mseg.BPMNG as BPMNG,
-                        mkpf.BUDAT as issuDate,
-                        mseg.EBELN as purchasing_doc_no,
-                        mseg.EBELP as poItemNumber,
-                        mseg.RSNUM as reservationNo,
-                        mseg.LIFNR as vendor_code,
-                        mseg.MENGE as requiredQty,
-                        mseg.KOSTL as costCenter
+                        mseg.MBLNR as "issueNo",
+                        mseg.WERKS as "plantName",
+                        mseg.MJAHR as "issueYear",
+                        mseg.MATNR as "materialNumber",
+                        makt.MAKTX as "materialDescription",
+                        mseg.MEINS as "unit",
+                        mseg.CHARG as "batchNo",
+                        mseg.ERFMG as "issueQty",
+                        mseg.BPMNG as "BPMNG",
+                        mkpf.BUDAT as "issuDate",
+                        mseg.EBELN as "purchasing_doc_no",
+                        mseg.EBELP as "poItemNumber",
+                        mseg.RSNUM as "reservationNo",
+                        mseg.LIFNR as "vendor_code",
+                        mseg.MENGE as "requiredQty",
+                        mseg.KOSTL as "costCenter"
                     FROM mseg AS mseg
                         LEFT JOIN mkpf AS mkpf
                             ON( mseg.MBLNR = mkpf.MBLNR)
@@ -295,38 +295,38 @@ const icgrnReport = async (req, res) => {
 
         icgrnGetQuery = `
                 SELECT 
-                qals.PRUEFLOS as inspectionLotNumber,
-                qals.EBELN as purchasing_doc_no,
-                qals.EBELP as purchasing_doc_no_item,
-                ekko.AEDAT as purchasing_doc_date,
-                qals.MBLNR as docNo,
-                qals.BUDAT as docdate,
-                qals.LIFNR as suppplier,
-                vendor_table.LAND1 as vendorCountry,
-                vendor_table.NAME1 as vendorName,
-                vendor_table.ORT01 as vendorCity,
-                vendor_table.ORT02 as vendorDistrict,
-                vendor_table.PFACH as vendorPinCode,
-                qals.MATNR AS materialNumber,
-                makt.MAKTX as materialDesc,
-                qals.MATNR as material,
-                qals.PAENDTERM as endDate,
-                qals.PAENDZEIT as endTime,
-                qals.PS_PSP_PNR as wbsElement,
-                qals.BWART as momentType,
-                ekpo.MEINS as baseUnit,
-                qals.LMENGE01 as acceptedQty,
-                qals.LMENGE07 as rejectedQty,
-                qals.LMENGE01 as unrestrictedUseStock,
-                qals.LMENGEIST as supplyQuantity,
-                qals.LTEXTKZ as remarks,
-                qave.vcode as udCode,
-                qals.ENSTEHDAT as inspDate,
-                zmm_gate_entry_d.INVNO as invoiceNo,
-                zmm_gate_entry_d.INV_DATE as invoiceDate,
-                zmm_gate_entry_d.ENTRY_NO as gateEntryNo,
-                zmm_gate_entry_h.ENTRY_DATE as gateEntryDate,
-                zmm_gate_entry_h.ENTRY_TIME as gateEntryTime
+                qals.PRUEFLOS as "inspectionLotNumber",
+                qals.EBELN as "purchasing_doc_no",
+                qals.EBELP as "purchasing_doc_no_item",
+                ekko.AEDAT as "purchasing_doc_date",
+                qals.MBLNR as "docNo",
+                qals.BUDAT as "docdate",
+                qals.LIFNR as "suppplier",
+                vendor_table.LAND1 as "vendorCountry",
+                vendor_table.NAME1 as "vendorName",
+                vendor_table.ORT01 as "vendorCity",
+                vendor_table.ORT02 as "vendorDistrict",
+                vendor_table.PFACH as "vendorPinCode",
+                qals.MATNR AS "materialNumber",
+                makt.MAKTX as "materialDesc",
+                qals.MATNR as "material",
+                qals.PAENDTERM as "endDate",
+                qals.PAENDZEIT as "endTime",
+                qals.PS_PSP_PNR as "wbsElement",
+                qals.BWART as "momentType",
+                ekpo.MEINS as "baseUnit",
+                qals.LMENGE01 as "acceptedQty",
+                qals.LMENGE07 as "rejectedQty",
+                qals.LMENGE01 as "unrestrictedUseStock",
+                qals.LMENGEIST as "supplyQuantity",
+                qals.LTEXTKZ as "remarks",
+                qave.vcode as "udCode",
+                qals.ENSTEHDAT as "inspDate",
+                zmm_gate_entry_d.INVNO as "invoiceNo",
+                zmm_gate_entry_d.INV_DATE as "invoiceDate",
+                zmm_gate_entry_d.ENTRY_NO as "gateEntryNo",
+                zmm_gate_entry_h.ENTRY_DATE as "gateEntryDate",
+                zmm_gate_entry_h.ENTRY_TIME as "gateEntryTime"
                 FROM qals as qals 
                 LEFT JOIN lfa1 as vendor_table
                 	ON( qals.LIFNR = vendor_table.LIFNR)
@@ -380,7 +380,7 @@ const icgrnReport = async (req, res) => {
                 invoiceDate: resp.invoiceDate,
                 gateEntryNo: resp.gateEntryNo,
                 gateEntryDate: resp.gateEntryDate,
-                lineItems: response[0]
+                lineItems: response
 
             }
             resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
@@ -402,20 +402,20 @@ const gateEntryReport = async (req, res) => {
     try {
         let ge_query = `
             SELECT 
-                zmm_gate_entry_h.ENTRY_NO as gate_entry_no,
-                zmm_gate_entry_h.ENTRY_DATE as entry_date,
-                zmm_gate_entry_h.VEH_REG_NO as vehicle_no,
-                zmm_gate_entry_d.INVNO as invoice_number,
-                zmm_gate_entry_d.INV_DATE as invoice_date,
-                zmm_gate_entry_d.EBELN as purchising_doc_no,
-                zmm_gate_entry_d.EBELP as po_line_item_no,
-                zmm_gate_entry_d.CH_QTY as chalan_quantity,
-                zmm_gate_entry_d.CH_NETWT as net_quantity,
-                zmm_gate_entry_d.MATNR as material_code,
-                material.MAKTX as material_desc,
-                ekko.LIFNR as vendor_code,
-                lfa1.NAME1 as vendor_name,
-                ekpo.MENGE as quantity
+                zmm_gate_entry_h.ENTRY_NO as "gate_entry_no",
+                zmm_gate_entry_h.ENTRY_DATE as "entry_date",
+                zmm_gate_entry_h.VEH_REG_NO as "vehicle_no",
+                zmm_gate_entry_d.INVNO as "invoice_number",
+                zmm_gate_entry_d.INV_DATE as "invoice_date",
+                zmm_gate_entry_d.EBELN as "purchising_doc_no",
+                zmm_gate_entry_d.EBELP as "po_line_item_no",
+                zmm_gate_entry_d.CH_QTY as "chalan_quantity",
+                zmm_gate_entry_d.CH_NETWT as "net_quantity",
+                zmm_gate_entry_d.MATNR as "material_code",
+                material.MAKTX as "material_desc",
+                ekko.LIFNR as "vendor_code",
+                lfa1.NAME1 as "vendor_name",
+                ekpo.MENGE as "quantity"
                 FROM zmm_gate_entry_h AS zmm_gate_entry_h 
             LEFT JOIN zmm_gate_entry_d as zmm_gate_entry_d
                 ON( zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)
@@ -442,6 +442,7 @@ const gateEntryReport = async (req, res) => {
 
         if (result && result.length) {
             let obj = {};
+            const sortedResp = result.sort((a, b) => a.po_line_item_no > b.po_line_item_no ? 1 : -1 )
             obj.gate_entry_no = result[0].gate_entry_no;
             obj.entry_date = result[0].entry_date;
             obj.vendor = result[0].vendor;
