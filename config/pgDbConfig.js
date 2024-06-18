@@ -45,7 +45,7 @@ const getQuery = async ({ query, values }) => {
     return rows;
   } catch (error) {
     console.log("error", error);
-    return error;
+    throw error;
     // throw new Error(`Error fetching rows (getQuery fn): ${error.message}`);
   } finally {
     // Consider using pool.end() for graceful shutdown on application exit
