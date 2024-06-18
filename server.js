@@ -21,31 +21,33 @@ const errorHandler = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
 const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
+const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
+const { syncCron, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
 const { sendBGReminderMail, sendPOMilestoneEXPReminderMail } = require("./controllers/sapController/remaiderMailSendController");
 
-// const task = cron.schedule( "*/1 * * * *", () => {
-//     console.log("running a task every two minutes");
-//     mailSentCornJob();
-//   },
-//   {
-//     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
-//   }
-// );
+const task = cron.schedule( "*/1 * * * *", () => {
+    console.log("running a task every two minutes");
+    mailSentCornJob();
+  },
+  {
+    scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
+  }
+);
 
 // At 00:00
-// const task2 = cron.schedule("* * * * *", () => {
-//     console.log("running a task every two minutes");
-//     // sendBGReminderMail();
-//     sendPOMilestoneEXPReminderMail();
-//   },
-//   {
-//     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
-//   }
-// );
+const task2 = cron.schedule("* * * * *", () => {
+    console.log("running a task every two minutes");
+    // sendBGReminderMail();
+    sendPOMilestoneEXPReminderMail();
+  },
+  {
+    scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
+  }
+);
 
 
 
@@ -57,6 +59,7 @@ app.use("/api/v1/auth2", authRoute);
 app.use("/api/v1/upload", uploadRoutes);
 app.use("/api/v1/insert", dataInsert);
 app.use("/api/v1/sap", sapRoutes);
+app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/stat", statRoutes);
 
 app.use(errorHandler);
@@ -67,6 +70,22 @@ app.use((req, res, next) => {
     data: "Page not found",
   });
 });
+
+// Call Cron JOB
+cron.schedule("05 00 * * *", async () => {
+  console.log("Cron job started at 12:05 AM");
+  try {
+    await syncCron();
+    console.log("Cron job completed successfully");
+  } catch (error) {
+    console.error("Error during cron job:", error);
+    fs.appendFileSync(
+      "error.log",
+      `${new Date().toISOString()} - Error: ${error.message}\n`
+    );
+  }
+});
+syncFileCron();
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);

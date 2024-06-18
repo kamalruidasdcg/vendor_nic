@@ -12,6 +12,7 @@ const {
   ACTUAL_SUBMISSION_DB,
 } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
+const { convertToEpoch } = require("../utils/dateTime");
 
 /**
  * Modify SDBG Payload object to insert data
@@ -152,7 +153,7 @@ const hrCompliancePayload = (payload) => {
 
   return payloadObj;
 };
-const wdcPayload = (payload,line_item_array) => {
+const wdcPayload = (payload, line_item_array) => {
   let line_item = JSON.parse(payload.line_item_array);
   // let line_item =  [
   //   {
@@ -170,18 +171,20 @@ const wdcPayload = (payload,line_item_array) => {
   //     status:REJECTED
   //     }
   // ];
- // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
+  // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
   let last_data_line_item_array = JSON.parse(line_item_array);
 
-   let resData;
-        if(line_item && Array.isArray(line_item)) {
-          resData = line_item.map((el2) => {
-            const resData =   last_data_line_item_array.find((elms) => elms.line_item_no == el2.line_item_no);
-            return resData ? {...resData, ...el2} : el2;
-          });
-        }
+  let resData;
+  if (line_item && Array.isArray(line_item)) {
+    resData = line_item.map((el2) => {
+      const resData = last_data_line_item_array.find(
+        (elms) => elms.line_item_no == el2.line_item_no
+      );
+      return resData ? { ...resData, ...el2 } : el2;
+    });
+  }
 
-        payload.line_item_array = JSON.stringify(resData);
+  payload.line_item_array = JSON.stringify(resData);
   return payload;
 
   // const payloadObj = {
@@ -217,12 +220,10 @@ const wdcPayload = (payload,line_item_array) => {
   //     ? payload.actual_payable_amount
   //     : null,
   // };
-    // let line_item_array = JSON.parse(payload.line_item_array);
-    // if(!payload || Array.isArray(line_item_array)) {
-    //   return [];
-    //   }
-    
- 
+  // let line_item_array = JSON.parse(payload.line_item_array);
+  // if(!payload || Array.isArray(line_item_array)) {
+  //   return [];
+  //   }
 };
 
 const shippingDocumentsPayload = (payload, status) => {
@@ -418,7 +419,11 @@ const setActualSubmissionDateSdbg = async (payload, tokenData) => {
 
   const select_bg_date = await query({
     query: select_bg_date_query,
-    values: [payload.action_type, payload.reference_no, payload.purchasing_doc_no],
+    values: [
+      payload.action_type,
+      payload.reference_no,
+      payload.purchasing_doc_no,
+    ],
   });
   if (!select_bg_date[0].created_at) {
     console.log("ERROR IN BG DATE");
@@ -460,21 +465,21 @@ const create_btn_no = async (type) => {
     let month = String(date.getMonth() + 1).padStart(2, "0");
     let day = String(date.getDate()).padStart(2, "0");
     let dateNeed = `${year}${month}${day}`;
-    let today = new Date().toLocaleDateString();
-    console.log(today);
+    let today = getEpochTime();
 
-    let btn_num_q = `SELECT count("*") as count FROM btn WHERE created_at = ?`;
+    let btn_num_q = `SELECT count("btn_num") as count FROM btn WHERE created_at = $1`;
     let btn_res = await query({
       query: btn_num_q,
       values: [today],
     });
+    btn_res = btn_res?.rows;
     console.log(btn_res);
     let threeDigit = 999 - parseInt(btn_res[0]?.count);
     // const reference_no = `${type}${dateNeed}${threeDigit}`;
     const reference_no = `${dateNeed}${threeDigit}`;
     return reference_no;
   } catch (error) {
-    console.log("Error into create btn :"`${error}`);
+    console.log(`ERROR_IN_BTN_CREATION: ${error}`);
   }
 };
 

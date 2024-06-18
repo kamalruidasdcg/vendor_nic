@@ -32,7 +32,6 @@ exports.btnmw = () => {
     { name: "debit_credit_filename", maxCount: 1 },
     { name: "get_entry_filename", maxCount: 1 },
     { name: "demand_raise_filename", maxCount: 1 },
-    { name: "pbg_filename", maxCount: 1 },
   ]);
 };
 
@@ -49,5 +48,3 @@ exports.btnAdvanceBillHybridUploadFile = () => {
     { name: "debit_credit_filename", maxCount: 1 },
   ]);
 };
-
-
