@@ -890,7 +890,7 @@ const doDetails = async (str) => {
 const poListByEcko = (vendorCode = "") => {
   let sufx;
   let qry = `SELECT DISTINCT(EBELN) as "EBELN" from ekko`;
-  if (vendorCode != "") {
+  if (vendorCode) {
     sufx = ` WHERE LIFNR = '${vendorCode}'`;
     qry = qry + sufx;
   }

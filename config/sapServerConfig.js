@@ -84,9 +84,7 @@ const sendDataToSapServer = async (endpoint, payload) => {
   } catch (error) {
 
     console.error('Error making the request:', error.message, payload);
-    await failedDataSave(payload, '10.18.7.123', endpoint, error,)
-
-
+    await failedDataSave(payload, '10.18.7.123', endpoint, error);
   }
 
 }
@@ -94,6 +92,9 @@ const sendDataToSapServer = async (endpoint, payload) => {
 
 
 module.exports = { makeHttpRequest, sendDataToSapServer }
+
+
+// sendDataToSapServer('/get', {name: 'ruid'})
 
 
 // Example usage with async/await

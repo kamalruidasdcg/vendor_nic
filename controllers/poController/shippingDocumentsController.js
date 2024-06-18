@@ -22,6 +22,9 @@ const path = require('path');
 const { inspectionCallLetterPayload, shippingDocumentsPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../../controllers/genralControlles");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
+const { SHIPPING_DOC_UPLOAD } = require("../../lib/event");
 
 
 const shippingDocuments = async (req, res) => {
@@ -80,7 +83,7 @@ const shippingDocuments = async (req, res) => {
 
             if (response) {
 
-                // await handleEmail();
+                handleEmail(insertObj);
                 resSend(res, true, 200, "Shipping documents inserted successfully !", response, null);
             } else {
                 resSend(res, false, 400, "No data inserted", null, null);
@@ -125,8 +128,23 @@ const List = async (req, res) => {
 
 }
 
-async function handleEmail() {
-    // Email alert to dealing officer, RIC & CDO about the uploading of shipping documents
+// async function handleEmail() {
+//     // Email alert to dealing officer, RIC & CDO about the uploading of shipping documents
+// }
+
+
+async function handleEmail(data) {
+    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters
+    try {
+        
+        const getDoQuery = getUserDetailsQuery('do', '$1');
+        const doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
+        const dataObj = { ...data };
+        await sendMail(SHIPPING_DOC_UPLOAD, dataObj, { users: doDetails }, SHIPPING_DOC_UPLOAD);
+    } catch (error) {
+        console.log("handleEmail", error.toString(), error.stack)
+    }
+
 }
 
 module.exports = { shippingDocuments, List }

@@ -39,7 +39,7 @@ const router = express.Router();
 const billRoutes = require("./billRoutes");
 // const paymentRoutes = require("./paymentRouter");
 const sdbgRoutes = require("./sdbgRoutes");
-const statRoutes = require("./statRoutes");
+
 const drawingRoutes = require("./drawingRoutes");
 const wdcRoutes = require("./WdcRoutes");
 const ilmsRoutes = require("./ilmsRoutes");
@@ -61,9 +61,6 @@ const MirRoutes = require("./MirRoutes");
 const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
-const {
-  sendReminderMail,
-} = require("../controllers/sapController/remaiderMailSendController");
 const { createTable } = require("../lib/createTableFromJson");
 
 // FOR CHECHING SERVER IS RUNNING ...
@@ -98,7 +95,7 @@ router.get("/getFilteredData", getFilteredData);
 router.post("/updatTableData", updatTableData);
 router.post("/insertTableData", insertTableData);
 
-router.get("/reminder", sendReminderMail);
+// router.get("/reminder", sendReminderMail);
 
 // VENDOR BILL RECEIVE, CERTIFIED REJECT FORWARD
 
@@ -138,7 +135,6 @@ router.use(poPrefix + "/sdbg", sdbgRoutes);
 router.use(poPrefix + "/drawing", drawingRoutes);
 router.use(poPrefix + "/wdc", wdcRoutes);
 router.use(poPrefix + "/ilms", ilmsRoutes);
-router.use(poPrefix + "/stat", statRoutes);
 
 router.use(poPrefix + "/dashboard", dashboardRoutes);
 router.use(poPrefix + "/download", downloadRoutes);

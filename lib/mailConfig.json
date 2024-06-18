@@ -3,14 +3,12 @@
         "users": [],
         "email_subject": "PO upload in LAN",
         "email_heading": "MAIL",
-        "cc_users": [
-        ],
+        "cc_users": [],
         "bcc_users": [],
         "data": {}
     },
     "TNC_MINUTE_UPLOAD": {
-        "users": [
-        ],
+        "users": [],
         "email_subject": "TNC MINUTE UPLOAD",
         "email_heading": "MAIL",
         "cc_users": [],
@@ -18,21 +16,15 @@
         "data": {}
     },
     "GATE_ENTRY_DOC_CREATE": {
-        "users": [
-           
-        ],
+        "users": [],
         "email_subject": "GATE ENTRY_DOC CREATE",
         "email_heading": "MAIL",
-        "cc_users": [
-           
-        ],
+        "cc_users": [],
         "bcc_users": [],
         "data": {}
     },
     "GRN_DOC_GENERATE_LAN": {
-        "users": [
-            
-        ],
+        "users": [],
         "email_subject": "GRN DOC GENERATE IN LAN",
         "email_heading": "MAIL",
         "cc_users": [],
@@ -40,9 +32,7 @@
         "data": {}
     },
     "ICGRN_DOC_FROM_SAP": {
-        "users": [
-           
-        ],
+        "users": [],
         "email_subject": "ICGRN DOC FROM SAP",
         "email_heading": "MAIL",
         "cc_users": [],
@@ -50,9 +40,7 @@
         "data": {}
     },
     "SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE": {
-        "users": [
-            
-        ],
+        "users": [],
         "email_subject": "Reminder mail",
         "email_heading": "MAIL",
         "cc_users": [],
@@ -60,8 +48,7 @@
         "data": {}
     },
     "DRAWING_ACKNOWLEDGE_RECEIPT": {
-        "users": [
-        ],
+        "users": [],
         "email_subject": "Drawing acknowledge",
         "email_heading": "MAIL",
         "cc_users": [],
@@ -69,9 +56,185 @@
         "data": {}
     },
     "DRAWING_UPLOAD_TO_CDO": {
-        "users": [
-        ],
+        "users": [],
         "email_subject": "Drawing uplod",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "ILMS_ACKNOWLEDGE_RECEIPT": {
+        "users": [],
+        "email_subject": "ilms acknowledge",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "ILMS_UPLOAD_TO_CDO": {
+        "users": [],
+        "email_subject": "Drawing uplod",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "INSP_CALL_LETTER_UPLOAD": {
+        "users": [],
+        "email_subject": "Inspection Call letter upload",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "INSP_RELEASE_NOTE_UPLOAD": {
+        "users": [],
+        "email_subject": "Inspection release note upload",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "SHIPPING_DOC_UPLOAD": {
+        "users": [],
+        "email_subject": "Shipping document upload",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "DEMAND_UPLOAD_BY_BEARTH": {
+        "users": [],
+        "email_subject": "Demand raised",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "QAP_UPLOAD_BY_VENDOR": {
+        "users": [],
+        "email_subject": "QAP upload",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "QAP_ASSIGNMENT": {
+        "users": [],
+        "email_subject": "QAP assign",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "QAP_APPROVE_REJECT": {
+        "users": [],
+        "email_subject": "QAP Current Status",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "WDC_APPROVAL_REJECT": {
+        "users": [],
+        "email_subject": "WDC",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_UPLOAD_BY_VENDOR": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+
+    },
+    "BG_ENTRY_BY_DO": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_ACCEPT_REJECT": {
+        "users": [],
+        "email_subject": "SDBG",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "WDC_UPLOADING": {
+        "users": [],
+        "email_subject": "WDC",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "PAYMENT_ADVICE_DOC_GENERATE": {
+        "users": [],
+        "email_subject": "Payment advice",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_UPLOAD_CHECKLIST": {
+        "users": [],
+        "email_subject": "BTN UPLOAD CHECKLIST",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_FORWORD_FINANCE": {
+        "users": [],
+        "email_subject": "BTN FORWORD FINANCE",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BTN_RETURN_DO": {
+        "users": [],
+        "email_subject": "BTN RETURN DO",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "PAYMENT_RELEASE_REVERSAL": {
+        "users": [],
+        "email_subject": "PAYMENT RELEASE REVERSAL",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "CLAIM_LETTER_APPROVE_REJECT": {
+        "users": [],
+        "email_subject": "CLAIM LETTER",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "CLAIM_LETTER_UPLOAD": {
+        "users": [],
+        "email_subject": "CLAIM LETTER UPLOAD",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_2MONTH_PRIOR": {
+        "users": [],
+        "email_subject": "BG remindr email",
         "email_heading": "MAIL",
         "cc_users": [],
         "bcc_users": [],

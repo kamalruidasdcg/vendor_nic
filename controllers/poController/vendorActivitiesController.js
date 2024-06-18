@@ -9,6 +9,8 @@ const path = require('path');
 const { inspectionCallLetterPayload } = require("../../services/po.services");
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
 
 
 
@@ -59,7 +61,7 @@ const vendorActivities = async (req, res) => {
 
         if (response) {
 
-            // await handleEmail();
+            // handelMail(insertObj);
 
            return  resSend(res, true, 200, "vendor Activities Uploaded successfully !", response, null);
         } else {
@@ -107,8 +109,24 @@ const list = async (req, res) => {
 }
 
 
-async function handleEmail() {
-    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
-}
+
+async function handelMail(tokenData, payload, event) {
+    try {
+  
+      let emailUserDetailsQuery;
+      let emailUserDetails;
+      let dataObj = payload;
+      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity',' $1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [parseInt(payload.assigned_to)] });
+      await sendMail(WDC_UPLOADING, dataObj, { users: emailUserDetails }, WDC_UPLOADING);
+  
+ } catch (error) {
+      console.log("handelMail qap", error.toString(), error.stack);
+    }
+  }
+
+
+
+
 
 module.exports = { vendorActivities, list }

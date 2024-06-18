@@ -217,14 +217,7 @@ exports.syncDataUpload = async (req, res) => {
     const folderPath = path.join(parentDir, UNZIP_DATA_PATH, todayDate);
 
     if (!fs.existsSync(folderPath)) {
-      return resSend(
-        res,
-        200,
-        false,
-        null,
-        "Today's folder does not exist!",
-        null
-      );
+      resSend(res, 200, false, null, "Today's folder does not exist!", null);
     }
 
     // Read all directories inside today's folder
