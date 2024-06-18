@@ -1,6 +1,6 @@
 
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query } = require("../../config/pgDbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { QAP, RIC } = require("../../lib/depertmentMaster");
@@ -218,9 +218,9 @@ const getPaymentAdvliceList = async (req, res) => {
 				
 				if(payload.poNo) {
 					console.log("payload.poNo",payload.poNo);
-					const result = await query({query: `SELECT lifnr AS vendor_code FROM ekko WHERE ebeln = ?`, values: [payload.poNo]});
+					const result = await query({query: `SELECT lifnr AS vendor_code FROM ekko WHERE ebeln = $1`, values: [payload.poNo]});
 					console.log(result, "resultresult");
-					paymentAdviceQuery = paymentAdviceQuery.concat(" AND lifnr = ?");
+					paymentAdviceQuery = paymentAdviceQuery.concat(" AND lifnr = $2");
 					queryValues.push(result[0].vendor_code);
 				}
 				const result = await query({query: paymentAdviceQuery, values: queryValues});
