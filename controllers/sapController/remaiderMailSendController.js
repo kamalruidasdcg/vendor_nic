@@ -1,17 +1,17 @@
 const { query, getQuery } = require("../../config/pgDbConfig");
-const { VENDOR_REMINDER_EMAIL, SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE } = require("../../lib/event");
+const { VENDOR_REMINDER_EMAIL, SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE, BG_2MONTH_PRIOR } = require("../../lib/event");
 const { resSend } = require("../../lib/resSend");
 const { sendMail } = require("../../services/mail.services");
 const { mailTrigger } = require("../sendMailController");
 
-const sendReminderMail = async (req, res) => {
+const sendPOMilestoneEXPReminderMail = async (req, res) => {
     const timeLineData = await getTimeLineData();
-    // console.log("timeLineData", timeLineData);
+    console.log("sendPOMilestoneEXPReminderMail", timeLineData);
 
     if (timeLineData && timeLineData.length) {
         for (const data of timeLineData) {
             console.log("data", data);
-            const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, user_type: data.user_type }] }
+            const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
             await sendMail(SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE,
                 data,
                 obj,
@@ -19,7 +19,7 @@ const sendReminderMail = async (req, res) => {
         }
     }
 
-    resSend(res, true, 200, "success", timeLineData, null);
+    // resSend(res, true, 200, "success", timeLineData, null);
 };
 
 async function getTimeLineData() {
@@ -38,7 +38,7 @@ async function getTimeLineData() {
                    t.MID        AS mile_stone_id,
                    p.table_name AS item,
                    v_name.lifnr AS  u_id
-                   'vendor' AS user_type,
+                   'vendor' AS u_type,
             FROM   zpo_milestone AS t
                    JOIN ((SELECT purchasing_doc_no,
                                  vendor_code,
@@ -71,7 +71,7 @@ async function getTimeLineData() {
                    t.MID        AS mile_stone_id,
                    p.table_name AS item,
                    v_name.lifnr AS  u_id,
-                   'vendor' AS user_type
+                   'vendor' AS u_type
             FROM   zpo_milestone AS t
                    JOIN ((SELECT purchasing_doc_no,
                                  vendor_code,
@@ -117,4 +117,98 @@ async function getTimeLineData() {
     return result;
 }
 
-module.exports = { sendReminderMail };
+
+
+
+const sendBGReminderMail = async () => {
+    const bgData = await getBGExpireData();
+
+    const bgTimelineData = getMaxExpireDate(bgData);
+
+    console.log("bgTimelineData", bgTimelineData);
+
+    if (bgTimelineData && bgTimelineData.length) {
+        for (const data of bgTimelineData) {
+            console.log("data", data);
+            const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
+            await sendMail(BG_2MONTH_PRIOR,
+                data,
+                obj,
+                BG_2MONTH_PRIOR)
+        }
+    }
+
+    // resSend(res, true, 200, "success", timeLineData, null);
+};
+
+async function getBGExpireData() {
+    const REMINDE_BEFORE_DAYS = 60 * 24 * 60 * 60 * 1000;
+    const currentDate = new Date();
+    const sevenDaysBefore = new Date(currentDate.getTime() + REMINDE_BEFORE_DAYS);
+    const dueDate = sevenDaysBefore.toISOString().split("T")[0];
+
+    let  q = `SELECT    file_no,
+        ref_no,
+        po_number AS purchasing_doc_no,
+        validity_date,
+        extention_date1,
+        extention_date2,
+        extention_date3,
+        extention_date4,
+        extention_date5,
+        users.cname AS u_name,
+        users.email AS u_email,
+        po.ernam    AS u_id,
+        'do'        AS u_type
+FROM      zfi_bgm_1   AS sap_bg
+LEFT JOIN ekko        AS po
+ON       (
+                  sap_bg.po_number = po.ebeln)
+LEFT JOIN pa0002 AS users
+ON       (
+                  users.pernr:: character VARYING = po.ernam)
+WHERE     (
+                  validity_date = $1
+        OR        extention_date1 = $1
+        OR        extention_date2 = $1
+        OR        extention_date3 = $1
+        OR        extention_date4 = $1
+        OR        extention_date5 = $1 )`;
+
+
+    //   GROUP  BY t.ebeln,
+    //   t.mid;
+    // const q = `SELECT * FROM zpo_milestone WHERE PLAN_DATE BETWEEN '${dueDate} 00:00:00' AND '${dueDate} 23:59:59';`;
+    const firstTime = `${dueDate} 00:00:00`;
+    const lastTime = `${dueDate} 23:59:59`
+    console.log(firstTime, lastTime);
+    console.log("dueDate", dueDate);
+    const result = await getQuery({ query: q, values: [dueDate] });
+    return result;
+}
+
+
+
+function getMaxExpireDate(data) {
+    data.forEach(item => {
+      const dates = [
+        item.validity_date,
+        item.extention_date1,
+        item.extention_date2,
+        item.extention_date3,
+        item.extention_date4,
+        item.extention_date5
+      ].filter(date => date !== null);
+  
+      const maxDate = new Date(Math.max(...dates.map(date => date.getTime())));
+  
+      item.expire_date = maxDate;
+    });
+    return data;
+  }
+
+
+
+
+
+module.exports = { sendPOMilestoneEXPReminderMail, sendBGReminderMail };

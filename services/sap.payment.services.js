@@ -138,7 +138,7 @@ const ztfi_bil_defacePayload = async (obj) => {
 };
 const paymentAviceHeaderPayload = async (obj) => {
   if (!obj) {
-    throw new Error("Please send valid payload");
+    throw new Error("Please send valid payload, paymentAviceHeaderPayload");
   }
   const pl = {
     zlsch: obj.zlsch || obj.ZLSCH || "",
@@ -157,7 +157,7 @@ const paymentAviceHeaderPayload = async (obj) => {
 
 const paymentAviceLineItemsPayload = async (payload) => {
   if (!payload || !Array.isArray(payload) || !payload.length) {
-    throw new Error("Please send valid payload");
+    throw new Error("Please send valid payload paymentAviceLineItemsPayload");
   }
   const pl = payload.map((obj) => ({
     sgtxt: obj.sgtxt || obj.SGTXT || "",

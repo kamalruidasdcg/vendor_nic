@@ -9,6 +9,7 @@ const { poolClient, poolQuery, getQuery } = require('../../config/pgDbConfig');
 const Message = require("../../utils/messages");
 const { ICGRN_DOC_FROM_SAP } = require('../../lib/event');
 const { sendMail } = require('../../services/mail.services');
+const { getUserDetailsQuery } = require('../../utils/mailFunc');
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -26,7 +27,7 @@ const qals = async (req, res) => {
             const { QAVE, ...payload } = tempPayload;
 
             if (!payload || !payload.PRUEFLOS) {
-                return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
+                return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, 'Invalid payload', null);
             }
 
 
@@ -42,17 +43,17 @@ const qals = async (req, res) => {
                 const resp = await poolQuery({ client, query: qaveInsertQuery.q, values: qaveInsertQuery.val });
             }
 
-            sendMail(mailPayload);
+            handelMail(mailPayload);
 
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (err) {
             console.log("data not inserted", err);
-            responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
+            responseSend(res, "F", 500, Message.SERVER_ERROR, err.message, null);
         } finally {
             client.release();
         }
     } catch (error) {
-        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error, null);
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.message, null);
     }
 
 };
@@ -62,7 +63,7 @@ const qals = async (req, res) => {
 async function handelMail(data) {
 
     try {
-        let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
+        let vendorAndDoDetails = getUserDetailsQuery('vendor_by_po', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
         const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
         console.log("dataObj", dataObj, mail_details);

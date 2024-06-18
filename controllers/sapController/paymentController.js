@@ -9,8 +9,11 @@ const { getEpochTime, generateQuery, generateInsertUpdateQuery, generateQueryFor
 
 const path = require('path');
 const fs = require('fs');
-const { query, getQuery } = require("../../config/pgDbConfig");
+const { query, getQuery, poolClient, poolQuery } = require("../../config/pgDbConfig");
 const Message = require("../../utils/messages");
+const { PAYMENT_ADVICE_DOC_GENERATE } = require("../../lib/event");
+const { sendMail } = require("../../services/mail.services");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -142,6 +145,10 @@ const ztfi_bil_deface = async (req, res) => {
 const newPaymentAdvice = async (req, res) => {
 
     try {
+
+        const client = await poolClient();
+
+        console.log("req.body ");
         if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
             return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
@@ -159,22 +166,41 @@ const newPaymentAdvice = async (req, res) => {
             const payloadObj = await paymentAviceHeaderPayload(obj);
             const paymentAviceHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zfi_pymt_advce_data_final", ["id"]);
 
-            const response1 = await query({ query: paymentAviceHeaderQuery.q, values: paymentAviceHeaderQuery.val });
+            const response1 = await poolQuery({ client, query: paymentAviceHeaderQuery.q, values: paymentAviceHeaderQuery.val });
 
             const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
             const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
-            const response2 = await query({ query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
+            const response2 = await poolQuery({ client, query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
+            handleEmail(obj);
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, { response1, response2 }, null);
         } catch (error) {
-            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error, null);
+            responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
 
+        } finally {
+            client.release();
         }
 
     } catch (err) {
 
-        responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);
+        responseSend(res, "F", 500, Message.SERVER_ERROR, err.message, null);
     }
 }
+
+
+async function handleEmail(data) {
+    try {
+        
+        const getDoQuery = getUserDetailsQuery('vendor', '$1');
+        const venodrDetails = await getQuery({ query: getDoQuery, values: [data.lifnr] });
+        const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0].u_name, };
+        await sendMail(PAYMENT_ADVICE_DOC_GENERATE, dataObj, { users: [] }, PAYMENT_ADVICE_DOC_GENERATE);
+    } catch (error) {
+        console.log("handleEmail", error.toString(), error.stack)
+    }
+
+}
+
+
 // const zbts_st = async (req, res) => {
 
 //     try {

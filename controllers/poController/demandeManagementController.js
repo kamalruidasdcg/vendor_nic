@@ -10,6 +10,9 @@ const { create_reference_no, get_latest_activity } = require("../../services/po.
 const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
 const { Console } = require("console");
+const { DEMAND_UPLOAD_BY_BEARTH } = require("../../lib/event");
+const { sendMail } = require("../../services/mail.services");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 
 
 const insert = async (req, res) => {
@@ -96,7 +99,10 @@ const insert = async (req, res) => {
         const response = await query({ query: q, values: val });
         if (response) {
 
-            // await handleEmail();
+            if (obj.status == SUBMITTED) {
+                handleEmail(payload);
+            }
+
 
             return resSend(res, true, 200, `DEMAND MANAGEMENT ${obj.status} successfully !`, response, null);
         } else {
@@ -177,14 +183,14 @@ const getRestAmount = async (req, res) => {
         const client = await poolClient();
         try {
             const get_data_query = `SELECT TXZ01 AS description, MATNR AS matarial_code, MEINS AS unit, MENGE AS target_amount, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1 AND EBELP = $2`;
-            let get_data_result = await poolQuery( {client, query:get_data_query, values: [req.query.po_no, req.query.line_item_no]});
+            let get_data_result = await poolQuery({ client, query: get_data_query, values: [req.query.po_no, req.query.line_item_no] });
             console.log("get_data_query :", get_data_result);
 
             const total_amount_query = `SELECT SUM(MENGE) AS total_amount from mseg WHERE EBELN = $1 AND EBELP = $2`;
-            let total_amount_result = await poolQuery({client, query : total_amount_query, values : [req.query.po_no, req.query.line_item_no]});
+            let total_amount_result = await poolQuery({ client, query: total_amount_query, values: [req.query.po_no, req.query.line_item_no] });
             console.log(total_amount_result);
-           total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
-            console.log("total_amount_result :" , total_amount_result);
+            total_amount_result = (total_amount_result[0].total_amount == null) ? 0 : total_amount_result[0].total_amount;
+            console.log("total_amount_result :", total_amount_result);
 
             // const target_amount_query = `SELECT KTMNG AS target_amount from ekpo WHERE EBELN = ? AND EBELP = ?`;
             // let target_amount_result = await query({ query: target_amount_query, values: [req.query.po_no, req.query.line_item_no] });
@@ -192,7 +198,7 @@ const getRestAmount = async (req, res) => {
             // console.log("target_amount :" + target_amount_result);
 
             let target_amount_result = (get_data_result[0].target_amount) ? get_data_result[0].target_amount : 0;
-console.log('target_amount_result', target_amount_result);
+            console.log('target_amount_result', target_amount_result);
             // const total_requested_amount_query = `SELECT SUM(request_amount) AS total_requested_amount from demande_management WHERE purchasing_doc_no = '${req.query.po_no}' AND line_item_no = ${req.query.line_item_no} AND status = '${SUBMITTED}'`;
             // let total_requested_amount_result = await query({ query: total_requested_amount_query, values: [] });
             // total_requested_amount_result = (total_requested_amount_result[0].total_requested_amount == null) ? 0 : total_requested_amount_result[0].total_requested_amount;
@@ -216,20 +222,20 @@ console.log('target_amount_result', target_amount_result);
             //     } 
             // });
 
-target_amount_result = parseFloat(target_amount_result).toFixed(3);
-total_amount_result = parseFloat(total_amount_result).toFixed(3);
-console.log(target_amount_result);
-console.log(total_amount_result);
+            target_amount_result = parseFloat(target_amount_result).toFixed(3);
+            total_amount_result = parseFloat(total_amount_result).toFixed(3);
+            console.log(target_amount_result);
+            console.log(total_amount_result);
             //const rest_amount = parseInt(target_amount_result) - (parseInt(total_amount_result) + parseInt(recived_amount_from_dm_table));
             let rest_amount = target_amount_result - total_amount_result;
             rest_amount = rest_amount.toFixed(3);
             console.log(rest_amount);
 
             // if (rest_amount) {
-                const resData = get_data_result[0];
-                resData.rest_amount = rest_amount;
-                console.log(resData);
-                resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
+            const resData = get_data_result[0];
+            resData.rest_amount = rest_amount;
+            console.log(resData);
+            resSend(res, true, 200, "Rest Amount fetched succesfully!", resData, null);
             // } else {
             //     return resSend(res, false, 200, "something went wrong!", null, null);
             // }
@@ -246,8 +252,25 @@ console.log(total_amount_result);
 }
 
 
-async function handleEmail() {
-    // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+// async function handleEmail() {
+//     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters.
+// }
+
+async function handleEmail(data) {
+    // Maill trigger to VENDOR.
+
+    try {
+
+        console.log("data", data);
+
+        const vendorDetalisQ = getUserDetailsQuery('vendor_by_po', '$1');
+        const vendorDetails = await getQuery({ query: vendorDetalisQ, values: [data.purchasing_doc_no] });
+        const dataObj = { ...data, vendor_name: vendorDetails[0].u_name };
+        await sendMail(DEMAND_UPLOAD_BY_BEARTH, dataObj, { users: vendorDetails }, DEMAND_UPLOAD_BY_BEARTH);
+    } catch (error) {
+        console.log("handleEmail", error.toString(), error.stack)
+    }
+
 }
 
 module.exports = { insert, list, getRestAmount }
