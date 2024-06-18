@@ -631,6 +631,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         let obj = poDateRes[0];
         other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
       }
+      USER_TYPE_GRSE_FINANCE
       if (obj.status != REJECTED) {
         const insertPayload = {
           ...other_details,
