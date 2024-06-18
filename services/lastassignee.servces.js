@@ -213,7 +213,7 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
       if(tableName == SDBG_SAVE) {
         insertPayload.man_no = tokenData.vendor_code;
       }
-
+ 
       // SDBG_ENTRY
 
       let dbQuery = `SELECT COUNT(*) AS count FROM ${tableName} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
