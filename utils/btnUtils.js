@@ -84,7 +84,7 @@ exports.getICGRNs = async (body) => {
         total_quantity += parseFloat(item?.quantity);
         await Promise.all(
           await unit_price.map(async (it) => {
-            console.log("it_price", it.price, parseFloat(it?.price));
+            // console.log("it_price", it.price, parseFloat(it?.price));
             total_price += parseFloat(it?.price) * total_quantity;
           })
         );
@@ -94,19 +94,18 @@ exports.getICGRNs = async (body) => {
   console.log("total_price", total_price);
   gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
   return {
+    icgrn_nos: icgrn_no,
     total_icgrn_value: parseFloat(total_price.toFixed(2)),
   };
 };
 
-exports.checkBTNRegistered = async (btn_num) => {
-  // let q = `SELECT count("btn_num") as count FROM btn_do WHERE btn_num = ?`;
-  let q = `SELECT count(btn_num) as count FROM btn_do WHERE btn_num = $1`;
+exports.checkBTNRegistered = async (btn_num, po) => {
+  let q = `SELECT count(btn_num) as count FROM btn_do WHERE btn_num = $1 and purchasing_doc_no = $2`;
   let result = await getQuery({
     query: q,
-    values: [btn_num],
+    values: [btn_num, po],
   });
-  console.log(result);
-  if (result.count > 0) {
+  if (parseInt(result[0].count) > 0) {
     return true;
   }
   return false;
@@ -137,6 +136,35 @@ exports.getVendorCodeName = async (po_no) => {
   });
   result = result[0];
   return result;
+};
+
+exports.fetchBTNListByPOAndBTNNum = async (btn, po) => {
+  console.log(po, btn);
+  if (!po || !btn) {
+    return {
+      status: false,
+      data: null,
+      message: "PO or BTN is missing, please refresh and retry!",
+    };
+  }
+  let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1 and btn_num = $2`;
+  let btn_list = await getQuery({
+    query: btn_list_q,
+    values: [po, btn],
+  });
+  if (btn_list.length > 0) {
+    return {
+      status: true,
+      data: btn_list[0],
+      message: "BTN LIST Fetched!",
+    };
+  } else {
+    return {
+      status: false,
+      data: null,
+      message: "Vendor have to create BTN First.",
+    };
+  }
 };
 
 // exports.getWdcInfo = async (po_no) => {

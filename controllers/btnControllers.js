@@ -10,10 +10,17 @@ const {
   A_DRAWING_DATE,
   A_QAP_DATE,
   A_ILMS_DATE,
+  INSERT,
 } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
 const { APPROVED } = require("../lib/status");
-const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
+const {
+  BTN_MATERIAL,
+  BTN_LIST,
+  BTN_MATERIAL_DO,
+  BTN_ASSIGN,
+} = require("../lib/tableName");
+const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -24,7 +31,9 @@ const {
   checkBTNRegistered,
   getBTNInfo,
   getBTNInfoDO,
+  fetchBTNListByPOAndBTNNum,
 } = require("../utils/btnUtils");
+const { convertToEpoch } = require("../utils/dateTime");
 const { checkTypeArr } = require("../utils/smallFun");
 
 const fetchAllBTNs = async (req, res) => {
@@ -40,7 +49,6 @@ const fetchAllBTNs = async (req, res) => {
     );
   }
 
-  // let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = ? ORDER BY created_at DESC`;
   let btnQ = `SELECT * FROM btn WHERE purchasing_doc_no = $1 ORDER BY created_at DESC`;
 
   let result = await getQuery({
@@ -239,10 +247,57 @@ const getBTNData = async (req, res) => {
   }
 };
 
+const addToBTNList = async (data) => {
+  console.log("data", data);
+  let payload = {
+    btn_num: data?.btn_num,
+    purchasing_doc_no: data?.purchasing_doc_no,
+    net_claim_amount: data?.net_claim_amount,
+    net_payable_amount: data?.net_payable_amount,
+    vendor_code: data?.vendor_code,
+    created_at: data?.created_at,
+    btn_type: data?.btn_type,
+    status: "SUBMITTED",
+  };
+  let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
+  let res = await getQuery({ query: q, values: val });
+  if (res.length > 0) {
+    return { status: true, data: res };
+  }
+  return { status: false, data: null };
+};
+
+const fetchBTNList = async (req, res) => {
+  const { id } = req.query;
+  if (!id) {
+    return resSend(
+      res,
+      false,
+      200,
+      "PO number is missing, please refresh and retry!",
+      null,
+      null
+    );
+  }
+  let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+  let btn_list = await getQuery({
+    query: btn_list_q,
+    values: [id],
+  });
+  if (btn_list.length > 0) {
+    return resSend(
+      res,
+      true,
+      200,
+      "BTN list has been fetched succesfully!",
+      btn_list,
+      null
+    );
+  }
+};
+
 const submitBTN = async (req, res) => {
   let {
-    yard,
-    stage,
     purchasing_doc_no,
     invoice_no,
     invoice_value,
@@ -252,11 +307,6 @@ const submitBTN = async (req, res) => {
     e_invoice_no,
     debit_note,
     credit_note,
-    gate_entry_no,
-    gate_entry_date,
-    grn_nos,
-    icgrn_nos,
-    gst_rate,
     hsn_gstn_icgrn,
     associated_po,
   } = req.body;
@@ -265,8 +315,11 @@ const submitBTN = async (req, res) => {
   let payload = {
     ...req.body,
     vendor_code: tokenData?.vendor_code,
+    created_by_id: tokenData?.vendor_code,
     btn_type: "hybrid-bill-material",
+    updated_by: "VENDOR",
   };
+  delete payload.associated_po;
 
   // Check required fields
   if (!hsn_gstn_icgrn) {
@@ -282,7 +335,7 @@ const submitBTN = async (req, res) => {
 
   // Check required fields
   if (!invoice_value || !invoice_value.trim() === "") {
-    return resSend(res, false, 200, "Invoice Value is missing!", null, null);
+    return resSend(res, false, 200, "Basic Value is mandatory.", null, null);
   }
   if (
     !purchasing_doc_no ||
@@ -294,13 +347,11 @@ const submitBTN = async (req, res) => {
   }
 
   // check invoice number is already present in DB
-  // let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = ? and vendor_code = ?`;
   let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = $1 and vendor_code = $2`;
   let check_invoice = await getQuery({
     query: check_invoice_q,
     values: [invoice_no, tokenData.vendor_code],
   });
-  console.log("check_invoice", check_invoice);
   if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
     return resSend(
       res,
@@ -313,21 +364,25 @@ const submitBTN = async (req, res) => {
   }
 
   // Handle uploaded files
-  console.log("payloadFiles", payloadFiles);
   let invoice_filename;
-  payloadFiles["invoice_filename"]
-    ? (invoice_filename = payloadFiles["invoice_filename"][0]?.filename)
-    : null;
+  if (payloadFiles["invoice_filename"]) {
+    invoice_filename = payloadFiles["invoice_filename"][0]?.filename;
+    payload = { ...payload, invoice_filename };
+  }
 
-  let e_invoice_filename;
   payloadFiles["e_invoice_filename"]
-    ? (e_invoice_filename = payloadFiles["e_invoice_filename"][0]?.filename)
+    ? (payload = {
+        ...payload,
+        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+      })
     : null;
 
-  let debit_credit_filename;
   payloadFiles["debit_credit_filename"]
-    ? (debit_credit_filename =
-        payloadFiles["debit_credit_filename"][0]?.filename)
+    ? (payload = {
+        ...payload,
+        debit_credit_filename:
+          payloadFiles["debit_credit_filename"][0]?.filename,
+      })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -337,53 +392,73 @@ const submitBTN = async (req, res) => {
   console.log("pbg_filename_result", pbg_filename_result);
 
   // // GET GRN Number by PO Number
-  // let grn_nos = await getGRNs(purchasing_doc_no);
+  let grn_nos = await getGRNs(purchasing_doc_no);
 
   // GET ICGRN Value by PO Number
-  let icgrn_total = await getICGRNs({ purchasing_doc_no, invoice_no });
-  if (!icgrn_total) {
+  let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
+  if (!resICGRN) {
     return resSend(res, false, 200, `Invoice number is not valid!`, null, null);
   }
 
-  icgrn_total = icgrn_total.total_icgrn_value;
-  payload = { ...payload, icgrn_total };
-  console.log("icgrn_total", icgrn_total);
+  payload = {
+    ...payload,
+    icgrn_total: resICGRN.total_icgrn_value,
+    icgrn_nos: resICGRN.icgrn_nos,
+    grn_nos,
+  };
 
   // // GET GRN Number by PO Number
   // let icgrn_nos = await getICGRNs(purchasing_doc_no);
 
-  let get_entry_filename;
   payloadFiles["get_entry_filename"]
-    ? (get_entry_filename = payloadFiles["get_entry_filename"][0]?.filename)
+    ? (payload = {
+        ...payload,
+        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+      })
     : null;
 
-  let demand_raise_filename;
   payloadFiles["demand_raise_filename"]
-    ? (demand_raise_filename =
-        payloadFiles["demand_raise_filename"][0]?.filename)
+    ? (payload = {
+        ...payload,
+        demand_raise_filename:
+          payloadFiles["demand_raise_filename"][0]?.filename,
+      })
     : null;
-
-  // let pbg_filename;
-  // payloadFiles["pbg_filename"]
-  //   ? (pbg_filename = payloadFiles["pbg_filename"][0]?.filename)
-  //   : null;
 
   // generate btn num
   const btn_num = await create_btn_no("BTN");
   payload = { ...payload, btn_num };
 
   // MATH Calculation
-  // if (!debit_note || debit_note === "") {
-  //   debit_note = 0;
-  // }
-  // if (!credit_note || credit_note === "") {
-  //   credit_note = 0;
-  // }
+  if (!debit_note || debit_note === "") {
+    debit_note = 0;
+  }
+  if (!credit_note || credit_note === "") {
+    credit_note = 0;
+  }
+  if (!cgst || cgst === "") {
+    cgst = 0;
+  }
+  if (!sgst || sgst === "") {
+    sgst = 0;
+  }
+  if (!igst || igst === "") {
+    igst = 0;
+  }
 
-  // let net_claim_amount =
-  //   parseFloat(invoice_value) +
-  //   parseFloat(debit_note) -
-  //   parseFloat(credit_note);
+  let net_claim_amount =
+    parseFloat(invoice_value) +
+    parseFloat(debit_note) -
+    parseFloat(credit_note);
+
+  let totalGST = parseFloat(cgst) + parseFloat(sgst) + parseFloat(igst);
+  let net_with_gst = net_claim_amount;
+  if (totalGST > 0) {
+    net_with_gst = net_claim_amount * (1 + totalGST / 100);
+    net_with_gst = parseFloat(net_with_gst.toFixed(2));
+  }
+
+  payload = { ...payload, net_claim_amount, net_with_gst };
 
   // GET Contractual Dates from other Table
   let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
@@ -408,10 +483,6 @@ const submitBTN = async (req, res) => {
   });
 
   // GET Actual Dates from other Table
-  // let a_sdbg_date;
-  // let a_drawing_date;
-  // let a_qap_date;
-  // let a_ilms_date;
   let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
   let a_dates = await getQuery({
     query: a_sdbg_date_q,
@@ -476,176 +547,66 @@ const submitBTN = async (req, res) => {
 
   console.log("payload", payload);
 
-  let payload2 = {
-    // btn_num,
-    // purchasing_doc_no,
-    // vendor_code: tokenData.vendor_code,
-    // invoice_no,
-    // invoice_value,
-    // cgst,
-    // igst,
-    // sgst,
-    invoice_filename,
-    // e_invoice_no: '${e_invoice_no ? e_invoice_no : ""}',
-    e_invoice_filename: '${e_invoice_filename ? e_invoice_filename : ""}',
-    // debit_note: '${debit_note ? debit_note : ""}',
-    // credit_note: '${credit_note ? credit_note : ""}',
-    debit_credit_filename:
-      '${debit_credit_filename ? debit_credit_filename : ""}',
-    // net_claim_amount: '${net_claim_amount ? net_claim_amount : ""}',
-    c_sdbg_date: '${c_sdbg_date ? c_sdbg_date : ""}',
-    c_sdbg_filename:
-      '${sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : ""}',
-    a_sdbg_date: '${a_sdbg_date ? a_sdbg_date : ""}',
-    demand_raise_filename:
-      '${demand_raise_filename ? demand_raise_filename : ""}',
-    gate_entry_no: '${gate_entry_no ? gate_entry_no : ""}',
-    gate_entry_date: '${gate_entry_date ? gate_entry_date : ""}',
-    get_entry_filename: '${get_entry_filename ? get_entry_filename : ""}',
-    grn_nos: '${grn_nos ? grn_nos : ""}',
-    // icgrn_nos: '${icgrn_nos ? icgrn_nos : ""}',
-    // icgrn_total: '${icgrn_total ? icgrn_total : ""}',
-    // c_drawing_date: '${c_drawing_date ? c_drawing_date : ""}',
-    // a_drawing_date: '${a_drawing_date ? a_drawing_date : ""}',
-    // c_qap_date: '${c_qap_date ? c_qap_date : ""}',
-    // a_qap_date: '${a_qap_date ? a_qap_date : ""}',
-    // c_ilms_date: '${c_ilms_date ? c_ilms_date : ""}',
-    // a_ilms_date: '${a_ilms_date ? a_ilms_date : ""}',
-    pbg_filename: '${pbg_filename ? pbg_filename : ""}',
-    hsn_gstn_icgrn: "${hsn_gstn_icgrn ? (hsn_gstn_icgrn === true ? 1 : 0) : 0}",
-    // created_at: '${created_at ? created_at : ""}',
-    // btn_type: "hybrid-bill-material",
-  };
-
   // INSERT Data into btn table
-  // let btnQ = `INSERT INTO btn SET
-  //   btn_num = '${btn_num}',
-  //   purchasing_doc_no = '${purchasing_doc_no}',
-  //   vendor_code = '${tokenData.vendor_code}',
-  //   invoice_no = '${invoice_no ? invoice_no : ""}',
-  //   invoice_value='${invoice_value ? invoice_value : ""}',
-  //   cgst='${cgst ? cgst : ""}',
-  //   igst='${igst ? igst : ""}',
-  //   sgst='${sgst ? sgst : ""}',
-  //   invoice_filename ='${invoice_filename ? invoice_filename : ""}',
-  //   e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
-  //   e_invoice_filename ='${e_invoice_filename ? e_invoice_filename : ""}',
-  //   debit_note='${debit_note ? debit_note : ""}',
-  //   credit_note='${credit_note ? credit_note : ""}',
-  //   debit_credit_filename='${
-  //     debit_credit_filename ? debit_credit_filename : ""
-  //   }',
-  //   net_claim_amount='${net_claim_amount ? net_claim_amount : ""}',
-  //   c_sdbg_date='${c_sdbg_date ? c_sdbg_date : ""}',
-  //   c_sdbg_filename='${
-  //     sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : ""
-  //   }',
-  //   a_sdbg_date='${a_sdbg_date ? a_sdbg_date : ""}',
-  //   demand_raise_filename='${
-  //     demand_raise_filename ? demand_raise_filename : ""
-  //   }',
-  //   gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
-  //   gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
-  //   get_entry_filename='${get_entry_filename ? get_entry_filename : ""}',
-  //   grn_nos='${grn_nos ? grn_nos : ""}',
-  //   icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
-  //   icgrn_total='${icgrn_total ? icgrn_total : ""}',
-  //   c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
-  //   a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
-  //   c_qap_date='${c_qap_date ? c_qap_date : ""}',
-  //   a_qap_date='${a_qap_date ? a_qap_date : ""}',
-  //   c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
-  //   a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
-  //   pbg_filename='${pbg_filename ? pbg_filename : ""}',
-  //   hsn_gstn_icgrn='${hsn_gstn_icgrn ? (hsn_gstn_icgrn === true ? 1 : 0) : 0}',
-  //   created_at='${created_at ? created_at : ""}',
-  //   btn_type='hybrid-bill-material'
-  // `;
-  // let result = await query({
-  //   query: btnQ,
-  //   values: [],
-  // });
+  let resBtnList = await addToBTNList(payload);
+  if (!resBtnList?.status) {
+    return resSend(
+      res,
+      false,
+      200,
+      `Something went wrong. Try again!`,
+      null,
+      null
+    );
+  }
+  let { q, val } = generateQuery(INSERT, BTN_MATERIAL, payload);
+  const result = await getQuery({ query: q, values: val });
 
-  // console.log(associated_po, "associated_po");
-  // if (associated_po && associated_po !== "" && Array.isArray(associated_po)) {
-  //   console.log(associated_po, "associated_po2");
-  //   await Promise.all(
-  //     associated_po.forEach(async (item) => {
-  //       console.log(item);
-  //       if (item && item?.a_po !== "") {
-  //         // INSERT Data into btn table
-  //         let btnQ = `INSERT INTO btn SET
-  //           yard = '${yard}',
-  //           stage = '${stage}',
-  //           btn_num = '${btn_num}',
-  //           purchasing_doc_no = '${item.a_po}',
-  //           vendor_code = '${tokenData.vendor_code}',
-  //           invoice_no = '${invoice_no ? invoice_no : ""}',
-  //           invoice_value='${invoice_value ? invoice_value : ""}',
-  //           cgst='${cgst ? cgst : ""}',
-  //           igst='${igst ? igst : ""}',
-  //           sgst='${sgst ? sgst : ""}',
-  //           invoice_filename ='${invoice_filename ? invoice_filename : ""}',
-  //           e_invoice_no='${e_invoice_no ? e_invoice_no : ""}',
-  //           e_invoice_filename ='${
-  //             e_invoice_filename ? e_invoice_filename : ""
-  //           }',
-  //           debit_note='${debit_note ? debit_note : ""}',
-  //           credit_note='${credit_note ? credit_note : ""}',
-  //           debit_credit_filename='${
-  //             debit_credit_filename ? debit_credit_filename : ""
-  //           }',
-  //           net_claim_amount='${net_claim_amount ? net_claim_amount : ""}',
-  //           c_sdbg_date='${c_sdbg_date ? c_sdbg_date : ""}',
-  //           c_sdbg_filename='${
-  //             sdbg_filename_result ? JSON.stringify(sdbg_filename_result) : ""
-  //           }',
-  //           a_sdbg_date='${a_sdbg_date ? a_sdbg_date : ""}',
-  //           demand_raise_filename='${
-  //             demand_raise_filename ? demand_raise_filename : ""
-  //           }',
-  //           gate_entry_no='${gate_entry_no ? gate_entry_no : ""}',
-  //           gate_entry_date='${gate_entry_date ? gate_entry_date : ""}',
-  //           get_entry_filename='${
-  //             get_entry_filename ? get_entry_filename : ""
-  //           }',
-  //           grn_nos='${grn_nos ? grn_nos : ""}',
-  //           icgrn_nos='${icgrn_nos ? icgrn_nos : ""}',
-  //           gst_rate='${gst_rate ? gst_rate : ""}',
-  //           icgrn_total='${icgrn_total ? icgrn_total : ""}',
-  //           c_drawing_date='${c_drawing_date ? c_drawing_date : ""}',
-  //           a_drawing_date='${a_drawing_date ? a_drawing_date : ""}',
-  //           c_qap_date='${c_qap_date ? c_qap_date : ""}',
-  //           a_qap_date='${a_qap_date ? a_qap_date : ""}',
-  //           c_ilms_date='${c_ilms_date ? c_ilms_date : ""}',
-  //           a_ilms_date='${a_ilms_date ? a_ilms_date : ""}',
-  //           pbg_filename='${pbg_filename ? pbg_filename : ""}',
-  //           hsn_gstn_icgrn='${
-  //             hsn_gstn_icgrn ? (hsn_gstn_icgrn === true ? 1 : 0) : 0
-  //           }',
-  //           created_at='${created_at ? created_at : ""}',
-  //           btn_type='hybrid-bill-material'
-  //         `;
-  //         await query({
-  //           query: btnQ,
-  //           values: [],
-  //         });
-  //       }
-  //     })
-  //   );
-  // }
+  associated_po = JSON.parse(associated_po);
+  if (associated_po && associated_po !== "" && Array.isArray(associated_po)) {
+    await Promise.all(
+      associated_po.map(async (item) => {
+        if (item && item?.a_po !== "") {
+          payload.purchasing_doc_no = item.a_po;
+          let resBtnList = await addToBTNList(payload);
+          if (!resBtnList?.status) {
+            return resSend(
+              res,
+              false,
+              200,
+              `Something went wrong. Try again!`,
+              null,
+              null
+            );
+          }
+          let { q, val } = generateQuery(INSERT, BTN_MATERIAL, payload);
+          let res = await getQuery({ query: q, values: val });
+          if (res.length <= 0) {
+            return resSend(
+              res,
+              false,
+              200,
+              "Something went wrong for Associated PO!",
+              null,
+              null
+            );
+          }
+        }
+      })
+    );
+  }
 
-  // console.log(result);
+  // console.log("result", result);
 
-  return resSend(
-    res,
-    true,
-    200,
-    "BTN number is generated and saved succesfully!",
-    null,
-    null
-  );
-  if (result?.rowCount) {
+  if (result.length > 0) {
+    return resSend(
+      res,
+      true,
+      200,
+      "BTN number is generated and saved succesfully!",
+      null,
+      null
+    );
   } else {
     return resSend(
       res,
@@ -659,22 +620,13 @@ const submitBTN = async (req, res) => {
 };
 
 const submitBTNByDO = async (req, res) => {
-  let {
-    btn_num,
-    ld_ge_date,
-    ld_c_date,
-    ld_amount,
-    p_sdbg_amount,
-    p_drg_amount,
-    p_qap_amount,
-    p_ilms_amount,
-    o_deduction,
-    p_estimate_amount,
-    total_deduction,
-    net_payable_amount,
-    assigned_to,
-  } = req.body;
+  let { btn_num, purchasing_doc_no, net_payable_amount, assign_to } = req.body;
   const tokenData = { ...req.tokenData };
+
+  console.log("tokenData", tokenData);
+  let payload = { ...req.body, created_by: tokenData?.vendor_code };
+
+  console.log(payload);
 
   // Check required fields
   if (!net_payable_amount) {
@@ -686,75 +638,111 @@ const submitBTNByDO = async (req, res) => {
   }
 
   // Check BTN by BTN Number
-  let checkBTNR = await checkBTNRegistered(btn_num);
+  let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
   if (checkBTNR) {
     return resSend(res, false, 200, "BTN is already submitted!", null, null);
   }
   // created at
-  let created_at = new Date().toLocaleDateString(); //getEpochTime();
-  console.log(created_at);
+  let created_at = getEpochTime(); //new Date().toLocaleDateString();
+  payload = { ...payload, created_at };
 
-  // INSERT Data into btn table
-  let btnQ = `INSERT INTO btn_do SET
-    btn_num = '${btn_num}',
-    contractual_ld = '${ld_c_date}',
-    ld_amount = '${ld_amount ? ld_amount : ""}',
-    drg_penalty = '${p_drg_amount ? p_drg_amount : ""}',
-    qap_penalty = '${p_qap_amount ? p_qap_amount : ""}',
-    ilms_penalty='${p_ilms_amount ? p_ilms_amount : ""}',
-    estimate_penalty='${p_estimate_amount ? p_estimate_amount : ""}',
-    other_deduction ='${o_deduction ? o_deduction : ""}',
-    total_deduction='${total_deduction ? total_deduction : ""}',
-    net_payable_amout ='${net_payable_amount ? net_payable_amount : ""}',
-    created_at='${created_at ? created_at : ""}',
-    created_by='',
-    assigned_to='${assigned_to ? assigned_to : ""}'
- 
-  `;
+  // INSERT data into BTN List Table
+  let d = await fetchBTNListByPOAndBTNNum(btn_num, purchasing_doc_no);
+  if (d.status) {
+    let btn_list_payload = d.data;
+    console.log("btn_list_payload: ", btn_list_payload);
+    let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
+    const res_list = await getQuery({
+      query: list_q.q,
+      values: list_q.val,
+    });
+    console.log("res_list", res_list);
+  } else {
+    return resSend(res, false, 200, d?.message, null, null);
+  }
 
-  let result = await query({
-    query: btnQ,
-    values: [],
-  });
-  console.log(result);
-  //return;
-  // GET BTN Info by BTN Number
-  let btnInfo = await getBTNInfo(btn_num);
-  let btnDOInfo = await getBTNInfoDO(btn_num);
-  console.log("result: " + JSON.stringify(btnInfo));
-  console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
-  // const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
-  // lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = ?`;
-  const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
-  lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = $1`;
-  let result_qq = await getQuery({
-    query: qq,
-    values: [btnInfo[0].purchasing_doc_no],
-  });
-
-  console.log(result_qq);
-  console.log("4567898765ji8y");
-  const btn_payload = {
-    ZBTNO: btnInfo[0]?.btn_num, // BTN Number
-    ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
-    ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
-    ERNAM: tokenData.vendor_code, // Created Person Name
-    LAEDA: "", // Not Needed
-    AENAM: result_qq[0].vendor_name, // Vendor Name
-    LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
-    ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
-    EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
-    DPERNR1: assigned_to, // assigned_to
-    DSTATUS: "4", // sap deparment forword status
-    ZRMK1: "Forwared To Finance", // REMARKS
+  // INSERT data into BTN ASSIGN Table
+  let assign_payload = {
+    btn_num,
+    purchasing_doc_no,
+    assign_by: payload.created_by,
+    assign_to,
+    last_assign: true,
+    assign_by_fi: "",
+    assign_to_fi: "",
+    last_assign_fi: false,
   };
-  console.log("result", result);
-  if (result.rowCount) {
-    btnSaveToSap(btn_payload);
+  let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+  const res_assign = await getQuery({
+    query: assign_q.q,
+    values: assign_q.val,
+  });
+
+  if (res_assign <= 0) {
+    return resSend(
+      res,
+      false,
+      200,
+      "Something went wrong. Please restart and try again!",
+      null,
+      null
+    );
+  }
+
+  // INSERT Data into btn_do table
+  console.log("payload", payload);
+  delete payload.assign_to;
+  delete payload.p_sdbg_amount;
+  delete payload.p_estimate_amount;
+  delete payload.created_by;
+  payload.created_at = convertToEpoch(new Date());
+  payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
+  let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
+  const result = await getQuery({ query: q, values: val });
+
+  console.log(result);
+
+  if (result.length > 0) {
     return resSend(res, true, 200, "BTN has been updated!", null, null);
   } else {
     return resSend(res, false, 200, JSON.stringify(result), null, null);
   }
+
+  //return;
+  // GET BTN Info by BTN Number
+  // let btnInfo = await getBTNInfo(btn_num);
+  // let btnDOInfo = await getBTNInfoDO(btn_num);
+  // console.log("result: " + JSON.stringify(btnInfo));
+  // console.log("btnDOInfo: " + JSON.stringify(btnDOInfo));
+
+  // const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
+  // lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = $1`;
+  // let result_qq = await getQuery({
+  //   query: qq,
+  //   values: [btnInfo[0].purchasing_doc_no],
+  // });
+
+  // const btn_payload = {
+  //   ZBTNO: btnInfo[0]?.btn_num, // BTN Number
+  //   ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+  //   ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
+  //   ERNAM: tokenData.vendor_code, // Created Person Name
+  //   LAEDA: "", // Not Needed
+  //   AENAM: result_qq[0].vendor_name, // Vendor Name
+  //   LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
+  //   ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
+  //   EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
+  //   DPERNR1: assigned_to, // assigned_to
+  //   DSTATUS: "4", // sap deparment forword status
+  //   ZRMK1: "Forwared To Finance", // REMARKS
+  // };
+  // console.log("result", result);
+  // if (result.length > 0) {
+  //   // btnSaveToSap(btn_payload);
+  //   return resSend(res, true, 200, "BTN has been updated!", null, null);
+  // } else {
+  //   return resSend(res, false, 200, JSON.stringify(result), null, null);
+  // }
 };
 
 async function btnSaveToSap(btnPayload) {
@@ -769,7 +757,7 @@ async function btnSaveToSap(btnPayload) {
   }
 }
 
-const getGrnIcrenPenelty = async (req, res) => {
+const getGrnIcgrnByInvoice = async (req, res) => {
   try {
     const { purchasing_doc_no, invoice_no } = req.body;
 
@@ -783,9 +771,6 @@ const getGrnIcrenPenelty = async (req, res) => {
         null
       );
     }
-    // const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
-    // ZMBLNR AS grn_no, EBELP as po_lineitem,
-    // INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = ? AND INVNO = ?`;
     const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no, EBELP as po_lineitem,
     INV_DATE AS invoice_date FROM zmm_gate_entry_d WHERE EBELN = $1 AND INVNO = $2`;
@@ -869,13 +854,14 @@ const timeInHHMMSS = () => {
 };
 
 module.exports = {
-  fetchAllBTNs,
+  // fetchAllBTNs,
+  fetchBTNList,
   getBTNData,
   submitBTN,
   submitBTNByDO,
   fetchBTNByNum,
   fetchBTNByNumForDO,
-  getGrnIcrenPenelty,
+  getGrnIcgrnByInvoice,
   btnSaveToSap,
   timeInHHMMSS,
 };

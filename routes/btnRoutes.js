@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const {
-  fetchAllBTNs,
+  // fetchAllBTNs,
   submitBTN,
   fetchBTNByNum,
   getBTNData,
   submitBTNByDO,
   fetchBTNByNumForDO,
-  getGrnIcrenPenelty,
+  getGrnIcgrnByInvoice,
+  fetchBTNList,
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
@@ -27,7 +28,7 @@ const {
 
 // HYBRID MATERIAL BTN
 router.get("/", [], (req, res) => {
-  fetchAllBTNs(req, res);
+  fetchBTNList(req, res);
 });
 router.get("/getBTNData", [veifyAccessToken], (req, res) => {
   getBTNData(req, res);
@@ -52,8 +53,8 @@ router.post(
   }
 );
 
-router.post("/getGrnIcrenPenelty", [veifyAccessToken], (req, res) => {
-  getGrnIcrenPenelty(req, res);
+router.post("/getGrnIcgrnByInvoice", [veifyAccessToken], (req, res) => {
+  getGrnIcgrnByInvoice(req, res);
 });
 
 //// Btn Service Hybrid ////
