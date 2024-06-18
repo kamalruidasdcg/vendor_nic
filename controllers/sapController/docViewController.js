@@ -442,6 +442,7 @@ const gateEntryReport = async (req, res) => {
 
         if (result && result.length) {
             let obj = {};
+            const sortedResp = result.sort((a, b) => a.po_line_item_no > b.po_line_item_no ? 1 : -1 )
             obj.gate_entry_no = result[0].gate_entry_no;
             obj.entry_date = result[0].entry_date;
             obj.vendor = result[0].vendor;
