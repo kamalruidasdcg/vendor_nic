@@ -869,10 +869,10 @@ const assignToFiStaffHandler = async (req, res) => {
     return resSend(res, false, 200, "Assign To is the mandatory!", null, null);
   }
 
-  const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = '1'`;
+  const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
   let assign_fi_staff_v = await getQuery({
     query: assign_q,
-    values: [btn_num],
+    values: [btn_num, true],
   });
   if (!checkTypeArr(assign_fi_staff_v)) {
     return resSend(
@@ -891,13 +891,13 @@ const assignToFiStaffHandler = async (req, res) => {
   const payload = {
     assign_by_fi: tokenData?.vendor_code,
     assign_to_fi: assign_to_fi,
+    last_assign_fi: true,
   };
 
   try {
     let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
-    console.log(q, val);
-
     let resp = await getQuery({ query: q, values: val });
+    console.log("resp", resp);
 
     let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
     let btn_list = await getQuery({
@@ -933,7 +933,7 @@ const assignToFiStaffHandler = async (req, res) => {
       resSend(res, false, 200, "Something went wrong in BTN List", null, null);
     }
   } catch (err) {
-    console.log("HELLO", err.message);
+    console.log("ERROR", err.message);
   }
 };
 
