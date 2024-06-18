@@ -11,10 +11,22 @@ const {
   A_QAP_DATE,
   A_ILMS_DATE,
   INSERT,
+  USER_TYPE_VENDOR,
   UPDATE,
 } = require("../lib/constant");
+const {
+  BTN_RETURN_DO,
+  BTN_FORWORD_FINANCE,
+  BTN_UPLOAD_CHECKLIST,
+} = require("../lib/event");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED } = require("../lib/status");
+const {
+  APPROVED,
+  SUBMITTED,
+  FORWARD_TO_FINANCE,
+  REJECTED,
+  ASSIGNED,
+} = require("../lib/status");
 const {
   BTN_MATERIAL,
   BTN_LIST,
@@ -22,6 +34,7 @@ const {
   BTN_ASSIGN,
 } = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
+const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
@@ -35,6 +48,7 @@ const {
   fetchBTNListByPOAndBTNNum,
 } = require("../utils/btnUtils");
 const { convertToEpoch } = require("../utils/dateTime");
+const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { checkTypeArr } = require("../utils/smallFun");
 
 const fetchAllBTNs = async (req, res) => {
@@ -853,6 +867,92 @@ const timeInHHMMSS = () => {
 
   return hours + minutes + seconds;
 };
+
+async function handelMail(tokenData, payload, event) {
+  try {
+    let emailUserDetailsQuery;
+    let emailUserDetails;
+    let dataObj = payload;
+
+    if (
+      tokenData.user_type == USER_TYPE_VENDOR &&
+      payload.status == SUBMITTED
+    ) {
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do");
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      console.log(
+        "emailUserDetailsQuery",
+        emailUserDetailsQuery,
+        emailUserDetails
+      );
+      await sendMail(
+        BTN_UPLOAD_CHECKLIST,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_UPLOAD_CHECKLIST
+      );
+    }
+
+    if (
+      tokenData.user_type != USER_TYPE_VENDOR &&
+      payload.status == FORWARD_TO_FINANCE
+    ) {
+      emailUserDetailsQuery = getUserDetailsQuery("venode_by_po");
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      await sendMail(
+        BTN_FORWORD_FINANCE,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_FORWORD_FINANCE
+      );
+    }
+
+    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
+      // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      await sendMail(
+        BTN_RETURN_DO,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_RETURN_DO
+      );
+    }
+    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
+      // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetailsQuery = "SELECT * FROM (";
+      buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
+      buildQuery += "UNION";
+      buildQuery += getUserDetailsQuery("assingee", "$2");
+      buildQuery += ") AS mail_info";
+
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      await sendMail(
+        BTN_RETURN_DO,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_RETURN_DO
+      );
+    }
+  } catch (error) {
+    console.log("handelMail qap", error.toString(), error.stack);
+  }
+}
 
 const assignToFiStaffHandler = async (req, res) => {
   const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
