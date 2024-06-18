@@ -1,5 +1,5 @@
 // const { query } = require("../config/dbConfig");
-const { getQuery, query } = require("../config/pgDbConfig");
+const { getQuery, query, poolClient } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
 const {
   C_SDBG_DATE,
@@ -12,6 +12,7 @@ const {
   A_ILMS_DATE,
   INSERT,
   USER_TYPE_VENDOR,
+  UPDATE,
 } = require("../lib/constant");
 const { BTN_RETURN_DO, BTN_FORWORD_FINANCE, BTN_UPLOAD_CHECKLIST } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
@@ -251,7 +252,7 @@ const getBTNData = async (req, res) => {
   }
 };
 
-const addToBTNList = async (data) => {
+const addToBTNList = async (data, status) => {
   console.log("data", data);
   let payload = {
     btn_num: data?.btn_num,
@@ -261,7 +262,7 @@ const addToBTNList = async (data) => {
     vendor_code: data?.vendor_code,
     created_at: data?.created_at,
     btn_type: data?.btn_type,
-    status: "SUBMITTED",
+    status: status,
   };
   let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
   let res = await getQuery({ query: q, values: val });
@@ -552,7 +553,7 @@ const submitBTN = async (req, res) => {
   console.log("payload", payload);
 
   // INSERT Data into btn table
-  let resBtnList = await addToBTNList(payload);
+  let resBtnList = await addToBTNList(payload, SUBMITTED);
   if (!resBtnList?.status) {
     return resSend(
       res,
@@ -572,7 +573,7 @@ const submitBTN = async (req, res) => {
       associated_po.map(async (item) => {
         if (item && item?.a_po !== "") {
           payload.purchasing_doc_no = item.a_po;
-          let resBtnList = await addToBTNList(payload);
+          let resBtnList = await addToBTNList(payload, SUBMITTED);
           if (!resBtnList?.status) {
             return resSend(
               res,
@@ -911,6 +912,88 @@ async function handelMail(tokenData, payload, event) {
 }
 
 
+const assignToFiStaffHandler = async (req, res) => {
+  const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+  const tokenData = { ...req.tokenData };
+
+  if (
+    !btn_num ||
+    btn_num === "" ||
+    !purchasing_doc_no ||
+    purchasing_doc_no === "" ||
+    !assign_to_fi ||
+    assign_to_fi === ""
+  ) {
+    return resSend(res, false, 200, "Assign To is the mandatory!", null, null);
+  }
+
+  const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = '1'`;
+  let assign_fi_staff_v = await getQuery({
+    query: assign_q,
+    values: [btn_num],
+  });
+  if (!checkTypeArr(assign_fi_staff_v)) {
+    return resSend(
+      res,
+      false,
+      200,
+      "You're not authorized to perform the action!",
+      null,
+      null
+    );
+  }
+
+  const whereCon = {
+    btn_num: btn_num,
+  };
+  const payload = {
+    assign_by_fi: tokenData?.vendor_code,
+    assign_to_fi: assign_to_fi,
+  };
+
+  try {
+    let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
+    console.log(q, val);
+
+    let resp = await getQuery({ query: q, values: val });
+
+    let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    let btn_list = await getQuery({
+      query: btn_list_q,
+      values: [purchasing_doc_no],
+    });
+    if (btn_list.length < 0) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Vendor have to submit BTN first.",
+        btn_list,
+        null
+      );
+    }
+
+    let data = {
+      btn_num,
+      purchasing_doc_no,
+      net_claim_amount: btn_list?.net_claim_amount,
+      net_payable_amount: btn_list?.net_payable_amount,
+      vendor_code: btn_list?.vendor_code,
+      created_at: convertToEpoch(new Date()),
+      btn_type: btn_list?.btn_type,
+    };
+
+    let result = await addToBTNList(data, "FORWARDED_TO_FI_STAFF");
+
+    if (result?.status) {
+      resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
+    } else {
+      resSend(res, false, 200, "Something went wrong in BTN List", null, null);
+    }
+  } catch (err) {
+    console.log("HELLO", err.message);
+  }
+};
 
 module.exports = {
   // fetchAllBTNs,
@@ -923,4 +1006,5 @@ module.exports = {
   getGrnIcgrnByInvoice,
   btnSaveToSap,
   timeInHHMMSS,
+  assignToFiStaffHandler,
 };

@@ -103,6 +103,9 @@ const drawingPayload = (payload, status) => {
     vendor_code: payload.vendor_code || null,
     created_at: payload.created_at || getEpochTime(),
     created_by_id: payload.created_by_id,
+    last_assigned: payload.last_assigned || null,
+    assign_from: payload.assign_from || null,
+    assign_to: payload.assign_to || null
   };
 
   return payloadObj;

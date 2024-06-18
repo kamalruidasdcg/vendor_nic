@@ -631,11 +631,13 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         let obj = poDateRes[0];
         other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
       }
+      USER_TYPE_GRSE_FINANCE
       if (obj.status != REJECTED) {
         const insertPayload = {
           ...other_details,
           reference_no: obj.reference_no,
           purchasing_doc_no: obj.purchasing_doc_no,
+          department: obj.department ? obj.department : null,
           bank_name: obj.bank_name ? obj.bank_name : null,
           branch_name: obj.branch_name ? obj.branch_name : null,
           bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
@@ -654,8 +656,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           check_list_reference: obj.reference_no ? obj.reference_no : null,
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
-          depertment: obj.depertment ? obj.depertment : null,
-          man_no:tokenData.vendor_code,
+          
           status: obj.status,
           created_at: getEpochTime(),
           created_by: tokenData.vendor_code,
@@ -668,8 +669,8 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           demand_notice_date: obj.demand_notice_date
             ? obj.demand_notice_date
             : 0,
-          entension_letter_date: obj.entension_letter_date
-            ? obj.entension_letter_date
+            extension_letter_date: obj.extension_letter_date
+            ? obj.extension_letter_date
             : 0,
         };
 
@@ -1552,11 +1553,12 @@ async function insertSdbgSave(req, res) {
         let obj = poDateRes[0];
         other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
       }
-
+console.log(obj);
         const insertPayload = {
           ...other_details,
           reference_no: obj.reference_no,
           purchasing_doc_no: obj.purchasing_doc_no,
+          department: obj.department ? obj.department : null,
           bank_name: obj.bank_name ? obj.bank_name : null,
           branch_name: obj.branch_name ? obj.branch_name : null,
           bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
@@ -1575,7 +1577,7 @@ async function insertSdbgSave(req, res) {
           check_list_reference: obj.reference_no ? obj.reference_no : null,
           check_list_date: getEpochTime(),
           bg_type: obj.bg_type ? obj.bg_type : null,
-          depertment: obj.depertment ? obj.depertment : null,
+          
           man_no:tokenData.vendor_code,
           status: obj.status,
           created_at: getEpochTime(),
@@ -1589,11 +1591,13 @@ async function insertSdbgSave(req, res) {
           demand_notice_date: obj.demand_notice_date
             ? obj.demand_notice_date
             : 0,
-          entension_letter_date: obj.entension_letter_date
-            ? obj.entension_letter_date
+            extension_letter_date: obj.extension_letter_date
+            ? obj.extension_letter_date
             : 0,
         };
-
+console.log("((((((((((((");
+console.log(insertPayload);
+console.log(")))))))))))");
         // SDBG_ENTRY
 
         let dbQuery = `SELECT COUNT(*) AS count FROM ${SDBG_SAVE} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
@@ -1626,7 +1630,9 @@ async function insertSdbgSave(req, res) {
           query: q,
           values: val,
         });
-
+console.log("(((((((((((((");
+console.log(sdbgEntryQuery);
+console.log(")))))))))))))");
         if (sdbgEntryQuery.error) {
           console.log(sdbgEntryQuery.error);
           return resSend(
@@ -1641,11 +1647,11 @@ async function insertSdbgSave(req, res) {
 
         if (dbResult2[0].count > 0) {
           console.log(
-            `Updating data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
+            `2Updating data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
           );
         } else {
           console.log(
-            `Inserting new data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
+            `2Inserting new data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
           );
         }
       
@@ -1653,7 +1659,7 @@ async function insertSdbgSave(req, res) {
 
 
 
-    return resSend(res, true, 200, "Data inserted122.", sdbgEntryQuery, null);
+    return resSend(res, true, 200, "Data inserted2.", sdbgEntryQuery, null);
   } catch (error) {
     console.log(error);
     return resSend(res, false, 400, "error.", error, null);
