@@ -815,8 +815,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("btnPayload", postUrl, btnPayload);
-    const postResponse = await makeHttpRequest(postUrl, "POST", btnPayload);
+    console.log("btnPayload", postUrl, btn_payload);
+    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
