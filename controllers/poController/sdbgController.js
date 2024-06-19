@@ -578,7 +578,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
       }
 
-      let sdbgQuery = await insertSdbgEntrySave(SDBG_ENTRY, obj, tokenData);
+      let sdbgQueryInsert = await insertSdbgEntrySave(SDBG_ENTRY, obj, tokenData);
 
       if (obj.status === FORWARD_TO_FINANCE) {
         // BG_ENTRY_BY_DO
@@ -590,6 +590,38 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         });
         handelEmail(obj, tokenData);
       }
+
+            const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      let sdbgResult = await poolQuery({
+        client,
+        query: Q,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
+      let sdbgDataResult = sdbgResult[0];
+      const insertPayloadForSdbg = {
+        reference_no: obj.reference_no,
+        purchasing_doc_no: obj.purchasing_doc_no,
+        ...sdbgDataResult,
+        remarks:
+          obj.status === REJECTED
+            ? `This BG is ${REJECTED}`
+            : `BG entry forwarded to Finance.`,
+        status: obj.status,
+        assigned_from: obj.status === REJECTED ? null : tokenData.vendor_code,
+        assigned_to: obj.assigned_to || null,
+        created_at: getEpochTime(),
+        created_by_name: "Dealing officer",
+        created_by_id: tokenData.vendor_code,
+        updated_by: "GRSE",
+      };
+
+      let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+      let sdbgQuery = await poolQuery({
+        client,
+        query: insertsdbg_q["q"],
+        values: insertsdbg_q["val"],
+      });
+
 
       // console.log("rt67898uygy");
       // console.log(sdbgQuery);
