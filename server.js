@@ -12,7 +12,9 @@ app.use(express.json());
 app.use(cors("*"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
-const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
+// const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
+// /home/obps/archieve'
+const poDirPath = path.join("home", "obps", "archieve");
 app.use("/sapuploads", express.static(poDirPath));
 // import routes
 const allRoutes = require("./routes/allRoutes");
