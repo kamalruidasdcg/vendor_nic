@@ -15,7 +15,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
 // /home/obps/archieve'
 const poDirPath = path.resolve('/home/obps/archieve');
-app.use("/sapuploads", express.static(poDirPath));
+app.use("/sapuploads/po", express.static(poDirPath));
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
