@@ -727,7 +727,7 @@ const submitBTNByDO = async (req, res) => {
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
   let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: q, values: val });
-  handelMail(tokenData, { ...payload, status: SUBMIT_BY_DO })
+  handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO })
   console.log(result);
 
   if (result.length > 0) {
@@ -1007,18 +1007,20 @@ async function handelMail(tokenData, payload, event) {
     }
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMIT_BY_DO) {
       // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      let buildQuery = "";
       emailUserDetailsQuery = 'SELECT * FROM ('
+      buildQuery += emailUserDetailsQuery;
       buildQuery += getUserDetailsQuery('vendor_by_po', '$1');
       buildQuery += 'UNION';
       buildQuery += getUserDetailsQuery('finance_authority', '$2');
-      buildQuery += ') AS mail_info';
+      buildQuery += ') AS mail_info'; 
 
-      console.log("payload.purchasing_doc_no, payload.assign_to", payload.purchasing_doc_no, payload.assign_to);
+      console.log("payload.purchasing_doc_no, payload.assign_to", payload, payload.assign_to, buildQuery);
       console.log("emailUserDetailsQuery", emailUserDetailsQuery);
 
-      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no, payload.assign_to] });
+      emailUserDetails = await getQuery({ query: buildQuery, values: [payload.purchasing_doc_no, parseInt(payload.assign_to)] });
       dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
-      await sendMail(BTN_RETURN_DO, dataObj, { users: emailUserDetails }, BTN_RETURN_DO);
+      await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
     }
 
   } catch (error) {
@@ -1029,6 +1031,8 @@ async function handelMail(tokenData, payload, event) {
 const assignToFiStaffHandler = async (req, res) => {
   const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
   const tokenData = { ...req.tokenData };
+
+  console.log("req.body", req.body);
 
   if (
     !btn_num ||
@@ -1104,7 +1108,7 @@ const assignToFiStaffHandler = async (req, res) => {
 
     if (result?.status) {
 
-      handelMail(tokenData, { ...req.body, status: FORWARDED_TO_FI_STAFF });
+      handelMail(tokenData, { ...req.body, assign_to_fi, status: FORWARDED_TO_FI_STAFF });
       try {
         btnSaveToSap({ ...req.body, ...payload }, tokenData);
       } catch (error) {
