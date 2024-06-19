@@ -790,8 +790,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
       LAEDA: "", // Not Needed
       AENAM: result_qq[0].vendor_name, // Vendor Name
       LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
-      ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
-      EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
+      ZVBNO: result_qq[0]?.invoice_no, // Invoice Number
+      EBELN: result_qq[0]?.purchasing_doc_no, // PO Number
       DPERNR1: btnPayload.assign_to_fi, // assigned_to
       DSTATUS: "4", // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
@@ -859,7 +859,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-
+    if (icgrn_no.length == 0) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Plese do ICGRN to Process BTN",
+        null,
+        null
+      );
+    }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
@@ -939,7 +948,7 @@ async function handelMail(tokenData, payload, event) {
       );
     }
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == FORWARDED_TO_FI_STAFF) {
-      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po');
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
       await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
     }
@@ -1075,14 +1084,16 @@ const assignToFiStaffHandler = async (req, res) => {
     let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
 
 
-    try {
-      btnSaveToSap({ ...req.body, ...payload }, tokenData);
-    } catch (error) {
-      console.log("btnSaveToSap", error.message);
-    }
+  
 
     if (result?.status) {
-      handelMail(tokenData, { ...req.body, status: FORWARDED_TO_FI_STAFF })
+
+      handelMail(tokenData, { ...req.body, status: FORWARDED_TO_FI_STAFF });
+      try {
+        btnSaveToSap({ ...req.body, ...payload }, tokenData);
+      } catch (error) {
+        console.log("btnSaveToSap", error.message);
+      }
       resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
     } else {
       resSend(res, false, 200, "Something went wrong in BTN List", null, null);
