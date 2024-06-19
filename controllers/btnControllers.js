@@ -277,31 +277,47 @@ const addToBTNList = async (data, status) => {
 };
 
 const fetchBTNList = async (req, res) => {
-  const { id } = req.query;
-  if (!id) {
-    return resSend(
-      res,
-      false,
-      200,
-      "PO number is missing, please refresh and retry!",
-      null,
-      null
-    );
-  }
-  let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
-  let btn_list = await getQuery({
-    query: btn_list_q,
-    values: [id],
-  });
-  if (btn_list.length > 0) {
-    return resSend(
-      res,
-      true,
-      200,
-      "BTN list has been fetched succesfully!",
-      btn_list,
-      null
-    );
+
+  try {
+
+
+    const { id } = req.query;
+    if (!id) {
+      return resSend(
+        res,
+        false,
+        200,
+        "PO number is missing, please refresh and retry!",
+        null,
+        null
+      );
+    }
+    let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    let btn_list = await getQuery({
+      query: btn_list_q,
+      values: [id],
+    });
+    if (btn_list.length > 0) {
+      return resSend(
+        res,
+        true,
+        200,
+        "BTN list has been fetched succesfully!",
+        btn_list,
+        null
+      );
+    } else {
+      return resSend(
+        res,
+        true,
+        200,
+        "No btn found",
+        btn_list,
+        null
+      );
+    }
+  } catch (error) {
+    resSend(res, false, 500, "Internal server error", error.message, null);
   }
 };
 
@@ -1084,7 +1100,7 @@ const assignToFiStaffHandler = async (req, res) => {
     let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
 
 
-  
+
 
     if (result?.status) {
 
