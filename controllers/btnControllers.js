@@ -381,17 +381,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["e_invoice_filename"]
     ? (payload = {
-        ...payload,
-        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
-      })
+      ...payload,
+      e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -421,17 +421,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -609,7 +609,7 @@ const submitBTN = async (req, res) => {
 
   if (result.length > 0) {
 
-    handelMail(tokenData, {...payload, status: SUBMITTED});
+    handelMail(tokenData, { ...payload, status: SUBMITTED });
     return resSend(
       res,
       true,
@@ -643,6 +643,7 @@ const submitBTNByDO = async (req, res) => {
   if (!net_payable_amount) {
     return resSend(res, false, 200, "Net payable is missing!", null, null);
   }
+
 
   if (!btn_num) {
     return resSend(res, false, 200, "BTN number is missing!", null, null);
@@ -710,7 +711,7 @@ const submitBTNByDO = async (req, res) => {
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
   let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: q, values: val });
-  handelMail(tokenData, {...payload, status: SUBMIT_BY_DO })
+  handelMail(tokenData, { ...payload, status: SUBMIT_BY_DO })
   console.log(result);
 
   if (result.length > 0) {
@@ -756,11 +757,49 @@ const submitBTNByDO = async (req, res) => {
   // }
 };
 
-async function btnSaveToSap(btnPayload) {
+async function btnSaveToSap(btnPayload, tokenData) {
   try {
+
+    const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
+    lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = $1`;
+    const vendorQuery = `
+              SELECT 
+	                          btn.btn_num, 
+	                          btn.purchasing_doc_no, 
+	                          btn.invoice_no, btn.cgst, 
+	                          btn.sgst, 
+	                          btn.igst, 
+	                          vendor.lifnr as vendor_code,
+	                          vendor.name1 as vendor_name
+              FROM  btn as btn
+              	left join lfa1 as vendor
+              		ON(vendor.lifnr = btn.vendor_code)
+              		where btn.btn_num = $1`;
+
+
+    let result_qq = await getQuery({
+      query: vendorQuery,
+      values: [btnPayload.btn_num],
+    });
+
+    const btn_payload = {
+      ZBTNO: btnPayload.btn_num, // BTN Number
+      ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+      ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
+      ERNAM: tokenData.vendor_code, // Created Person Name
+      LAEDA: "", // Not Needed
+      AENAM: result_qq[0].vendor_name, // Vendor Name
+      LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
+      ZVBNO: btnInfo[0]?.invoice_no, // Invoice Number
+      EBELN: btnInfo[0]?.purchasing_doc_no, // PO Number
+      DPERNR1: btnPayload.assign_to_fi, // assigned_to
+      DSTATUS: "4", // sap deparment forword status
+      ZRMK1: "Forwared To Finance", // REMARKS
+    };
+
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("postUrl", postUrl, btnPayload);
+    console.log("btnPayload", postUrl, btnPayload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btnPayload);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
@@ -944,7 +983,7 @@ async function handelMail(tokenData, payload, event) {
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMIT_BY_DO) {
       // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetailsQuery = 'SELECT * FROM ('
-      buildQuery +=  getUserDetailsQuery('vendor_by_po', '$1');
+      buildQuery += getUserDetailsQuery('vendor_by_po', '$1');
       buildQuery += 'UNION';
       buildQuery += getUserDetailsQuery('finance_authority', '$2');
       buildQuery += ') AS mail_info';
@@ -1035,8 +1074,15 @@ const assignToFiStaffHandler = async (req, res) => {
 
     let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
 
+
+    try {
+      btnSaveToSap({ ...req.body, ...payload }, tokenData);
+    } catch (error) {
+      console.log("btnSaveToSap", error.message);
+    }
+
     if (result?.status) {
-      handelMail(tokenData, {...req.body, status: FORWARDED_TO_FI_STAFF})
+      handelMail(tokenData, { ...req.body, status: FORWARDED_TO_FI_STAFF })
       resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
     } else {
       resSend(res, false, 200, "Something went wrong in BTN List", null, null);
