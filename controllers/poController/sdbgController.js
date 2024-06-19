@@ -1013,7 +1013,7 @@ async function handelEmail(payload, tokenData) {
     emailUserDetailsQuery = getUserDetailsQuery('do', '$1');
     emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
     const emailUserDetails2 = await getQuery({ query: getUserDetailsQuery('vendor_by_po', '$1'), values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails2[0].u_name}
+    dataObj = {...dataObj, vendor_name: emailUserDetails2[0]?.u_name}
     console.log("dataObj", dataObj, emailUserDetails);
     await sendMail(BG_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, BG_UPLOAD_BY_VENDOR);
   }
@@ -1021,7 +1021,7 @@ async function handelEmail(payload, tokenData) {
     // BG_ACCEPT_REJECT
     emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
     emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name}
+    dataObj = {...dataObj, vendor_name: emailUserDetails[0]?.u_name}
     await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
   }
   if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == REJECTED) {
