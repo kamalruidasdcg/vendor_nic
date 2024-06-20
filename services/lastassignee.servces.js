@@ -1,5 +1,7 @@
 const { query, getQuery, poolClient, poolQuery } = require("../config/pgDbConfig");
-const { EKPO } = require("../lib/tableName");
+const { UPDATE, INSERT } = require("../lib/constant");
+const { EKPO, SDBG_SAVE, SDBG, VENDOR_MASTER_LFA1, EKKO } = require("../lib/tableName");
+const { getEpochTime, generateQuery } = require("../lib/utils");
 
 
 /**
@@ -127,4 +129,134 @@ function poTypeCheck(materialData) {
   return isMatched;
 }
 
-module.exports = { getLastAssignee, getAssigneeList, checkIsAssigned, checkIsApprovedRejected, getFristRow, checkPoType }
+const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
+
+  try {
+    const client = await poolClient();
+    try {
+      const star = `vendor_code`;
+      // GET Vendor Info 
+      let vendor_code = await getFristRow(SDBG, star, obj.purchasing_doc_no);
+      vendor_code = vendor_code.vendor_code;
+     
+      let v_query = `SELECT * FROM ${VENDOR_MASTER_LFA1} WHERE LIFNR = $1`;
+      const dbResult = await poolQuery({
+        client,
+        query: v_query,
+        values: [vendor_code],
+      });
+
+      let other_details = {};
+      if (dbResult && dbResult.length > 0) {
+        let obj = dbResult[0];
+  
+        other_details.vendor_name = obj.name1 ? obj.name1 : null;
+        other_details.vendor_city = obj.ort01 ? obj.ort01 : null;
+        other_details.vendor_pin_code = obj.pstlz ? obj.pstlz : "";
+        other_details.vendor_address1 = obj.stras ? obj.stras : "";
+      }
+
+      // GET PO Date
+      let po_date_query = `SELECT aedat FROM ${EKKO} WHERE ebeln = $1`;
+      const poDateRes = await poolQuery({
+        client,
+        query: po_date_query,
+        values: [obj?.purchasing_doc_no],
+      });
+
+      if (poDateRes && poDateRes.length > 0) {
+        let obj = poDateRes[0];
+        other_details.po_date = obj.aedat ? new Date(obj.aedat).getTime() : null;
+      }
+    
+      const insertPayload = {
+        ...other_details,
+        reference_no: obj.reference_no,
+        purchasing_doc_no: obj.purchasing_doc_no,
+        department: obj.department ? obj.department : null,
+        bank_name: obj.bank_name ? obj.bank_name : null,
+        branch_name: obj.branch_name ? obj.branch_name : null,
+        bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
+        bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
+        bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
+        bank_city: obj.bank_city ? obj.bank_city : null,
+        bank_pin_code: obj.bank_pin_code ? obj.bank_pin_code : null,
+
+        bg_no: obj.bg_no ? obj.bg_no : null,
+        bg_date: obj.bg_date ? obj.bg_date : null,
+        bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
+        yard_no: obj.yard_no ? obj.yard_no : null,
+
+        validity_date: obj.validity_date ? obj.validity_date : null,
+        claim_priod: obj.claim_priod ? obj.claim_priod : null,
+        check_list_reference: obj.reference_no ? obj.reference_no : null,
+        check_list_date: getEpochTime(),
+        bg_type: obj.bg_type ? obj.bg_type : null,
+
+       // man_no: tokenData.vendor_code,
+        status: obj.status,
+        created_at: getEpochTime(),
+        created_by: tokenData.vendor_code,
+
+        extension_date1: obj.extension_date1 ? obj.extension_date1 : 0,
+        extension_date2: obj.extension_date2 ? obj.extension_date2 : 0,
+        extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
+        extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
+        release_date: obj.release_date ? obj.release_date : 0,
+        demand_notice_date: obj.demand_notice_date
+          ? obj.demand_notice_date
+          : 0,
+        extension_letter_date: obj.extension_letter_date
+          ? obj.extension_letter_date
+          : 0,
+      };
+      if(tableName == SDBG_SAVE) {
+        insertPayload.man_no = tokenData.vendor_code;
+      }
+ 
+      // SDBG_ENTRY
+
+      let dbQuery = `SELECT COUNT(*) AS count FROM ${tableName} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      const dbResult2 = await poolQuery({
+        client,
+        query: dbQuery,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
+
+      const whereCondition = {
+        purchasing_doc_no: obj.purchasing_doc_no,
+        reference_no: obj.reference_no,
+      };
+
+      let q, val;
+
+      if (dbResult2[0].count > 0) {
+        ({ q, val } = generateQuery(
+          UPDATE,
+          tableName,
+          insertPayload,
+          whereCondition
+        ));
+      } else {
+        ({ q, val } = generateQuery(INSERT, tableName, insertPayload));
+      }
+
+      let sdbgEntryQuery = await poolQuery({
+        client,
+        query: q,
+        values: val,
+      });
+      return sdbgEntryQuery;
+    } catch (error) {
+      console.log(error);
+      return resSend(res, false, 400, "error.", error, null);
+    }
+    finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, "error in db conn!", error, "");
+  }
+}
+
+module.exports = { getLastAssignee, getAssigneeList, checkIsAssigned, checkIsApprovedRejected, getFristRow, checkPoType, insertSdbgEntrySave }

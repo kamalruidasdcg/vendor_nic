@@ -67,7 +67,7 @@ const {
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
-const { getLastAssignee, getAssigneeList, checkIsAssigned, getFristRow, checkIsApprovedRejected, checkPoType } = require("../../services/lastassignee.servces");
+const { getLastAssignee, getAssigneeList, checkIsAssigned, getFristRow, checkIsApprovedRejected, checkPoType, insertSdbgEntrySave } = require("../../services/lastassignee.servces");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -573,164 +573,25 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         );
       }
 
-      const GET_LATEST_SDBG = await get_latest_sdbg_with_reference(
-        obj.purchasing_doc_no,
-        obj.reference_no
-      ); // `SELECT created_at,status FROM sdbg  WHERE purchasing_doc_no = ? ORDER BY sdbg.created_at DESC LIMIT 1`;
-
-      if (GET_LATEST_SDBG.length > 0) {
-        if (GET_LATEST_SDBG[0].status == ACCEPTED) {
-          return resSend(
-            res,
-            false,
-            200,
-            `The BG is already approved.`,
-            null,
-            null
-          );
-        }
-        if (GET_LATEST_SDBG[0].status == REJECTED) {
-          return resSend(
-            res,
-            false,
-            200,
-            `The BG is already ${GET_LATEST_SDBG[0].status}.`,
-            null,
-            null
-          );
-        }
+      const check = await checkIsApprovedRejected(SDBG, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
+      if (check > 0) {
+          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
       }
 
-      // GET Vendor Info
-      let vendor_code = GET_LATEST_SDBG[0]?.vendor_code;
-      let v_query = `SELECT * FROM ${VENDOR_MASTER_LFA1} WHERE LIFNR = $1`;
-      const dbResult = await poolQuery({
-        client,
-        query: v_query,
-        values: [vendor_code],
-      });
+      let sdbgQueryInsert = await insertSdbgEntrySave(SDBG_ENTRY, obj, tokenData);
 
-      let other_details = {};
-      if (dbResult && dbResult.length > 0) {
-        let obj = dbResult[0];
-        other_details.vendor_name = obj.NAME1 ? obj.NAME1 : null;
-        other_details.vendor_city = obj.ORT01 ? obj.ORT01 : null;
-        other_details.vendor_pin_code = obj.PSTLZ ? obj.PSTLZ : null;
-        other_details.vendor_address1 = obj.STRAS ? obj.STRAS : null;
-      }
-
-      // GET PO Date
-      let po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE EBELN = $1`;
-      const poDateRes = await poolQuery({
-        client,
-        query: po_date_query,
-        values: [obj?.purchasing_doc_no],
-      });
-
-      if (poDateRes && poDateRes.length > 0) {
-        let obj = poDateRes[0];
-        other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
-      }
-      USER_TYPE_GRSE_FINANCE
-      if (obj.status != REJECTED) {
-        const insertPayload = {
-          ...other_details,
-          reference_no: obj.reference_no,
-          purchasing_doc_no: obj.purchasing_doc_no,
-          department: obj.department ? obj.department : null,
-          bank_name: obj.bank_name ? obj.bank_name : null,
-          branch_name: obj.branch_name ? obj.branch_name : null,
-          bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
-          bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
-          bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
-          bank_city: obj.bank_city ? obj.bank_city : null,
-          bank_pin_code: obj.bank_pin_code ? obj.bank_pin_code : null,
-
-          bg_no: obj.bg_no ? obj.bg_no : null,
-          bg_date: obj.bg_date ? obj.bg_date : null,
-          bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
-          yard_no: obj.yard_no ? obj.yard_no : null,
-
-          validity_date: obj.validity_date ? obj.validity_date : null,
-          claim_priod: obj.claim_priod ? obj.claim_priod : null,
-          check_list_reference: obj.reference_no ? obj.reference_no : null,
-          check_list_date: getEpochTime(),
-          bg_type: obj.bg_type ? obj.bg_type : null,
-          
-          status: obj.status,
-          created_at: getEpochTime(),
-          created_by: tokenData.vendor_code,
-
-          extension_date1: obj.extension_date1 ? obj.extension_date1 : 0,
-          extension_date2: obj.extension_date2 ? obj.extension_date2 : 0,
-          extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
-          extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
-          release_date: obj.release_date ? obj.release_date : 0,
-          demand_notice_date: obj.demand_notice_date
-            ? obj.demand_notice_date
-            : 0,
-            extension_letter_date: obj.extension_letter_date
-            ? obj.extension_letter_date
-            : 0,
-        };
-
-        // SDBG_ENTRY
-
-        let dbQuery = `SELECT COUNT(*) AS count FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND status = $3`;
-        const dbResult2 = await poolQuery({
+      if (obj.status === FORWARD_TO_FINANCE) {
+        // BG_ENTRY_BY_DO
+        const deleteSdbgSaveQuery = `DELETE FROM ${SDBG_SAVE} WHERE reference_no = $1`;
+        const deleteSdbgSave = await poolQuery({
           client,
-          query: dbQuery,
-          values: [obj.purchasing_doc_no, obj.reference_no, FORWARD_TO_FINANCE],
+          query: deleteSdbgSaveQuery,
+          values: [obj.reference_no],
         });
-
-        const whereCondition = {
-          purchasing_doc_no: obj.purchasing_doc_no,
-          reference_no: obj.reference_no,
-        };
-
-        let q, val;
-
-        if (dbResult2[0].count > 0) {
-          ({ q, val } = generateQuery(
-            UPDATE,
-            SDBG_ENTRY,
-            insertPayload,
-            whereCondition
-          ));
-        } else {
-          ({ q, val } = generateQuery(INSERT, SDBG_ENTRY, insertPayload));
-        }
-
-        let sdbgEntryQuery = await poolQuery({
-          client,
-          query: q,
-          values: val,
-        });
-
-        if (sdbgEntryQuery.error) {
-          console.log(sdbgEntryQuery.error);
-          return resSend(
-            res,
-            false,
-            201,
-            "Data not inserted in sdbg_entry table!!",
-            sdbgEntryQuery.error,
-            null
-          );
-        }
-
-        if (dbResult2[0].count > 0) {
-          console.log(
-            `Updating data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
-          );
-        } else {
-          console.log(
-            `Inserting new data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
-          );
-        }
+        handelEmail(obj, tokenData);
       }
-      //SDBG
-      const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+
+            const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
       let sdbgResult = await poolQuery({
         client,
         query: Q,
@@ -761,16 +622,6 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-      if (obj.status === FORWARD_TO_FINANCE) {
-        // BG_ENTRY_BY_DO
-        const deleteSdbgSaveQuery = `DELETE FROM ${SDBG_SAVE} WHERE reference_no = $1`;
-        const deleteSdbgSave = await poolQuery({
-          client,
-          query: deleteSdbgSaveQuery,
-          values: [obj.reference_no],
-        });
-        handelEmail(obj, tokenData);
-      }
 
       // console.log("rt67898uygy");
       // console.log(sdbgQuery);
@@ -1194,7 +1045,7 @@ async function handelEmail(payload, tokenData) {
     emailUserDetailsQuery = getUserDetailsQuery('do', '$1');
     emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
     const emailUserDetails2 = await getQuery({ query: getUserDetailsQuery('vendor_by_po', '$1'), values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails2[0].u_name}
+    dataObj = {...dataObj, vendor_name: emailUserDetails2[0]?.u_name}
     console.log("dataObj", dataObj, emailUserDetails);
     await sendMail(BG_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, BG_UPLOAD_BY_VENDOR);
   }
@@ -1202,7 +1053,7 @@ async function handelEmail(payload, tokenData) {
     // BG_ACCEPT_REJECT
     emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
     emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name}
+    dataObj = {...dataObj, vendor_name: emailUserDetails[0]?.u_name}
     await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
   }
   if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == REJECTED) {
@@ -1521,118 +1372,9 @@ async function insertSdbgSave(req, res) {
       if (check > 0) {
           return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
       }
-        const star = `vendor_code`;
-      // GET Vendor Info 
-      let vendor_code = await getFristRow(SDBG, star, obj.purchasing_doc_no); // GET_LATEST_SDBG[0]?.vendor_code;
-      vendor_code = vendor_code.vendor_code;
-      let v_query = `SELECT * FROM ${VENDOR_MASTER_LFA1} WHERE LIFNR = $1`;
-      const dbResult = await poolQuery({
-        client,
-        query: v_query,
-        values: [vendor_code],
-      });
+      
+      let sdbgEntryQuery = await insertSdbgEntrySave(SDBG_SAVE, obj, tokenData);
 
-      let other_details = {};
-      if (dbResult && dbResult.length > 0) {
-        let obj = dbResult[0];
-        other_details.vendor_name = obj.NAME1 ? obj.NAME1 : null;
-        other_details.vendor_city = obj.ORT01 ? obj.ORT01 : null;
-        other_details.vendor_pin_code = obj.PSTLZ ? obj.PSTLZ : null;
-        other_details.vendor_address1 = obj.STRAS ? obj.STRAS : null;
-      }
-
-      // GET PO Date
-      let po_date_query = `SELECT AEDAT FROM ${EKKO} WHERE EBELN = $1`;
-      const poDateRes = await poolQuery({
-        client,
-        query: po_date_query,
-        values: [obj?.purchasing_doc_no],
-      });
-
-      if (poDateRes && poDateRes.length > 0) {
-        let obj = poDateRes[0];
-        other_details.po_date = obj.AEDAT ? obj.AEDAT : null;
-      }
-console.log(obj);
-        const insertPayload = {
-          ...other_details,
-          reference_no: obj.reference_no,
-          purchasing_doc_no: obj.purchasing_doc_no,
-          department: obj.department ? obj.department : null,
-          bank_name: obj.bank_name ? obj.bank_name : null,
-          branch_name: obj.branch_name ? obj.branch_name : null,
-          bank_addr1: obj.bank_addr1 ? obj.bank_addr1 : null,
-          bank_addr2: obj.bank_addr2 ? obj.bank_addr2 : null,
-          bank_addr3: obj.bank_addr3 ? obj.bank_addr3 : null,
-          bank_city: obj.bank_city ? obj.bank_city : null,
-          bank_pin_code: obj.bank_pin_code ? obj.bank_pin_code : null,
-
-          bg_no: obj.bg_no ? obj.bg_no : null,
-          bg_date: obj.bg_date ? obj.bg_date : null,
-          bg_ammount: obj.bg_ammount ? obj.bg_ammount : null,
-          yard_no: obj.yard_no ? obj.yard_no : null,
-
-          validity_date: obj.validity_date ? obj.validity_date : null,
-          claim_priod: obj.claim_priod ? obj.claim_priod : null,
-          check_list_reference: obj.reference_no ? obj.reference_no : null,
-          check_list_date: getEpochTime(),
-          bg_type: obj.bg_type ? obj.bg_type : null,
-          
-          man_no:tokenData.vendor_code,
-          status: obj.status,
-          created_at: getEpochTime(),
-          created_by: tokenData.vendor_code,
-
-          extension_date1: obj.extension_date1 ? obj.extension_date1 : 0,
-          extension_date2: obj.extension_date2 ? obj.extension_date2 : 0,
-          extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
-          extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
-          release_date: obj.release_date ? obj.release_date : 0,
-          demand_notice_date: obj.demand_notice_date
-            ? obj.demand_notice_date
-            : 0,
-            extension_letter_date: obj.extension_letter_date
-            ? obj.extension_letter_date
-            : 0,
-        };
-console.log("((((((((((((");
-console.log(insertPayload);
-console.log(")))))))))))");
-        // SDBG_ENTRY
-
-        let dbQuery = `SELECT COUNT(*) AS count FROM ${SDBG_SAVE} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
-        const dbResult2 = await poolQuery({
-          client,
-          query: dbQuery,
-          values: [obj.purchasing_doc_no, obj.reference_no],
-        });
-
-        const whereCondition = {
-          purchasing_doc_no: obj.purchasing_doc_no,
-          reference_no: obj.reference_no,
-        };
-
-        let q, val;
-
-        if (dbResult2[0].count > 0) {
-          ({ q, val } = generateQuery(
-            UPDATE,
-            SDBG_SAVE,
-            insertPayload,
-            whereCondition
-          ));
-        } else {
-          ({ q, val } = generateQuery(INSERT, SDBG_SAVE, insertPayload));
-        }
-
-        let sdbgEntryQuery = await poolQuery({
-          client,
-          query: q,
-          values: val,
-        });
-console.log("(((((((((((((");
-console.log(sdbgEntryQuery);
-console.log(")))))))))))))");
         if (sdbgEntryQuery.error) {
           console.log(sdbgEntryQuery.error);
           return resSend(
@@ -1644,22 +1386,8 @@ console.log(")))))))))))))");
             null
           );
         }
-
-        if (dbResult2[0].count > 0) {
-          console.log(
-            `2Updating data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
-          );
-        } else {
-          console.log(
-            `2Inserting new data for purchasing_doc_no: ${obj.purchasing_doc_no}, reference_no: ${obj.reference_no}`
-          );
-        }
       
-
-
-
-
-    return resSend(res, true, 200, "Data inserted2.", sdbgEntryQuery, null);
+    return resSend(res, true, 200, `Data update in ${SDBG_SAVE} table.`, sdbgEntryQuery, null);
   } catch (error) {
     console.log(error);
     return resSend(res, false, 400, "error.", error, null);
