@@ -1,4 +1,4 @@
-const { asyncPool, poolQuery } = require("../../config/pgDbConfig");
+const { asyncPool, poolQuery, poolClient } = require("../../config/pgDbConfig");
 const { responseSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
@@ -8,8 +8,8 @@ const zbts_st = async (req, res) => {
 
     try {
 
-        const client = await asyncPool();
-        let transactionSuccessful = false;
+        const client = await poolClient();
+        // let transactionSuccessful = false;
 
         try {
             if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
@@ -44,7 +44,7 @@ const zbts_st = async (req, res) => {
 
                 try {
                     const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
-                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno"]);
+                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno", "srno"]);
                     const results = await poolQuery({ client, query: btnPaymentLineItemQuery.q, values: btnPaymentLineItemQuery.val });
                     console.log("results 2", results);
                 } catch (error) {
@@ -55,12 +55,12 @@ const zbts_st = async (req, res) => {
                 }
             }
 
-            console.log("transactionSuccessful", transactionSuccessful);
+            // console.log("transactionSuccessful", transactionSuccessful);
 
-            const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
-            transactionSuccessful = true;
+            // const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
+            // transactionSuccessful = true;
 
-            console.log("transactionSuccessful", transactionSuccessful);
+            // console.log("transactionSuccessful", transactionSuccessful);
 
 
 
@@ -69,24 +69,14 @@ const zbts_st = async (req, res) => {
             responseSend(res, "S", 200, "Data inserted successfully", {}, null)
 
         } catch (error) {
-            console.log("errorerrorerrorerror", error);
+            console.log("errorerrorerrorerror", error.message);
             responseSend(res, "F", 502, "Data insert failed !!", error.toString(), null);
         }
         finally {
-            if (!transactionSuccessful) {
-                console.log("Connection End", transactionSuccessful);
-                await client.query('ROLLBACK')
-            }
-
-            const connEnd = client.release();
-            if (transactionSuccessful) {
-                responseSend(res, "S", 200, "Data inserted successfully", null, null)
-            }
-
-            console.log("Connection End" + "--->" + "conn release", connEnd);
+            client.release();
         }
     } catch (error) {
-        responseSend(res, "F", 500, "Error in database conn!!", error, null);
+        responseSend(res, "F", 500, "Error in database conn!!", error.message, null);
     }
 }
 
