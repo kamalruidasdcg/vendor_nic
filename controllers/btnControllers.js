@@ -20,7 +20,17 @@ const {
   BTN_UPLOAD_CHECKLIST,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED, FORWARD_TO_FINANCE, REJECTED, ASSIGNED, FORWARDED_TO_FI_STAFF, SUBMIT_BY_DO, D_STATUS_FORWARDED_TO_FINANCE } = require("../lib/status");
+const {
+  APPROVED,
+  SUBMITTED,
+  FORWARD_TO_FINANCE,
+  REJECTED,
+  ASSIGNED,
+  FORWARDED_TO_FI_STAFF,
+  SUBMIT_BY_DO,
+  SUBMITTED_BY_DO,
+  SUBMITTED_BY_VENDOR,
+} = require("../lib/status");
 const {
   BTN_MATERIAL,
   BTN_LIST,
@@ -132,7 +142,6 @@ const fetchBTNByNumForDO = async (req, res) => {
     );
   }
 
-  // let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
   let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = $1`;
   console.log("btn_num", btnDOQ, btn_num);
 
@@ -563,7 +572,7 @@ const submitBTN = async (req, res) => {
   console.log("payload", payload);
 
   // INSERT Data into btn table
-  let resBtnList = await addToBTNList(payload, SUBMITTED);
+  let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
   if (!resBtnList?.status) {
     return resSend(
       res,
@@ -583,7 +592,7 @@ const submitBTN = async (req, res) => {
       associated_po.map(async (item) => {
         if (item && item?.a_po !== "") {
           payload.purchasing_doc_no = item.a_po;
-          let resBtnList = await addToBTNList(payload, SUBMITTED);
+          let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
           if (!resBtnList?.status) {
             return resSend(
               res,
@@ -705,8 +714,9 @@ const submitBTNByDO = async (req, res) => {
     );
   }
 
+  let resBtnList = await addToBTNList(payload, SUBMITTED_BY_DO);
   // INSERT Data into btn_do table
-  console.log("payload", payload);
+  // console.log("payload", payload);
   delete payload.assign_to;
   delete payload.p_sdbg_amount;
   delete payload.p_estimate_amount;
@@ -777,13 +787,12 @@ async function btnSaveToSap(btnPayload, tokenData) {
               		ON(vendor.lifnr = btn.vendor_code)
               		where btn.btn_num = $1`;
 
-
     let btnDetails = await getQuery({
       query: vendorQuery,
       values: [btnPayload.btn_num],
     });
 
-    // CALCULATION 
+    // CALCULATION
     let basic_ammount = parseFloat(btnDetails[0]?.net_claim_amount) || 0;
     const cgst = parseFloat(btnDetails[0]?.cgst) || 0;
     const igst = parseFloat(btnDetails[0]?.igst) || 0;
@@ -803,26 +812,23 @@ async function btnSaveToSap(btnPayload, tokenData) {
       sgst_ammount = parseFloat(basic_ammount * (sgst / 100)).toFixed(3);
     }
 
-
-
-
     const btn_payload = {
       ZBTNO: btnPayload.btn_num, // BTN Number
       ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
       ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
       ERNAM: tokenData.vendor_code, // Created Person Name
       LAEDA: "", // Not Needed
-      AENAM: result_qq[0].vendor_name, // Vendor Name
-      LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
-      ZVBNO: result_qq[0]?.invoice_no, // Invoice Number
-      EBELN: result_qq[0]?.purchasing_doc_no, // PO Number
+      AENAM: btnDetails[0].vendor_name, // Vendor Name
+      LIFNR: btnDetails[0].vendor_code, // Vendor Codebtn_v2
+      ZVBNO: btnDetails[0]?.invoice_no, // Invoice Number
+      EBELN: btnDetails[0]?.purchasing_doc_no, // PO Number
       DPERNR1: btnPayload.assign_to_fi, // assigned_to
       DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
       CGST: cgst_ammount,
       IGST: igst_ammount,
       SGST: sgst_ammount,
-      BASICAMT: basic_ammount.toFixed(3)
+      BASICAMT: basic_ammount.toFixed(3),
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
