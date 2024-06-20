@@ -818,10 +818,10 @@ async function btnSaveToSap(btnPayload, tokenData) {
       ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
       ERNAM: tokenData.vendor_code, // Created Person Name
       LAEDA: "", // Not Needed
-      AENAM: result_qq[0].vendor_name, // Vendor Name
-      LIFNR: result_qq[0].vendor_code, // Vendor Codebtn_v2
-      ZVBNO: result_qq[0]?.invoice_no, // Invoice Number
-      EBELN: result_qq[0]?.purchasing_doc_no, // PO Number
+      AENAM: btnDetails[0].vendor_name, // Vendor Name
+      LIFNR: btnDetails[0].vendor_code, // Vendor Codebtn_v2
+      ZVBNO: btnDetails[0]?.invoice_no, // Invoice Number
+      EBELN: btnDetails[0]?.purchasing_doc_no, // PO Number
       DPERNR1: btnPayload.assign_to_fi, // assigned_to
       DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
