@@ -117,8 +117,12 @@ const downloadLatest = async (req, res) => {
 				const fileName = file.data[0]
 				// const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${fileName}`);
 				// const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'po', `${fileName}`);
-				const directoryPath = path.resolve(`/home/obps/archieve/${fileName}`);
-				const file_path = path.join('home', 'obps', 'archieve', `${fileName}`)
+				// const directoryPath = path.resolve(`/home/obps/archieve/${fileName}`);
+				// const file_path = path.join('home', 'obps', 'archieve', `${fileName}`)
+				// const response = [{ full_file_path: directoryPath, file_name: fileName, file_path }];
+
+				const directoryPath = path.join(__dirname, '..', '..', 'uploads', 'po', `${file}`);
+				const file_path = path.join('uploads', 'po', `${file}`);
 				const response = [{ full_file_path: directoryPath, file_name: fileName, file_path }];
 
 				// res.download(directoryPath, (err) => {
@@ -162,8 +166,8 @@ const getPoFileList = async (req, res) => {
 					// const directoryPath = path.join(__dirname, '..', '..', 'sapuploads', 'po', `${file}`);
 					// const file_path = path.join('sapuploads', 'po', `${file}`);
 					// const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'po', `${file}`);
-					const directoryPath = path.resolve(`/home/obos/archieve/${file}`);
-					const file_path = path.join('home', 'obps', 'archieve', `${file}`)
+					const directoryPath = path.join(__dirname, '..', '..', 'uploads', 'po', `${file}`);
+					const file_path = path.join('uploads', 'po', `${file}`);
 					let fileInfo = {};
 					fileInfo.FullFilePath = directoryPath;
 					fileInfo.filePath = file_path;
@@ -234,8 +238,12 @@ const getPaymentAdvliceList = async (req, res) => {
 					const realFileName = files?.data?.find((el) => el.includes(ele.documentNo))
 					// const directoryPath = path.join(__dirname, '..', '..', '..', '..', '..', 'ftpgrse', 'pymtadvice', `${realFileName}`);
 					// const file_path = path.join('home', 'ftpgrse', 'pymtadvice', `${realFileName}`);
-					const directoryPath = path.join('home','obps', 'pymtadvice', `${realFileName}`);
-					const file_path = path.join('home', 'obps', 'pymtadvice', `${realFileName}`);
+					// const directoryPath = path.join('home','obps', 'pymtadvice', `${realFileName}`);
+					// const file_path = path.join('home', 'obps', 'pymtadvice', `${realFileName}`);
+
+					const directoryPath = path.join(__dirname, '..', '..', 'uploads', 'paymentadvice', `${realFileName}`);
+					const file_path = path.join('uploads', 'paymentadvice', `${realFileName}`);
+
 					return {
 						...ele, fullFilePath: directoryPath,
 						filePath: file_path,

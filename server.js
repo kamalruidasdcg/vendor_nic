@@ -10,12 +10,12 @@ const HOST_NAME = process.env.HOST_NAME || "10.12.1.148";
 
 app.use(express.json());
 app.use(cors("*"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-// app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
-// const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
-// /home/obps/archieve'
-const poDirPath = path.resolve('/home/obps/archieve');
-app.use("/sapuploads/po", express.static(poDirPath));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// // app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
+// // const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
+// // /home/obps/archieve'
+// const poDirPath = path.resolve();
+// app.use("/sapuploads/po", express.static(poDirPath));
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
@@ -25,7 +25,7 @@ const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
 const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
-const { YES, TRUE } = require("./lib/constant");
+const { YES, TRUE, LAN_SERVER_PO_PATH, } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
 const { syncCron, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
@@ -67,10 +67,16 @@ const task2 = cron.schedule("* * * * *", () => {
 );
 
 
-
+// API LOGS
 app.use(apiLog);
 
+// STATIC PATH TO SHOW FILES
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const poDirPath = path.resolve(LAN_SERVER_PO_PATH);
+app.use("/sapuploads/po", express.static(poDirPath));
+
 // use routes
+
 app.use("/api/v1", allRoutes);
 app.use("/api/v1/auth2", authRoute);
 app.use("/api/v1/upload", uploadRoutes);
