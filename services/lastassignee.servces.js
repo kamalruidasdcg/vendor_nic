@@ -134,9 +134,11 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
   try {
     const client = await poolClient();
     try {
+      
       const star = `vendor_code`;
       // GET Vendor Info 
       let vendor_code = await getFristRow(SDBG, star, obj.purchasing_doc_no);
+     
       vendor_code = vendor_code.vendor_code;
      
       let v_query = `SELECT * FROM ${VENDOR_MASTER_LFA1} WHERE LIFNR = $1`;
@@ -192,6 +194,7 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
         check_list_reference: obj.reference_no ? obj.reference_no : null,
         check_list_date: getEpochTime(),
         bg_type: obj.bg_type ? obj.bg_type : null,
+        bg_file_no: obj.bg_file_no ? obj.bg_file_no : null,
 
        // man_no: tokenData.vendor_code,
         status: obj.status,
@@ -249,13 +252,13 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
       return sdbgEntryQuery;
     } catch (error) {
       console.log(error);
-      return resSend(res, false, 400, "error.", error, null);
+      
     }
     finally {
       client.release();
     }
   } catch (error) {
-    resSend(res, false, 500, "error in db conn!", error, "");
+    console.log(error);
   }
 }
 
