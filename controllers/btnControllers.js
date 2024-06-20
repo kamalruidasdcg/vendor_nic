@@ -30,6 +30,7 @@ const {
   SUBMIT_BY_DO,
   SUBMITTED_BY_DO,
   SUBMITTED_BY_VENDOR,
+  D_STATUS_FORWARDED_TO_FINANCE,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
