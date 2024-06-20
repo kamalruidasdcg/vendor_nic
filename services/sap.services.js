@@ -16,7 +16,7 @@ exports.zfi_bgm_1_Payload = async (obj) => {
     // return  { id :getEpochTime() ,purchasing_doc_no : obj.purchasing_doc_no  };
     const pl =
     {
-        "FILE_NO": "FILE-" + obj.purchasing_doc_no.slice(-5),
+        "FILE_NO": obj.bg_file_no || "",
         "REF_NO": obj.reference_no || "",
         "BANKERS_NAME": obj.bank_name || "",
         "BANKERS_BRANCH": obj.branch_name || "",
@@ -44,15 +44,15 @@ exports.zfi_bgm_1_Payload = async (obj) => {
         "VENDOR_CITY": obj.vendor_city || "",
         "V_PIN_CODE": obj.vendor_pin_code || 0,
         "CONFIRMATION": obj.confirmation || "yes",
-        "EXTENTION_DATE1": (obj.extension_date1 && obj.extension_date1 != "") ? getYyyyMmDd(obj.extension_date1) : "",
-        "EXTENTION_DATE2": (obj.extension_date2 && obj.extension_date2 != "") ? getYyyyMmDd(obj.extension_date2) : "",
-        "EXTENTION_DATE3": (obj.extension_date3 && obj.extension_date3 != "") ? getYyyyMmDd(obj.extension_date3) : "",
-        "EXTENTION_DATE4": (obj.extension_date4 && obj.extension_date4 != "") ? getYyyyMmDd(obj.extension_date4) : "",
-        "EXTENTION_DATE5": (obj.extension_date5 && obj.extension_date5 != "") ? getYyyyMmDd(obj.extension_date5) : "",
-        "EXTENTION_DATE6": (obj.extension_date6 && obj.extension_date6 != "") ? getYyyyMmDd(obj.extension_date6) : "",
-        "RELEASE_DATE": (obj.release_date && obj.release_date != "") ? getYyyyMmDd(obj.release_date) : "",
-        "DEM_NOTICE_DATE": (obj.demand_notice_date && obj.demand_notice_date != "") ? getYyyyMmDd(obj.demand_notice_date) : "",
-        "EXT_LETTER_DATE": (obj.entension_letter_date && obj.entension_letter_date != "") ? getYyyyMmDd(obj.entension_letter_date) : "",
+        "EXTENTION_DATE1": (obj.extension_date1 && obj.extension_date1 != "") ? obj.extension_date1 : "",
+        "EXTENTION_DATE2": (obj.extension_date2 && obj.extension_date2 != "") ? obj.extension_date2 : "",
+        "EXTENTION_DATE3": (obj.extension_date3 && obj.extension_date3 != "") ? obj.extension_date3 : "",
+        "EXTENTION_DATE4": (obj.extension_date4 && obj.extension_date4 != "") ? obj.extension_date3 : "",
+        "EXTENTION_DATE5": (obj.extension_date5 && obj.extension_date5 != "") ? obj.extension_date4 : "",
+        "EXTENTION_DATE6": (obj.extension_date6 && obj.extension_date6 != "") ? obj.extension_date5 : "",
+        "RELEASE_DATE": (obj.release_date && obj.release_date != "") ? obj.release_date : "",
+        "DEM_NOTICE_DATE": (obj.demand_notice_date && obj.demand_notice_date != "") ? obj.demand_notice_date : "",
+        "EXT_LETTER_DATE": (obj.entension_letter_date && obj.entension_letter_date != "") ? obj.entension_letter_date : "",
     };
 
     return pl;

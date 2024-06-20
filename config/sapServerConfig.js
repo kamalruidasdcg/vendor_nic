@@ -21,7 +21,7 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
     const credential = Username + ":" + Password;
     const base64Credentials = Buffer.from(credential).toString('base64');
     console.log(base64Credentials, "base64Credentials");
-
+    let statusCode = null;
 
     const options = {
       hostname: urlParts.hostname,
@@ -52,13 +52,14 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
 
       // The whole response has been received.
       res.on('end', () => {
-        resolve(data);
+        resolve({ statusCode, data });
       });
+      statusCode = res.statusCode;
     });
 
     // Handle errors
     req.on('error', (error) => {
-      reject(error);
+      reject({ statusCode, error });
     });
 
     // If it's a POST request, write the postData to the request
@@ -149,26 +150,31 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //     const postUrl = "http://10.181.1.31:8010/sap/bc/zobps_out_api";
 
 //     const btn_payload =
-// {
-//   ZBTNO: "20240425995",
-//   ERDAT: "20240318",
-//   ERZET: "164853",
-//   ERNAM: "600233",
-//   LAEDA: "20240318",
-//   AENAM: "NAME",
-//   LIFNR: "50000437",
-//   ZVBNO: "",
-//   EBELN: "4100000236",
-//   DPERNR1: "600233",
-//   ZRMK1: "REMARKS SEND FROM OBPS LAN SERVER",
-// }
+//     {
+//       ZBTNO: "20240620993",
+//       ERDAT: "20240318",
+//       ERZET: "164853",
+//       ERNAM: "600233",
+//       LAEDA: "20240318",
+//       AENAM: "NAME fg",
+//       LIFNR: "50000437",
+//       ZVBNO: "",
+//       DSTATUS: "4",
+//       EBELN: "4100000236",
+//       DPERNR1: "600233",
+//       ZRMK1: "REMARKS SEND FROM OBPS LAN SERVER",
+//       CGST: (parseFloat("7000") / parseFloat("5")).toFixed(2),
+//       IGST: (parseFloat("7000") / parseFloat("10.50")).toFixed(2),
+//       SGST: (parseFloat("7000") / parseFloat("5.50")).toFixed(2),
+//       BASICAMT: "7000"
+//     }
 
 
 //     console.log("postUrl", postUrl);
 //     console.log("btn_payload", btn_payload);
 
 //     const postResponse = await makeHttpRequest(postUrl, 'POST', btn_payload);
-//     console.log('POST Response from the server:', postResponse);
+//     console.log('POST Response from the server:', postResponse.data);
 //   } catch (error) {
 //     console.error('Error making the request:', error.message);
 //   }
@@ -193,4 +199,3 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //       console.error('Error making the request:', error.message);
 //   }
 // }
-

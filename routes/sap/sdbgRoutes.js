@@ -7,8 +7,11 @@ const { dynamicallyUpload } = require("../../lib/fileUpload");
 
 ////////////// STRAT SDBG PAYMENT ADVICE //////////////
 let suffix = "ZFI_BGM_1";
-router.post("/paymentAdvice/"+suffix, [], (req, res) => {
+router.post("/paymentAdvice/" + suffix, [], (req, res) => {
     sdbgController.sdbgPaymentAdvice(req, res);
+});
+router.post("/bgList/", [], (req, res) => {
+    sdbgController.bgList(req, res);
 });
 
 

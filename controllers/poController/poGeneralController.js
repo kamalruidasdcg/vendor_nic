@@ -4,6 +4,7 @@ const {
   generateQuery,
   getEpochTime,
   queryArrayTOString,
+  getCreatedArr,
 } = require("../../lib/utils");
 const {
   DRAWING,
@@ -53,7 +54,6 @@ const { getQuery } = require("../../config/pgDbConfig");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
- // console.log(99999999999999);
   try {
     const queryParams = req.query;
     const tokenData = { ...req.tokenData };
@@ -82,11 +82,8 @@ const details = async (req, res) => {
         WHERE 
             t1.EBELN = $1`;
 
-            console.log("dddddddddddd", q);
 
     const result = await getQuery({ query: q, values: [queryParams.id] });
-
-    console.log('resultresultresult', result);
 
     if (!result?.length)
       return resSend(res, false, 404, "No PO number found !!", [], null);
@@ -196,7 +193,7 @@ const details = async (req, res) => {
             (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = '04')
-            WHERE a.EBELN = $4 AND a.MID = '04');
+            WHERE a.EBELN = $4 AND a.MID = '04')
         `;
     const timeline = await getQuery({
       query: timeLineQuery,
@@ -207,19 +204,19 @@ const details = async (req, res) => {
     console.log('timelinetimelinetimelinetimelinetimeline', timeline);
 
     const getLatest = `
-        (SELECT purchasing_doc_no, status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status AS current_status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
+        (SELECT purchasing_doc_no, status  AS current_status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
 
     const curret_data = await getQuery({
       query: getLatest,
@@ -248,8 +245,17 @@ const details = async (req, res) => {
 
     let timelineData;
     if (timeline.length) {
-      timelineData = joinArrays(timeline, curret_data);
-      timelineData = joinArrays(timelineData, acknowledgementnt_date);
+      console.log("timeline", timeline);
+      let timeLineDatArr = mergeData(timeline, curret_data);
+      console.log("timeline", timeline);
+      timeLineDatArr = joinArrays(timeLineDatArr, acknowledgementnt_date);
+      console.log("timeline", timeline);
+
+      timelineData = timeLineDatArr.filter((v, i, a) => a.findIndex((el) => el?.milestoneid === v?.milestoneid) === i);
+
+      // Sort the array by milestoneid
+      timelineData.sort((a, b) => a.milestoneid - b.milestoneid);
+
     }
 
     // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
@@ -278,13 +284,11 @@ const details = async (req, res) => {
                     ON (materialMaster.MATNR = mat.MATNR)
             WHERE 1 = 1 AND mat.EBELN = $1`;
 
-            console.log("materialQuery", materialQuery);
     let materialResult = await getQuery({
       query: materialQuery,
       values: [queryParams.id],
     });
 
-    console.log("materialResult", materialResult);
     if (materialResult && materialResult?.length) {
 
 
@@ -295,7 +299,6 @@ const details = async (req, res) => {
     const materialType = await getQuery({ query: materialTypeQuery, values: [] });
 
     const isMaterialTypePO = poTypeCheck(materialResult, materialType);
-    console.log("isMaterialTypePO", isMaterialTypePO);
 
     const poType = isMaterialTypePO;
 
@@ -313,9 +316,6 @@ const details = async (req, res) => {
     result[0]["timeline"] = timelineData || [];
     result[0]["isDO"] = isDO(result[0], tokenData.vendor_code);
     result[0]["doInfo"] = DO.length > 0 ? DO[0] : null;
-    console.log("################");
-    console.log(result);
-    console.log("***********");
     resSend(res, true, 200, "data fetch scussfully.", result, null);
   } catch (error) {
     console.log("error.toString()", error.toString());
@@ -353,14 +353,12 @@ function poTypeCheck(materialData, materialType) {
   // const service = new Set(materialType.filter((el) => el.material_type === SERVICE_TYPE).map((e) => e.material_type_value));
   // const material = new Set(materialType.filter((el) => el.material_type === MATERIAL_TYPE).map((e) => e.material_type_value));
 
-  console.log("materialData", materialData);
 
   let isService = false;
   let isMaterial = false;
 
   for (const mat of materialData) {
     const type = mat.MATNR;
-    console.log("po type", type);
 
     if (!type) {
       isService = true;
@@ -394,7 +392,6 @@ function poTypeCheck(materialData, materialType) {
   // // types.every(type => material.includes(type));
 
   // console.log("service", service, "material", material, "type", types);
-  console.log("isService", isService, "isMaterial", isMaterial);
 
   if (isService && !isMaterial) {
     return 'service';
@@ -471,7 +468,7 @@ const poList = async (req, res) => {
     let Query = "";
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      Query = `SELECT DISTINCT(EBELN) as "EBELN" from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+      Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
     } else {
       switch (tokenData.department_id) {
         case USER_TYPE_GRSE_QAP:
@@ -479,7 +476,7 @@ const poList = async (req, res) => {
             //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
             Query = poListByEcko();
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
           }
           break;
         case USER_TYPE_GRSE_FINANCE:
@@ -487,7 +484,7 @@ const poList = async (req, res) => {
             Query = poListByEcko();
             // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
           }
           break;
         case USER_TYPE_GRSE_DRAWING:
@@ -495,7 +492,7 @@ const poList = async (req, res) => {
           Query = poListByEcko();
           break;
         case USER_TYPE_GRSE_PURCHASE:
-          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
           break;
         case USER_TYPE_PPNC_DEPARTMENT:
           Query = poListByEcko(); // poListByPPNC(req.query);
@@ -521,8 +518,13 @@ const poList = async (req, res) => {
         null
       );
     }
+
     let strVal;
+    let createdArr;
+    // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
+    //new Date().getTime()
     try {
+      createdArr = await getCreatedArr(Query, tokenData.user_type);
       strVal = await queryArrayTOString(Query, tokenData.user_type);
     } catch (error) {
       return resSend(res, false, 400, "Error in db query.", error, null);
@@ -555,9 +557,7 @@ const poList = async (req, res) => {
     //  left join wbs
     //  ON  wbs.purchasing_doc_no = ekko.ebeln
 
-    console.log("strVal", strVal
 
-    );
 
     const poArr = await getQuery({ query: poQuery, values: [] });
     if (!poArr) {
@@ -623,12 +623,10 @@ const poList = async (req, res) => {
       values: [],
     });
 
-    console.log("SdbgActualSubmissionDateArr", SdbgActualSubmissionDateArr);
 
     // let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
     let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no, MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '01'  group by EBELN, MTEXT, PLAN_DATE`;
 
-    console.log("SdbgContractualSubmissionDate", SdbgContractualSubmissionDate);
     let SdbgContractualSubmissionDateArr = await getQuery({
       query: SdbgContractualSubmissionDate,
       values: [],
@@ -659,7 +657,6 @@ const poList = async (req, res) => {
       values: [],
     });
 
-    console.log("DrawingActualSubmissionDate", DrawingActualSubmissionDate, DrawingActualSubmissionDateArr);
 
     let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '02'  group by EBELN, MTEXT, PLAN_DATE`;
     let DrawingContractualSubmissionDateArr = await getQuery({
@@ -667,7 +664,6 @@ const poList = async (req, res) => {
       values: [],
     });
 
-    console.log();
     // DRAWING
 
     // QAP
@@ -751,25 +747,34 @@ const poList = async (req, res) => {
     await Promise.all(
       result.map(async (item) => {
         let obj = {};
+        const created = createdArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNo || item.poNb
+        );//created_at
+
         let currentStage = {
           current: await currentStageHandler(item.poNb),
         };
         obj.currentStage = currentStage;
         obj.poNumber = item.poNb;
-        obj.poType = item.poType;
+        obj.createdAt = created?.created_at;
+        obj.poType = item?.poType;
         obj.isDo = item.isDo;
         obj.vendor_code = item.vendor_code;
         obj.vendor_name = item.vendor_name;
         obj.project_code = item.project_code;
         obj.wbs_id = item.wbs_id;
 
+
+
+
+
+
         ////////////// SD /////////////////
         const SDVGObj = {};
         const SdbgActualSubmission = SdbgActualSubmissionDateArr.find(
           ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
         );
-        // console.log('SdbgActualSubmission----------');
-        // console.log(SdbgActualSubmission);
+
         const SdbgContractualSubmission =
           await SdbgContractualSubmissionDateArr.find(
             ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
@@ -863,8 +868,9 @@ const poList = async (req, res) => {
         resultArr.push(obj);
       })
     );
+    const sortedRes = resultArr.sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
 
-    resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
+    resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
   } catch (error) {
 
     console.log("err", error, error.toString());
@@ -889,7 +895,7 @@ const doDetails = async (str) => {
 
 const poListByEcko = (vendorCode = "") => {
   let sufx;
-  let qry = `SELECT DISTINCT(EBELN) as "EBELN" from ekko`;
+  let qry = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
   if (vendorCode) {
     sufx = ` WHERE LIFNR = '${vendorCode}'`;
     qry = qry + sufx;
@@ -924,7 +930,7 @@ function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
     const matchingItem = arr2.find(
       (item2) =>
-        item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag
+        item1.eblel == item2.purchasing_doc_no && item1.mid == item2.flag
     );
 
     if (matchingItem) {
@@ -932,6 +938,21 @@ function joinArrays(arr1, arr2) {
     }
 
     return item1;
+  });
+}
+
+
+function mergeData(timelineData, currentData) {
+  return timelineData.map(timelineItem => {
+    const currentItem = currentData.find(
+      currentItem =>
+        currentItem.purchasing_doc_no === timelineItem.ebeln &&
+        currentItem.flag === timelineItem.mid
+    );
+
+    return currentItem
+      ? { ...timelineItem, current_status: currentItem.current_status }
+      : timelineItem;
   });
 }
 

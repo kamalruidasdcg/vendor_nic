@@ -29,6 +29,7 @@ const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
 const { WDC_APPROVAL_REJECT, WDC_UPLOADING } = require("../../lib/event");
+const { checkIsApprovedRejected } = require("../../services/lastassignee.servces");
 require("dotenv").config();
 
 exports.wdc = async (req, res) => {
@@ -87,6 +88,12 @@ exports.wdc = async (req, res) => {
           null
         );
       }
+
+      const check = await checkIsApprovedRejected(WDC, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
+      if (check > 0) {
+          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+      }
+
       const line_item_array_q = `SELECT COUNT(assigned_to) AS assingn from ${WDC} WHERE purchasing_doc_no = $1 AND  assigned_to = $2`;
       let line_item_array = await getQuery({ query: line_item_array_q, values: [obj.purchasing_doc_no, tokenData.vendor_code] });
       //  console.log("#$%^&*(*&^%$#");

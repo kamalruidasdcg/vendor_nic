@@ -164,7 +164,7 @@ const getUserDetailsQuery = (type, valueParameter) => {
     default:
       getDeatilsQuery =
         `(
-                SELECT    user_t.pernr       AS u_id,
+                SELECT    user_t.pernr :: character varying  AS u_id,
                           user_t.cname       AS u_name,
                           user_t.email       AS u_email,
                           '${type || ""}'    AS u_type
