@@ -589,7 +589,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );
@@ -777,7 +777,7 @@ const sdbgUpdateByFinance = async (req, res) => {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );
@@ -1520,7 +1520,7 @@ async function insertSdbgSave(req, res) {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );

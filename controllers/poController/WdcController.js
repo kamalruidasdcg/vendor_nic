@@ -91,7 +91,7 @@ exports.wdc = async (req, res) => {
 
       const check = await checkIsApprovedRejected(WDC, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
       if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+          return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
       }
 
       const line_item_array_q = `SELECT COUNT(assigned_to) AS assingn from ${WDC} WHERE purchasing_doc_no = $1 AND  assigned_to = $2`;
