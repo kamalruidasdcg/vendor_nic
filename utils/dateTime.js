@@ -20,3 +20,31 @@ exports.convertToEpoch = (date) => {
     return null;
   }
 };
+
+exports.getEpochFirstLastToday = () => {
+  // Get current date
+  const now = new Date();
+
+  // Get the start of today (00:00:00)
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const firstEpochTime = Math.floor(startOfDay.getTime() / 1000);
+
+  // Get the end of today (23:59:59)
+  const endOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+  const lastEpochTime = Math.floor(endOfDay.getTime() / 1000);
+
+  console.log("First Epoch Time of Today:", firstEpochTime);
+  console.log("Last Epoch Time of Today:", lastEpochTime);
+  return {
+    firstEpochTime,
+    lastEpochTime,
+  };
+};
