@@ -87,14 +87,15 @@ const zbts_st = async (req, res) => {
 
 const updateBtnListTable = async (client, data) => {
     try {
-        const btnListPayload = { btn_num: data.zbtno, status: data.dstatus };
+        // const btnListPayload = { btn_num: data.zbtno, status: data.dstatus };
         const statusObj = {
             "1": "RECEIVED",
             "2": "REJECTED",
-            "3": "CERTIFIED",
-            "4" :"FORWARDED"
+            "3": "APPROVE",
+            "4" :"BANK",
+            "5": "D-RETURN"
         }
-        const { q, val } = generateQuery(UPDATE, 'btn_list', { status: statusObj[data.dstatus] || "" }, { btn_num: data.zbtno })
+        const { q, val } = generateQuery(UPDATE, 'btn_list', { status: statusObj[data.fstatus] || "" }, { btn_num: data.zbtno })
         await poolQuery({ client, query: q, values: val });
     } catch (error) {
         throw error;

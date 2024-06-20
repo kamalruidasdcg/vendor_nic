@@ -20,7 +20,7 @@ const {
   BTN_UPLOAD_CHECKLIST,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED, FORWARD_TO_FINANCE, REJECTED, ASSIGNED, FORWARDED_TO_FI_STAFF, SUBMIT_BY_DO } = require("../lib/status");
+const { APPROVED, SUBMITTED, FORWARD_TO_FINANCE, REJECTED, ASSIGNED, FORWARDED_TO_FI_STAFF, SUBMIT_BY_DO, D_STATUS_FORWARDED_TO_FINANCE } = require("../lib/status");
 const {
   BTN_MATERIAL,
   BTN_LIST,
@@ -775,9 +775,6 @@ const submitBTNByDO = async (req, res) => {
 
 async function btnSaveToSap(btnPayload, tokenData) {
   try {
-
-    const qq = `select t1.LIFNR as vendor_code,t2.NAME1 as vendor_name from ekko as t1 LEFT JOIN
-    lfa1 as t2 ON t1.LIFNR = t2.LIFNR where t1.EBELN = $1`;
     const vendorQuery = `
               SELECT 
 	                          btn.btn_num, 
@@ -793,10 +790,33 @@ async function btnSaveToSap(btnPayload, tokenData) {
               		where btn.btn_num = $1`;
 
 
-    let result_qq = await getQuery({
+    let btnDetails = await getQuery({
       query: vendorQuery,
       values: [btnPayload.btn_num],
     });
+
+    // CALCULATION 
+    let basic_ammount = parseFloat(btnDetails[0]?.net_claim_amount) || 0;
+    const cgst = parseFloat(btnDetails[0]?.cgst) || 0;
+    const igst = parseFloat(btnDetails[0]?.igst) || 0;
+    const sgst = parseFloat(btnDetails[0]?.sgst) || 0;
+
+    let cgst_ammount = "0";
+    let igst_ammount = "0";
+    let sgst_ammount = "0";
+
+    if (cgst && basic_ammount) {
+      cgst_ammount = parseFloat(basic_ammount * (cgst / 100)).toFixed(3);
+    }
+    if (igst && basic_ammount) {
+      igst_ammount = parseFloat(basic_ammount * (igst / 100)).toFixed(3);
+    }
+    if (sgst && basic_ammount) {
+      sgst_ammount = parseFloat(basic_ammount * (sgst / 100)).toFixed(3);
+    }
+
+
+
 
     const btn_payload = {
       ZBTNO: btnPayload.btn_num, // BTN Number
@@ -809,8 +829,12 @@ async function btnSaveToSap(btnPayload, tokenData) {
       ZVBNO: result_qq[0]?.invoice_no, // Invoice Number
       EBELN: result_qq[0]?.purchasing_doc_no, // PO Number
       DPERNR1: btnPayload.assign_to_fi, // assigned_to
-      DSTATUS: "4", // sap deparment forword status
+      DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
+      CGST: cgst_ammount,
+      IGST: igst_ammount,
+      SGST: sgst_ammount,
+      BASICAMT: basic_ammount.toFixed(3)
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
@@ -1013,7 +1037,7 @@ async function handelMail(tokenData, payload, event) {
       buildQuery += getUserDetailsQuery('vendor_by_po', '$1');
       buildQuery += 'UNION';
       buildQuery += getUserDetailsQuery('finance_authority', '$2');
-      buildQuery += ') AS mail_info'; 
+      buildQuery += ') AS mail_info';
 
       console.log("payload.purchasing_doc_no, payload.assign_to", payload, payload.assign_to, buildQuery);
       console.log("emailUserDetailsQuery", emailUserDetailsQuery);
