@@ -765,7 +765,7 @@ const poList = async (req, res) => {
         };
         obj.currentStage = currentStage;
         obj.poNumber = item.poNb;
-        obj.createdAt = created.created_at;
+        obj.createdAt = created?.created_at;
         obj.poType = item.poType;
         obj.isDo = item.isDo;
         obj.vendor_code = item.vendor_code;
