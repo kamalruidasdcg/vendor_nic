@@ -196,7 +196,7 @@ const details = async (req, res) => {
             (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = '04')
-            WHERE a.EBELN = $4 AND a.MID = '04');
+            WHERE a.EBELN = $4 AND a.MID = '04')
         `;
     const timeline = await getQuery({
       query: timeLineQuery,
@@ -207,19 +207,19 @@ const details = async (req, res) => {
     console.log('timelinetimelinetimelinetimelinetimeline', timeline);
 
     const getLatest = `
-        (SELECT purchasing_doc_no, status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status AS current_status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
+        (SELECT purchasing_doc_no, status  AS current_status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
 
     const curret_data = await getQuery({
       query: getLatest,
@@ -248,7 +248,7 @@ const details = async (req, res) => {
 
     let timelineData;
     if (timeline.length) {
-      timelineData = joinArrays(timeline, curret_data);
+      timelineData = mergeData(timeline, curret_data);
       timelineData = joinArrays(timelineData, acknowledgementnt_date);
     }
 
@@ -924,7 +924,7 @@ function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
     const matchingItem = arr2.find(
       (item2) =>
-        item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag
+        item1.eblel == item2.purchasing_doc_no && item1.mid == item2.flag
     );
 
     if (matchingItem) {
@@ -932,6 +932,21 @@ function joinArrays(arr1, arr2) {
     }
 
     return item1;
+  });
+}
+
+
+function mergeData(timelineData, currentData) {
+  return timelineData.map(timelineItem => {
+    const currentItem = currentData.find(
+      currentItem => 
+        currentItem.purchasing_doc_no === timelineItem.ebeln && 
+        currentItem.flag === timelineItem.mid
+    );
+
+    return currentItem
+      ? { ...timelineItem, current_status: currentItem.current_status }
+      : timelineItem;
   });
 }
 
