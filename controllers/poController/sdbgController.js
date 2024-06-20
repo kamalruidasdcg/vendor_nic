@@ -644,6 +644,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 const sdbgUpdateByFinance = async (req, res) => {
   const tokenData = { ...req.tokenData };
   const { ...obj } = req.body;
+  let sdgbRollBackId;
   try {
     const client = await poolClient();
     try {
@@ -823,7 +824,9 @@ const sdbgUpdateByFinance = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-      handelEmail(insertPayloadForSdbg, tokenData)
+      sdgbRollBackId = sdbgQuery[0].id;
+
+      handelEmail(insertPayloadForSdbg, tokenData);
 
       if (
         insertPayloadForSdbg.status == APPROVED &&
@@ -875,7 +878,10 @@ const sdbgUpdateByFinance = async (req, res) => {
             get_sdbg_entry_data[0].confirmation = `No`;
           }
 
-          await sendBgToSap(get_sdbg_entry_data[0]);
+          const sendSap = await sendBgToSap(get_sdbg_entry_data[0], sdgbRollBackId);
+          if(sendSap == false) {
+            return resSend( res, false, 200, `SAP not connected.This po ${obj.status} is pending.`, sdbgQuery, null);
+          }
         } catch (error) {
           console.error(error);
         }
@@ -1070,22 +1076,34 @@ async function handelEmail(payload, tokenData) {
   }
 }
 
-async function sendBgToSap(payload) {
+async function sendBgToSap(payload, sdgbRollBackId) {
+  let status;
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
     console.log("wdc_payload -->");
-
     let modified = await zfi_bgm_1_Payload(payload);
     console.log("___________modified");
     console.log(modified);
     console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
+    status = true;
   } catch (error) {
     console.error("Error making the request:", error.message);
+    if(sdgbRollBackId) {
+      const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
+      const deleteRollBack = await getQuery({
+        query: deleteRollBackQuery,
+        values: [sdgbRollBackId],
+      });
+    } 
+    status = false;
+  } finally {
+      return status;
   }
+
 }
 
 async function BGextensionRelease(req, res) {
@@ -1387,7 +1405,7 @@ async function insertSdbgSave(req, res) {
           );
         }
       
-    return resSend(res, true, 200, `Data update in ${SDBG_SAVE} table.`, sdbgEntryQuery, null);
+    return resSend(res, true, 200, `BG has been saved.`, sdbgEntryQuery, null);
   } catch (error) {
     console.log(error);
     return resSend(res, false, 400, "error.", error, null);

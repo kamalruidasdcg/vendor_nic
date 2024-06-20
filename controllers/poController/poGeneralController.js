@@ -4,6 +4,7 @@ const {
   generateQuery,
   getEpochTime,
   queryArrayTOString,
+  getCreatedArr,
 } = require("../../lib/utils");
 const {
   DRAWING,
@@ -196,7 +197,7 @@ const details = async (req, res) => {
             (SELECT a.*, sub.actualSubmissionDate, sub.milestoneText, sub.milestoneId FROM   zpo_milestone AS a 
             LEFT JOIN actualsubmissiondate AS sub ON 
                 ( a.EBELN = sub.purchasing_doc_no and sub.milestoneId = '04')
-            WHERE a.EBELN = $4 AND a.MID = '04');
+            WHERE a.EBELN = $4 AND a.MID = '04')
         `;
     const timeline = await getQuery({
       query: timeLineQuery,
@@ -207,19 +208,19 @@ const details = async (req, res) => {
     console.log('timelinetimelinetimelinetimelinetimeline', timeline);
 
     const getLatest = `
-        (SELECT purchasing_doc_no, status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status AS current_status, '01' as flag FROM sdbg WHERE purchasing_doc_no = $1 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '02' as flag FROM drawing WHERE purchasing_doc_no = $2 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
+        (SELECT purchasing_doc_no, status  AS current_status, '03' as flag FROM qap_submission WHERE purchasing_doc_no = $3 ORDER BY id DESC LIMIT 1)
 
         UNION
 
-        (SELECT purchasing_doc_no, status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
+        (SELECT purchasing_doc_no, status  AS current_status, '04' as flag FROM ilms WHERE purchasing_doc_no = $4 ORDER BY id DESC LIMIT 1)`;
 
     const curret_data = await getQuery({
       query: getLatest,
@@ -248,7 +249,7 @@ const details = async (req, res) => {
 
     let timelineData;
     if (timeline.length) {
-      timelineData = joinArrays(timeline, curret_data);
+      timelineData = mergeData(timeline, curret_data);
       timelineData = joinArrays(timelineData, acknowledgementnt_date);
     }
 
@@ -471,7 +472,7 @@ const poList = async (req, res) => {
     let Query = "";
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      Query = `SELECT DISTINCT(EBELN) as "EBELN" from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+      Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
     } else {
       switch (tokenData.department_id) {
         case USER_TYPE_GRSE_QAP:
@@ -479,7 +480,7 @@ const poList = async (req, res) => {
             //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
             Query = poListByEcko();
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
           }
           break;
         case USER_TYPE_GRSE_FINANCE:
@@ -487,7 +488,7 @@ const poList = async (req, res) => {
             Query = poListByEcko();
             // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
           }
           break;
         case USER_TYPE_GRSE_DRAWING:
@@ -495,7 +496,7 @@ const poList = async (req, res) => {
           Query = poListByEcko();
           break;
         case USER_TYPE_GRSE_PURCHASE:
-          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
           break;
         case USER_TYPE_PPNC_DEPARTMENT:
           Query = poListByEcko(); // poListByPPNC(req.query);
@@ -521,8 +522,13 @@ const poList = async (req, res) => {
         null
       );
     }
+   
     let strVal;
+    let createdArr;
+   // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
+//new Date().getTime()
     try {
+      createdArr = await getCreatedArr(Query, tokenData.user_type);
       strVal = await queryArrayTOString(Query, tokenData.user_type);
     } catch (error) {
       return resSend(res, false, 400, "Error in db query.", error, null);
@@ -751,17 +757,26 @@ const poList = async (req, res) => {
     await Promise.all(
       result.map(async (item) => {
         let obj = {};
+        const created = createdArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );//created_at
         let currentStage = {
           current: await currentStageHandler(item.poNb),
         };
         obj.currentStage = currentStage;
         obj.poNumber = item.poNb;
+        obj.createdAt = created.created_at;
         obj.poType = item.poType;
         obj.isDo = item.isDo;
         obj.vendor_code = item.vendor_code;
         obj.vendor_name = item.vendor_name;
         obj.project_code = item.project_code;
         obj.wbs_id = item.wbs_id;
+
+        
+        
+
+
 
         ////////////// SD /////////////////
         const SDVGObj = {};
@@ -863,8 +878,9 @@ const poList = async (req, res) => {
         resultArr.push(obj);
       })
     );
+    const sortedRes = resultArr.sort((a, b)=> a.createdAt < b.createdAt ? 1: -1);
 
-    resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
+    resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
   } catch (error) {
 
     console.log("err", error, error.toString());
@@ -889,7 +905,7 @@ const doDetails = async (str) => {
 
 const poListByEcko = (vendorCode = "") => {
   let sufx;
-  let qry = `SELECT DISTINCT(EBELN) as "EBELN" from ekko`;
+  let qry = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
   if (vendorCode) {
     sufx = ` WHERE LIFNR = '${vendorCode}'`;
     qry = qry + sufx;
@@ -924,7 +940,7 @@ function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
     const matchingItem = arr2.find(
       (item2) =>
-        item1.EBELN == item2.purchasing_doc_no && item1.MID == item2.flag
+        item1.eblel == item2.purchasing_doc_no && item1.mid == item2.flag
     );
 
     if (matchingItem) {
@@ -932,6 +948,21 @@ function joinArrays(arr1, arr2) {
     }
 
     return item1;
+  });
+}
+
+
+function mergeData(timelineData, currentData) {
+  return timelineData.map(timelineItem => {
+    const currentItem = currentData.find(
+      currentItem => 
+        currentItem.purchasing_doc_no === timelineItem.ebeln && 
+        currentItem.flag === timelineItem.mid
+    );
+
+    return currentItem
+      ? { ...timelineItem, current_status: currentItem.current_status }
+      : timelineItem;
   });
 }
 
