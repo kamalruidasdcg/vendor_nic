@@ -868,9 +868,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         query: insertsdbg_q["q"],
         values: insertsdbg_q["val"],
       });
-      console.log("^^^^^^^^^^^^^^^^^^^^^^");
-      console.log(sdbgQuery);
-      console.log("^^^^^^^^^^^^^^^^^^^^^^");
+      
       sdgbRollBackId = sdbgQuery[0].id;
 
       handelEmail(insertPayloadForSdbg, tokenData);
