@@ -28,6 +28,8 @@ const {
   ASSIGNED,
   FORWARDED_TO_FI_STAFF,
   SUBMIT_BY_DO,
+  SUBMITTED_BY_DO,
+  SUBMITTED_BY_VENDOR,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -140,7 +142,6 @@ const fetchBTNByNumForDO = async (req, res) => {
     );
   }
 
-  // let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = ?`;
   let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = $1`;
   console.log("btn_num", btnDOQ, btn_num);
 
@@ -571,7 +572,7 @@ const submitBTN = async (req, res) => {
   console.log("payload", payload);
 
   // INSERT Data into btn table
-  let resBtnList = await addToBTNList(payload, SUBMITTED);
+  let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
   if (!resBtnList?.status) {
     return resSend(
       res,
@@ -591,7 +592,7 @@ const submitBTN = async (req, res) => {
       associated_po.map(async (item) => {
         if (item && item?.a_po !== "") {
           payload.purchasing_doc_no = item.a_po;
-          let resBtnList = await addToBTNList(payload, SUBMITTED);
+          let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
           if (!resBtnList?.status) {
             return resSend(
               res,
@@ -713,8 +714,9 @@ const submitBTNByDO = async (req, res) => {
     );
   }
 
+  let resBtnList = await addToBTNList(payload, SUBMITTED_BY_DO);
   // INSERT Data into btn_do table
-  console.log("payload", payload);
+  // console.log("payload", payload);
   delete payload.assign_to;
   delete payload.p_sdbg_amount;
   delete payload.p_estimate_amount;

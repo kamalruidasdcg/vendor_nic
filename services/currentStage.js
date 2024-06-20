@@ -1,25 +1,42 @@
 const { query, getQuery } = require("../config/pgDbConfig");
 const { USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
+const {
+  SDBG,
+  DRAWING,
+  QAP_SUBMISSION,
+  ILMS,
+  INSPECTIONCALLLETTER,
+  SHIPPINGDOCUMENTS,
+  WDC,
+  BTN_LIST,
+  QALS,
+  MSEG,
+} = require("../lib/tableName");
 
 const currentStageHandler = async (id) => {
   let dbs = [
-    "sdbg",
-    "drawing",
-    "qap_submission",
-    "ilms",
-    "inspection_call_letter",
-    "shipping_documents",
-    "store_icgrn",
-    "store_grn",
-    "store_gate",
-    "wdc",
-    "btn",
+    SDBG,
+    DRAWING,
+    QAP_SUBMISSION,
+    ILMS,
+    INSPECTIONCALLLETTER,
+    SHIPPINGDOCUMENTS,
+    QALS, // grn
+    MSEG, // icgrn
+    WDC,
+    BTN_LIST,
   ];
   let finalStage = "Not Started";
   let stage = "Not Started";
   for (const item of dbs) {
-    let q = `SELECT count(*) as count FROM ${item} WHERE purchasing_doc_no = $1 AND updated_by = 'VENDOR'`;
+    let q = "";
+    if (item === QALS || item === MSEG) {
+      q = `SELECT count(*) as count FROM ${item} WHERE EBELN = $1`;
+    } else {
+      q = `SELECT count(*) as count FROM ${item} WHERE purchasing_doc_no = $1`;
+    }
+
     let res = await getQuery({
       query: q,
       values: [id],
@@ -27,32 +44,37 @@ const currentStageHandler = async (id) => {
     console.log(res);
     if (res[0]?.count > 0) {
       let r = "";
-      if (item === "sdbg") {
+      if (item === SDBG) {
         r = "SDBG";
-      } else if (item === "drawing") {
+      }
+      if (item === DRAWING) {
         r = "DRAWING";
-      } else if (item === "qap_submission") {
+      }
+      if (item === QAP_SUBMISSION) {
         r = "QAP";
-      } else if (item === "ilms") {
+      }
+      if (item === ILMS) {
         r = "ILMS";
-      } else if (item === "inspection_call_letter") {
+      }
+      if (item === INSPECTIONCALLLETTER) {
         r = "INSPECTION";
-      } else if (item === "shipping_documents") {
+      }
+      if (item === SHIPPINGDOCUMENTS) {
         r = "SHIPPING";
-      } else if (
-        item === "store_icgrn" ||
-        item === "store_grn" ||
-        item === "store_gate"
-      ) {
-        r = "STORE";
-      } else if (item === "wdc") {
+      }
+      if (item === QALS) {
+        r = "STORE-GRN";
+      }
+      if (item === MSEG) {
+        r = "STORE-ICGRN";
+      }
+      if (item === WDC) {
         r = "WDC";
         finalStage = r;
-      } else if (item === "btn") {
+      }
+      if (item === BTN_LIST) {
         r = "PAYMENT";
         finalStage = r;
-      } else {
-        r = item;
       }
       stage = r;
     } else {
@@ -61,7 +83,7 @@ const currentStageHandler = async (id) => {
     }
   }
 
-  console.log("finalStage", finalStage);
+  // console.log("finalStage", finalStage);
 
   return finalStage;
 };
