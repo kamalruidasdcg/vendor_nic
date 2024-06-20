@@ -758,7 +758,7 @@ const poList = async (req, res) => {
       result.map(async (item) => {
         let obj = {};
         const created = createdArr.find(
-          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNo || item.poNb
         );//created_at
 
         let currentStage = {
