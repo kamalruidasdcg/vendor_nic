@@ -20,7 +20,7 @@ const sdbgPaymentAdvice = async (req, res) => {
         console.log("payloadObj", payloadObj);
         // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
         const queryText = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, ["FILE_NO", "REF_NO"])
-        console.log(q);
+        // console.log(q);
         const response = await query({ query: queryText.q, values: queryText.val });
         responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
     } catch (err) {
