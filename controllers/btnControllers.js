@@ -277,10 +277,7 @@ const addToBTNList = async (data, status) => {
 };
 
 const fetchBTNList = async (req, res) => {
-
   try {
-
-
     const { id } = req.query;
     if (!id) {
       return resSend(
@@ -307,14 +304,7 @@ const fetchBTNList = async (req, res) => {
         null
       );
     } else {
-      return resSend(
-        res,
-        true,
-        200,
-        "No btn found",
-        btn_list,
-        null
-      );
+      return resSend(res, true, 200, "No btn found", btn_list, null);
     }
   } catch (error) {
     resSend(res, false, 500, "Internal server error", error.message, null);
@@ -397,17 +387,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["e_invoice_filename"]
     ? (payload = {
-      ...payload,
-      e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
-    })
+        ...payload,
+        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+      })
     : null;
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-      ...payload,
-      debit_credit_filename:
-        payloadFiles["debit_credit_filename"][0]?.filename,
-    })
+        ...payload,
+        debit_credit_filename:
+          payloadFiles["debit_credit_filename"][0]?.filename,
+      })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -437,17 +427,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-      ...payload,
-      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-    })
+        ...payload,
+        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+      })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-      ...payload,
-      demand_raise_filename:
-        payloadFiles["demand_raise_filename"][0]?.filename,
-    })
+        ...payload,
+        demand_raise_filename:
+          payloadFiles["demand_raise_filename"][0]?.filename,
+      })
     : null;
 
   // generate btn num
@@ -624,7 +614,6 @@ const submitBTN = async (req, res) => {
   // console.log("result", result);
 
   if (result.length > 0) {
-
     handelMail(tokenData, { ...payload, status: SUBMITTED });
     return resSend(
       res,
@@ -659,7 +648,6 @@ const submitBTNByDO = async (req, res) => {
   if (!net_payable_amount) {
     return resSend(res, false, 200, "Net payable is missing!", null, null);
   }
-
 
   if (!btn_num) {
     return resSend(res, false, 200, "BTN number is missing!", null, null);
@@ -727,7 +715,7 @@ const submitBTNByDO = async (req, res) => {
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
   let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: q, values: val });
-  handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO })
+  handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
   console.log(result);
 
   if (result.length > 0) {
@@ -960,15 +948,28 @@ async function handelMail(tokenData, payload, event) {
 
     console.log("876567890987656789", tokenData, payload);
 
-
-    if (tokenData.user_type == USER_TYPE_VENDOR && payload.status == SUBMITTED) {
-
-      emailUserDetailsQuery = getUserDetailsQuery('vendor_and_do', '$1');
+    if (
+      tokenData.user_type == USER_TYPE_VENDOR &&
+      payload.status == SUBMITTED
+    ) {
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do", "$1");
 
       console.log("emailUserDetails", emailUserDetails);
-      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      console.log("emailUserDetailsQuery", emailUserDetailsQuery, emailUserDetails);
-      await sendMail(BTN_UPLOAD_CHECKLIST, dataObj, { users: emailUserDetails }, BTN_UPLOAD_CHECKLIST);
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      console.log(
+        "emailUserDetailsQuery",
+        emailUserDetailsQuery,
+        emailUserDetails
+      );
+      await sendMail(
+        BTN_UPLOAD_CHECKLIST,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_UPLOAD_CHECKLIST
+      );
     }
 
     if (
@@ -987,10 +988,21 @@ async function handelMail(tokenData, payload, event) {
         BTN_FORWORD_FINANCE
       );
     }
-    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == FORWARDED_TO_FI_STAFF) {
-      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
+    if (
+      tokenData.user_type != USER_TYPE_VENDOR &&
+      payload.status == FORWARDED_TO_FI_STAFF
+    ) {
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetails = await getQuery({
+        query: emailUserDetailsQuery,
+        values: [payload.purchasing_doc_no],
+      });
+      await sendMail(
+        BTN_FORWORD_FINANCE,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_FORWORD_FINANCE
+      );
     }
 
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
@@ -1029,24 +1041,39 @@ async function handelMail(tokenData, payload, event) {
         BTN_RETURN_DO
       );
     }
-    if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMIT_BY_DO) {
+    if (
+      tokenData.user_type != USER_TYPE_VENDOR &&
+      payload.status == SUBMIT_BY_DO
+    ) {
       // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       let buildQuery = "";
-      emailUserDetailsQuery = 'SELECT * FROM ('
+      emailUserDetailsQuery = "SELECT * FROM (";
       buildQuery += emailUserDetailsQuery;
-      buildQuery += getUserDetailsQuery('vendor_by_po', '$1');
-      buildQuery += 'UNION';
-      buildQuery += getUserDetailsQuery('finance_authority', '$2');
-      buildQuery += ') AS mail_info';
+      buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
+      buildQuery += "UNION";
+      buildQuery += getUserDetailsQuery("finance_authority", "$2");
+      buildQuery += ") AS mail_info";
 
-      console.log("payload.purchasing_doc_no, payload.assign_to", payload, payload.assign_to, buildQuery);
+      console.log(
+        "payload.purchasing_doc_no, payload.assign_to",
+        payload,
+        payload.assign_to,
+        buildQuery
+      );
       console.log("emailUserDetailsQuery", emailUserDetailsQuery);
 
-      emailUserDetails = await getQuery({ query: buildQuery, values: [payload.purchasing_doc_no, parseInt(payload.assign_to)] });
+      emailUserDetails = await getQuery({
+        query: buildQuery,
+        values: [payload.purchasing_doc_no, parseInt(payload.assign_to)],
+      });
       dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
-      await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
+      await sendMail(
+        BTN_FORWORD_FINANCE,
+        dataObj,
+        { users: emailUserDetails },
+        BTN_FORWORD_FINANCE
+      );
     }
-
   } catch (error) {
     console.log("handelMail btn", error.toString(), error.stack);
   }
@@ -1127,12 +1154,12 @@ const assignToFiStaffHandler = async (req, res) => {
 
     let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
 
-
-
-
     if (result?.status) {
-
-      handelMail(tokenData, { ...req.body, assign_to_fi, status: FORWARDED_TO_FI_STAFF });
+      handelMail(tokenData, {
+        ...req.body,
+        assign_to_fi,
+        status: FORWARDED_TO_FI_STAFF,
+      });
       try {
         btnSaveToSap({ ...req.body, ...payload }, tokenData);
       } catch (error) {
