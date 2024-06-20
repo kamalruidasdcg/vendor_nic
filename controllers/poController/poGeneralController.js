@@ -4,6 +4,7 @@ const {
   generateQuery,
   getEpochTime,
   queryArrayTOString,
+  getCreatedArr,
 } = require("../../lib/utils");
 const {
   DRAWING,
@@ -471,7 +472,7 @@ const poList = async (req, res) => {
     let Query = "";
 
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      Query = `SELECT DISTINCT(EBELN) as "EBELN" from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+      Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
     } else {
       switch (tokenData.department_id) {
         case USER_TYPE_GRSE_QAP:
@@ -479,7 +480,7 @@ const poList = async (req, res) => {
             //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
             Query = poListByEcko();
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
           }
           break;
         case USER_TYPE_GRSE_FINANCE:
@@ -487,7 +488,7 @@ const poList = async (req, res) => {
             Query = poListByEcko();
             // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
           } else if (tokenData.internal_role_id === STAFF) {
-            Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
           }
           break;
         case USER_TYPE_GRSE_DRAWING:
@@ -495,7 +496,7 @@ const poList = async (req, res) => {
           Query = poListByEcko();
           break;
         case USER_TYPE_GRSE_PURCHASE:
-          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+          Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
           break;
         case USER_TYPE_PPNC_DEPARTMENT:
           Query = poListByEcko(); // poListByPPNC(req.query);
@@ -521,8 +522,13 @@ const poList = async (req, res) => {
         null
       );
     }
+   
     let strVal;
+    let createdArr;
+   // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
+//new Date().getTime()
     try {
+      createdArr = await getCreatedArr(Query, tokenData.user_type);
       strVal = await queryArrayTOString(Query, tokenData.user_type);
     } catch (error) {
       return resSend(res, false, 400, "Error in db query.", error, null);
@@ -751,17 +757,26 @@ const poList = async (req, res) => {
     await Promise.all(
       result.map(async (item) => {
         let obj = {};
+        const created = createdArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );//created_at
         let currentStage = {
           current: await currentStageHandler(item.poNb),
         };
         obj.currentStage = currentStage;
         obj.poNumber = item.poNb;
+        obj.createdAt = created.created_at;
         obj.poType = item.poType;
         obj.isDo = item.isDo;
         obj.vendor_code = item.vendor_code;
         obj.vendor_name = item.vendor_name;
         obj.project_code = item.project_code;
         obj.wbs_id = item.wbs_id;
+
+        
+        
+
+
 
         ////////////// SD /////////////////
         const SDVGObj = {};
@@ -863,8 +878,9 @@ const poList = async (req, res) => {
         resultArr.push(obj);
       })
     );
+    const sortedRes = resultArr.sort((a, b)=> a.createdAt < b.createdAt ? 1: -1);
 
-    resSend(res, true, 200, "data fetch scussfully.", resultArr, null);
+    resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
   } catch (error) {
 
     console.log("err", error, error.toString());
@@ -889,7 +905,7 @@ const doDetails = async (str) => {
 
 const poListByEcko = (vendorCode = "") => {
   let sufx;
-  let qry = `SELECT DISTINCT(EBELN) as "EBELN" from ekko`;
+  let qry = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
   if (vendorCode) {
     sufx = ` WHERE LIFNR = '${vendorCode}'`;
     qry = qry + sufx;
