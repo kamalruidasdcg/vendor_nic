@@ -60,4 +60,8 @@ router.post("/insertSdbgSave", [veifyAccessToken], (req, res) => {
 router.get("/getSdbgSave", [veifyAccessToken], (req, res) => {
   sdbgController.getSdbgSave(req, res);
 });
+
+router.get("/getingFileNo", [veifyAccessToken], (req, res) => {
+  sdbgController.getingFileNo(req, res);
+});
 module.exports = router;

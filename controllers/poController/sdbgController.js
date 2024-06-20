@@ -865,7 +865,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         query: insertsdbg_q["q"],
         values: insertsdbg_q["val"],
       });
-
+      
       sdgbRollBackId = sdbgQuery[0].id;
 
       handelEmail(insertPayloadForSdbg, tokenData);
@@ -899,6 +899,26 @@ const sdbgUpdateByFinance = async (req, res) => {
         insertPayloadForSdbg.status == "HOLD"
       ) {
         try {
+
+          const whereCondition = {
+            purchasing_doc_no: obj.purchasing_doc_no,
+            reference_no: obj.reference_no,
+          };
+    
+          ({ q, val } = generateQuery(
+            UPDATE,
+            SDBG_ENTRY,
+            {status : obj.status, bg_file_no: obj.bg_file_no},
+            whereCondition
+          ));
+    
+          let sdbgEntryQuery2 = await poolQuery({
+            client,
+            query: q,
+            values: val,
+          });
+
+
           const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
           let get_sdbg_entry_data = await poolQuery({
             client,
@@ -913,6 +933,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             values: [obj.purchasing_doc_no],
           });
 
+
           get_sdbg_entry_data[0].po_date = getDateString(
             get_po_date_data[0].aedat
           );
@@ -925,6 +946,32 @@ const sdbgUpdateByFinance = async (req, res) => {
             sdgbRollBackId
           );
           if (sendSap == false) {
+
+            if (sdgbRollBackId) {
+              const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
+              const deleteRollBack = await getQuery({
+                query: deleteRollBackQuery,
+                values: [sdgbRollBackId],
+              });
+            }
+            const whereCondition = {
+              purchasing_doc_no: obj.purchasing_doc_no,
+              reference_no: obj.reference_no,
+            };
+        
+            ({ q, val } = generateQuery(
+              UPDATE,
+              SDBG_ENTRY,
+              {status : FORWARD_TO_FINANCE, bg_file_no: null},
+              whereCondition
+            ));
+        
+            let sdbgEntryQuery2 = await poolQuery({
+              client,
+              query: q,
+              values: val,
+            });
+
             return resSend(
               res,
               false,
@@ -943,7 +990,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         res,
         true,
         200,
-        `This po is ${obj.status}.`,
+        `This BG is ${obj.status}.`,
         sdbgQuery,
         null
       );
@@ -1155,9 +1202,11 @@ async function handelEmail(payload, tokenData) {
   }
 }
 
-async function sendBgToSap(payload, sdgbRollBackId) {
+async function sendBgToSap(payload) {
   let status;
+  
   try {
+
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
@@ -1170,14 +1219,9 @@ async function sendBgToSap(payload, sdgbRollBackId) {
     console.log("POST Response from the server:", postResponse);
     status = true;
   } catch (error) {
-    console.error("Error making the request:", error.message);
-    if (sdgbRollBackId) {
-      const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
-      const deleteRollBack = await getQuery({
-        query: deleteRollBackQuery,
-        values: [sdgbRollBackId],
-      });
-    }
+    console.error("Error making the request:", error);
+    
+
     status = false;
   } finally {
     return status;
@@ -1561,6 +1605,60 @@ async function getSdbgSave(req, res) {
   }
 }
 
+async function getingFileNo(req, res) {
+  try {
+    const tokenData = req.tokenData;
+
+    if (!req.query.reference_no || !req.query.poNo) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Please send valid payload!.",
+        null,
+        null
+      );
+    }
+    if (tokenData.user_type === USER_TYPE_VENDOR) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Please login as valid user!.",
+        null,
+        null
+      );
+    }
+
+    const getFileQuery = `SELECT bg_file_no FROM ${SDBG_ENTRY} WHERE reference_no = $1 AND purchasing_doc_no = $2`;
+    const resgetSdbgSave = await getQuery({
+      query: getFileQuery,
+      values: [req.query.reference_no, req.query.poNo],
+    });
+    let data;
+    let msg;
+if(resgetSdbgSave.length > 0 && resgetSdbgSave[0].bg_file_no != null) {
+  data = resgetSdbgSave[0].bg_file_no;
+  msg = "BG File fetched successfully.";
+} else {
+  data = null;
+  msg = "No File found.";
+}
+    return resSend(
+      res,
+      true,
+      200,
+      msg,
+      data,
+      null
+    );
+  } catch (err) {
+    console.log("data not fetched", err);
+    resSend(res, false, 500, "Internal server error", null, null);
+  }
+
+}
+
 module.exports = {
   submitSDBG,
   getSdbgEntry,
@@ -1576,4 +1674,5 @@ module.exports = {
   getCurrentAssignee,
   insertSdbgSave,
   getSdbgSave,
+  getingFileNo
 };

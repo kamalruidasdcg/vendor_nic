@@ -30,6 +30,7 @@ const {
   SUBMIT_BY_DO,
   SUBMITTED_BY_DO,
   SUBMITTED_BY_VENDOR,
+  D_STATUS_FORWARDED_TO_FINANCE,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -813,22 +814,22 @@ async function btnSaveToSap(btnPayload, tokenData) {
     }
 
     const btn_payload = {
-      ZBTNO: btnPayload.btn_num, // BTN Number
+      ZBTNO: btnPayload?.btn_num || "", // BTN Number
       ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
       ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
-      ERNAM: tokenData.vendor_code, // Created Person Name
+      ERNAM: tokenData?.vendor_code || "", // Created Person Name
       LAEDA: "", // Not Needed
-      AENAM: btnDetails[0].vendor_name, // Vendor Name
-      LIFNR: btnDetails[0].vendor_code, // Vendor Codebtn_v2
-      ZVBNO: btnDetails[0]?.invoice_no, // Invoice Number
-      EBELN: btnDetails[0]?.purchasing_doc_no, // PO Number
-      DPERNR1: btnPayload.assign_to_fi, // assigned_to
+      AENAM: btnDetails[0]?.vendor_name || "", // Vendor Name
+      LIFNR: btnDetails[0]?.vendor_code || "", // Vendor Codebtn_v2
+      ZVBNO: btnDetails[0]?.invoice_no || "", // Invoice Number
+      EBELN: btnDetails[0]?.purchasing_doc_no || "", // PO Number
+      DPERNR1: btnPayload?.assign_to_fi || "", // assigned_to
       DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
       CGST: cgst_ammount,
       IGST: igst_ammount,
       SGST: sgst_ammount,
-      BASICAMT: basic_ammount.toFixed(3),
+      BASICAMT: basic_ammount?.toFixed(3),
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
