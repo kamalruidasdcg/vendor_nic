@@ -67,7 +67,15 @@ const {
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
-const { getLastAssignee, getAssigneeList, checkIsAssigned, getFristRow, checkIsApprovedRejected, checkPoType, insertSdbgEntrySave } = require("../../services/lastassignee.servces");
+const {
+  getLastAssignee,
+  getAssigneeList,
+  checkIsAssigned,
+  getFristRow,
+  checkIsApprovedRejected,
+  checkPoType,
+  insertSdbgEntrySave,
+} = require("../../services/lastassignee.servces");
 
 // add new post
 const submitSDBG = async (req, res) => {
@@ -154,8 +162,7 @@ const submitSDBG = async (req, res) => {
       const response = await getQuery({ query: q, values: val });
 
       if (response.length) {
-
-        handelEmail(payload, tokenData)
+        handelEmail(payload, tokenData);
 
         resSend(res, true, 200, "file uploaded!", fileData, null);
       } else {
@@ -200,9 +207,7 @@ const get_latest_sdbg_with_reference = async (
   return result;
 };
 
-const get_action_type_with_vendor_code = async (
-  purchasing_doc_no
-) => {
+const get_action_type_with_vendor_code = async (purchasing_doc_no) => {
   const GET_LATEST_SDBG = `SELECT action_type,vendor_code FROM sdbg WHERE purchasing_doc_no = '4700026717' ORDER BY sdbg.created_at DESC LIMIT 1`;
   console.log(GET_LATEST_SDBG);
   const result = await getQuery({
@@ -215,7 +220,6 @@ const get_action_type_with_vendor_code = async (
   console.log("##########");
   return result;
 };
-
 
 const getSDBGData = async (req, res) => {
   try {
@@ -573,12 +577,29 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         );
       }
 
-      const check = await checkIsApprovedRejected(SDBG, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
+      const check = await checkIsApprovedRejected(
+        SDBG,
+        obj.purchasing_doc_no,
+        obj.reference_no,
+        APPROVED,
+        REJECTED
+      );
       if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+        return resSend(
+          res,
+          false,
+          200,
+          `You can't take any action against this reference_no.`,
+          null,
+          null
+        );
       }
 
-      let sdbgQueryInsert = await insertSdbgEntrySave(SDBG_ENTRY, obj, tokenData);
+      let sdbgQueryInsert = await insertSdbgEntrySave(
+        SDBG_ENTRY,
+        obj,
+        tokenData
+      );
 
       if (obj.status === FORWARD_TO_FINANCE) {
         // BG_ENTRY_BY_DO
@@ -591,7 +612,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         handelEmail(obj, tokenData);
       }
 
-            const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
       let sdbgResult = await poolQuery({
         client,
         query: Q,
@@ -622,7 +643,6 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-
       // console.log("rt67898uygy");
       // console.log(sdbgQuery);
       let msg =
@@ -644,6 +664,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
 const sdbgUpdateByFinance = async (req, res) => {
   const tokenData = { ...req.tokenData };
   const { ...obj } = req.body;
+  let sdgbRollBackId;
   try {
     const client = await poolClient();
     try {
@@ -668,12 +689,19 @@ const sdbgUpdateByFinance = async (req, res) => {
       if (tokenData.department_id != FINANCE) {
         return resSend(res, false, 200, "please login as finance!", null, null);
       }
-      
+
       const star = `vendor_code,action_type`;
-      const action_type_with_vendor_code = await getFristRow(SDBG, star, obj.purchasing_doc_no);
+      const action_type_with_vendor_code = await getFristRow(
+        SDBG,
+        star,
+        obj.purchasing_doc_no
+      );
 
-      if (tokenData.internal_role_id == ASSIGNER && obj.assigned_to && obj.status == ASSIGNED) {
-
+      if (
+        tokenData.internal_role_id == ASSIGNER &&
+        obj.assigned_to &&
+        obj.status == ASSIGNED
+      ) {
         const insertPayloadForSdbg = {
           reference_no: "SDBG ASSIGNED",
           purchasing_doc_no: obj.purchasing_doc_no,
@@ -714,12 +742,16 @@ const sdbgUpdateByFinance = async (req, res) => {
           null,
           null
         );
-
       }
 
       if (tokenData.internal_role_id == STAFF) {
         const assign = `assigned_to`;
-        let checkAssig = await checkIsAssigned(SDBG, obj.purchasing_doc_no, tokenData.vendor_code, assign);
+        let checkAssig = await checkIsAssigned(
+          SDBG,
+          obj.purchasing_doc_no,
+          tokenData.vendor_code,
+          assign
+        );
 
         if (checkAssig != 1) {
           return resSend(
@@ -733,11 +765,23 @@ const sdbgUpdateByFinance = async (req, res) => {
         }
       }
 
-      const check = await checkIsApprovedRejected(SDBG, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
-                if (check > 0) {
-                    return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
-                }
-
+      const check = await checkIsApprovedRejected(
+        SDBG,
+        obj.purchasing_doc_no,
+        obj.reference_no,
+        APPROVED,
+        REJECTED
+      );
+      if (check > 0) {
+        return resSend(
+          res,
+          false,
+          200,
+          `You can't take any action against this reference_no.`,
+          null,
+          null
+        );
+      }
 
       // if (
       //   tokenData.internal_role_id == ASSIGNER &&
@@ -754,7 +798,6 @@ const sdbgUpdateByFinance = async (req, res) => {
       //     null
       //   );
       // }
-
 
       const check_it_forward_to_finance = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND status = $2`;
 
@@ -823,7 +866,9 @@ const sdbgUpdateByFinance = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-      handelEmail(insertPayloadForSdbg, tokenData)
+      sdgbRollBackId = sdbgQuery[0].id;
+
+      handelEmail(insertPayloadForSdbg, tokenData);
 
       if (
         insertPayloadForSdbg.status == APPROVED &&
@@ -831,7 +876,6 @@ const sdbgUpdateByFinance = async (req, res) => {
           action_type_with_vendor_code.action_type == ACTION_IB ||
           action_type_with_vendor_code.action_type == ACTION_DD)
       ) {
-
         const actual_subminission = await setActualSubmissionDate(
           insertPayloadForSdbg,
           "01",
@@ -850,9 +894,10 @@ const sdbgUpdateByFinance = async (req, res) => {
         }
       }
 
-
-      if (insertPayloadForSdbg.status == APPROVED || insertPayloadForSdbg.status == "HOLD") {
-
+      if (
+        insertPayloadForSdbg.status == APPROVED ||
+        insertPayloadForSdbg.status == "HOLD"
+      ) {
         try {
           const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
           let get_sdbg_entry_data = await poolQuery({
@@ -875,12 +920,24 @@ const sdbgUpdateByFinance = async (req, res) => {
             get_sdbg_entry_data[0].confirmation = `No`;
           }
 
-          await sendBgToSap(get_sdbg_entry_data[0]);
+          const sendSap = await sendBgToSap(
+            get_sdbg_entry_data[0],
+            sdgbRollBackId
+          );
+          if (sendSap == false) {
+            return resSend(
+              res,
+              false,
+              200,
+              `SAP not connected.This po ${obj.status} is pending.`,
+              sdbgQuery,
+              null
+            );
+          }
         } catch (error) {
           console.error(error);
         }
       }
-
 
       return resSend(
         res,
@@ -936,7 +993,6 @@ const assigneeList = async (req, res) => {
     console.error("Error executing the query:", error.message);
     return resSend(res, false, 500, "Internal Server Error", error, null);
   }
-
 };
 
 const unlock = async (req, res) => {
@@ -969,8 +1025,9 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
-      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${
+                  payload.purchasing_doc_no
+                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -1035,34 +1092,62 @@ async function poContactDetails(purchasing_doc_no) {
 // }
 
 async function handelEmail(payload, tokenData) {
-
-
   let emailUserDetailsQuery;
   let emailUserDetails;
   let dataObj = payload;
   if (tokenData.user_type === USER_TYPE_VENDOR && payload.status == SUBMITTED) {
     // BG_UPLOAD_BY_VENDOR
-    emailUserDetailsQuery = getUserDetailsQuery('do', '$1');
-    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-    const emailUserDetails2 = await getQuery({ query: getUserDetailsQuery('vendor_by_po', '$1'), values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails2[0]?.u_name}
+    emailUserDetailsQuery = getUserDetailsQuery("do", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.purchasing_doc_no],
+    });
+    const emailUserDetails2 = await getQuery({
+      query: getUserDetailsQuery("vendor_by_po", "$1"),
+      values: [payload.purchasing_doc_no],
+    });
+    dataObj = { ...dataObj, vendor_name: emailUserDetails2[0]?.u_name };
     console.log("dataObj", dataObj, emailUserDetails);
-    await sendMail(BG_UPLOAD_BY_VENDOR, dataObj, { users: emailUserDetails }, BG_UPLOAD_BY_VENDOR);
+    await sendMail(
+      BG_UPLOAD_BY_VENDOR,
+      dataObj,
+      { users: emailUserDetails },
+      BG_UPLOAD_BY_VENDOR
+    );
   }
   if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == APPROVED) {
     // BG_ACCEPT_REJECT
-    emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-    dataObj = {...dataObj, vendor_name: emailUserDetails[0]?.u_name}
-    await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
+    emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.purchasing_doc_no],
+    });
+    dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+    await sendMail(
+      BG_ACCEPT_REJECT,
+      dataObj,
+      { users: emailUserDetails },
+      BG_ACCEPT_REJECT
+    );
   }
   if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == REJECTED) {
     // BG_ACCEPT_REJECT
-    emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-    emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-    await sendMail(BG_ACCEPT_REJECT, dataObj, { users: emailUserDetails }, BG_ACCEPT_REJECT);
+    emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.purchasing_doc_no],
+    });
+    await sendMail(
+      BG_ACCEPT_REJECT,
+      dataObj,
+      { users: emailUserDetails },
+      BG_ACCEPT_REJECT
+    );
   }
-  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == FORWARD_TO_FINANCE) {
+  if (
+    tokenData.dept_id != USER_TYPE_VENDOR &&
+    payload.status == FORWARD_TO_FINANCE
+  ) {
     // BG_ACCEPT_REJECT
     // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
     // emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
@@ -1070,21 +1155,32 @@ async function handelEmail(payload, tokenData) {
   }
 }
 
-async function sendBgToSap(payload) {
+async function sendBgToSap(payload, sdgbRollBackId) {
+  let status;
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
     console.log("postUrl", postUrl);
     console.log("wdc_payload -->");
-
     let modified = await zfi_bgm_1_Payload(payload);
     console.log("___________modified");
     console.log(modified);
     console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
     console.log("POST Response from the server:", postResponse);
+    status = true;
   } catch (error) {
     console.error("Error making the request:", error.message);
+    if (sdgbRollBackId) {
+      const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
+      const deleteRollBack = await getQuery({
+        query: deleteRollBackQuery,
+        values: [sdgbRollBackId],
+      });
+    }
+    status = false;
+  } finally {
+    return status;
   }
 }
 
@@ -1318,13 +1414,13 @@ const getCurrentAssignee = async (req, res) => {
     console.error("Error executing the query:", error.message);
     return resSend(res, false, 500, "Internal Server Error", error, null);
   }
-}
+};
 
 async function insertSdbgSave(req, res) {
   try {
     const client = await poolClient();
-  try {
-    const tokenData = { ...req.tokenData };
+    try {
+      const tokenData = { ...req.tokenData };
 
       const { ...obj } = req.body;
 
@@ -1368,48 +1464,81 @@ async function insertSdbgSave(req, res) {
         );
       }
 
-      const check = await checkIsApprovedRejected(SDBG, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
+      const check = await checkIsApprovedRejected(
+        SDBG,
+        obj.purchasing_doc_no,
+        obj.reference_no,
+        APPROVED,
+        REJECTED
+      );
       if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+        return resSend(
+          res,
+          false,
+          200,
+          `You can't take any action against this reference_no.`,
+          null,
+          null
+        );
       }
-      
+
+      console.log("OBJ", obj);
       let sdbgEntryQuery = await insertSdbgEntrySave(SDBG_SAVE, obj, tokenData);
 
-        if (sdbgEntryQuery.error) {
-          console.log(sdbgEntryQuery.error);
-          return resSend(
-            res,
-            false,
-            201,
-            "Data not inserted in sdbg_save table!!",
-            sdbgEntryQuery.error,
-            null
-          );
-        }
-      
-    return resSend(res, true, 200, `Data update in ${SDBG_SAVE} table.`, sdbgEntryQuery, null);
-  } catch (error) {
-    console.log(error);
-    return resSend(res, false, 400, "error.", error, null);
-  }
-  finally {
-    client.release();
-  }
-} catch (error) {
-  resSend(res, false, 500, "error in db conn!", error, "");
-}
-}
+      if (sdbgEntryQuery.error) {
+        console.log(sdbgEntryQuery.error);
+        return resSend(
+          res,
+          false,
+          201,
+          "BG has been saved successfully.",
+          sdbgEntryQuery.error,
+          null
+        );
+      }
 
+      return resSend(
+        res,
+        true,
+        200,
+        `The BG has been saved.`,
+        sdbgEntryQuery,
+        null
+      );
+    } catch (error) {
+      console.log(error);
+      return resSend(res, false, 400, "error.", error, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, "error in db conn!", error, "");
+  }
+}
 
 async function getSdbgSave(req, res) {
   try {
     const tokenData = req.tokenData;
 
     if (!req.query.reference_no) {
-      return resSend(res, false, 200, "Please send valid reference_no!.", null, null);
+      return resSend(
+        res,
+        false,
+        200,
+        "Please send valid reference_no!.",
+        null,
+        null
+      );
     }
     if (tokenData.user_type === USER_TYPE_VENDOR) {
-      return resSend(res, false, 200, "Please login as valid user!.", null, null);
+      return resSend(
+        res,
+        false,
+        200,
+        "Please login as valid user!.",
+        null,
+        null
+      );
     }
 
     const getSSdbgSaveQuery = `SELECT * FROM ${SDBG_SAVE} WHERE reference_no = $1 AND man_no = $2`;
@@ -1422,7 +1551,7 @@ async function getSdbgSave(req, res) {
       res,
       true,
       200,
-      "data fetched successfully.",
+      "BG saved data fetched successfully.",
       resgetSdbgSave,
       null
     );
@@ -1446,5 +1575,5 @@ module.exports = {
   UpdateBGextensionRelease,
   getCurrentAssignee,
   insertSdbgSave,
-  getSdbgSave
+  getSdbgSave,
 };
