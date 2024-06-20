@@ -1,10 +1,10 @@
 
-const { responseSend } = require("../../lib/resSend");
+const { responseSend, resSend } = require("../../lib/resSend");
 const { zfi_bgm_1_Payload, ztfi_bil_defacePayload, zfi_bgm_1_Payload_sap } = require("../../services/sap.services");
-const { SDBG_PAYMENT_ADVICE } = require('../../lib/tableName');
+const { SDBG_PAYMENT_ADVICE, PAYMENTADVICE, PAYMENT_ADVICE2 } = require('../../lib/tableName');
 const { generateQueryArray, generateInsertUpdateQuery, generateQueryForMultipleData } = require('../../lib/utils');
 const { INSERT } = require('../../lib/constant');
-const { query } = require("../../config/pgDbConfig");
+const { query, getQuery } = require("../../config/pgDbConfig");
 const Message = require('../../utils/messages');
 
 const sdbgPaymentAdvice = async (req, res) => {
@@ -20,7 +20,7 @@ const sdbgPaymentAdvice = async (req, res) => {
         console.log("payloadObj", payloadObj);
         // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
         const queryText = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, ["FILE_NO", "REF_NO"])
-        console.log(q);
+        // console.log(q);
         const response = await query({ query: queryText.q, values: queryText.val });
         responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
     } catch (err) {
@@ -55,4 +55,73 @@ const ztfi_bil_deface = async (req, res) => {
 
 }
 
-module.exports = { sdbgPaymentAdvice, ztfi_bil_deface }
+const bgList = async (req, res) => {
+
+
+    try {
+        filterBy = req.body;
+
+        let { startDate, endDate, page, limit } = filterBy;
+        delete filterBy.startDate;
+        delete filterBy.endDate;
+        delete filterBy.page;
+        delete filterBy.limit;
+        delete filterBy.groupBy;
+        let tableName = SDBG_PAYMENT_ADVICE;
+        let baseQuery = `SELECT  * FROM ${tableName}`
+
+        let condQuery = " ";
+        let count = 0;
+        let val = [];
+        let filterQuery = "";
+        if (Object.keys(filterBy).length > 0) {
+            filterQuery += " WHERE ";
+            const conditions = Object.keys(filterBy).map((key, index) => {
+                val.push(filterBy[key]);
+
+                if (index > 0) {
+                    return `AND ${key} = $${++count}`;
+                } else {
+                    return `${key} = $${++count}`;
+                }
+            });
+            condQuery += conditions.join(" ");
+        }
+
+        if (startDate && !endDate) {
+            condQuery = condQuery.concat(` AND bg_date >= $${++count}`)
+            val.push(startDate);
+        }
+        if (!startDate && endDate) {
+            condQuery = condQuery.concat(` AND bg_date <= $${++count}`)
+            val.push(endDate);
+        }
+        if (startDate && endDate) {
+            condQuery = condQuery.concat(` AND ( bg_date BETWEEN $${++count} AND $${++count} )`)
+            val.push(startDate, endDate);
+        }
+
+        filterQuery += condQuery;
+
+        page = page ? parseInt(page) : 1;
+        limit = limit ? parseInt(limit) : 10;
+        const offSet = (page - 1) * limit;
+
+        const pageinatonQ = ` LIMIT ${limit} OFFSET ${offSet}`;
+        const orderByQ = ` ORDER BY bg_date DESC`;
+
+        filterQuery += orderByQ;
+        filterQuery += pageinatonQ;
+        baseQuery += filterQuery;
+
+        const result = await getQuery({ query: baseQuery, values: val });
+
+        resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, null);
+
+    } catch (error) {
+        resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+    }
+}
+
+
+module.exports = { sdbgPaymentAdvice, ztfi_bil_deface, bgList }
