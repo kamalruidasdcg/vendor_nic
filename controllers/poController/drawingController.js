@@ -97,7 +97,7 @@ const submitDrawing = async (req, res) => {
 
         const check = await checkIsApprovedRejected(DRAWING, payload.purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
         if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+          return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
         }
       }
 
