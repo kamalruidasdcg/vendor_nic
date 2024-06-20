@@ -760,13 +760,14 @@ const poList = async (req, res) => {
         const created = createdArr.find(
           ({ purchasing_doc_no }) => purchasing_doc_no == item.poNo || item.poNb
         );//created_at
+
         let currentStage = {
           current: await currentStageHandler(item.poNb),
         };
         obj.currentStage = currentStage;
         obj.poNumber = item.poNb;
-        obj.createdAt = created ? created.created_at : null;
-        obj.poType = item.poType;
+        obj.createdAt = created?.created_at;
+        obj.poType = item?.poType;
         obj.isDo = item.isDo;
         obj.vendor_code = item.vendor_code;
         obj.vendor_name = item.vendor_name;
