@@ -101,7 +101,7 @@ const submitQAP = async (req, res) => {
         }
         let count_val = await checkIsApprovedOrRejected(client, purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
         if (count_val > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+          return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
         }
 
         // const GET_LATEST_QA = await get_latest_QA_with_reference(
@@ -121,7 +121,7 @@ const submitQAP = async (req, res) => {
         // //console.log(resAssigneQry);
         //        // return;
         //         if (resAssigneQry[0].count_val > 0) {
-        //           return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+        //           return resSend(res,false,200,`You can't take any action against this reference no.`,null,null);
         //         }
       }
 
@@ -265,7 +265,7 @@ const submitQAP = async (req, res) => {
         if (payload.reference_no || payload.reference_no != "") {
           let count_val = await checkIsApprovedOrRejected(client, purchasing_doc_no, payload.reference_no, APPROVED, REJECTED);
           if (count_val > 0) {
-            return resSend(res, false, 200, `You can't take any action against this reference_no.`, null, null);
+            return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
           }
         }
 
@@ -396,7 +396,7 @@ const checkIsApprovedOrRejected = async (client, purchasing_doc_no, reference_no
   //console.log(resAssigneQry);
   return resAssigneQry[0].count_val;
   // if (resAssigneQry[0].count_val > 0) {
-  //   return resSend(res,false,200,`You can't take any action against this reference_no.`,null,null);
+  //   return resSend(res,false,200,`You can't take any action against this reference no.`,null,null);
   // }
 }
 
