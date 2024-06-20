@@ -1,6 +1,7 @@
-const { asyncPool, poolQuery } = require("../../config/pgDbConfig");
+const { asyncPool, poolQuery, poolClient } = require("../../config/pgDbConfig");
+const { UPDATE } = require("../../lib/constant");
 const { responseSend } = require("../../lib/resSend");
-const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
 const Message = require("../../utils/messages");
 
@@ -8,12 +9,12 @@ const zbts_st = async (req, res) => {
 
     try {
 
-        const client = await asyncPool();
-        let transactionSuccessful = false;
+        const client = await poolClient();
+        // let transactionSuccessful = false;
 
         try {
             if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
-                return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+                return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
             }
 
             const payload = req.body;
@@ -23,11 +24,12 @@ const zbts_st = async (req, res) => {
             }
 
             const { ZBTSM, zbtsm, ...obj } = payload;
+            let payloadObj = {};
 
-            console.log("payloadObj", obj, ZBTSM, zbtsm);
+            // console.log("payloadObj", obj, ZBTSM, zbtsm);
 
             try {
-                const payloadObj = await zbtsHeaderPayload(obj);
+                payloadObj = await zbtsHeaderPayload(obj);
                 const btnPaymentHeaderQuery = await generateInsertUpdateQuery(payloadObj, "zbts_st", ["zbtno"]);
                 const results = await poolQuery({ client, query: btnPaymentHeaderQuery.q, values: btnPaymentHeaderQuery.val });
                 console.log("results 1", results);
@@ -36,7 +38,7 @@ const zbts_st = async (req, res) => {
                 return responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
             }
             const zbtsmPayload = ZBTSM || zbtsm;
-            console.log("zbtsmPayload", zbtsmPayload);
+            // console.log("zbtsmPayload", zbtsmPayload);
             // const response1 = await query({ query: btnPaymentHeaderQuery, values: [] });
             if (zbtsmPayload) {
 
@@ -44,7 +46,7 @@ const zbts_st = async (req, res) => {
 
                 try {
                     const lineItemPayloadObj = await zbtsLineItemsPayload(zbtsmPayload, obj);
-                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno"]);
+                    const btnPaymentLineItemQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zbtsm_st", ["zbtno", "srno"]);
                     const results = await poolQuery({ client, query: btnPaymentLineItemQuery.q, values: btnPaymentLineItemQuery.val });
                     console.log("results 2", results);
                 } catch (error) {
@@ -55,12 +57,14 @@ const zbts_st = async (req, res) => {
                 }
             }
 
-            console.log("transactionSuccessful", transactionSuccessful);
+            await updateBtnListTable(client, payloadObj);
 
-            const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
-            transactionSuccessful = true;
+            // console.log("transactionSuccessful", transactionSuccessful);
 
-            console.log("transactionSuccessful", transactionSuccessful);
+            // const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
+            // transactionSuccessful = true;
+
+            // console.log("transactionSuccessful", transactionSuccessful);
 
 
 
@@ -69,24 +73,31 @@ const zbts_st = async (req, res) => {
             responseSend(res, "S", 200, "Data inserted successfully", {}, null)
 
         } catch (error) {
-            console.log("errorerrorerrorerror", error);
-            responseSend(res, "F", 502, "Data insert failed !!", error.toString(), null);
+            console.log("errorerrorerrorerror", error.message);
+            responseSend(res, "F", 502, Message.SERVER_ERROR, error.toString(), null);
         }
         finally {
-            if (!transactionSuccessful) {
-                console.log("Connection End", transactionSuccessful);
-                await client.query('ROLLBACK')
-            }
-
-            const connEnd = client.release();
-            if (transactionSuccessful) {
-                responseSend(res, "S", 200, "Data inserted successfully", null, null)
-            }
-
-            console.log("Connection End" + "--->" + "conn release", connEnd);
+            client.release();
         }
     } catch (error) {
-        responseSend(res, "F", 500, "Error in database conn!!", error, null);
+        responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.message, null);
+    }
+}
+
+
+const updateBtnListTable = async (client, data) => {
+    try {
+        const btnListPayload = { btn_num: data.zbtno, status: data.dstatus };
+        const statusObj = {
+            "1": "RECEIVED",
+            "2": "REJECTED",
+            "3": "CERTIFIED",
+            "4" :"FORWARDED"
+        }
+        const { q, val } = generateQuery(UPDATE, 'btn_list', { status: statusObj[data.dstatus] || "" }, { btn_num: data.zbtno })
+        await poolQuery({ client, query: q, values: val });
+    } catch (error) {
+        throw error;
     }
 }
 
