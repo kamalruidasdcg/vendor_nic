@@ -138,7 +138,7 @@ exports.statsForBTN = async (req, res) => {
         const result = await poolQuery({
           client,
           query: Q,
-          values: [tokenData.vendor_code],
+          values: [tokenData.vendor_code], 
         });
         // For grse_FINANCE_ASSIGNER
         if (
