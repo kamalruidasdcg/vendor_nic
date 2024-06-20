@@ -10,9 +10,10 @@ const {
   SDBG,
   SDBG_ENTRY,
   ACTUAL_SUBMISSION_DB,
+  BTN_LIST,
 } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
-const { convertToEpoch } = require("../utils/dateTime");
+const { convertToEpoch, getEpochFirstLastToday } = require("../utils/dateTime");
 
 /**
  * Modify SDBG Payload object to insert data
@@ -105,7 +106,7 @@ const drawingPayload = (payload, status) => {
     created_by_id: payload.created_by_id,
     last_assigned: payload.last_assigned || null,
     assign_from: payload.assign_from || null,
-    assign_to: payload.assign_to || null
+    assign_to: payload.assign_to || null,
   };
 
   return payloadObj;
@@ -461,7 +462,7 @@ const create_reference_no = async (type, vendor_code) => {
   }
 };
 
-const create_btn_no = async (type) => {
+const create_btn_no = async () => {
   try {
     let date = new Date();
     let year = date.getFullYear();
@@ -469,11 +470,12 @@ const create_btn_no = async (type) => {
     let day = String(date.getDate()).padStart(2, "0");
     let dateNeed = `${year}${month}${day}`;
     let today = getEpochTime();
+    let { firstEpochTime, lastEpochTime } = getEpochFirstLastToday();
 
-    let btn_num_q = `SELECT count("btn_num") as count FROM btn WHERE created_at = $1`;
+    let btn_num_q = `SELECT count("*") as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
     let btn_res = await query({
       query: btn_num_q,
-      values: [today],
+      values: [firstEpochTime, lastEpochTime],
     });
     btn_res = btn_res?.rows;
     console.log(btn_res);
