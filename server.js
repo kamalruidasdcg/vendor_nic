@@ -25,16 +25,31 @@ const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
 const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
-const { YES } = require("./lib/constant");
+const { YES, TRUE } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
 const { syncCron, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
 const { sendBGReminderMail, sendPOMilestoneEXPReminderMail } = require("./controllers/sapController/remaiderMailSendController");
 
-const task = cron.schedule( "*/1 * * * *", () => {
+let isCompletedTask = false;
+
+const task = cron.schedule("* * * * *", async () => {
+
+  if (isCompletedTask == TRUE) {
+    console.log('Job is already running. Skipping this execution.');
+    return;
+  }
+  isCompletedTask = true;
+  try {
+    await mailSentCornJob();
     console.log("running a task every two minutes");
-    mailSentCornJob();
-  },
+
+  } catch (error) {
+    console.error('Job failed:', error.message);
+  } finally {
+    isCompletedTask = false;
+  }
+},
   {
     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
   }
@@ -42,10 +57,10 @@ const task = cron.schedule( "*/1 * * * *", () => {
 
 // At 00:00
 const task2 = cron.schedule("* * * * *", () => {
-    console.log("running a task every two minutes");
-    // sendBGReminderMail();
-    sendPOMilestoneEXPReminderMail();
-  },
+  console.log("running a task every two minutes");
+  sendBGReminderMail();
+  sendPOMilestoneEXPReminderMail();
+},
   {
     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
   }
