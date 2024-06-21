@@ -251,10 +251,10 @@ const details = async (req, res) => {
       timeLineDatArr = joinArrays(timeLineDatArr, acknowledgementnt_date);
       console.log("timeline", timeline);
 
-      timelineData = timeLineDatArr.filter((v, i, a) => a.findIndex((el) => el?.milestoneid === v?.milestoneid) === i);
+      timelineData = timeLineDatArr.filter((v, i, a) => a.findIndex((el) => el?.mid === v?.mid) === i);
 
       // Sort the array by milestoneid
-      timelineData.sort((a, b) => a.milestoneid - b.milestoneid);
+      timelineData.sort((a, b) => parseInt(a.mid) - parseInt(b.mid));
 
     }
 
