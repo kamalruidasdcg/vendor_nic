@@ -1,6 +1,7 @@
 // const { query } = require("../config/dbConfig");
 const { query } = require("../config/dbConfig");
-const { ACTION_SDBG, ACTION_PBG, A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE, C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE } = require("../lib/constant");
+const { poolQuery } = require("../config/pgDbConfig");
+const { ACTION_SDBG, ACTION_PBG, A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE, C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE, SDBG_MILESTONE_ID, DRAWING_MILESTONE_ID, QAP_MILESTONE_ID, ILMS_MILESTONE_ID } = require("../lib/constant");
 const { APPROVED } = require("../lib/status");
 const { checkTypeArr } = require("../utils/smallFun");
 
@@ -114,8 +115,8 @@ const advBillHybridbtnDOPayload = async (payload) => {
         created_by: payload.created_by || "",
         assigned_to: payload.assigned_to || "",
         a_drawing_date: payload.a_drawing_date || null,
-        a_qap_date:payload.a_qap_date || null,
-        a_ilms_date:payload.a_ilms_date || null,
+        a_qap_date: payload.a_qap_date || null,
+        a_ilms_date: payload.a_ilms_date || null,
 
     };
 
@@ -252,7 +253,7 @@ const checkBTNRegistered = async (btn_num, btn_table_name, client) => {
 const getBTNInfo = async (btn_num, btn_table_name, client) => {
     let q = `SELECT * FROM ${btn_table_name} WHERE btn_num = ?`;
 
-    q = 
+    q =
         `SELECT 
             btn.*, 
             vendor.name1 as vendor_name 
@@ -299,10 +300,17 @@ const filesData = (payloadFiles) => {
 
 
 const contractualSubmissionDate = async (purchasing_doc_no, client) => {
-    let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
+
+    const milestoneIdArr = [
+        SDBG_MILESTONE_ID,
+        DRAWING_MILESTONE_ID_MILESTONE_ID,
+        QAP_MILESTONE_ID_MILESTONE_ID,
+        ILMS_MILESTONE_ID_MILESTONE_ID];
+
+    let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE ebeln = $1 AND mid = ANY($2::text[]);`;
     console.log('c_sdbg_date_q', c_sdbg_date_q);
-    const [results] = await client.execute(c_sdbg_date_q, [purchasing_doc_no]);
-    console.log("results", results);
+    const results = await poolQuery({ client, query: c_sdbg_date_q, values: [purchasing_doc_no, milestoneIdArr] });
+    console.log("resultseeeeeeeeeeeeeeeeeeeeeeee", results);
     // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
     let c_dates = results;
     const dates_arr = [C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE];
@@ -318,14 +326,14 @@ const contractualSubmissionDate = async (purchasing_doc_no, client) => {
 
 
     c_dates.forEach((item) => {
-        if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
-            contractualDateObj.c_sdbg_date = new Date(item.PLAN_DATE).getTime();
-        } else if (item.PLAN_DATE && item.MTEXT === C_DRAWING_DATE) {
-            contractualDateObj.c_drawing_date = new Date(item.PLAN_DATE).getTime();
-        } else if (item.PLAN_DATE && item.MTEXT === C_QAP_DATE) {
-            contractualDateObj.c_qap_date = new Date(item.PLAN_DATE).getTime();
-        } else if (item.PLAN_DATE && item.MTEXT === C_ILMS_DATE) {
-            contractualDateObj.c_ilms_date = new Date(item.PLAN_DATE).getTime();
+        if (item.plan_date && item.mid === SDBG_MILESTONE_ID) {
+            contractualDateObj.c_sdbg_date = new Date(item.plan_date).getTime();
+        } else if (item.plan_date && item.mid === DRAWING_MILESTONE_ID_MILESTONE_ID) {
+            contractualDateObj.c_drawing_date = new Date(item.plan_date).getTime();
+        } else if (item.plan_date && item.mid === QAP_MILESTONE_ID_MILESTONE_ID) {
+            contractualDateObj.c_qap_date = new Date(item.plan_date).getTime();
+        } else if (item.plan_date && item.mid === ILMS_MILESTONE_ID_MILESTONE_ID) {
+            contractualDateObj.c_ilms_date = new Date(item.plan_date).getTime();
         }
     });
 
@@ -344,13 +352,32 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     const actualSubmissionObj = {};
     let response = {}
 
-    let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
+    // let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1 AND milestoneid = ANY($2::int[])`;
     // let a_dates = await query({
     //     query: a_sdbg_date_q,
     //     values: [purchasing_doc_no],
     // });
 
-    const [results] = await client.execute(a_sdbg_date_q, [purchasing_doc_no]);
+    const milestoneIdArr = [
+        parseInt(SDBG_MILESTONE_ID),
+        parseInt(DRAWING_MILESTONE_ID_MILESTONE_ID),
+        parseInt(QAP_MILESTONE_ID_MILESTONE_ID),
+        parseInt(ILMS_MILESTONE_ID_MILESTONE_ID)];
+
+    let a_sdbg_date_q = `
+            SELECT 
+              purchasing_doc_no, 
+              milestoneid AS mid, 
+              actualSubmissionDate AS plan_date, 
+              milestoneText AS mtext 
+            FROM 
+              actualsubmissiondate 
+            WHERE 
+              purchasing_doc_no = $1 
+              AND milestoneid = ANY($2::int[])`;
+
+
+    const results = await poolQuery({ client, query: a_sdbg_date_q, values: [purchasing_doc_no, milestoneIdArr] });
     let a_dates = results;
 
     console.log(a_dates, "ooooooooooooooooo")
@@ -369,68 +396,26 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     // }
 
     for (const item of a_dates) {
-        if (item.MTEXT === A_SDBG_DATE) {
+        if (item.mid === parseInt(SDBG_MILESTONE_ID)) {
             if (!item.PLAN_DATE) {
-
-                // throw new Error(`${A_SDBG_DATE} is missing!`)
-
                 return { status: false, data: {}, msg: `${A_SDBG_DATE} is missing!` }
-                // return resSend(
-                //     res,
-                //     false,
-                //     200,
-                //     `${A_SDBG_DATE} is missing!`,
-                //     null,
-                //     null
-                // );
             }
             actualSubmissionObj.a_sdbg_date = item.PLAN_DATE;
             // a_sdbg_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_DRAWING_DATE) {
+        } else if (item.mid === parseInt(DRAWING_MILESTONE_ID)) {
             if (!item.PLAN_DATE) {
-
-                // throw new Error(`${A_DRAWING_DATE} is missing!`)
                 return { status: false, data: {}, msg: `${A_DRAWING_DATE} is missing!` };
-
-                // return resSend(
-                //     res,
-                //     false,
-                //     200,
-                //     `${A_SDBG_DATE} is missing!`,
-                //     null,
-                //     null
-                // );
             }
             actualSubmissionObj.a_drawing_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_QAP_DATE) {
+        } else if (item.mid === parseInt(QAP_MILESTONE_ID)) {
             if (!item.PLAN_DATE) {
                 // throw new Error(`${A_QAP_DATE} is missing!`)
                 return { status: false, data: {}, msg: `${A_QAP_DATE} is missing!` };
-
-                // return resSend(
-                //     res,
-                //     false,
-                //     200,
-                //     `${A_QAP_DATE} is missing!`,
-                //     null,
-                //     null
-                // );
             }
             actualSubmissionObj.a_qap_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_ILMS_DATE) {
+        } else if (item.mid === parseInt(ILMS_MILESTONE_ID)) {
             if (!item.PLAN_DATE) {
-                // throw new Error(`${A_ILMS_DATE} is missing!`);
                 return { status: false, data: {}, msg: `${A_ILMS_DATE} is missing!` };
-
-
-                // return resSend(
-                //     res,
-                //     false,
-                //     200,
-                //     `${A_ILMS_DATE} is missing!`,
-                //     null,
-                //     null
-                // );
             }
             actualSubmissionObj.a_ilms_date = item.PLAN_DATE;
         }
