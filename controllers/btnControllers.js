@@ -508,7 +508,7 @@ const submitBTN = async (req, res) => {
   });
 
   // GET Actual Dates from other Table
-  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+  let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
   let a_dates = await getQuery({
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -588,59 +588,51 @@ const submitBTN = async (req, res) => {
   const result = await getQuery({ query: q, values: val });
 
   associated_po = JSON.parse(associated_po);
-  if (associated_po && associated_po !== "" && Array.isArray(associated_po)) {
-    await Promise.all(
-      associated_po.map(async (item) => {
-        if (item && item?.a_po !== "") {
-          payload.purchasing_doc_no = item.a_po;
-          let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
-          if (!resBtnList?.status) {
-            return resSend(
-              res,
-              false,
-              200,
-              `Something went wrong. Try again!`,
-              null,
-              null
-            );
-          }
-          let { q, val } = generateQuery(INSERT, BTN_MATERIAL, payload);
-          let res = await getQuery({ query: q, values: val });
-          if (res.length <= 0) {
-            return resSend(
-              res,
-              false,
-              200,
-              "Something went wrong for Associated PO!",
-              null,
-              null
-            );
-          }
-        }
-      })
-    );
+  if (associated_po && Array.isArray(associated_po) && associated_po.length) {
+    const mod_associated_po = associated_po.map((item) => ({ ...payload, purchasing_doc_no: item.a_po  }));
+
+    console.log("mod_associated_po", mod_associated_po);
+
+
+    // await Promise.all(
+    //   associated_po.map(async (item) => {
+    //     if (item && item?.a_po !== "") {
+    //       payload.purchasing_doc_no = item.a_po;
+    //       let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
+    //       if (!resBtnList?.status) {
+    //         return resSend(
+    //           res,
+    //           false,
+    //           200,
+    //           `Something went wrong. Try again!`,
+    //           null,
+    //           null
+    //         );
+    //       }
+    //       let { q, val } = generateQuery(INSERT, BTN_MATERIAL, payload);
+    //       let res = await getQuery({ query: q, values: val });
+    //       if (res.length <= 0) {
+    //         return resSend(
+    //           res,
+    //           false,
+    //           200,
+    //           "Something went wrong for Associated PO!",
+    //           null,
+    //           null
+    //         );
+    //       }
+    //     }
+    //   })
+    // );
   }
 
   // console.log("result", result);
 
   if (result.length > 0) {
     handelMail(tokenData, { ...payload, status: SUBMITTED });
-    return resSend(
-      res,
-      true,
-      200,
-      "BTN number is generated and saved succesfully!",
-      null,
-      null
-    );
+    return resSend( res, true, 200, "BTN number is generated and saved succesfully!", null, null);
   } else {
-    return resSend(
-      res,
-      false,
-      200,
-      "Data not inserted! Try Again!",
-      null,
-      null
+    return resSend( res, false, 200, "Data not inserted! Try Again!", null, null
     );
   }
 };
@@ -905,16 +897,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;

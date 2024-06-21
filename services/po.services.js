@@ -472,7 +472,7 @@ const create_btn_no = async () => {
     let today = getEpochTime();
     let { firstEpochTime, lastEpochTime } = getEpochFirstLastToday();
 
-    let btn_num_q = `SELECT count("*") as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
+    let btn_num_q = `SELECT count(*) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
     let btn_res = await query({
       query: btn_num_q,
       values: [firstEpochTime, lastEpochTime],
