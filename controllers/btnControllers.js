@@ -397,17 +397,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["e_invoice_filename"]
     ? (payload = {
-        ...payload,
-        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
-      })
+      ...payload,
+      e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -437,17 +437,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -565,6 +565,16 @@ const submitBTN = async (req, res) => {
       payload = { ...payload, a_ilms_date: item.PLAN_DATE };
     }
   });
+
+
+
+
+  const checkMissingMilestone = checkActualDates(c_dates, a_dates);
+  console.log("checkMissingMilestone", checkMissingMilestone);
+  if (!checkMissingMilestone) {
+    return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
+  }
+
 
   // created at
   let created_at = getEpochTime();
@@ -1191,6 +1201,39 @@ const assignToFiStaffHandler = async (req, res) => {
     console.log("ERROR", err.message);
   }
 };
+
+
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD 
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkActualDates(c_dates, a_dates) {
+
+
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  const arr = new Set([parseInt('01'), parseInt('02'), parseInt('03'), parseInt('04')]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    "01": "SDBG",
+    "02": "Drawing",
+    "03": "QAP",
+    "04": "ILMS",
+  }
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex((el) => parseInt(el.MID) == parseInt(item.MID));
+    if (i < 0) {
+      return { success: false, msg: `Please submit ${mtextObj[item.MID]} to process BTN !` };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" }
+}
 
 module.exports = {
   // fetchAllBTNs,
