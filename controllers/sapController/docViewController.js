@@ -339,7 +339,7 @@ const icgrnReport = async (req, res) => {
                 LEFT JOIN ekpo as ekpo
                 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
                 LEFT JOIN  zmm_gate_entry_d as zmm_gate_entry_d
-                	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR)
+                	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR AND zmm_gate_entry_d.EBELN = qals.EBELN AND zmm_gate_entry_d.EBELP =  qals.EBELP)
                 LEFT JOIN  zmm_gate_entry_h as zmm_gate_entry_h
                 	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)`;
 
