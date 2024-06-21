@@ -15,7 +15,7 @@ const xlsx = require("xlsx");
 
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const { resSend } = require("../lib/resSend");
-const { generateQueryForMultipleData, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
+const { generateQueryForMultipleData, generateQuery, generateInsertUpdateQuery, generateInsertQuery } = require("../lib/utils");
 const { INSERT } = require("../lib/constant");
 
 // require("dotenv").config();
@@ -288,7 +288,7 @@ const updoadExcelFileController = async (req, res) => {
                 if (req.file == undefined) {
                     resSend(res, false, 400, "Please upload an excel file!", fileData, null);
                 }
-                let pks = JSON.parse(primayKeysArr);
+                // let pks = JSON.parse(primayKeysArr);
 
                 const workbook = xlsx.readFile(req.file.path);
 
@@ -369,10 +369,13 @@ const updoadExcelFileController = async (req, res) => {
                 // const {q, val } = await generateQueryForMultipleData(data, 'mara', ['MATNR']);
                 const errorData = [];
                 let successData = 0;
+                let cll = []
                 for (const element of data) {
                     const { q, val } = await generateInsertUpdateQuery(element, tableName, pks);
+                    // const { q, val } = generateInsertQuery(INSERT, 'auth', element);
                     // console.log("query", q, val);
                     console.log("query", q, val);
+                    cll.push(q)
                     try {
                         await poolQuery({ client, query: q, values: val });
                         successData++;
@@ -384,7 +387,7 @@ const updoadExcelFileController = async (req, res) => {
 
 
 
-                resSend(res, true, 200, "succeddd", { success: successData, errorData }, null);
+                resSend(res, true, 200, "succeddd", { success: successData, errorData, cll }, null);
             } else {
                 resSend(res, false, 400, "Please upload a valid Excel File", [], null);
             }
