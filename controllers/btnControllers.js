@@ -716,6 +716,16 @@ const submitBTNByDO = async (req, res) => {
   }
 
   let resBtnList = await addToBTNList(payload, SUBMITTED_BY_DO);
+  if (!resBtnList?.status) {
+    return resSend(
+      res,
+      false,
+      200,
+      `Something went wrong in BTN List!`,
+      null,
+      null
+    );
+  }
   // INSERT Data into btn_do table
   // console.log("payload", payload);
   delete payload.assign_to;

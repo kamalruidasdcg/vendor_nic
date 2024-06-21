@@ -589,7 +589,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );
@@ -690,7 +690,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         return resSend(res, false, 200, "please login as finance!", null, null);
       }
 
-      const star = `vendor_code,action_type`;
+      const star = `file_name,file_path,vendor_code,action_type`;
       const action_type_with_vendor_code = await getFristRow(
         SDBG,
         star,
@@ -707,6 +707,8 @@ const sdbgUpdateByFinance = async (req, res) => {
           purchasing_doc_no: obj.purchasing_doc_no,
           remarks: obj.remarks,
           status: obj.status,
+          file_name:action_type_with_vendor_code.file_name,
+          file_path:action_type_with_vendor_code.file_path,
           action_type: action_type_with_vendor_code.action_type,
           vendor_code: action_type_with_vendor_code.vendor_code,
           assigned_from: tokenData.vendor_code,
@@ -777,7 +779,7 @@ const sdbgUpdateByFinance = async (req, res) => {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );
@@ -850,7 +852,8 @@ const sdbgUpdateByFinance = async (req, res) => {
         status: obj.status,
         action_type: action_type_with_vendor_code.action_type,
         vendor_code: action_type_with_vendor_code.vendor_code,
-
+        file_name:action_type_with_vendor_code.file_name,
+        file_path:action_type_with_vendor_code.file_path,
         last_assigned: 0,
         created_at: getEpochTime(),
         created_by_name: "finance dept",
@@ -1520,7 +1523,7 @@ async function insertSdbgSave(req, res) {
           res,
           false,
           200,
-          `You can't take any action against this reference_no.`,
+          `You can't take any action against this reference no.`,
           null,
           null
         );
