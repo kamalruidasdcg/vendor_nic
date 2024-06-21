@@ -171,7 +171,7 @@ const newPaymentAdvice = async (req, res) => {
             const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
             const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
             const response2 = await poolQuery({ client, query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
-            handleEmail(obj);
+            handleEmail(payloadObj);
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, { response1, response2 }, null);
         } catch (error) {
             responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
