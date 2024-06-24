@@ -27,7 +27,8 @@ exports.getEpochFirstLastToday = () => {
 
   // Get the start of today (00:00:00)
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const firstEpochTime = Math.floor(startOfDay.getTime() / 1000);
+  // const firstEpochTime = Math.floor(startOfDay.getTime() / 1000);
+  const firstEpochTime = startOfDay.getTime();
 
   // Get the end of today (23:59:59)
   const endOfDay = new Date(
@@ -39,7 +40,8 @@ exports.getEpochFirstLastToday = () => {
     59,
     999
   );
-  const lastEpochTime = Math.floor(endOfDay.getTime() / 1000);
+  // const lastEpochTime = Math.floor(endOfDay.getTime() / 1000);
+  const lastEpochTime = endOfDay.getTime();
 
   console.log("First Epoch Time of Today:", firstEpochTime);
   console.log("Last Epoch Time of Today:", lastEpochTime);

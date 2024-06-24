@@ -791,6 +791,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
 	                          btn.invoice_no, btn.cgst, 
 	                          btn.sgst, 
 	                          btn.igst, 
+	                          btn.net_claim_amount, 
 	                          vendor.lifnr as vendor_code,
 	                          vendor.name1 as vendor_name
               FROM  btn as btn
