@@ -251,7 +251,13 @@ exports.wdc = async (req, res) => {
           payload = { ...payload, slno: response.id };
           console.log(payload);
           console.log("payload$%^&*(");
-          await submitToSapServer(payload);
+          const submit = await submitToSapServer(payload);
+            //await client.query('COMMIT');
+            if(submit == false) {
+              //await client.query('ROLLBACK');
+            }
+
+
         } catch (error) {
           console.warn(
             "WDC/JCC save in sap faild, please refer to wdcContorller submitToSapServer fn"
@@ -418,6 +424,7 @@ exports.grseEmpList = async (req, res) => {
 };
 
 async function submitToSapServer(data) {
+  let status = false;
   try {
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zoBPS_WDC`;
@@ -444,9 +451,14 @@ async function submitToSapServer(data) {
     console.log(wdc_payload);
 
     const postResponse = await makeHttpRequest(postUrl, "POST", wdc_payload);
+    if(postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
+      status = true;
+    }
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
+  } finally {
+    return status;
   }
 }
 

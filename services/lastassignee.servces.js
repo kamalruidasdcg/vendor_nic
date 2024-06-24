@@ -195,7 +195,7 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
         check_list_date: getEpochTime(),
         bg_type: obj.bg_type ? obj.bg_type : null,
         bg_file_no: obj.bg_file_no ? obj.bg_file_no : null,
-
+        bg_recived_date: obj.bg_recived_date ? obj.bg_recived_date : null,
        // man_no: tokenData.vendor_code,
         status: obj.status,
         created_at: getEpochTime(),
