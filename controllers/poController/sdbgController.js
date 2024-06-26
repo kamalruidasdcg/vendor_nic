@@ -785,6 +785,23 @@ const sdbgUpdateByFinance = async (req, res) => {
         );
       }
 
+    const checkIsHold = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND status = $3`;
+    const checkIsHoldQry = await getQuery({
+      query: checkIsHold,
+      values: [obj.purchasing_doc_no, obj.reference_no, "HOLD"],
+    });
+    const isHold = checkIsHoldQry[0].count_val;
+    if(isHold == 1 && obj.status != APPROVED) {
+      return resSend(res,false,200,
+        `YOU CAN ONLY RECIVED WHEN BG IS HOLD.`,
+        null,
+        null
+      );
+    }
+    console.log("&&&&&&&&&&&&&&&&&&&&&checkIsHoldQry[0].count_val");
+    console.log(checkIsHoldQry[0].count_val);
+    console.log("checkIsHoldQry[0].count_val*************");
+
       // if (
       //   tokenData.internal_role_id == ASSIGNER &&
       //   GET_LATEST_SDBG[0].status == ASSIGNED &&
@@ -979,7 +996,7 @@ const sdbgUpdateByFinance = async (req, res) => {
               res,
               false,
               200,
-              `SAP not connected.This po ${obj.status} is pending.`,
+              `SAP not connected.`,
               sdbgQuery,
               null
             );
@@ -1206,7 +1223,7 @@ async function handelEmail(payload, tokenData) {
 }
 
 async function sendBgToSap(payload) {
-  let status;
+  let status = false;
   
   try {
 
@@ -1219,13 +1236,15 @@ async function sendBgToSap(payload) {
     console.log(modified);
     console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
+
+    if(postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
+      status = true;
+    }
     console.log("POST Response from the server:", postResponse);
-    status = true;
+    
   } catch (error) {
     console.error("Error making the request:", error);
     
-
-    status = false;
   } finally {
     return status;
   }
@@ -1236,11 +1255,10 @@ async function BGextensionRelease(req, res) {
 
   if (startDate && endDate) {
     try {
-      let filterdata = `SELECT * FROM sdbg_entry WHERE validity_date BETWEEN ? AND ? 
-      AND status != 'RELEASED'`;
-      const result1 = await query({
+      let filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate});`;
+      const result1 = await getQuery({
         query: filterdata,
-        values: [startDate, endDate],
+        values: [],
       });
 
       resSend(res, true, 200, "BG fetched successfully", result1, null);
