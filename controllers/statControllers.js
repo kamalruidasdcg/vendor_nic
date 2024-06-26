@@ -107,7 +107,7 @@ exports.statsForBG = async (req, res) => {
         return resSend(
           res,
           false,
-          403,
+          200,
           "You are not authorized to view the information",
           null,
           null
@@ -201,7 +201,7 @@ exports.statsForBTN = async (req, res) => {
         return resSend(
           res,
           false,
-          403,
+          200,
           "You are not authorized to view the information",
           null,
           null
