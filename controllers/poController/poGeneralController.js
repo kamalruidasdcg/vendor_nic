@@ -258,6 +258,16 @@ const details = async (req, res) => {
 
     }
 
+    timelineData = timelineData.map((el2) => {
+      const DOObj = acknowledgementnt_date.find((elms) => elms.flag == el2.mid);
+      if (DOObj) {
+        el2.acknowledgement_text = `ACKNOWLEDGEMENT DATE`;
+        el2.acknowledgement_date = DOObj.acknowledgementnt_date;
+      }
+
+      return el2;
+    });
+
     // let tableName = (result[0].BSART === 'ZDM') ? EKPO : (result[0].BSART === 'ZGSR') ? EKBE : null;
 
     // let resDate;

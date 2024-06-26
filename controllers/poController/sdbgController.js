@@ -996,7 +996,7 @@ const sdbgUpdateByFinance = async (req, res) => {
               res,
               false,
               200,
-              `SAP not connected.This po ${obj.status} is pending.`,
+              `SAP not connected.`,
               sdbgQuery,
               null
             );
@@ -1255,11 +1255,10 @@ async function BGextensionRelease(req, res) {
 
   if (startDate && endDate) {
     try {
-      let filterdata = `SELECT * FROM sdbg_entry WHERE validity_date BETWEEN ? AND ? 
-      AND status != 'RELEASED'`;
-      const result1 = await query({
+      let filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate});`;
+      const result1 = await getQuery({
         query: filterdata,
-        values: [startDate, endDate],
+        values: [],
       });
 
       resSend(res, true, 200, "BG fetched successfully", result1, null);

@@ -46,12 +46,12 @@ exports.wdc = async (req, res) => {
     }
 
     //  deper
-    // if (
-    //   tokenData.user_type != USER_TYPE_VENDOR &&
-    //   tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT
-    // ) {
-    //   return resSend(res, false, 200, "You are not authorised!", null, null);
-    // }
+    if (
+      tokenData.user_type != USER_TYPE_VENDOR &&
+      tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT
+    ) {
+      return resSend(res, false, 200, "You are not authorised!", null, null);
+    }
     //console.log(obj);
     if (tokenData.user_type == USER_TYPE_VENDOR) {
       if (!obj.action_type || obj.action_type == "") {
