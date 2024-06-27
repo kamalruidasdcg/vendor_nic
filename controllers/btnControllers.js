@@ -143,7 +143,7 @@ const fetchBTNByNumForDO = async (req, res) => {
     );
   }
 
-  let btnDOQ = `SELECT * FROM btn_do WHERE btn_num = $1`;
+  let btnDOQ = `SELECT * FROM ${BTN_MATERIAL_DO} WHERE btn_num = $1`;
   console.log("btn_num", btnDOQ, btn_num);
 
   let doRes = await getQuery({
@@ -674,15 +674,22 @@ const submitBTNByDO = async (req, res) => {
 
   // INSERT data into BTN List Table
   let d = await fetchBTNListByPOAndBTNNum(btn_num, purchasing_doc_no);
-  if (d.status) {
-    let btn_list_payload = d.data;
+  if (d?.status) {
+    let btn_list_payload = d?.data;
     console.log("btn_list_payload: ", btn_list_payload);
-    let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
-    const res_list = await getQuery({
-      query: list_q.q,
-      values: list_q.val,
-    });
-    console.log("res_list", res_list);
+    btn_list_payload.net_payable_amount = net_payable_amount;
+    payload = {
+      ...payload,
+      net_claim_amount: btn_list_payload?.net_claim_amount,
+      btn_type: btn_list_payload?.btn_type,
+    };
+    // let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
+    // console.log("list_q", list_q);
+    // const res_list = await getQuery({
+    //   query: list_q.q,
+    //   values: list_q.val,
+    // });
+    // console.log("res_list", res_list);
   } else {
     return resSend(res, false, 200, d?.message, null, null);
   }
@@ -698,11 +705,15 @@ const submitBTNByDO = async (req, res) => {
     assign_to_fi: "",
     last_assign_fi: false,
   };
+
+  console.log("assign_payload", assign_payload);
   let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
   const res_assign = await getQuery({
     query: assign_q.q,
     values: assign_q.val,
   });
+
+  console.log("res_assign", res_assign);
 
   if (res_assign <= 0) {
     return resSend(
@@ -715,7 +726,10 @@ const submitBTNByDO = async (req, res) => {
     );
   }
 
+  console.log("BTN LIST PAYLOAD", payload);
+  payload.vendor_code = tokenData?.vendor_code;
   let resBtnList = await addToBTNList(payload, SUBMITTED_BY_DO);
+  console.log("BTN LIST RESPONSE", resBtnList);
   if (!resBtnList?.status) {
     return resSend(
       res,
@@ -726,12 +740,15 @@ const submitBTNByDO = async (req, res) => {
       null
     );
   }
-  // INSERT Data into btn_do table
+  // INSERT Data into btn_do BTN_MATERIAL_DO table
   // console.log("payload", payload);
   delete payload.assign_to;
   delete payload.p_sdbg_amount;
   delete payload.p_estimate_amount;
   delete payload.created_by;
+  delete payload.net_claim_amount;
+  delete payload.btn_type;
+  delete payload.vendor_code;
   payload.created_at = convertToEpoch(new Date());
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
   let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
