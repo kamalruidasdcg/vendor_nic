@@ -107,7 +107,7 @@ exports.statsForBG = async (req, res) => {
         return resSend(
           res,
           false,
-          403,
+          200,
           "You are not authorized to view the information",
           null,
           null
@@ -131,19 +131,30 @@ exports.statsForBTN = async (req, res) => {
     try {
       const tokenData = req.tokenData;
       if (tokenData) {
-        const Q = `SELECT * FROM ${AUTH} WHERE vendor_code = $1`;
-
-        const result = await poolQuery({
+        const QbtnNo = `SELECT MAX(created_at) as time, btn_num FROM ${BTN_LIST} GROUP BY btn_num,purchasing_doc_no`;
+        let btn_no_list = await poolQuery({
           client,
-          query: Q,
-          values: [tokenData.vendor_code],
+          query: QbtnNo,
+          values: [],
         });
+
+        let str = "";
+
+        if (btn_no_list.length) {
+          btn_no_list.forEach((item) => {
+            const no = item.time;
+            str = str.concat("'").concat(`${no}`).concat("'").concat(",");
+          });
+        }
+        str = str.slice(0, -1);
+        console.log(str);
+
         // For grse_FINANCE_ASSIGNER
         if (
-          result[0].internal_role_id === 1 &&
-          result[0].department_id === 15
+          tokenData.internal_role_id === 1 &&
+          tokenData.department_id === 15
         ) {
-          const Q = `SELECT * FROM ${BTN_LIST} ORDER BY created_at DESC`;
+          const Q = `SELECT * FROM ${BTN_LIST} WHERE created_at IN(${str}) ORDER BY created_at DESC`;
 
           const result = await poolQuery({
             client,
@@ -172,14 +183,16 @@ exports.statsForBTN = async (req, res) => {
         }
         // For grse_FINANCE_STAFF
         if (
-          result[0].internal_role_id === 2 &&
-          result[0].department_id === 15
+          tokenData.internal_role_id === 2 &&
+          tokenData.department_id === 15
         ) {
+
           const query = `SELECT * FROM ${BTN_LIST} bl 
                          JOIN ${BTN_MATERIAL_DO} bdo ON bl.btn_num = bdo.btn_num
                          JOIN ${BTN_ASSIGN} ba ON bdo.btn_num = ba.btn_num WHERE 
                          (ba.assign_to = $1 AND ba.last_assign = 'true') OR
                          (ba.assign_to_fi = $1 AND ba.last_assign_fi = 'false') 
+                         AND bl.created_at IN(${str})
                          ORDER BY bl.created_at DESC`;
 
           const result = await poolQuery({
@@ -201,7 +214,7 @@ exports.statsForBTN = async (req, res) => {
         return resSend(
           res,
           false,
-          403,
+          200,
           "You are not authorized to view the information",
           null,
           null

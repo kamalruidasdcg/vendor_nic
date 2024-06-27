@@ -39,6 +39,7 @@ const {
   VENDOR_MASTER_LFA1,
   ACTUAL_SUBMISSION_DB,
   SDBG_SAVE,
+  SDBG_RECOMMENDATION,
 } = require("../../lib/tableName");
 const { FINANCE, VENDOR } = require("../../lib/depertmentMaster");
 const {
@@ -707,8 +708,8 @@ const sdbgUpdateByFinance = async (req, res) => {
           purchasing_doc_no: obj.purchasing_doc_no,
           remarks: obj.remarks,
           status: obj.status,
-          file_name:action_type_with_vendor_code.file_name,
-          file_path:action_type_with_vendor_code.file_path,
+          file_name: action_type_with_vendor_code.file_name,
+          file_path: action_type_with_vendor_code.file_path,
           action_type: action_type_with_vendor_code.action_type,
           vendor_code: action_type_with_vendor_code.vendor_code,
           assigned_from: tokenData.vendor_code,
@@ -785,22 +786,22 @@ const sdbgUpdateByFinance = async (req, res) => {
         );
       }
 
-    const checkIsHold = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND status = $3`;
-    const checkIsHoldQry = await getQuery({
-      query: checkIsHold,
-      values: [obj.purchasing_doc_no, obj.reference_no, "HOLD"],
-    });
-    const isHold = checkIsHoldQry[0].count_val;
-    if(isHold == 1 && obj.status != APPROVED) {
-      return resSend(res,false,200,
-        `YOU CAN ONLY RECIVED WHEN BG IS HOLD.`,
-        null,
-        null
-      );
-    }
-    console.log("&&&&&&&&&&&&&&&&&&&&&checkIsHoldQry[0].count_val");
-    console.log(checkIsHoldQry[0].count_val);
-    console.log("checkIsHoldQry[0].count_val*************");
+      const checkIsHold = `SELECT COUNT(status) AS count_val FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND status = $3`;
+      const checkIsHoldQry = await getQuery({
+        query: checkIsHold,
+        values: [obj.purchasing_doc_no, obj.reference_no, "HOLD"],
+      });
+      const isHold = checkIsHoldQry[0].count_val;
+      if (isHold == 1 && obj.status != APPROVED) {
+        return resSend(res, false, 200,
+          `YOU CAN ONLY RECIVED WHEN BG IS HOLD.`,
+          null,
+          null
+        );
+      }
+      console.log("&&&&&&&&&&&&&&&&&&&&&checkIsHoldQry[0].count_val");
+      console.log(checkIsHoldQry[0].count_val);
+      console.log("checkIsHoldQry[0].count_val*************");
 
       // if (
       //   tokenData.internal_role_id == ASSIGNER &&
@@ -869,8 +870,8 @@ const sdbgUpdateByFinance = async (req, res) => {
         status: obj.status,
         action_type: action_type_with_vendor_code.action_type,
         vendor_code: action_type_with_vendor_code.vendor_code,
-        file_name:action_type_with_vendor_code.file_name,
-        file_path:action_type_with_vendor_code.file_path,
+        file_name: action_type_with_vendor_code.file_name,
+        file_path: action_type_with_vendor_code.file_path,
         last_assigned: 0,
         created_at: getEpochTime(),
         created_by_name: "finance dept",
@@ -885,7 +886,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         query: insertsdbg_q["q"],
         values: insertsdbg_q["val"],
       });
-      
+
       sdgbRollBackId = sdbgQuery[0].id;
 
       handelEmail(insertPayloadForSdbg, tokenData);
@@ -924,14 +925,14 @@ const sdbgUpdateByFinance = async (req, res) => {
             purchasing_doc_no: obj.purchasing_doc_no,
             reference_no: obj.reference_no,
           };
-    
+
           ({ q, val } = generateQuery(
             UPDATE,
             SDBG_ENTRY,
-            {status : obj.status, bg_file_no: obj.bg_file_no},
+            { status: obj.status, bg_file_no: obj.bg_file_no },
             whereCondition
           ));
-    
+
           let sdbgEntryQuery2 = await poolQuery({
             client,
             query: q,
@@ -978,14 +979,14 @@ const sdbgUpdateByFinance = async (req, res) => {
               purchasing_doc_no: obj.purchasing_doc_no,
               reference_no: obj.reference_no,
             };
-        
+
             ({ q, val } = generateQuery(
               UPDATE,
               SDBG_ENTRY,
-              {status : FORWARD_TO_FINANCE, bg_file_no: null},
+              { status: FORWARD_TO_FINANCE, bg_file_no: null },
               whereCondition
             ));
-        
+
             let sdbgEntryQuery2 = await poolQuery({
               client,
               query: q,
@@ -1092,9 +1093,8 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${
-                  payload.purchasing_doc_no
-                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
+      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -1224,7 +1224,7 @@ async function handelEmail(payload, tokenData) {
 
 async function sendBgToSap(payload) {
   let status = false;
-  
+
   try {
 
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
@@ -1237,14 +1237,14 @@ async function sendBgToSap(payload) {
     console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
 
-    if(postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
+    if (postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
       status = true;
     }
     console.log("POST Response from the server:", postResponse);
-    
+
   } catch (error) {
     console.error("Error making the request:", error);
-    
+
   } finally {
     return status;
   }
@@ -1255,7 +1255,7 @@ async function BGextensionRelease(req, res) {
 
   if (startDate && endDate) {
     try {
-      let filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate});`;
+      let filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate})`;
       const result1 = await getQuery({
         query: filterdata,
         values: [],
@@ -1276,6 +1276,39 @@ async function BGextensionRelease(req, res) {
       null
     );
   }
+}
+
+async function recommendationBGextensionRelease(req, res) {
+  try {
+    const tokenData = { ...req.tokenData };
+    const { reference_no, purchasing_doc_no, bg_file_no, recommendation_type, remarks } = req.body;
+
+    if (!reference_no && !purchasing_doc_no && !bg_file_no && !recommendation_type && !remarks) {
+      return resSend(res, false, 200, "please send valid payload.", req.body, null);
+    }
+
+    let payload = {
+      ...req.body,
+      created_at: getEpochTime(),
+      created_by_id: tokenData.vendor_code,
+      updated_by: "GRSE",
+    };
+
+    const { q, val } = generateQuery(INSERT, SDBG_RECOMMENDATION, payload);
+    const response = await getQuery({ query: q, values: val });
+    return resSend(
+      res,
+      true,
+      200,
+      "Release/Extention updated successfully",
+      response,
+      null
+    );
+  } catch (error) {
+    console.error("Error  recommendation BG extension/release:", error);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+
 }
 
 async function UpdateBGextensionRelease(req, res) {
@@ -1658,13 +1691,13 @@ async function getingFileNo(req, res) {
     });
     let data;
     let msg;
-if(resgetSdbgSave.length > 0 && resgetSdbgSave[0].bg_file_no != null) {
-  data = resgetSdbgSave[0].bg_file_no;
-  msg = "BG File fetched successfully.";
-} else {
-  data = null;
-  msg = "No File found.";
-}
+    if (resgetSdbgSave.length > 0 && resgetSdbgSave[0].bg_file_no != null) {
+      data = resgetSdbgSave[0].bg_file_no;
+      msg = "BG File fetched successfully.";
+    } else {
+      data = null;
+      msg = "No File found.";
+    }
     return resSend(
       res,
       true,
@@ -1691,6 +1724,7 @@ module.exports = {
   getSDBGData,
   GetspecificBG,
   BGextensionRelease,
+  recommendationBGextensionRelease,
   UpdateBGextensionRelease,
   getCurrentAssignee,
   insertSdbgSave,
