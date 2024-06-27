@@ -2,6 +2,7 @@ const { query } = require("../config/dbConfig");
 const { getQuery } = require("../config/pgDbConfig");
 const { ACTION_SDBG, ACTION_PBG } = require("../lib/constant");
 const { APPROVED } = require("../lib/status");
+const { BTN_MATERIAL_DO } = require("../lib/tableName");
 const { checkTypeArr } = require("./smallFun");
 
 exports.getSDBGApprovedFiles = async (po) => {
@@ -100,7 +101,7 @@ exports.getICGRNs = async (body) => {
 };
 
 exports.checkBTNRegistered = async (btn_num, po) => {
-  let q = `SELECT count(btn_num) as count FROM btn_do WHERE btn_num = $1 and purchasing_doc_no = $2`;
+  let q = `SELECT count(btn_num) as count FROM ${BTN_MATERIAL_DO} WHERE btn_num = $1 and purchasing_doc_no = $2`;
   let result = await getQuery({
     query: q,
     values: [btn_num, po],
