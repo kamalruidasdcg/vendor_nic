@@ -1301,7 +1301,7 @@ async function getBGForFinance(req, res) {
       );
     }
 
-    let filterdata = `SELECT * FROM ${SDBG_RECOMMENDATION} WHERE status != 'PENDING'`;
+    let filterdata = `SELECT * FROM ${SDBG_RECOMMENDATION} WHERE status = 'PENDING'`;
     const result = await getQuery({
       query: filterdata,
       values: [],
