@@ -42,6 +42,14 @@ router.post("/bger", [veifyAccessToken], (req, res) => {
   sdbgController.BGextensionRelease(req, res);
 });
 
+router.post("/recommendationBger", [veifyAccessToken], (req, res) => {
+  sdbgController.recommendationBGextensionRelease(req, res);
+});
+
+router.get("/getBGForFinance", [veifyAccessToken], (req, res) => {
+  sdbgController.getBGForFinance(req, res);
+});
+
 router.post("/updatebger", [veifyAccessToken], (req, res) => {
   sdbgController.UpdateBGextensionRelease(req, res);
 });

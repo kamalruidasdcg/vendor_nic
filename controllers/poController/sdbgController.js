@@ -1251,40 +1251,94 @@ async function sendBgToSap(payload) {
 }
 
 async function BGextensionRelease(req, res) {
-  const { startDate, endDate } = req.body;
+  try {
+    const { startDate, endDate } = req.body;
+    const tokenData = { ...req.tokenData };
+    if (startDate && endDate) {
+      let result;
+      let filterdata;
+      if (tokenData.department_id === FINANCE) {
+        result = [];
+      } else {
+        filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate})`;
+        result = await getQuery({
+          query: filterdata,
+          values: [],
+        });
+      }
 
-  if (startDate && endDate) {
-    try {
-      let filterdata = `SELECT * FROM sdbg_entry WHERE status != 'RELEASED' AND (validity_date BETWEEN ${startDate} AND ${endDate})`;
-      const result1 = await getQuery({
-        query: filterdata,
-        values: [],
-      });
 
-      resSend(res, true, 200, "BG fetched successfully", result1, null);
-    } catch (error) {
-      console.error("Error executing the query:", error.message);
-      return resSend(res, false, 500, "Internal Server Error", error, null);
+      resSend(res, true, 200, "BG fetched successfully", result, null);
+
+    } else {
+      return resSend(
+        res,
+        false,
+        400,
+        "startDate and endDate are required",
+        error,
+        null
+      );
     }
-  } else {
-    return resSend(
-      res,
-      false,
-      400,
-      "startDate and endDate are required",
-      error,
-      null
-    );
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+}
+
+async function getBGForFinance(req, res) {
+  try {
+    const tokenData = { ...req.tokenData };
+
+    if (tokenData.department_id !== FINANCE) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Please login as finance!",
+        null,
+        null
+      );
+    }
+
+    let filterdata = `SELECT * FROM ${SDBG_RECOMMENDATION} WHERE status != 'PENDING'`;
+    const result = await getQuery({
+      query: filterdata,
+      values: [],
+    });
+
+    resSend(res, true, 200, "BG fetched successfully", result, null);
+
+
+  } catch (error) {
+    console.error("Error executing the query:", error.message);
+    return resSend(res, false, 500, "Internal Server Error", error, null);
   }
 }
 
 async function recommendationBGextensionRelease(req, res) {
   try {
     const tokenData = { ...req.tokenData };
-    const { reference_no, purchasing_doc_no, bg_file_no, recommendation_type, remarks } = req.body;
+    const { ...obj } = req.body;
 
-    if (!reference_no && !purchasing_doc_no && !bg_file_no && !recommendation_type && !remarks) {
+    if (!obj.reference_no || !obj.purchasing_doc_no || !obj.bg_file_no || !obj.recommendation_type || !obj.remarks) {
       return resSend(res, false, 200, "please send valid payload.", req.body, null);
+    }
+
+    const isDO = await checkIsDealingOfficer(
+      obj.purchasing_doc_no,
+      tokenData.vendor_code
+    );
+    if (isDO == 0) {
+      console.log(123456789);
+      return resSend(
+        res,
+        false,
+        200,
+        "Please Login as dealing officer.",
+        null,
+        null
+      );
     }
 
     let payload = {
@@ -1292,6 +1346,7 @@ async function recommendationBGextensionRelease(req, res) {
       created_at: getEpochTime(),
       created_by_id: tokenData.vendor_code,
       updated_by: "GRSE",
+      status:"PENDING"
     };
 
     const { q, val } = generateQuery(INSERT, SDBG_RECOMMENDATION, payload);
@@ -1725,6 +1780,7 @@ module.exports = {
   GetspecificBG,
   BGextensionRelease,
   recommendationBGextensionRelease,
+  getBGForFinance,
   UpdateBGextensionRelease,
   getCurrentAssignee,
   insertSdbgSave,
