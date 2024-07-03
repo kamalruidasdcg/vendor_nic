@@ -1,7 +1,7 @@
 const { asyncPool, poolQuery, poolClient } = require("../../config/pgDbConfig");
-const { UPDATE } = require("../../lib/constant");
+const { UPDATE, INSERT } = require("../../lib/constant");
 const { responseSend } = require("../../lib/resSend");
-const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery, getEpochTime } = require("../../lib/utils");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
 const Message = require("../../utils/messages");
 
@@ -57,6 +57,7 @@ const zbts_st = async (req, res) => {
                 }
             }
 
+            // UPDATE BTN LIST TABLE WHERE ANY ACTION TAKEN FROM SAP
             await updateBtnListTable(client, payloadObj);
 
             // console.log("transactionSuccessful", transactionSuccessful);
@@ -92,11 +93,31 @@ const updateBtnListTable = async (client, data) => {
             "1": "RECEIVED",
             "2": "REJECTED",
             "3": "APPROVE",
-            "4" :"BANK",
+            "4": "BANK",
             "5": "D-RETURN"
         }
-        const { q, val } = generateQuery(UPDATE, 'btn_list', { status: statusObj[data.fstatus] || "" }, { btn_num: data.zbtno })
-        await poolQuery({ client, query: q, values: val });
+        const getLatestDataQuery = `
+        SELECT 
+            btn_num, 
+            purchasing_doc_no, 
+            net_claim_amount, 
+            net_payable_amount, 
+            vendor_code, 
+            status, 
+            btn_type,
+            created_at
+        FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+        const lasBtnDetails = await poolQuery({ client, query: getLatestDataQuery, values: [data.zbtno] });
+        let btnListTablePaylod = { btn_num: data.zbtno };
+
+        if (lasBtnDetails.length) {
+            btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, status: statusObj[data.fstatus] || "", created_at: getEpochTime() };
+            const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod)
+            await poolQuery({ client, query: q, values: val });
+        } else {
+            console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+        }
+
     } catch (error) {
         throw error;
     }
