@@ -1,6 +1,6 @@
 
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/pgDbConfig");
+const { query, getQuery } = require("../../config/pgDbConfig");
 const fileDetails = require("../../lib/filePath");
 const path = require('path');
 const { QAP, RIC } = require("../../lib/depertmentMaster");
@@ -204,6 +204,7 @@ const getPaymentAdvliceList = async (req, res) => {
 		try {
 
 			files = await paymentAdviceFiles(req.query.poNo);
+			
 			console.log("reso file", files);
 
 			if (files.success && files?.data?.length) {
@@ -215,21 +216,21 @@ const getPaymentAdvliceList = async (req, res) => {
 
 				// const paymentAdviceQuery = `SELECT * FROM zfi_pymt_advce_data_final WHERE vblnr in ( ${placeholders} )`;
 				let paymentAdviceQuery = `SELECT  
-													bldat AS docuentDate, 
-													lifnr AS vendor_code,
-													vblnr AS documentNo
+													bldat AS "docuentDate", 
+													lifnr AS "vendor_code",
+													vblnr AS "documentNo"
 														FROM zfi_pymt_advce_data_final 
 															WHERE 1 = 1 AND vblnr in ( ${placeholders} )`;
 
 
 				if (payload.poNo) {
 					console.log("payload.poNo", payload.poNo);
-					const result = await query({ query: `SELECT lifnr AS vendor_code FROM ekko WHERE ebeln = $1`, values: [payload.poNo] });
+					const result = await getQuery({ query: `SELECT lifnr AS vendor_code FROM ekko WHERE ebeln = $1`, values: [payload.poNo] });
 					console.log(result, "resultresult");
 					paymentAdviceQuery = paymentAdviceQuery.concat(" AND lifnr = $2");
 					queryValues.push(result[0].vendor_code);
 				}
-				const result = await query({ query: paymentAdviceQuery, values: queryValues });
+				const result = await getQuery({ query: paymentAdviceQuery, values: queryValues });
 
 
 				console.log("queryValues", queryValues, paymentAdviceQuery, result);

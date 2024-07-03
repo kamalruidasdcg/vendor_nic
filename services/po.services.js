@@ -235,6 +235,7 @@ const shippingDocumentsPayload = (payload, status) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
+    file_type_name: payload.file_type_name ? payload.file_type_name : null,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
