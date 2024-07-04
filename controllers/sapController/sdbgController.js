@@ -6,6 +6,7 @@ const { generateQueryArray, generateInsertUpdateQuery, generateQueryForMultipleD
 const { INSERT } = require('../../lib/constant');
 const { query, getQuery } = require("../../config/pgDbConfig");
 const Message = require('../../utils/messages');
+const { update_in_all_obps_sdbgs_table } = require("../poController/sdbgController");
 
 const sdbgPaymentAdvice = async (req, res) => {
 
@@ -16,6 +17,7 @@ const sdbgPaymentAdvice = async (req, res) => {
             return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
         }
         const payload = { ...req.body };
+        await update_in_all_obps_sdbgs_table(payload);
         const payloadObj = await zfi_bgm_1_Payload_sap(payload);
         console.log("payloadObj", payloadObj);
         // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
