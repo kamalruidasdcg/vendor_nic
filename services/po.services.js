@@ -473,12 +473,13 @@ const create_btn_no = async () => {
     let today = getEpochTime();
     let { firstEpochTime, lastEpochTime } = getEpochFirstLastToday();
 
-    let btn_num_q = `SELECT count(*) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
-    let btn_res = await query({
+    // let btn_num_q = `SELECT count(*) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
+    let btn_num_q = `SELECT COUNT(DISTINCT btn_num) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
+    let btn_res = await getQuery({
       query: btn_num_q,
       values: [firstEpochTime, lastEpochTime],
     });
-    btn_res = btn_res?.rows;
+    // btn_res = btn_res?.rows;
     console.log(btn_res);
     let threeDigit = 999 - parseInt(btn_res[0]?.count);
     // const reference_no = `${type}${dateNeed}${threeDigit}`;
