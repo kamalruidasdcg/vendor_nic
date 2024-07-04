@@ -1324,7 +1324,10 @@ async function recommendationBGextensionRelease(req, res) {
     try {
       const tokenData = { ...req.tokenData };
       const { ...obj } = req.body;
-
+console.log(111111111111);
+console.log(obj);
+await update_in_all_obps_sdbgs_table(obj);
+return;
       if (!obj.reference_no || !obj.purchasing_doc_no || !obj.bg_file_no || !obj.recommendation_type || !obj.remarks) {
         return resSend(res, false, 200, "please send valid payload.", req.body, null);
       }
@@ -1795,6 +1798,105 @@ async function getingFileNo(req, res) {
 
 }
 
+async function update_in_all_obps_sdbgs_table(payload) {
+  try {
+    const client = await poolClient();
+    try {
+      //
+      console.log("get data");
+      console.log(payload.FILE_NO);
+      console.log(payload.REF_NO);
+      console.log(payload.PO_NUMBER);
+
+      if (payload.FILE_NO && payload.REF_NO && payload.PO_NUMBER) {
+        const status = (payload.RELEASE_DATE && (payload.RELEASE_DATE != "" || payload.RELEASE_DATE != 0)) ? "RELEASE"  : "EXTENTION";
+        console.log("update in all sdgds table.");
+        let whereCondition;
+        const sdbg_entry_payload = {
+          extension_date1: payload.EXTENTION_DATE1,
+          extension_date2: payload.EXTENTION_DATE2,
+          extension_date3: payload.EXTENTION_DATE3,
+          extension_date4: payload.EXTENTION_DATE4,
+          extension_date5: payload.EXTENTION_DATE5,
+          extension_date6: payload.EXTENTION_DATE6,
+          release_date: payload.RELEASE_DATE,
+          status: status
+        }
+        whereCondition = {
+          purchasing_doc_no: payload.PO_NUMBER,
+          reference_no: payload.REF_NO,
+          bg_file_no: payload.FILE_NO
+        }
+          const sdbg_entry_query = generateQuery(
+            UPDATE,
+            SDBG_ENTRY,
+            sdbg_entry_payload,
+            whereCondition
+          );
+          console.log(sdbg_entry_query);
+        const updateSdbgEntry = await poolQuery({
+          client,
+          query: sdbg_entry_query["q"],
+          values: sdbg_entry_query["val"],
+        });
+// console.log(updateSdbgEntry);
+// return;
+        const sdbg_recommendation_payload = {
+          status: status
+        }
+        const SdbgRecommendationQuery = generateQuery(
+          UPDATE,
+          SDBG_RECOMMENDATION,
+          sdbg_recommendation_payload,
+          whereCondition
+        );
+        const updateSdbgRecommendation = await poolQuery({
+          client,
+          query: SdbgRecommendationQuery["q"],
+          values: SdbgRecommendationQuery["val"],
+        });
+        console.log(updateSdbgRecommendation);
+      const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      let sdbgResult = await poolQuery({
+        client,
+        query: Q,
+        values: [payload.PO_NUMBER, payload.REF_NO],
+      });
+      let sdbgDataResult = sdbgResult[0];
+      const insertPayloadForSdbg = {
+        reference_no: payload.REF_NO,
+        purchasing_doc_no: payload.PO_NUMBER,
+        ...sdbgDataResult,
+        remarks:`This BG is ${status} from SAP.`,
+        status: status,
+        created_at: getEpochTime(),
+        created_by_name: "SAP Finaance.",
+        created_by_id: `600200`,
+        updated_by: "GRSE",
+      };
+
+      let insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
+      let sdbgQuery = await poolQuery({
+        client,
+        query: insertsdbg_q["q"],
+        values: insertsdbg_q["val"],
+      });
+
+      console.log(sdbgQuery);
+
+      }
+    } catch (err) {
+      console.log("data not fetched", err);
+      resSend(res, false, 500, "Internal server error", null, null);
+    }
+    finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, "error in db conn!", error, "");
+  }
+}
+
 module.exports = {
   submitSDBG,
   getSdbgEntry,
@@ -1812,5 +1914,46 @@ module.exports = {
   getCurrentAssignee,
   insertSdbgSave,
   getSdbgSave,
-  getingFileNo
+  getingFileNo,
+  update_in_all_obps_sdbgs_table
 };
+
+// {
+//   FILE_NO: '43t11111',
+//   REF_NO: 'SD-1719998396925-7545',
+//   BANKERS_NAME: 'kolkata',
+//   BANKERS_BRANCH: '46546546',
+//   BANKERS_ADD1: 'new town, kolkata, India',
+//   BANKERS_ADD2: 'ee3',
+//   BANKERS_ADD3: 'ww',
+//   BANKERS_CITY: 'kolkata',
+//   B_PIN_CODE: '157',
+//   BANK_GU_NO: '10',
+//   BG_DATE: '20240703',
+//   BG_AMOUNT: '2345',
+//   PO_NUMBER: '4700026717',
+//   DEPARTMENT: 'mainak',
+//   PO_DATE: '20240503',
+//   YARD_NO: '10',
+//   VALIDITY_DATE: '20240718',
+//   CLAIM_PERIOD: '20240723',
+//   CHECKLIST_REF: 'SD-1719998396925-7545',
+//   CHECKLIST_DATE: '20240703',
+//   BG_TYPE: 'SDBG',
+//   VENDOR_NAME: 'DCG DATA CORE 03.04.2024',
+//   VENDOR_ADD1: '',
+//   VENDOR_ADD2: '',
+//   VENDOR_ADD3: '',
+//   VENDOR_CITY: 'KOLKATA',
+//   V_PIN_CODE: 0,
+//   CONFIRMATION: 'yes',
+//   EXTENTION_DATE1: '0',
+//   EXTENTION_DATE2: '0',
+//   EXTENTION_DATE3: '0',
+//   EXTENTION_DATE4: '0',
+//   EXTENTION_DATE5: '',
+//   EXTENTION_DATE6: '',
+//   RELEASE_DATE: '0',
+//   DEM_NOTICE_DATE: '0',
+//   EXT_LETTER_DATE: ''
+// }
