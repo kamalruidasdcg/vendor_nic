@@ -4,12 +4,13 @@
 //     getHashedText,
 //     compareHash,
 // } = require("../services/crypto.services");
+const crypto = require("crypto");
 
 // const { query } = require("../../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../../services/jwt.services");
 const { resSend } = require("../../lib/resSend");
-const { AUTH, USTER_TYPE } = require("../../lib/tableName");
-const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE } = require("../../lib/constant");
+const { AUTH, USTER_TYPE, SDBG, REGISTRATION_OTP } = require("../../lib/tableName");
+const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE, UPDATE } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
 const rolePermission = require("../../lib/role/deptWiseRolePermission");
@@ -17,7 +18,12 @@ const rolePermission = require("../../lib/role/deptWiseRolePermission");
 const { getEpochTime, generateQuery } = require("../../lib/utils");
 
 const Message = require("../../utils/messages");
-const { getQuery, poolClient } = require("../../config/pgDbConfig");
+const {
+    query,
+    getQuery,
+    poolClient,
+    poolQuery,
+} = require("../../config/pgDbConfig");
 
 
 
@@ -290,7 +296,7 @@ const login = async (req, res) => {
 
             return resSend(res, true, 200, Message.USER_AUTHENTICATION_SUCCESS, user, { accessToken, refreshToken });
         } catch (error) {
-        
+
             return resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error));
         }
         finally {
@@ -303,6 +309,132 @@ const login = async (req, res) => {
     }
 };
 
+const sendOtp = async (req, res) => {
+
+    try {
+        const client = await poolClient();
+
+        try {
+            const { ...obj } = req.body;
+            if (!obj.user_type || !obj.user_code) {
+                return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+            }
+
+            if (obj.user_type === "vendor") {
+
+                let validVendor = await poolQuery({
+                    client,
+                    query: `SELECT COUNT(*) as count FROM lfa1 where lifnr = '${obj.user_code}'`,
+                    values: [],
+                });
+                console.log(validVendor);
+                if (!validVendor[0].count || validVendor[0].count == 0) {
+                    return resSend(res, false, 200, "No record found with the user code!", null, null);
+                }
+                ;
+                const otp = crypto.randomInt(100000, 999999);
+                // SEND MAIL TO USER //
+                const insertRegistrationOtp = {
+                    user_type: obj.user_type,
+                    functional_area: obj.functional_area ? obj.functional_area : null,
+                    role: obj.role ? obj.role : null,
+                    user_code: obj.user_code,
+                    otp: otp,
+                    created_ip: obj.created_ip ? obj.created_ip : null,
+                    created_at: getEpochTime(),
+                    status: "PENDING",
+                }
+                let insertRegistrationOtpQuery = generateQuery(INSERT, REGISTRATION_OTP, insertRegistrationOtp);
+                let insertRegistrationOtpResult = await poolQuery({
+                    client,
+                    query: insertRegistrationOtpQuery["q"],
+                    values: insertRegistrationOtpQuery["val"],
+                });
+
+            }
+            return resSend(res, true, 200, `OTP send via mail.Please check Mail inbox.`, null, null);
+        } catch (error) {
+
+            return resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error));
+        }
+        finally {
+            console.log("finally block");
+            client.release();
+        }
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+    }
+};
+
+const otpVefify = async (req, res) => {
+    try {
+        const client = await poolClient();
+
+        try {
+            const { ...obj } = req.body;
+            if (!obj.otp || !obj.user_code) {
+                return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+            }
+
+            const milliseconds = (h, m, s) => ((h * 60 * 60 + m * 60 + s) * 1000);
+
+            // Usage
+            const result = milliseconds(0, 30, 0);
+            let start = getEpochTime() - result;
+
+            const otpVefifyQuery = `SELECT COUNT(*) as count FROM ${REGISTRATION_OTP} where created_at BETWEEN '${start}' AND '${getEpochTime()}' AND user_code = '${obj.user_code}' AND otp = '${obj.otp}'`;
+            const otpVefifyQueryRes = await poolQuery({
+                client,
+                query: otpVefifyQuery,
+                values: [],
+            });
+            console.log(otpVefifyQueryRes);
+            //return false;
+            let msg;
+            let status;
+            if (otpVefifyQueryRes && otpVefifyQueryRes[0].count == 1) {
+                msg = `OTP is veryfied.`;
+                status = true;
+                const whereCondition = {
+                    user_code: obj.user_code,
+                    otp: obj.otp
+                }
+
+                const updatePayload = {
+                    status: "VERIFIED"
+                }
+                const updateVerified = generateQuery(
+                    UPDATE,
+                    REGISTRATION_OTP,
+                    updatePayload,
+                    whereCondition
+                );
+                const getUpdate = await poolQuery({
+                    client,
+                    query: updateVerified["q"],
+                    values: updateVerified["val"],
+                });
+                console.log(getUpdate);
+
+            } else {
+                msg = `OTP mismatch!`;
+                status = false;
+            }
+            resSend(res, status, 200, msg, null, null);
+
+        } catch (error) {
+            console.log(error);
+            resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null);
+        } finally {
+            console.log("finally block");
+            client.release();
+        }
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+    }
+}
 
 // const registration = async (req, res) => {
 
@@ -385,5 +517,5 @@ const login = async (req, res) => {
 // }
 
 
-module.exports = { login };
+module.exports = { login, sendOtp, otpVefify };
 
