@@ -242,7 +242,15 @@
     },
     "BG_EXTENSION_RELEASE": {
         "users": [],
-        "email_subject": "  BG Extension Release",
+        "email_subject": "BG Extension Release",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
+    },
+    "BG_ASSIGN": {
+        "users": [],
+        "email_subject": "BG Assign",
         "email_heading": "MAIL",
         "cc_users": [],
         "bcc_users": [],

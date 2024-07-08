@@ -46,6 +46,16 @@ const getUserDetailsQuery = (type, valueParameter) => {
                     user_t.pernr = ${valueParameter}
                 )`;
       break;
+    case 'bg_assignee':
+      getDeatilsQuery =
+        `(
+                SELECT    user_t.pernr :: character varying  AS u_id,
+                          user_t.cname       AS u_name,
+                          user_t.email       AS u_email,
+                          '${type || ""}'    AS u_type
+                FROM     pa0002  as user_t where  user_t.pernr = ${valueParameter}
+            )`;
+      break;
 
     case 'vendor_and_do':
       getDeatilsQuery = `        
