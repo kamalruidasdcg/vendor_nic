@@ -255,5 +255,13 @@
         "cc_users": [],
         "bcc_users": [],
         "data": {}
+    },
+    "BG_RETURN_TO_DO": {
+        "users": [],
+        "email_subject": "BG Return to DO",
+        "email_heading": "MAIL",
+        "cc_users": [],
+        "bcc_users": [],
+        "data": {}
     }
 }

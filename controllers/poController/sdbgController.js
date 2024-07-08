@@ -65,6 +65,7 @@ const {
   BG_ACCEPT_REJECT,
   BG_ENTRY_BY_DO,
   BG_ASSIGN,
+  BG_RETURN_TO_DO,
 } = require("../../lib/event");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
@@ -1227,6 +1228,20 @@ async function handelEmail(payload, tokenData) {
       dataObj,
       { users: emailUserDetails },
       BG_ASSIGN
+    );
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == RETURN_TO_DO) {
+    // BG_ACCEPT_REJECT
+    emailUserDetailsQuery = getUserDetailsQuery("do", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.purchasing_doc_no],
+    });
+    await sendMail(
+      BG_RETURN_TO_DO,
+      dataObj,
+      { users: emailUserDetails },
+      BG_RETURN_TO_DO
     );
   }
   if (
