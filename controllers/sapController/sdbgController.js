@@ -7,6 +7,9 @@ const { INSERT } = require('../../lib/constant');
 const { query, getQuery } = require("../../config/pgDbConfig");
 const Message = require('../../utils/messages');
 const { update_in_all_obps_sdbgs_table } = require("../poController/sdbgController");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { sendMail } = require("../../services/mail.services");
+const { BG_EXTENSION_RELEASE } = require("../../lib/event");
 
 const sdbgPaymentAdvice = async (req, res) => {
 
@@ -24,6 +27,7 @@ const sdbgPaymentAdvice = async (req, res) => {
         const queryText = await generateInsertUpdateQuery(payloadObj, SDBG_PAYMENT_ADVICE, ["FILE_NO", "REF_NO"])
         // console.log(q);
         const response = await query({ query: queryText.q, values: queryText.val });
+        handelMail(payloadObj);
         responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
     } catch (err) {
         console.log("data not fetched", err);
@@ -122,6 +126,51 @@ const bgList = async (req, res) => {
 
     } catch (error) {
         resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+    }
+}
+
+
+const findLatestExtensionDate = (datesObj) => {
+    let latestDate = null;
+
+    for (const key in datesObj) {
+        if (datesObj[key] !== null) {
+            const currentDate = new Date(datesObj[key]);
+            if (!latestDate || currentDate > latestDate) {
+                latestDate = currentDate;
+            }
+        }
+    }
+
+    return latestDate ? latestDate.toISOString().split('T')[0] : null;
+};
+
+
+async function handelMail(data) {
+
+    try {
+
+        const obj = {
+            "EXTENTION_DATE1": data.EXTENTION_DATE1,
+            "EXTENTION_DATE2": data.EXTENTION_DATE2,
+            "EXTENTION_DATE3": data.EXTENTION_DATE3,
+            "EXTENTION_DATE4": data.EXTENTION_DATE4,
+            "EXTENTION_DATE5": data.EXTENTION_DATE5,
+            "EXTENTION_DATE6": data.EXTENTION_DATE6,
+        };
+
+        const extension_date = findLatestExtensionDate(obj);
+        console.log("extension_date", extension_date);
+        if (extension_date) {
+            let vendorAndDoDetails = getUserDetailsQuery('vendor_and_do', '$1');
+            const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.PO_NUMBER] });
+            const dataObj = { ...data, vendor_name: mail_details[0]?.u_name,  date: extension_date, purchasing_doc_no: data. PO_NUMBER };
+            console.log("dataObj", dataObj, mail_details);
+            await sendMail(BG_EXTENSION_RELEASE, dataObj, { users: mail_details }, BG_EXTENSION_RELEASE);
+        }
+
+    } catch (error) {
+        console.log(error.toString(), error.stack);
     }
 }
 

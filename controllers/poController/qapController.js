@@ -37,6 +37,7 @@ const {
   QAP_UPLOAD_BY_VENDOR,
   QAP_ASSIGNMENT,
   QAP_APPROVE_REJECT,
+  QAP_ACCEPT_UPDATE,
 } = require("../../lib/event");
 // const { mailTrigger } = require("../sendMailController");
 const { deptLogEntry } = require("../../log/deptActivities");
@@ -632,7 +633,7 @@ async function handelMail(tokenData, payload, event) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
       console.log("dataObj", dataObj);
       await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
     }
@@ -641,8 +642,15 @@ async function handelMail(tokenData, payload, event) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      dataObj = {...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
       await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
+    }
+    if (tokenData.internal_role_id == ASSIGNER && (payload.status == ACCEPTED || payload.status == UPDATED)) {
+      // QA NODAL OFFICERS
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      await sendMail(QAP_ACCEPT_UPDATE, dataObj, { users: emailUserDetails }, QAP_ACCEPT_UPDATE);
     }
 
     // switch (event) {
@@ -992,7 +1000,7 @@ async function insertQapSave(req, res) {
   // return resSend(res, true, 200, "qapSave!", req.query, null);
   try {
     const tokenData = { ...req.tokenData };
-   
+
     let payload = { ...req.body, created_at: getEpochTime() };
 
     if (!req.body.reference_no) {
@@ -1002,7 +1010,7 @@ async function insertQapSave(req, res) {
       return resSend(res, false, 200, "Please login as valid user!.", null, null);
     }
 
-    
+
     payload.created_by_id = tokenData.vendor_code;
     payload.man_no = tokenData.vendor_code;
     console.log(payload);

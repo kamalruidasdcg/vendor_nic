@@ -65,7 +65,7 @@ const sendMail = async (eventName, data, userInfo, activity_name) => {
         }
 
         const email_info = await getEmailInfo(eventName);
-        const mailjsonConfig = mailjson[eventName];
+        const mailjsonConfig =  {};
         mailjsonConfig.data = data;
         const m_user = userInfo.users || [];
         console.log("userInfo.users", userInfo.users);
@@ -94,7 +94,8 @@ const getEmailInfo = async (event_name) => {
                 e_info.u_name,
                 e_info.u_type,
                 e_info.u_email,
-                e_body.email_body
+                e_body.email_body,
+                e_body.email_subject
          FROM   email_send_info AS e_info
                 LEFT JOIN email_body AS e_body
                        ON( e_body.email_body_name = e_info.email_body_name )
@@ -174,7 +175,8 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             email_to: el.u_email,
             email_cc: el.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
             email_bcc: el.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
-            email_body: el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) || "Mail from GRSE"
+            email_subject: el.email_subject || "",
+            email_body: el.email_body ? el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
         }));
 
         console.log("mailArr", mailArr);

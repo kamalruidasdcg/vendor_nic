@@ -64,6 +64,8 @@ const {
   BG_UPLOAD_BY_VENDOR,
   BG_ACCEPT_REJECT,
   BG_ENTRY_BY_DO,
+  BG_ASSIGN,
+  BG_RETURN_TO_DO,
 } = require("../../lib/event");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { zfi_bgm_1_Payload } = require("../../services/sap.services");
@@ -737,6 +739,9 @@ const sdbgUpdateByFinance = async (req, res) => {
           values: [obj.purchasing_doc_no, obj.assigned_to],
         });
         console.log(update_assign_touery);
+
+        handelEmail(insertPayloadForSdbg, tokenData);
+
         return resSend(
           res,
           true,
@@ -1209,6 +1214,34 @@ async function handelEmail(payload, tokenData) {
       dataObj,
       { users: emailUserDetails },
       BG_ACCEPT_REJECT
+    );
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
+    // BG_ACCEPT_REJECT
+    emailUserDetailsQuery = getUserDetailsQuery("bg_assignee", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.assigned_to],
+    });
+    await sendMail(
+      BG_ASSIGN,
+      dataObj,
+      { users: emailUserDetails },
+      BG_ASSIGN
+    );
+  }
+  if (tokenData.dept_id != USER_TYPE_VENDOR && payload.status == RETURN_TO_DO) {
+    // BG_ACCEPT_REJECT
+    emailUserDetailsQuery = getUserDetailsQuery("do", "$1");
+    emailUserDetails = await getQuery({
+      query: emailUserDetailsQuery,
+      values: [payload.purchasing_doc_no],
+    });
+    await sendMail(
+      BG_RETURN_TO_DO,
+      dataObj,
+      { users: emailUserDetails },
+      BG_RETURN_TO_DO
     );
   }
   if (
