@@ -14,6 +14,10 @@ router.post("/sendOtp", [], (req, res) => {
   router.post("/otpVefify", [], (req, res) => {
     authController.otpVefify(req, res);
   });
+
+  router.post("/setPassword", [], (req, res) => {
+    authController.setPassword(req, res);
+  });
   
   module.exports = router;
 
