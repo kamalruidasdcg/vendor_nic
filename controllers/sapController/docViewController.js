@@ -110,6 +110,7 @@ const grnReport = async (req, res) => {
                         ekpo.TXZ01 as "materialDesc",
                         zmm_gate_entry_d.ENTRY_NO as "gateEntryNo",
                         zmm_gate_entry_d.INVNO as "invoiceNo",
+                        zmm_gate_entry_d.INV_DATE as "invoiceDate",
                         zmm_gate_entry_h.CHALAN_NO as "chalanNo"
                     FROM mseg AS mseg
                         LEFT JOIN mkpf AS mkpf
@@ -148,6 +149,7 @@ const grnReport = async (req, res) => {
                 matDocNo: result[0].matDocNo,
                 entryDate: result[0].entryDate,
                 invoiceNo: result[0].invoiceNo,
+                invoiceDate: result[0].invoiceDate,
                 gateEntryNo: result[0].gateEntryNo,
                 plant: result[0].plant,
                 vendor_code: result[0].vendor_code,

@@ -176,7 +176,7 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
             email_cc: el.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
             email_bcc: el.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
             email_subject: el.email_subject || "",
-            email_body: el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) || "Mail from GRSE"
+            email_body: el.email_body ? el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
         }));
 
         console.log("mailArr", mailArr);
