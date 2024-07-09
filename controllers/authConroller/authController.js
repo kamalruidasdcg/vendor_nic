@@ -1,16 +1,16 @@
 // const roles = require("../constants/roles");
-// const {
-//     generateSalt,
-//     getHashedText,
-//     compareHash,
-// } = require("../services/crypto.services");
+const {
+    generateSalt,
+    getHashedText,
+    compareHash,
+} = require("../../services/crypto.services");
 const crypto = require("crypto");
 
 // const { query } = require("../../config/dbConfig");
 const { getAccessToken, getRefreshToken } = require("../../services/jwt.services");
 const { resSend } = require("../../lib/resSend");
-const { AUTH, USTER_TYPE, SDBG, REGISTRATION_OTP } = require("../../lib/tableName");
-const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE, UPDATE } = require("../../lib/constant");
+const { AUTH, USTER_TYPE, SDBG, REGISTRATION_OTP, EMPLAYEE_MASTER_PA0002, VENDOR_MASTER_LFA1 } = require("../../lib/tableName");
+const { USER_TYPE_VENDOR, USER_TYPE_SUPER_ADMIN, INSERT, TRUE, UPDATE, USER_TYPE_GRSE_DRAWING } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
 const rolePermission = require("../../lib/role/deptWiseRolePermission");
@@ -24,6 +24,8 @@ const {
     poolClient,
     poolQuery,
 } = require("../../config/pgDbConfig");
+const { EMAIL_TEMPLAE } = require("../../templates/mail-template");
+const SENDMAIL = require("../../lib/mailSend");
 
 
 
@@ -133,7 +135,8 @@ const login = async (req, res) => {
                 return resSend(res, false, 200, Message.USER_NOT_FOUND, result);
             }
 
-
+            const match = await bcrypt.compare(password, result[0]["password"]);
+            console.log("match");
             if (password !== result[0]["password"]) {
                 console.log("U R given Password -->", req.body.password, "Please check !!");
                 return resSend(res, false, 200, "INCORRECT_PASSWORD");
@@ -320,39 +323,66 @@ const sendOtp = async (req, res) => {
                 return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
             }
 
-            if (obj.user_type === "vendor") {
+            const tableName = (obj.user_type === "vendor") ? VENDOR_MASTER_LFA1 : EMPLAYEE_MASTER_PA0002;
+            const fieldName = (obj.user_type === "vendor") ? "lifnr" : "pernr";
 
-                let validVendor = await poolQuery({
-                    client,
-                    query: `SELECT COUNT(*) as count FROM lfa1 where lifnr = '${obj.user_code}'`,
-                    values: [],
-                });
-                console.log(validVendor);
-                if (!validVendor[0].count || validVendor[0].count == 0) {
-                    return resSend(res, false, 200, "No record found with the user code!", null, null);
-                }
-                ;
-                const otp = crypto.randomInt(100000, 999999);
-                // SEND MAIL TO USER //
+
+            const validUser = await poolQuery({
+                client,
+                query: `SELECT email  FROM ${tableName} where ${fieldName} = '${obj.user_code}'`,
+                values: [],
+            });
+
+
+            if (!validUser.length && (!validUser[0].email || validUser[0].email === "")) {
+                return resSend(res, false, 200, "You are not allowed to register!", null, null);
+            }
+
+            const otp = crypto.randomInt(100000, 999999);
+            // SEND MAIL TO USER //
+            let mailOptions = {
+                to: validUser[0].email,
+                from: process.env.MAIL_SEND_MAIL_ID,
+                subject: `OBPS Registration OTP Generated`,
+                html: EMAIL_TEMPLAE(`Your one time PIN for registration in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`),
+            }
+            try {
+
+                await SENDMAIL(mailOptions);
+
+
+                // delete existing record on same user code
+                    let delOtp = `DELETE FROM ${REGISTRATION_OTP} WHERE user_code = '${obj.user_code}'`;
+                    let delOtpRes = await poolQuery({
+                        client,
+                        query: delOtp,
+                        values: [],
+                    });
+                    console.log(delOtpRes);
+                // add otp record
                 const insertRegistrationOtp = {
                     user_type: obj.user_type,
                     functional_area: obj.functional_area ? obj.functional_area : null,
                     role: obj.role ? obj.role : null,
                     user_code: obj.user_code,
                     otp: otp,
-                    created_ip: obj.created_ip ? obj.created_ip : null,
                     created_at: getEpochTime(),
                     status: "PENDING",
                 }
-                let insertRegistrationOtpQuery = generateQuery(INSERT, REGISTRATION_OTP, insertRegistrationOtp);
-                let insertRegistrationOtpResult = await poolQuery({
-                    client,
-                    query: insertRegistrationOtpQuery["q"],
-                    values: insertRegistrationOtpQuery["val"],
-                });
 
+                let addOtpQ = generateQuery(INSERT, REGISTRATION_OTP, insertRegistrationOtp);
+                let addOtpRes = await poolQuery({
+                    client,
+                    query: addOtpQ["q"],
+                    values: addOtpQ["val"],
+                });
+                console.log(addOtpRes);
+                return resSend(res, true, 200, `OTP send via mail.Please check Mail inbox.`, null, null);
+
+            } catch (err) {
+                return resSend(res, false, 200, `You are not authourised.`, null, null);
             }
-            return resSend(res, true, 200, `OTP send via mail.Please check Mail inbox.`, null, null);
+
         } catch (error) {
 
             return resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error));
@@ -394,7 +424,7 @@ const otpVefify = async (req, res) => {
             let msg;
             let status;
             if (otpVefifyQueryRes && otpVefifyQueryRes[0].count == 1) {
-                msg = `OTP is veryfied.`;
+                msg = `OTP is verified.`;
                 status = true;
                 const whereCondition = {
                     user_code: obj.user_code,
@@ -418,7 +448,7 @@ const otpVefify = async (req, res) => {
                 console.log(getUpdate);
 
             } else {
-                msg = `OTP mismatch!`;
+                msg = `Your OTP is incorrect!`;
                 status = false;
             }
             resSend(res, status, 200, msg, null, null);
@@ -427,7 +457,6 @@ const otpVefify = async (req, res) => {
             console.log(error);
             resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null);
         } finally {
-            console.log("finally block");
             client.release();
         }
 
@@ -436,6 +465,97 @@ const otpVefify = async (req, res) => {
     }
 }
 
+const setPassword = async (req, res) => {
+    try {
+        const client = await poolClient();
+        try {
+           
+            const { ...obj } = req.body;
+            if (!obj.password || !obj.user_code || !obj.otp) {
+                return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+            }
+         
+
+            const vefifyQuery = `SELECT * FROM ${REGISTRATION_OTP} where user_code = '${obj.user_code}' AND status = 'VERIFIED' AND otp = '${obj.otp}'`;
+            const otpVefifyQueryRes = await getQuery({
+                query: vefifyQuery,
+                values: [],
+            });
+           
+
+            if (otpVefifyQueryRes && otpVefifyQueryRes.length == 0) {
+                return resSend(res, false, 200, `OTP is incorrect!`, null, null);
+            }
+            const tableName = (otpVefifyQueryRes[0].user_type === "vendor") ? VENDOR_MASTER_LFA1 : EMPLAYEE_MASTER_PA0002;
+            const fieldName = (otpVefifyQueryRes[0].user_type === "vendor") ? "lifnr" : "pernr";
+
+            const validUser = await poolQuery({
+                client,
+                query: `SELECT * FROM ${tableName} where ${fieldName} = '${obj.user_code}'`,
+                values: [],
+            });
+
+            if (validUser.length == 0) {
+                return resSend(res, false, 200, "You are not allowed to register!", null, null);
+            }
+           
+            let name;
+            let username;
+            if (otpVefifyQueryRes[0].user_type === "vendor") {
+                name = validUser[0].name1;
+                username = validUser[0].stcd1;
+            } else {
+                name = validUser[0].cname;
+                username = validUser[0].persg;
+            }
+
+            const salt = generateSalt();
+            const encrytedPassword = getHashedText(obj.password, salt);
+
+            const regData = {
+                user_type: (otpVefifyQueryRes[0].user_type == "vendor") ? USER_TYPE_VENDOR : 2,
+                department_id: otpVefifyQueryRes[0].functional_area,
+                internal_role_id: otpVefifyQueryRes[0].role,
+                username: username,
+                password: encrytedPassword,
+                name: name,
+                vendor_code: obj.user_code,
+                datetime: getEpochTime()
+            }
+
+            let resMsg;
+            if (otpVefifyQueryRes[0].user_type === "vendor" || otpVefifyQueryRes[0].role == 2) {
+                regData.is_active = 1;
+                resMsg = 'You are authorised! Please login to get access.'
+            } else {
+                regData.is_active = 0;
+                resMsg = 'Please contact a nodal officer for approval.'
+            }
+            // delete existing record on same user code
+            let delOtp = `DELETE FROM ${AUTH} WHERE vendor_code = '${obj.user_code}'`;
+            let delOtpRes = await poolQuery({
+                client,
+                query: delOtp,
+                values: [],
+            });
+            console.log(delOtpRes);
+            // Insert new user record in auth table.
+            const { q, val } = generateQuery(INSERT, AUTH, regData);
+            const response = await poolQuery({ client, query: q, values: val });
+
+            resSend(res, 'status', 200, resMsg, response, null);
+
+        } catch (error) {
+            console.log(error.message);
+            resSend(res, false, 500, Message.SERVER_ERROR, JSON.stringify(error), null);
+        } finally {
+            client.release();
+        }
+
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+    }
+}
 // const registration = async (req, res) => {
 
 //     try {
@@ -517,5 +637,5 @@ const otpVefify = async (req, res) => {
 // }
 
 
-module.exports = { login, sendOtp, otpVefify };
+module.exports = { login, sendOtp, otpVefify, setPassword };
 
