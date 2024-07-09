@@ -46,6 +46,9 @@ const {
   DRAWING_SUBMIT_BY_GRSE,
   DRAWING_UPLOAD_TO_CDO,
   DRAWING_ACKNOWLEDGE_RECEIPT,
+  BTN_ASSIGN_TO_STAFF,
+  DRAWING_ASSIGN,
+  DRAWING_REJECT,
 } = require("../../lib/event");
 const { Console } = require("console");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
@@ -125,6 +128,10 @@ const submitDrawing = async (req, res) => {
           query: update_assign_to,
           values: [payload.purchasing_doc_no, payload.assign_to],
         });
+
+        if (payload.assign_to && payload.status == ASSIGNED) {
+          handelMail(tokenData, payload)
+        }
         console.log(update_assign_touery);
         return resSend(
           res,
@@ -177,7 +184,8 @@ const submitDrawing = async (req, res) => {
 
             // CDO APPROVED DRAWING . . 
 
-            sendMailToVendor(payload)
+            // sendMailToVendor(payload)
+            // handelMail(payload, tokenData)
 
             const actual_subminission = await setActualSubmissionDate(
               payload,
@@ -187,6 +195,9 @@ const submitDrawing = async (req, res) => {
             );
             console.log("actual_subminission", actual_subminission);
           }
+
+        
+          handelMail( tokenData, payload)
           return resSend(res, true, 200, `Drawing is ${payload.status}`, response, null);
         }
 
@@ -284,9 +295,10 @@ const submitDrawing = async (req, res) => {
       //   console.log("actual_subminission", actual_subminission);
       // }
 
-      if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {
-        sendMailToCDOandDO(payload)
-      }
+      handelMail(tokenData, payload);
+      // if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {
+      //   sendMailToCDOandDO(payload)
+      // }
 
 
       if (response) {
@@ -404,32 +416,32 @@ async function poContactDetails(purchasing_doc_no) {
 
 
 
-async function sendMailToCDOandDO(data) {
+// async function sendMailToCDOandDO(data) {
 
-  try {
+//   try {
 
-    let vendorDetails = getUserDetailsQuery('cdo_and_do', '$1');
-    const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
-    const dataObj = { ...data };
-    await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
-  } catch (error) {
-    console.log(error.toString(), error.stack);
-  }
-}
-async function sendMailToVendor(data) {
+//     let vendorDetails = getUserDetailsQuery('cdo_and_do', '$1');
+//     const mail_details = await getQuery({ query: vendorDetails, values: [data.purchasing_doc_no] });
+//     const dataObj = { ...data };
+//     await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: mail_details }, DRAWING_UPLOAD_TO_CDO);
+//   } catch (error) {
+//     console.log(error.toString(), error.stack);
+//   }
+// }
+// async function sendMailToVendor(data) {
 
-  try {
+//   try {
 
-    let vendorDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+//     let vendorDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
 
-    const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.purchasing_doc_no] });
-    console.log(vendorDetailsQuery, data, "ruid");
-    const dataObj = { ...data };
-    await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
-  } catch (error) {
-    console.log(error.toString(), error.stack);
-  }
-}
+//     const vendorDetails = await getQuery({ query: vendorDetailsQuery, values: [data.purchasing_doc_no] });
+//     // console.log(vendorDetailsQuery, data, "ruid");
+//     const dataObj = { ...data };
+//     await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: vendorDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
+//   } catch (error) {
+//     console.log(error.toString(), error.stack);
+//   }
+// }
 
 
 const assigneeList = async (req, res) => {
@@ -485,6 +497,54 @@ const getCurrentAssignee = async (req, res) => {
   } catch (error) {
     console.error("Error executing the query:", error.message);
     return resSend(res, false, 500, "Internal Server Error", error, null);
+  }
+}
+
+
+async function handelMail(tokenData, payload) {
+
+
+  console.log("handelMail", tokenData, payload );
+
+
+  try {
+
+    let emailUserDetailsQuery;
+    let emailUserDetails;
+    let dataObj = payload;
+
+    if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {
+
+      emailUserDetailsQuery = getUserDetailsQuery('cdo_and_do', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [dataObj.purchasing_doc_no] });
+      dataObj = { ...dataObj };
+      await sendMail(DRAWING_UPLOAD_TO_CDO, dataObj, { users: emailUserDetails }, DRAWING_UPLOAD_TO_CDO);
+
+    }
+
+    if (payload.status === APPROVED) {
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [dataObj.purchasing_doc_no] });
+      dataObj = { ...dataObj };
+      await sendMail(DRAWING_ACKNOWLEDGE_RECEIPT, dataObj, { users: emailUserDetails }, DRAWING_ACKNOWLEDGE_RECEIPT);
+    }
+    if (payload.status === REJECTED) {
+      emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [dataObj.purchasing_doc_no] });
+      dataObj = { ...dataObj };
+      await sendMail(DRAWING_REJECT, dataObj, { users: emailUserDetails }, DRAWING_REJECT);
+    }
+    if (payload.status === ASSIGNED) {
+      emailUserDetailsQuery = getUserDetailsQuery('drawing_assingee', '$1');
+      emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [dataObj.assign_to] });
+      dataObj = { ...dataObj };
+      await sendMail(DRAWING_ASSIGN, dataObj, { users: emailUserDetails }, DRAWING_ASSIGN
+      );
+    }
+
+
+  } catch (error) {
+    console.log("handelMail drawing", error.toString(), error.stack);
   }
 }
 
