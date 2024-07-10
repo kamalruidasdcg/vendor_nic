@@ -4,7 +4,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { resSend } = require("../../lib/resSend");
 const { query, getQuery, poolClient, poolQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING, } = require("../../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, USER_TYPE_GRSE_DRAWING, MID_ILMS, } = require("../../lib/constant");
 
 const { EKKO, NEW_SDBG, SDBG_ENTRY, SDBG, ILMS, DRAWING } = require("../../lib/tableName");
 const { SUBMITTED, ACCEPTED, APPROVED, REJECTED, ACKNOWLEDGED, } = require("../../lib/status");
@@ -80,7 +80,7 @@ const submitILMS = async (req, res) => {
             const response = await poolQuery({ client, query: q, values: val });
             console.log(response);
             if (payload.status === APPROVED ) {
-                const actual_subminission = await setActualSubmissionDate(payload, "04", tokenData, SUBMITTED);
+                const actual_subminission = await setActualSubmissionDate(payload, MID_ILMS, tokenData, SUBMITTED);
                 sendMailToVendor(payload)
                 console.log("actual_subminission", actual_subminission);
             }

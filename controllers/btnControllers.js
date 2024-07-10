@@ -13,6 +13,10 @@ const {
   INSERT,
   USER_TYPE_VENDOR,
   UPDATE,
+  MID_SDBG,
+  MID_ILMS,
+  MID_QAP,
+  MID_DRAWING,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -523,7 +527,7 @@ const submitBTN = async (req, res) => {
   payload = { ...payload, net_claim_amount, net_with_gst };
 
   // GET Contractual Dates from other Table
-  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
   let c_dates = await getQuery({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -602,6 +606,15 @@ const submitBTN = async (req, res) => {
       payload = { ...payload, a_ilms_date: item.PLAN_DATE };
     }
   });
+
+
+  // checking no submitted milestones by vendor
+  const checkMissingMilestone = checkActualDates(c_dates, a_dates);
+console.log("checkMissingMilestone", checkMissingMilestone);
+  if (!checkMissingMilestone.success) {
+    return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
+  }
+
 
   // created at
   let created_at = getEpochTime();
@@ -1007,16 +1020,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
@@ -1294,6 +1307,43 @@ const assignToFiStaffHandler = async (req, res) => {
     console.log("ERROR", err.message);
   }
 };
+
+
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD 
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkActualDates(c_dates, a_dates) {
+
+
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    [MID_SDBG]: "SDBG",
+    [MID_DRAWING]: "Drawing",
+    [MID_QAP]: "QAP",
+    [MID_ILMS]: "ILMS",
+  }
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex((el) => parseInt(el.MID) == parseInt(item.MID));
+    if (i < 0) {
+      return { success: false, msg: `Please submit ${mtextObj[item.MID]} to process BTN !` };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" }
+}
+
+
+
+
 
 module.exports = {
   // fetchAllBTNs,
