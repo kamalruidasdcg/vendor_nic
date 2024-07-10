@@ -217,7 +217,14 @@ exports.syncDataUpload = async (req, res) => {
     const folderPath = path.join(parentDir, UNZIP_DATA_PATH, todayDate);
 
     if (!fs.existsSync(folderPath)) {
-     return resSend(res, 200, false, null, "Today's folder does not exist!", null);
+      return resSend(
+        res,
+        200,
+        false,
+        null,
+        "Today's folder does not exist!",
+        null
+      );
     }
 
     // Read all directories inside today's folder
@@ -253,7 +260,7 @@ exports.syncDataUpload = async (req, res) => {
 
         const check_q = `SELECT sync_id FROM ${tableName} WHERE sync_id = '${item.sync_id}'`;
         const { rowCount } = await pool.query(check_q, []);
-        console.log("res_check", rowCount);
+        // console.log("res_check", rowCount);
         if (rowCount > 0) {
           const keys = Object.keys(item);
           let index = 0;
@@ -420,7 +427,7 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
   cron.schedule("20 00 * * *", async () => {
-    console.log("Running the scheduled task 12:20 AM");
+    console.log("Running the scheduled task 00:10");
 
     try {
       await getAndZipFileHandler();
