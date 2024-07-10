@@ -6,7 +6,7 @@ const {
 const router = express.Router();
 const sdbgController = require("../controllers/poController/sdbgController");
 const { uploadSDBGFile, dynamicallyUpload } = require("../lib/fileUpload");
-const { unlockPrivilege } = require("../services/auth.services");
+// const { unlockPrivilege } = require("../services/auth.services");
 
 router.post(
   "/submitSDBG",
@@ -24,9 +24,9 @@ router.post("/sdbgUpdateByFinance", [veifyAccessToken], (req, res) => {
   sdbgController.sdbgUpdateByFinance(req, res);
 });
 
-router.post("/unlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
-  sdbgController.unlock(req, res);
-});
+// router.post("/unlock", [veifyAccessToken, unlockPrivilege], (req, res) => {
+//   sdbgController.unlock(req, res);
+// });
 
 router.get("/getSdbgEntry/", [veifyAccessToken], (req, res) => {
   sdbgController.getSdbgEntry(req, res);

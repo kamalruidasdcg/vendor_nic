@@ -926,7 +926,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
       EBELN: btnDetails[0]?.purchasing_doc_no || "", // PO Number
       DPERNR1: btnPayload?.assign_to_fi || "", // assigned_to
       DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
-      ZRMK1: "Forwared To Finance", // REMARKS
+      ZRMK1: "Forwarded to finance", // REMARKS
       CGST: cgst_ammount,
       IGST: igst_ammount,
       SGST: sgst_ammount,

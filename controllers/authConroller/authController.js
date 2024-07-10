@@ -362,7 +362,7 @@ const sendOtp = async (req, res) => {
         from: process.env.MAIL_SEND_MAIL_ID,
         subject: `OBPS Registration OTP Generated`,
         html: EMAIL_TEMPLAE(
-          `Your one time PIN for registration in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`
+          `Your one time PIN for registration in OBPS is : ${otp}. Valid for 30 minutes, Do not share it with anyone.`
         ),
       };
       try {
