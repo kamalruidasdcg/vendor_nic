@@ -192,7 +192,7 @@ async function handleEmail(data) {
         
         const getDoQuery = getUserDetailsQuery('vendor', '$1');
         const venodrDetails = await getQuery({ query: getDoQuery, values: [data.lifnr] });
-        const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0].u_name, };
+        const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0]?.u_name, };
         await sendMail(PAYMENT_ADVICE_DOC_GENERATE, dataObj, { users: [] }, PAYMENT_ADVICE_DOC_GENERATE);
     } catch (error) {
         console.log("handleEmail", error.toString(), error.stack)

@@ -633,7 +633,7 @@ async function handelMail(tokenData, payload, event) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       console.log("dataObj", dataObj);
       await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
     }
@@ -642,14 +642,14 @@ async function handelMail(tokenData, payload, event) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(QAP_APPROVE_REJECT, dataObj, { users: emailUserDetails }, QAP_APPROVE_REJECT);
     }
     if (tokenData.internal_role_id == ASSIGNER && (payload.status == ACCEPTED || payload.status == UPDATED)) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(QAP_ACCEPT_UPDATE, dataObj, { users: emailUserDetails }, QAP_ACCEPT_UPDATE);
     }
 
