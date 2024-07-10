@@ -25,25 +25,25 @@ exports.getPBGApprovedFiles = async (po) => {
   return result;
 };
 
-exports.getGateEntry = async (po) => {
-  let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = $1`;
-  let result = await getQuery({
-    query: q,
-    values: [po],
-  });
-  return result;
-};
+// exports.getGateEntry = async (po) => {
+//   let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = $1`;
+//   let result = await getQuery({
+//     query: q,
+//     values: [po],
+//   });
+//   return result;
+// };
 // ZMLNR
 // EBELN
 
-exports.getGRNs = async (po) => {
-  let q = `SELECT grn_no FROM store_grn WHERE purchasing_doc_no = $1`;
-  let result = await getQuery({
-    query: q,
-    values: [po],
-  });
-  return result;
-};
+// exports.getGRNs = async (po) => {
+//   let q = `SELECT grn_no FROM store_grn WHERE purchasing_doc_no = $1`;
+//   let result = await getQuery({
+//     query: q,
+//     values: [po],
+//   });
+//   return result;
+// };
 
 exports.getICGRNs = async (body) => {
   const { purchasing_doc_no, invoice_no } = body;
