@@ -5,7 +5,7 @@ const {
   compareHash,
 } = require("../../services/crypto.services");
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 // const { query } = require("../../config/dbConfig");
 const {
   getAccessToken,
@@ -553,8 +553,8 @@ const setPassword = async (req, res) => {
         username = validUser[0].persg;
       }
 
-      const salt = generateSalt();
-      const encrytedPassword = getHashedText(obj.password, salt);
+      const salt = bcrypt.genSaltSync();
+      const encrytedPassword = bcrypt.hashSync(obj.password, salt);
 
       const regData = {
         user_type:
