@@ -104,7 +104,7 @@ const login = async (req, res) => {
                 ON	
                     t1.internal_role_id = t3.id
                 WHERE
-                    t1.vendor_code = $1`;
+                    t1.vendor_code = $1 AND t1.is_active = 1`;
 
       // if (req.body.userType === "VENDOR") {
       //     login_Q = `SELECT t1.vendor_code, t1.email, t1.user_type, t1.username, t1.password,
@@ -381,6 +381,7 @@ const sendOtp = async (req, res) => {
           user_type: obj.user_type,
           functional_area: obj.functional_area ? obj.functional_area : null,
           role: obj.role ? obj.role : null,
+          sub_dept_id: obj.sub_dept_id ? obj.sub_dept_id : null,
           user_code: obj.user_code,
           otp: otp,
           created_at: getEpochTime(),
@@ -590,7 +591,36 @@ const setPassword = async (req, res) => {
       const { q, val } = generateQuery(INSERT, AUTH, regData);
       const response = await poolQuery({ client, query: q, values: val });
 
-      resSend(res, "status", 200, resMsg, response, null);
+      if (
+        otpVefifyQueryRes[0].user_type === "GRSE" &&
+        otpVefifyQueryRes[0].role === 2
+      ) {
+        const empDLQ = {
+          dept_id: otpVefifyQueryRes[0].functional_area,
+          internal_role_id: otpVefifyQueryRes[0].role,
+          sub_dept_id: otpVefifyQueryRes[0].sub_dept_id
+            ? otpVefifyQueryRes[0].sub_dept_id
+            : 0,
+          emp_id: obj.user_code,
+        };
+        // delete existing record on same user code
+        let delOtp = `DELETE FROM emp_department_list WHERE emp_id = '${obj.user_code}'`;
+        let delOtpRes = await poolQuery({
+          client,
+          query: delOtp,
+          values: [],
+        });
+        console.log(delOtpRes);
+        // Insert new user record in emp_department_list table.
+        const empDLR = generateQuery(INSERT, "emp_department_list", empDLQ);
+        const response = await poolQuery({
+          client,
+          query: empDLR["q"],
+          values: empDLR["val"],
+        });
+      }
+
+      resSend(res, "status", 200, resMsg, null, null);
     } catch (error) {
       console.log(error.message);
       resSend(
