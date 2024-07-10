@@ -18,6 +18,8 @@ const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
   BTN_UPLOAD_CHECKLIST,
+  BTN_ASSIGN_TO_STAFF,
+  BTN_REJECT,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const {
@@ -464,8 +466,7 @@ const submitBTN = async (req, res) => {
   payload = {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
-    icgrn_nos: resICGRN.icgrn_nos,
-    grn_nos,
+    icgrn_nos: resICGRN.icgrn_nos
   };
 
   // // GET GRN Number by PO Number
@@ -1111,33 +1112,34 @@ async function handelMail(tokenData, payload, event) {
       tokenData.user_type != USER_TYPE_VENDOR &&
       payload.status == FORWARDED_TO_FI_STAFF
     ) {
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
       emailUserDetails = await getQuery({
         query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
+        values: [payload.assign_to_fi],
       });
       await sendMail(
-        BTN_FORWORD_FINANCE,
+        BTN_ASSIGN_TO_STAFF,
         dataObj,
         { users: emailUserDetails },
-        BTN_FORWORD_FINANCE
+        BTN_ASSIGN_TO_STAFF
       );
     }
 
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
       // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_btn", "$1");
+
 
       emailUserDetails = await getQuery({
         query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
+        values: [payload.btn_num],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
-        BTN_RETURN_DO,
+        BTN_REJECT,
         dataObj,
         { users: emailUserDetails },
-        BTN_RETURN_DO
+        BTN_REJECT
       );
     }
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
@@ -1152,7 +1154,7 @@ async function handelMail(tokenData, payload, event) {
         query: emailUserDetailsQuery,
         values: [payload.purchasing_doc_no],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_RETURN_DO,
         dataObj,
@@ -1185,7 +1187,7 @@ async function handelMail(tokenData, payload, event) {
         query: buildQuery,
         values: [payload.purchasing_doc_no, parseInt(payload.assign_to)],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_FORWORD_FINANCE,
         dataObj,

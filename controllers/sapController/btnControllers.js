@@ -1,8 +1,11 @@
-const { asyncPool, poolQuery, poolClient } = require("../../config/pgDbConfig");
+const { asyncPool, poolQuery, poolClient, getQuery } = require("../../config/pgDbConfig");
 const { UPDATE, INSERT } = require("../../lib/constant");
+const { BTN_RETURN_DO } = require("../../lib/event");
 const { responseSend } = require("../../lib/resSend");
 const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery, getEpochTime } = require("../../lib/utils");
+const { sendMail } = require("../../services/mail.services");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const Message = require("../../utils/messages");
 
 const zbts_st = async (req, res) => {
@@ -112,8 +115,11 @@ const updateBtnListTable = async (client, data) => {
 
         if (lasBtnDetails.length) {
             btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, status: statusObj[data.fstatus] || "", created_at: getEpochTime() };
-            const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod)
+            const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod);
             await poolQuery({ client, query: q, values: val });
+            if (data.fstatus == "5" || data.fstatus == 5) {
+                await handelMail(btnListTablePaylod, client);
+            }
         } else {
             console.log("NO BTN FOUND IN LIST TO BE UPDATED");
         }
@@ -123,6 +129,30 @@ const updateBtnListTable = async (client, data) => {
     }
 }
 
+async function handelMail(payload, client) {
+    try {
+        let emailUserDetailsQuery;
+        let emailUserDetails;
+        let dataObj = payload;
 
+        emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do", "$1");
+        emailUserDetails = await poolQuery({
+            client,
+            query: emailUserDetailsQuery,
+            values: [payload.purchasing_doc_no],
+        });
+        dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+        await sendMail(
+            BTN_RETURN_DO,
+            dataObj,
+            { users: emailUserDetails },
+            BTN_RETURN_DO
+        );
+
+
+    } catch (error) {
+        console.log("handelMail btn ctrl sap", error.toString(), error.stack);
+    }
+}
 
 module.exports = { zbts_st }
