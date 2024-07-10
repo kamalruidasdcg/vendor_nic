@@ -15,6 +15,7 @@ const {
   USER_TYPE_VENDOR,
   ASSIGNER,
   A_QAP_DATE,
+  MID_QAP,
 } = require("../../lib/constant");
 const { QAP_SUBMISSION, QAP_SAVE } = require("../../lib/tableName");
 const {
@@ -357,7 +358,7 @@ const submitQAP = async (req, res) => {
         if (insertObj.status === APPROVED) {
           const actual_subminission = await setActualSubmissionDate(
             insertObj,
-            "03",
+            MID_QAP,
             tokenData,
             SUBMITTED
           );

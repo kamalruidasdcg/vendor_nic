@@ -1,6 +1,6 @@
 const { json } = require("express");
 const { query, getQuery } = require("../config/pgDbConfig");
-const { INSERT } = require("../lib/constant");
+const { INSERT, MID_SDBG, MID_DRAWING, MID_QAP, MID_ILMS } = require("../lib/constant");
 const { SUBMITTED, ACCEPTED, REJECTED } = require("../lib/status");
 const {
   ACTUAL_SUBMISSION_DATE,
@@ -366,13 +366,13 @@ const insertActualSubmission = async (data) => {
 async function setActualSubmissionDate(payload, mid, tokenData, status) {
   const getTableName = (mid) => {
     switch (mid) {
-      case "01":
+      case MID_SDBG:
         return SDBG;
-      case "02":
+      case MID_DRAWING:
         return DRAWING;
-      case "03":
+      case MID_QAP:
         return QAP_SUBMISSION;
-      case "04":
+      case MID_ILMS:
         return ILMS;
       default:
         return null;
@@ -392,10 +392,10 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
   console.log(result);
 
   const mtext = {
-    "01": "ACTUAL SDBG SUBMISSION DATE",
-    "02": "ACTUAL DRAWING SUBMISSION DATE",
-    "03": "ACTUAL QAP SUBMISSION DATE",
-    "04": "ACTUAL ILMS SUBMISSION DATE",
+    [MID_SDBG]: "ACTUAL SDBG SUBMISSION DATE",
+    [MID_DRAWING]: "ACTUAL DRAWING SUBMISSION DATE",
+    [MID_QAP]: "ACTUAL QAP SUBMISSION DATE",
+    [MID_ILMS]: "ACTUAL ILMS SUBMISSION DATE",
   };
 
   if (result && result.length) {
