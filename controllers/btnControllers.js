@@ -466,8 +466,7 @@ const submitBTN = async (req, res) => {
   payload = {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
-    icgrn_nos: resICGRN.icgrn_nos,
-    grn_nos,
+    icgrn_nos: resICGRN.icgrn_nos
   };
 
   // // GET GRN Number by PO Number
@@ -1008,16 +1007,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
@@ -1135,7 +1134,7 @@ async function handelMail(tokenData, payload, event) {
         query: emailUserDetailsQuery,
         values: [payload.btn_num],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_REJECT,
         dataObj,
@@ -1155,7 +1154,7 @@ async function handelMail(tokenData, payload, event) {
         query: emailUserDetailsQuery,
         values: [payload.purchasing_doc_no],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_RETURN_DO,
         dataObj,
@@ -1188,7 +1187,7 @@ async function handelMail(tokenData, payload, event) {
         query: buildQuery,
         values: [payload.purchasing_doc_no, parseInt(payload.assign_to)],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_FORWORD_FINANCE,
         dataObj,
