@@ -1,17 +1,26 @@
-const { query, getQuery, poolClient, poolQuery } = require("../config/pgDbConfig");
+const {
+  query,
+  getQuery,
+  poolClient,
+  poolQuery,
+} = require("../config/pgDbConfig");
 const { UPDATE, INSERT } = require("../lib/constant");
-const { EKPO, SDBG_SAVE, SDBG, VENDOR_MASTER_LFA1, EKKO } = require("../lib/tableName");
+const {
+  EKPO,
+  SDBG_SAVE,
+  SDBG,
+  VENDOR_MASTER_LFA1,
+  EKKO,
+} = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
-
 
 /**
  * Modify SDBG Payload object to insert data
- * @param {Object} payload 
- * @param {string} status 
+ * @param {Object} payload
+ * @param {string} status
  * @returns Object
  */
 const getLastAssignee = async (tableName, poNo, assign) => {
-
   let filterdata = `SELECT ${assign} FROM ${tableName} WHERE purchasing_doc_no = $1 AND last_assigned = $2`;
   console.log(filterdata);
   const result = await getQuery({
@@ -20,7 +29,7 @@ const getLastAssignee = async (tableName, poNo, assign) => {
   });
 
   return result;
-}
+};
 
 const getAssigneeList = async (dept_id, internal_role_id) => {
   const drawingQuery = `SELECT t1.emp_id, t2.* FROM emp_department_list AS t1
@@ -30,30 +39,34 @@ const getAssigneeList = async (dept_id, internal_role_id) => {
             t1.emp_id= t2.pernr  :: character varying WHERE
          t1.dept_id = $1 AND t1.internal_role_id = $2`;
 
-  const result = await getQuery({ query: drawingQuery, values: [dept_id, internal_role_id] });
+  const result = await getQuery({
+    query: drawingQuery,
+    values: [dept_id, internal_role_id],
+  });
 
   return result;
-
-}
+};
 
 const checkIsAssigned = async (tableName, poNo, userCode, assign) => {
   const check_assign_to_str = `SELECT COUNT(id) AS assign_count FROM ${tableName} WHERE purchasing_doc_no = $1 AND ${assign} = $2 AND last_assigned = $3`;
 
   const check_assign_to_query = await getQuery({
     query: check_assign_to_str,
-    values: [
-      poNo,
-      userCode,
-      1,
-    ],
+    values: [poNo, userCode, 1],
   });
   let check_assign_to_result = check_assign_to_query[0].assign_count;
 
   // console.log(check_assign_to_result);
   return check_assign_to_result;
-}
+};
 
-const checkIsApprovedRejected = async (tableName, poNo, reference_no, status1, status2) => {
+const checkIsApprovedRejected = async (
+  tableName,
+  poNo,
+  reference_no,
+  status1,
+  status2
+) => {
   try {
     const check = `SELECT COUNT(status) AS count_val FROM ${tableName} WHERE purchasing_doc_no = $1 AND reference_no = $2 AND (status = $3 OR status = $4)`;
     const resAssigneQry = await getQuery({
@@ -62,11 +75,10 @@ const checkIsApprovedRejected = async (tableName, poNo, reference_no, status1, s
     });
 
     return resAssigneQry[0].count_val;
-
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const getFristRow = async (table_name, star, purchasing_doc_no) => {
   try {
@@ -113,7 +125,7 @@ const checkPoType = async (poNo) => {
   } catch (error) {
     console.log("error into checkPoType function :"`${error}`);
   }
-}
+};
 
 function poTypeCheck(materialData) {
   const regex = /DIEN/; // USE FOR IDENTIFY SERVICE PO as discuss with Preetham
@@ -130,17 +142,15 @@ function poTypeCheck(materialData) {
 }
 
 const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
-
   try {
     const client = await poolClient();
     try {
-      
       const star = `vendor_code`;
-      // GET Vendor Info 
+      // GET Vendor Info
       let vendor_code = await getFristRow(SDBG, star, obj.purchasing_doc_no);
-     
+
       vendor_code = vendor_code.vendor_code;
-     
+
       let v_query = `SELECT * FROM ${VENDOR_MASTER_LFA1} WHERE LIFNR = $1`;
       const dbResult = await poolQuery({
         client,
@@ -151,7 +161,7 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
       let other_details = {};
       if (dbResult && dbResult.length > 0) {
         let obj = dbResult[0];
-  
+
         other_details.vendor_name = obj.name1 ? obj.name1 : null;
         other_details.vendor_city = obj.ort01 ? obj.ort01 : null;
         other_details.vendor_pin_code = obj.pstlz ? obj.pstlz : "";
@@ -168,9 +178,11 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
 
       if (poDateRes && poDateRes.length > 0) {
         let obj = poDateRes[0];
-        other_details.po_date = obj.aedat ? new Date(obj.aedat).getTime() : null;
+        other_details.po_date = obj.aedat
+          ? new Date(obj.aedat).getTime()
+          : null;
       }
-    
+
       const insertPayload = {
         ...other_details,
         reference_no: obj.reference_no,
@@ -196,7 +208,7 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
         bg_type: obj.bg_type ? obj.bg_type : null,
         bg_file_no: obj.bg_file_no ? obj.bg_file_no : null,
         bg_recived_date: obj.bg_recived_date ? obj.bg_recived_date : null,
-       // man_no: tokenData.vendor_code,
+        // man_no: tokenData.vendor_code,
         status: obj.status,
         created_at: getEpochTime(),
         created_by: tokenData.vendor_code,
@@ -206,17 +218,15 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
         extension_date3: obj.extension_date3 ? obj.extension_date3 : 0,
         extension_date4: obj.extension_date4 ? obj.extension_date4 : 0,
         release_date: obj.release_date ? obj.release_date : 0,
-        demand_notice_date: obj.demand_notice_date
-          ? obj.demand_notice_date
-          : 0,
+        demand_notice_date: obj.demand_notice_date ? obj.demand_notice_date : 0,
         extension_letter_date: obj.extension_letter_date
           ? obj.extension_letter_date
           : 0,
       };
-      if(tableName == SDBG_SAVE) {
+      if (tableName == SDBG_SAVE) {
         insertPayload.man_no = tokenData.vendor_code;
       }
- 
+
       // SDBG_ENTRY
 
       let dbQuery = `SELECT COUNT(*) AS count FROM ${tableName} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
@@ -252,14 +262,20 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
       return sdbgEntryQuery;
     } catch (error) {
       console.log(error);
-      
-    }
-    finally {
+    } finally {
       client.release();
     }
   } catch (error) {
     console.log(error);
   }
-}
+};
 
-module.exports = { getLastAssignee, getAssigneeList, checkIsAssigned, checkIsApprovedRejected, getFristRow, checkPoType, insertSdbgEntrySave }
+module.exports = {
+  getLastAssignee,
+  getAssigneeList,
+  checkIsAssigned,
+  checkIsApprovedRejected,
+  getFristRow,
+  checkPoType,
+  insertSdbgEntrySave,
+};

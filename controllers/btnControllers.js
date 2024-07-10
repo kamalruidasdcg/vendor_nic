@@ -44,9 +44,9 @@ const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
 const {
   getSDBGApprovedFiles,
-  getGRNs,
+  // getGRNs,
   getICGRNs,
-  getGateEntry,
+  // getGateEntry,
   getPBGApprovedFiles,
   checkBTNRegistered,
   getBTNInfo,
@@ -227,17 +227,17 @@ const getBTNData = async (req, res) => {
     }
 
     // GET gate by PO Number
-    let gate_entry = await getGateEntry(id);
-    if (gate_entry) {
-      obj = { ...obj, gate_entry };
-    }
-    console.log("gate_entry", gate_entry);
+    // let gate_entry = await getGateEntry(id);
+    // if (gate_entry) {
+    //   obj = { ...obj, gate_entry };
+    // }
+    // console.log("gate_entry", gate_entry);
 
     // GET GRN Number by PO Number
-    let grn_nos = await getGRNs(id);
-    if (checkTypeArr(grn_nos)) {
-      obj = { ...obj, grn_nos };
-    }
+    // let grn_nos = await getGRNs(id);
+    // if (checkTypeArr(grn_nos)) {
+    //   obj = { ...obj, grn_nos };
+    // }
 
     // GET GRN Number by PO Number
     // let icgrn_nos = await getICGRNs(id);
@@ -299,20 +299,20 @@ const insertUpdateToBTNList = async (data, status, isInserted) => {
     btn_type: data?.btn_type,
     status: status,
   };
-  
-  if(isInserted == true) {
+
+  if (isInserted == true) {
     // update
     whereCondition = {
       btn_num: payload.btn_num,
       purchasing_doc_no: payload.purchasing_doc_no,
     };
     assign_q = await generateQuery(UPDATE, BTN_LIST, payload, whereCondition);
-    console.log('update..');
-} else {
+    console.log("update..");
+  } else {
     //insert
     assign_q = await generateQuery(INSERT, BTN_LIST, payload);
-    console.log('insert..');
-}
+    console.log("insert..");
+  }
 
   let res = await getQuery({ query: assign_q.q, values: assign_q.val });
 
@@ -454,7 +454,7 @@ const submitBTN = async (req, res) => {
   console.log("pbg_filename_result", pbg_filename_result);
 
   // // GET GRN Number by PO Number
-  let grn_nos = await getGRNs(purchasing_doc_no);
+  // let grn_nos = await getGRNs(purchasing_doc_no);
 
   // GET ICGRN Value by PO Number
   let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
@@ -708,7 +708,7 @@ const submitBTNByDO = async (req, res) => {
     //return resSend(res, false, 200, "BTN is already submitted!", null, null);
     isInserted = true;
   }
-  
+
   // created at
   let created_at = getEpochTime(); //new Date().toLocaleDateString();
   payload = { ...payload, created_at };
@@ -749,22 +749,24 @@ const submitBTNByDO = async (req, res) => {
 
   console.log("assign_payload", assign_payload);
   let assign_q;
-if(isInserted == true) {
+  if (isInserted == true) {
     // update
     whereCondition = {
       btn_num: assign_payload.btn_num,
       purchasing_doc_no: assign_payload.purchasing_doc_no,
     };
-    assign_q = await generateQuery(UPDATE, BTN_ASSIGN, assign_payload, whereCondition);
-
-} else {
+    assign_q = await generateQuery(
+      UPDATE,
+      BTN_ASSIGN,
+      assign_payload,
+      whereCondition
+    );
+  } else {
     //insert
     assign_q = await generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+  }
 
-}
-  
-
- // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+  // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
   const res_assign = await getQuery({
     query: assign_q.q,
     values: assign_q.val,
@@ -782,10 +784,14 @@ if(isInserted == true) {
   //     null
   //   );
   // }
-// return false;
+  // return false;
   console.log("BTN LIST PAYLOAD", payload);
   payload.vendor_code = tokenData?.vendor_code;
-  let resBtnList = await insertUpdateToBTNList(payload, SUBMITTED_BY_DO, isInserted);
+  let resBtnList = await insertUpdateToBTNList(
+    payload,
+    SUBMITTED_BY_DO,
+    isInserted
+  );
   console.log("BTN LIST RESPONSE", resBtnList);
   if (!resBtnList?.status) {
     return resSend(
@@ -797,7 +803,7 @@ if(isInserted == true) {
       null
     );
   }
- // return false;
+  // return false;
   // INSERT Data into btn_do BTN_MATERIAL_DO table
   // console.log("payload", payload);
   delete payload.assign_to;
@@ -811,22 +817,27 @@ if(isInserted == true) {
   payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
 
   let btn_do_q;
-  if(isInserted == true) {
+  if (isInserted == true) {
     // update
     whereCondition = {
       btn_num: payload.btn_num,
       purchasing_doc_no: payload.purchasing_doc_no,
     };
-    btn_do_q = await generateQuery(UPDATE, BTN_MATERIAL_DO, payload, whereCondition);
-    console.log('update1..');
-} else {
+    btn_do_q = await generateQuery(
+      UPDATE,
+      BTN_MATERIAL_DO,
+      payload,
+      whereCondition
+    );
+    console.log("update1..");
+  } else {
     //insert
     btn_do_q = await generateQuery(INSERT, BTN_MATERIAL_DO, payload);
-    console.log('insert1..');
-}
+    console.log("insert1..");
+  }
   //let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: btn_do_q.q, values: btn_do_q.val });
-  console.log('insert1..');
+  console.log("insert1..");
   handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
   console.log(result);
 
