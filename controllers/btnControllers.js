@@ -465,7 +465,6 @@ const submitBTN = async (req, res) => {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
     icgrn_nos: resICGRN.icgrn_nos,
-    grn_nos,
   };
 
   // // GET GRN Number by PO Number
