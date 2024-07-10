@@ -1007,16 +1007,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    // if (icgrn_no.length == 0) {
-    //   return resSend(
-    //     res,
-    //     false,
-    //     200,
-    //     "Plese do ICGRN to Process BTN",
-    //     null,
-    //     null
-    //   );
-    // }
+    if (icgrn_no.length == 0) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Plese do ICGRN to Process BTN",
+        null,
+        null
+      );
+    }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
