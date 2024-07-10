@@ -527,7 +527,7 @@ const submitBTN = async (req, res) => {
   payload = { ...payload, net_claim_amount, net_with_gst };
 
   // GET Contractual Dates from other Table
-  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
   let c_dates = await getQuery({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -611,7 +611,7 @@ const submitBTN = async (req, res) => {
   // checking no submitted milestones by vendor
   const checkMissingMilestone = checkActualDates(c_dates, a_dates);
 console.log("checkMissingMilestone", checkMissingMilestone);
-  if (!checkMissingMilestone) {
+  if (!checkMissingMilestone.success) {
     return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
   }
 
@@ -1020,16 +1020,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
