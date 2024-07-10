@@ -18,6 +18,7 @@ const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
   BTN_UPLOAD_CHECKLIST,
+  BTN_ASSIGN_TO_STAFF,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const {
@@ -1100,16 +1101,16 @@ async function handelMail(tokenData, payload, event) {
       tokenData.user_type != USER_TYPE_VENDOR &&
       payload.status == FORWARDED_TO_FI_STAFF
     ) {
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
       emailUserDetails = await getQuery({
         query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
+        values: [payload.assign_to_fi],
       });
       await sendMail(
-        BTN_FORWORD_FINANCE,
+        BTN_ASSIGN_TO_STAFF,
         dataObj,
         { users: emailUserDetails },
-        BTN_FORWORD_FINANCE
+        BTN_ASSIGN_TO_STAFF
       );
     }
 
