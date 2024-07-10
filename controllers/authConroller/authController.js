@@ -342,8 +342,9 @@ const sendOtp = async (req, res) => {
       });
 
       if (
-        !validUser.length &&
-        (!validUser[0].email || validUser[0].email === "")
+        validUser.length == 0 ||
+        !validUser[0].email ||
+        validUser[0].email === ""
       ) {
         return resSend(
           res,
