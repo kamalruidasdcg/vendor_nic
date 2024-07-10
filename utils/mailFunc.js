@@ -14,7 +14,6 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 po.ernam           AS u_id,
                 user_t.cname       AS u_name,
                 user_t.email       AS u_email,
-                po.ebeln           AS purchising_doc_no,
                 '${type}'               AS u_type
                 FROM      ekko               AS po
                     LEFT JOIN pa0002             AS user_t
@@ -134,6 +133,22 @@ const getUserDetailsQuery = (type, valueParameter) => {
                 FROM      ekko                          AS po
                 LEFT JOIN lfa1                          AS vendor_t
                 ON        ( po.lifnr = vendor_t.lifnr)  where po.ebeln = ${valueParameter}
+            )`;
+      break;
+    case 'vendor_by_btn':
+
+      getDeatilsQuery = `
+            (
+
+            SELECT 
+	            btn.vendor_code as u_id,
+	            vendor.name1 as u_name,
+	            vendor.email as u_email,
+	            'vendor' as u_type
+            FROM btn as btn 
+	            left join lfa1 as vendor
+	              ON(vendor.lifnr = btn.vendor_code)
+            WHERE btn_num = ${valueParameter}
             )`;
       break;
 
