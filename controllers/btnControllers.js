@@ -549,7 +549,7 @@ const submitBTN = async (req, res) => {
   });
 
   // GET Actual Dates from other Table
-  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+  let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
   let a_dates = await getQuery({
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
