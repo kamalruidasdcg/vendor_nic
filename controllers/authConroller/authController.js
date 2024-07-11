@@ -5,7 +5,7 @@ const {
   compareHash,
 } = require("../../services/crypto.services");
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 // const { query } = require("../../config/dbConfig");
 const {
   getAccessToken,
@@ -27,6 +27,8 @@ const {
   TRUE,
   UPDATE,
   USER_TYPE_GRSE_DRAWING,
+  ASSIGNER,
+  STAFF,
 } = require("../../lib/constant");
 // const { authDataModify } = require("../services/auth.services");
 
@@ -342,8 +344,9 @@ const sendOtp = async (req, res) => {
       });
 
       if (
-        !validUser.length &&
-        (!validUser[0].email || validUser[0].email === "")
+        validUser.length == 0 ||
+        !validUser[0].email ||
+        validUser[0].email === ""
       ) {
         return resSend(
           res,
@@ -553,8 +556,8 @@ const setPassword = async (req, res) => {
         username = validUser[0].persg;
       }
 
-      const salt = generateSalt();
-      const encrytedPassword = getHashedText(obj.password, salt);
+      const salt = bcrypt.genSaltSync();
+      const encrytedPassword = bcrypt.hashSync(obj.password, salt);
 
       const regData = {
         user_type:
@@ -590,6 +593,50 @@ const setPassword = async (req, res) => {
       // Insert new user record in auth table.
       const { q, val } = generateQuery(INSERT, AUTH, regData);
       const response = await poolQuery({ client, query: q, values: val });
+
+      if (
+        otpVefifyQueryRes[0].user_type === "GRSE" &&
+        otpVefifyQueryRes[0].role === 1
+      ) {
+        // SEND MAIL TO NODAL OFFICERS //
+        let getNodalOfficersQ = `SELECT t1.vendor_code, t2.email FROM auth AS t1
+                LEFT JOIN 
+                    pa0002 AS t2 
+                ON 
+                    t1.vendor_code = t2.pernr  :: character varying WHERE
+                t1.department_id = $1 AND t1.internal_role_id = $2`;
+
+        const getNodalOfficersR = await getQuery({
+          query: getNodalOfficersQ,
+          values: [otpVefifyQueryRes[0].functional_area, ASSIGNER],
+        });
+        let emails = "";
+        if (getNodalOfficersR.length > 0) {
+          getNodalOfficersR.forEach((item) => {
+            if (item.email && item.email != "") {
+              if (emails === "") {
+                emails += item.email;
+              } else {
+                emails += "," + item.email;
+              }
+            }
+          });
+        }
+
+        if (emails != "") {
+          let mailOptions = {
+            to: "mainak.dutta16@gmail.com,kbcdefgh33@gmail.co",
+            from: process.env.MAIL_SEND_MAIL_ID,
+            subject: `OBPS Registration Request.`,
+            html: EMAIL_TEMPLAE(
+              `A user is trying to register as a nodal officier in your depertment in OBPS system. \n  Please login to your OBPS portal to take the necessary action.`
+            ),
+          };
+          await SENDMAIL(mailOptions);
+        } else {
+          resMsg = "No nodal officer found.";
+        }
+      }
 
       if (
         otpVefifyQueryRes[0].user_type === "GRSE" &&
@@ -631,6 +678,94 @@ const setPassword = async (req, res) => {
         JSON.stringify(error),
         null
       );
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+  }
+};
+
+const getListPendingEmp = async (req, res) => {
+  try {
+    const tokenData = { ...req.tokenData };
+    if (tokenData.internal_role_id != ASSIGNER) {
+      resSend(res, false, 200, Message.YOU_ARE_UN_AUTHORIZED, null, null);
+    }
+    const vefifyQuery = `SELECT t1.vendor_code, t2.name as depertment_name, t3.name as internal_role, t4.email, t4.cname as name FROM auth AS t1
+                LEFT JOIN 
+                    depertment_master AS t2 
+                ON 
+                    t1.department_id = t2.id  
+                    LEFT JOIN 
+                    internal_role_master AS t3 
+                ON 
+                    t1.internal_role_id = t3.id
+                    LEFT JOIN 
+                    pa0002 AS t4 
+                ON 
+                    t1.vendor_code = t4.pernr :: character varying
+    
+                    WHERE t1.vendor_code != $1 AND
+                t1.department_id = $2 AND t1.internal_role_id = $3 AND t1.is_active = $4`;
+    const otpVefifyQueryRes = await getQuery({
+      query: vefifyQuery,
+      values: [
+        tokenData.vendor_code,
+        tokenData.department_id,
+        tokenData.internal_role_id,
+        0,
+      ],
+    });
+    resSend(
+      res,
+      true,
+      200,
+      `user data fetch Succesfully.`,
+      otpVefifyQueryRes,
+      null
+    );
+  } catch (error) {
+    resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+  }
+};
+
+const acceptedPendingEmp = async (req, res) => {
+  try {
+    const client = await poolClient();
+    try {
+      const tokenData = { ...req.tokenData };
+      if (!req.body.status || !req.body.user_code) {
+        return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+      }
+      if (tokenData.internal_role_id != ASSIGNER) {
+        return resSend(
+          res,
+          false,
+          200,
+          Message.YOU_ARE_UN_AUTHORIZED,
+          null,
+          null
+        );
+      }
+      const checkDeptQ = `SELECT department_id FROM ${AUTH} WHERE vendor_code = $1`;
+      const checkDeptR = await getQuery({
+        query: checkDeptQ,
+        values: [req.body.user_code],
+      });
+
+      if (checkDeptR[0].department_id != tokenData.department_id) {
+        resSend(res, false, 200, Message.YOU_ARE_UN_AUTHORIZED, null, null);
+      } else {
+        const updateQuery = `Update ${AUTH} set is_active = $1 WHERE vendor_code = $2`;
+        const queryRes = await getQuery({
+          query: updateQuery,
+          values: [req.body.status, req.body.user_code],
+        });
+        resSend(res, true, 200, `user approved.`, null, null);
+      }
+    } catch (error) {
+      resSend(res, false, 500, Message.SERVER_ERROR, error, null);
     } finally {
       client.release();
     }
@@ -715,4 +850,11 @@ const setPassword = async (req, res) => {
 
 // }
 
-module.exports = { login, sendOtp, otpVefify, setPassword };
+module.exports = {
+  login,
+  sendOtp,
+  otpVefify,
+  setPassword,
+  getListPendingEmp,
+  acceptedPendingEmp,
+};
