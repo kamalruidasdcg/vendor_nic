@@ -13,11 +13,17 @@ const {
   INSERT,
   USER_TYPE_VENDOR,
   UPDATE,
+  MID_SDBG,
+  MID_ILMS,
+  MID_QAP,
+  MID_DRAWING,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
   BTN_UPLOAD_CHECKLIST,
+  BTN_ASSIGN_TO_STAFF,
+  BTN_REJECT,
 } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const {
@@ -464,8 +470,7 @@ const submitBTN = async (req, res) => {
   payload = {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
-    icgrn_nos: resICGRN.icgrn_nos,
-    grn_nos,
+    icgrn_nos: resICGRN.icgrn_nos
   };
 
   // // GET GRN Number by PO Number
@@ -522,7 +527,7 @@ const submitBTN = async (req, res) => {
   payload = { ...payload, net_claim_amount, net_with_gst };
 
   // GET Contractual Dates from other Table
-  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
   let c_dates = await getQuery({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -544,7 +549,7 @@ const submitBTN = async (req, res) => {
   });
 
   // GET Actual Dates from other Table
-  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+  let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
   let a_dates = await getQuery({
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -601,6 +606,15 @@ const submitBTN = async (req, res) => {
       payload = { ...payload, a_ilms_date: item.PLAN_DATE };
     }
   });
+
+
+  // checking no submitted milestones by vendor
+  const checkMissingMilestone = checkActualDates(c_dates, a_dates);
+console.log("checkMissingMilestone", checkMissingMilestone);
+  if (!checkMissingMilestone.success) {
+    return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
+  }
+
 
   // created at
   let created_at = getEpochTime();
@@ -1006,16 +1020,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
@@ -1111,33 +1125,34 @@ async function handelMail(tokenData, payload, event) {
       tokenData.user_type != USER_TYPE_VENDOR &&
       payload.status == FORWARDED_TO_FI_STAFF
     ) {
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
       emailUserDetails = await getQuery({
         query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
+        values: [payload.assign_to_fi],
       });
       await sendMail(
-        BTN_FORWORD_FINANCE,
+        BTN_ASSIGN_TO_STAFF,
         dataObj,
         { users: emailUserDetails },
-        BTN_FORWORD_FINANCE
+        BTN_ASSIGN_TO_STAFF
       );
     }
 
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
       // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_po", "$1");
+      emailUserDetailsQuery = getUserDetailsQuery("vendor_by_btn", "$1");
+
 
       emailUserDetails = await getQuery({
         query: emailUserDetailsQuery,
-        values: [payload.purchasing_doc_no],
+        values: [payload.btn_num],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
-        BTN_RETURN_DO,
+        BTN_REJECT,
         dataObj,
         { users: emailUserDetails },
-        BTN_RETURN_DO
+        BTN_REJECT
       );
     }
     if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
@@ -1152,7 +1167,7 @@ async function handelMail(tokenData, payload, event) {
         query: emailUserDetailsQuery,
         values: [payload.purchasing_doc_no],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_RETURN_DO,
         dataObj,
@@ -1185,7 +1200,7 @@ async function handelMail(tokenData, payload, event) {
         query: buildQuery,
         values: [payload.purchasing_doc_no, parseInt(payload.assign_to)],
       });
-      dataObj = { ...dataObj, vendor_name: emailUserDetails[0].u_name };
+      dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
       await sendMail(
         BTN_FORWORD_FINANCE,
         dataObj,
@@ -1292,6 +1307,43 @@ const assignToFiStaffHandler = async (req, res) => {
     console.log("ERROR", err.message);
   }
 };
+
+
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD 
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkActualDates(c_dates, a_dates) {
+
+
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    [MID_SDBG]: "SDBG",
+    [MID_DRAWING]: "Drawing",
+    [MID_QAP]: "QAP",
+    [MID_ILMS]: "ILMS",
+  }
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex((el) => parseInt(el.MID) == parseInt(item.MID));
+    if (i < 0) {
+      return { success: false, msg: `Please submit ${mtextObj[item.MID]} to process BTN !` };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" }
+}
+
+
+
+
 
 module.exports = {
   // fetchAllBTNs,
