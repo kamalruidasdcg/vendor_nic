@@ -8,7 +8,6 @@ const { formatDate } = require("../lib/utils");
  */
 
 const reservationHeaderPayload = async (obj) => {
-  console.log("obj-obj-obj-objobj", obj);
   if (!obj || typeof obj !== "object") {
     throw new Error("Please send valid payload");
   }
@@ -38,7 +37,6 @@ const reservationHeaderPayload = async (obj) => {
  */
 
 const reservationLineItemPayload = async (payload) => {
-  console.log("payyyyyy", payload);
   if (!payload || !Array.isArray(payload) || !payload.length) {
     throw new Error("Please send valid payload");
   }
@@ -67,7 +65,6 @@ const reservationLineItemPayload = async (payload) => {
   return pl;
 };
 const serviceEntryPayload = async (payload) => {
-  console.log("payyyyyy", payload);
   if (!payload || !Array.isArray(payload) || !payload.length) {
     throw new Error("Please send valid payload");
   }

@@ -22,7 +22,6 @@ const { getEpochTime, generateQuery } = require("../lib/utils");
  */
 const getLastAssignee = async (tableName, poNo, assign) => {
   let filterdata = `SELECT ${assign} FROM ${tableName} WHERE purchasing_doc_no = $1 AND last_assigned = $2`;
-  console.log(filterdata);
   const result = await getQuery({
     query: filterdata,
     values: [poNo, 1],
@@ -56,7 +55,6 @@ const checkIsAssigned = async (tableName, poNo, userCode, assign) => {
   });
   let check_assign_to_result = check_assign_to_query[0].assign_count;
 
-  // console.log(check_assign_to_result);
   return check_assign_to_result;
 };
 
@@ -76,7 +74,7 @@ const checkIsApprovedRejected = async (
 
     return resAssigneQry[0].count_val;
   } catch (error) {
-    console.log(error);
+    console.error(error.message);
   }
 };
 
@@ -90,7 +88,7 @@ const getFristRow = async (table_name, star, purchasing_doc_no) => {
 
     return result[0];
   } catch (error) {
-    console.log("error into getFristRow function :"`${error}`);
+    console.error(error.message);
   }
 };
 
@@ -123,7 +121,7 @@ const checkPoType = async (poNo) => {
     const poType = isMaterialTypePO === true ? "SERVICE" : "MATERIAL";
     return poType;
   } catch (error) {
-    console.log("error into checkPoType function :"`${error}`);
+    console.error(error.message);
   }
 };
 
@@ -261,12 +259,12 @@ const insertSdbgEntrySave = async (tableName, obj, tokenData) => {
       });
       return sdbgEntryQuery;
     } catch (error) {
-      console.log(error);
+      console.error(error.message);
     } finally {
       client.release();
     }
   } catch (error) {
-    console.log(error);
+    console.error(error.message);
   }
 };
 

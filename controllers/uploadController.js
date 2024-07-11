@@ -52,7 +52,14 @@ const uploadTNCMinuts = async (req, res) => {
   const tokenData = { ...req.tokenData };
 
   if (!req.body.purchasing_doc_no) {
-    return resSend(res, true, 200, "Please send purchasing_doc_no !!.", null, null);
+    return resSend(
+      res,
+      true,
+      200,
+      "Please send purchasing_doc_no !!.",
+      null,
+      null
+    );
   }
   // const check = await isDealingOfficers(req.body.purchasing_doc_no, tokenData.vendor_code);
   // console.log("check", check)
@@ -88,37 +95,32 @@ const uploadTNCMinuts = async (req, res) => {
       return resSend(res, true, 200, "Already upload a file !!.", null, null);
     }
 
-
     const { q, val } = generateQuery(INSERT, TNC_MINUTES, payload);
     const result = await query({ query: q, values: val });
-    console.log("q, val ", q, val);
 
     if (result.rowCount > 0) {
       await handelMail(payload);
       resSend(res, true, 200, "file uploaded!", fileData, null);
-
     } else {
       resSend(res, false, 400, "Please upload a valid input", fileData, null);
-
     }
-
   } else {
     resSend(res, false, 400, "Please upload a valid image", fileData, null);
   }
 };
 
-
-
 async function handelMail(payload) {
   console.log("TNC_MINUTE_UPLOAD", TNC_MINUTE_UPLOAD, TNC_MINUTE_UPLOAD);
-  await sendMail(TNC_MINUTE_UPLOAD, payload, {}, TNC_MINUTE_UPLOAD)
+  await sendMail(TNC_MINUTE_UPLOAD, payload, {}, TNC_MINUTE_UPLOAD);
 }
-
 
 async function isDealingOfficers(purchasing_doc_no, loginId) {
   // const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = ?  AND ERNAM = ?;`
-  const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = $1  AND ERNAM = $2;`
-  const result = await getQuery({ query: q, values: [purchasing_doc_no, loginId] });
+  const q = `SELECT COUNT(ERNAM) AS count FROM ekko WHERE EBELN = $1  AND ERNAM = $2;`;
+  const result = await getQuery({
+    query: q,
+    values: [purchasing_doc_no, loginId],
+  });
 
   if (result && result.length) {
     return result[0]["count"] > 0;

@@ -41,7 +41,6 @@ const currentStageHandler = async (id) => {
       query: q,
       values: [id],
     });
-    console.log(res);
     if (res[0]?.count > 0) {
       let r = "";
       if (item === SDBG) {
@@ -82,8 +81,6 @@ const currentStageHandler = async (id) => {
       break;
     }
   }
-
-  // console.log("finalStage", finalStage);
 
   return finalStage;
 };

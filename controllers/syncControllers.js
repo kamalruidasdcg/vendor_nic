@@ -135,7 +135,7 @@ exports.syncDownload = async (req, res) => {
     let resData = await syncDownloadMain();
     resSend(res, 200, true, resData, "Unsynced data downloaded!", null);
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
   }
 };
@@ -145,7 +145,7 @@ exports.syncCompress = async (req, res) => {
     let zipDataPath = await syncCompressMain();
     resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
   }
 };
@@ -180,7 +180,6 @@ exports.syncUnzip = async (req, res) => {
       await access(filePath, fs.constants.F_OK);
       console.log("sync_data.zip exists in the uploads folder.");
     } catch (err) {
-      console.error("sync_data.zip does not exist in the uploads folder.");
       return resSend(
         res,
         200,
@@ -332,7 +331,7 @@ exports.syncCron = async () => {
   if (downloadRes) {
     compresedRes = await syncCompressMain();
   }
-  console.log(downloadRes, compresedRes);
+  // console.log(downloadRes, compresedRes);
 };
 
 // SYNCRONISATION OF FILES
@@ -341,7 +340,6 @@ const UPLOADS_DIR = path.join(__dirname, "../", "uploads");
 // Function to create zip file
 const createZipForFiles = async (folderName, files) => {
   const DOWNLOAD_DIR = path.join(__dirname, "../", UNSYNCED_FILES);
-  console.log(DOWNLOAD_DIR);
   // Ensure download directory exists
   const syncFolderPath = path.join(DOWNLOAD_DIR, todayDate);
   if (!fs.existsSync(syncFolderPath)) {

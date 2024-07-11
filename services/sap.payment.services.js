@@ -175,7 +175,6 @@ const paymentAviceLineItemsPayload = async (payload) => {
   return pl;
 };
 const zbtsHeaderPayload = async (obj) => {
-  console.log("oooo", obj);
   if (!obj) {
     throw new Error("Please send valid payload");
   }
@@ -189,7 +188,8 @@ const zbtsHeaderPayload = async (obj) => {
     raenam: obj.raenam || obj.RAENAM || "",
     lifnr: obj.lifnr || obj.LIFNR || "",
     zvbno: obj.zvbno || obj.ZVBNO || "",
-    ven_bill_date: formatDate(obj.ven_bill_date) || formatDate(obj.VEN_BILL_DATE),
+    ven_bill_date:
+      formatDate(obj.ven_bill_date) || formatDate(obj.VEN_BILL_DATE),
     ebeln: obj.ebeln || obj.EBELN || "",
     dpernr1: obj.dpernr1 || obj.DPERNR1 || null,
     drerdat1: formatDate(obj.drerdat1) || formatDate(obj.DRERDAT1),
@@ -264,7 +264,12 @@ const zbtsLineItemsPayload = async (payload, zbtsHeaderPayload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    zbtno: obj.zbtno || obj.ZBTNO || zbtsHeaderPayload.zbtno || zbtsHeaderPayload.ZBTNO || "",
+    zbtno:
+      obj.zbtno ||
+      obj.ZBTNO ||
+      zbtsHeaderPayload.zbtno ||
+      zbtsHeaderPayload.ZBTNO ||
+      "",
     srno: obj.srno || obj.SRNO || "",
     manno: obj.manno || obj.MANNO || null,
     zsection: obj.zsection || obj.ZSECTION || "",
@@ -273,8 +278,8 @@ const zbtsLineItemsPayload = async (payload, zbtsHeaderPayload) => {
     erzet: formatTime(obj.erzet) || formatTime(obj.ERZET),
     ernam: obj.ernam || obj.ERNAM || "",
     dretseq: obj.dretseq || obj.DRETSEQ || "",
-    alert_status: obj.alert_status || obj.ALERT_STATUS || ""
-  }))
+    alert_status: obj.alert_status || obj.ALERT_STATUS || "",
+  }));
   // const pl = {
   //   zbtno: obj.zbtno || obj.ZBTNO || "",
   //   srno: obj.srno || obj.SRNO || "",
@@ -297,5 +302,5 @@ module.exports = {
   paymentAviceHeaderPayload,
   paymentAviceLineItemsPayload,
   zbtsHeaderPayload,
-  zbtsLineItemsPayload
+  zbtsLineItemsPayload,
 };

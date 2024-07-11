@@ -514,7 +514,7 @@ const list = async (req, res) => {
     // if (finalQuery == "") {
     //     resSend(res, true, 200, "no user type or deperment found.", fileData, null);
     // }
-    console.log(pre);
+
     const result = await getQuery({ query: pre, values: [req.query.poNo] });
     if (!result.length) {
       return resSend(res, true, 200, "No QAP found.", null, null);
@@ -1128,13 +1128,12 @@ async function insertQapSave(req, res) {
 
     payload.created_by_id = tokenData.vendor_code;
     payload.man_no = tokenData.vendor_code;
-    console.log(payload);
     const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
     const response = await getQuery({ query: q, values: val });
 
     return resSend(res, true, 200, "Data inserted.", response, null);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return resSend(res, false, 400, "error.", error, null);
   }
 }

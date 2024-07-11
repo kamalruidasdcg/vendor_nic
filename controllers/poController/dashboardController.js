@@ -7,8 +7,6 @@ const dashboard = async (req, res) => {
   try {
     const filterBy = { ...req.body };
 
-    console.log("filterBy", filterBy);
-
     if (!filterBy.depertment) {
       return resSend(
         res,
@@ -116,9 +114,6 @@ const dashboard = async (req, res) => {
     filterQuery = filterQuery.concat(orderByQ);
     filterQuery = filterQuery.concat(pageinatonQ);
 
-    console.log("filterQuery", filterQuery);
-    console.log("values", values);
-
     const result = await query({ query: filterQuery, values: values });
 
     const logCount = await poReportCount(req, res, condQuery, values);
@@ -165,7 +160,7 @@ async function poReportCount(req, res, condQuery, values) {
 
     return 0;
   } catch (error) {
-    console.log("po report count error", error);
+    console.error(error.message);
   }
 }
 

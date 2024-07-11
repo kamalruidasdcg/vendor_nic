@@ -42,9 +42,6 @@ exports.getEpochFirstLastToday = () => {
   );
   // const lastEpochTime = Math.floor(endOfDay.getTime() / 1000);
   const lastEpochTime = endOfDay.getTime();
-
-  console.log("First Epoch Time of Today:", firstEpochTime);
-  console.log("Last Epoch Time of Today:", lastEpochTime);
   return {
     firstEpochTime,
     lastEpochTime,

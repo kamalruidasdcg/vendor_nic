@@ -135,7 +135,6 @@ const login = async (req, res) => {
 
       let { rows } = await client.query(login_Q, [vendor_code]);
 
-      console.log("result", rows);
       result = rows;
       let user = {};
       let permission = {};
@@ -162,8 +161,6 @@ const login = async (req, res) => {
 
           const userData = await client.query(vendorDetailsQ, [vendor_code]);
           userDetails = userData.rows;
-
-          console.log("userDetails", userDetails);
 
           if (userDetails.length) {
             result[0] = { ...result[0], ...userDetails[0] };
@@ -196,8 +193,6 @@ const login = async (req, res) => {
           //         grseDetaisQ, values: [req.body.vendor_code]
           // });
           const grseEmpDetails = await client.query(grseDetaisQ, [vendor_code]);
-
-          console.log("grseEmpDetails", grseEmpDetails);
 
           userDetails = grseEmpDetails.rows;
           if (userDetails.length) {
@@ -305,7 +300,7 @@ const login = async (req, res) => {
         { accessToken, refreshToken }
       );
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       return resSend(
         res,
         false,
@@ -378,7 +373,6 @@ const sendOtp = async (req, res) => {
           query: delOtp,
           values: [],
         });
-        console.log(delOtpRes);
         // add otp record
         const insertRegistrationOtp = {
           user_type: obj.user_type,
@@ -401,7 +395,6 @@ const sendOtp = async (req, res) => {
           query: addOtpQ["q"],
           values: addOtpQ["val"],
         });
-        console.log(addOtpRes);
         return resSend(
           res,
           true,
@@ -454,7 +447,6 @@ const otpVefify = async (req, res) => {
         query: otpVefifyQuery,
         values: [],
       });
-      console.log(otpVefifyQueryRes);
       //return false;
       let msg;
       let status;
@@ -480,7 +472,6 @@ const otpVefify = async (req, res) => {
           query: updateVerified["q"],
           values: updateVerified["val"],
         });
-        console.log(getUpdate);
       } else {
         msg = `Your OTP is incorrect!`;
         status = false;
@@ -657,7 +648,6 @@ const setPassword = async (req, res) => {
           query: delOtp,
           values: [],
         });
-        console.log(delOtpRes);
         // Insert new user record in emp_department_list table.
         const empDLR = generateQuery(INSERT, "emp_department_list", empDLQ);
         const response = await poolQuery({
@@ -749,7 +739,8 @@ const acceptedPendingEmp = async (req, res) => {
         );
       }
       const checkDeptQ = `SELECT department_id FROM ${AUTH} WHERE vendor_code = $1`;
-      const checkDeptR = await getQuery({
+      const checkDeptR = await poolQuery({
+        client,
         query: checkDeptQ,
         values: [req.body.user_code],
       });
@@ -758,7 +749,8 @@ const acceptedPendingEmp = async (req, res) => {
         resSend(res, false, 200, Message.YOU_ARE_UN_AUTHORIZED, null, null);
       } else {
         const updateQuery = `Update ${AUTH} set is_active = $1 WHERE vendor_code = $2`;
-        const queryRes = await getQuery({
+        const queryRes = await poolQuery({
+          client,
           query: updateQuery,
           values: [req.body.status, req.body.user_code],
         });
