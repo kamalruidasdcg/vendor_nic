@@ -1,23 +1,21 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcryptjs");
 
-const secret = process.env.SECRET || 'secret';
+const secret = process.env.SECRET || "secret";
 
 const getHashedText = (plainText, salt) => {
-	return bcrypt.hashSync(plainText, salt);
-}
+  return bcrypt.hashSync(plainText, salt);
+};
 
 const compareHash = (plainText, hash) => {
-	return bcrypt.compareSync(plainText, hash);
-}
+  return bcrypt.compareSync(plainText, hash);
+};
 
 const generateSalt = () => {
-	return bcrypt.genSaltSync();
-}
-
-
+  return bcrypt.genSaltSync();
+};
 
 module.exports = {
-	getHashedText,
-	compareHash,
-	generateSalt,
-}
+  getHashedText,
+  compareHash,
+  generateSalt,
+};
