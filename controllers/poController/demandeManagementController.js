@@ -265,7 +265,7 @@ async function handleEmail(data) {
 
         const vendorDetalisQ = getUserDetailsQuery('vendor_by_po', '$1');
         const vendorDetails = await getQuery({ query: vendorDetalisQ, values: [data.purchasing_doc_no] });
-        const dataObj = { ...data, vendor_name: vendorDetails[0].u_name };
+        const dataObj = { ...data, vendor_name: vendorDetails[0]?.u_name };
         await sendMail(DEMAND_UPLOAD_BY_BEARTH, dataObj, { users: vendorDetails }, DEMAND_UPLOAD_BY_BEARTH);
     } catch (error) {
         console.log("handleEmail", error.toString(), error.stack)

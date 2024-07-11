@@ -21,7 +21,7 @@ const mailSentCornJob = async () => {
     if (emails.length) {
         for (let i = 0; i < emails.length; i++) {
             const mailDetails = {
-                to: emails[i]["email_to"],
+                to: "mainak.dutta16@gmail.com", //emails[i]["email_to"],
                 from: process.env.MAIL_SEND_MAIL_ID,
                 // cc:  emails[i]["email_cc"],
                 // bcc:  emails[i]["email_bcc"],
