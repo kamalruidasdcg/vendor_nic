@@ -36,7 +36,6 @@ const syncDownloadMain = async () => {
       );
       // Store in CSV file for each tables
       let file_path = await convertToCSV(rows, item);
-      console.log("resData", JSON.stringify(rows), item);
       let resRow = {
         rows: rows,
         file_path: file_path,
@@ -304,11 +303,12 @@ exports.syncDataUpload = async (req, res) => {
           });
 
           const query = `INSERT INTO ${tableName} (${columns}) VALUES ${placeholders}`;
+          console.log("query", query);
 
-          // console.log("query2", query);
+          console.log("query2", query);
           // console.log("values2", values);
           const data = await pool.query(query, values);
-          // console.log("data2", data);
+          console.log("data2", data);
         }
       });
     }
