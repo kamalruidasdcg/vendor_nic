@@ -43,6 +43,7 @@ const syncDownloadMain = async () => {
       resData = { ...resData, [item]: resRow };
     })
   );
+  console.log("resData", resData);
   return resData;
 };
 
