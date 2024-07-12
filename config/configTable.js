@@ -15,6 +15,7 @@ exports.synced_tables = [
   "drawing",
   "ekpo",
   "email_body",
+  "icgrn",
   "emp_department_list",
   "essr",
   "hr",

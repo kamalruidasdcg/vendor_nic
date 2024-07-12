@@ -13,6 +13,10 @@ const {
   INSERT,
   USER_TYPE_VENDOR,
   UPDATE,
+  MID_SDBG,
+  MID_ILMS,
+  MID_QAP,
+  MID_DRAWING,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -435,17 +439,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["e_invoice_filename"]
     ? (payload = {
-        ...payload,
-        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
-      })
+      ...payload,
+      e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -474,17 +478,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -523,7 +527,7 @@ const submitBTN = async (req, res) => {
   payload = { ...payload, net_claim_amount, net_with_gst };
 
   // GET Contractual Dates from other Table
-  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
+  let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
   let c_dates = await getQuery({
     query: c_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -545,7 +549,7 @@ const submitBTN = async (req, res) => {
   });
 
   // GET Actual Dates from other Table
-  let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+  let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
   let a_dates = await getQuery({
     query: a_sdbg_date_q,
     values: [purchasing_doc_no],
@@ -602,6 +606,15 @@ const submitBTN = async (req, res) => {
       payload = { ...payload, a_ilms_date: item.PLAN_DATE };
     }
   });
+
+
+  // checking no submitted milestones by vendor
+  const checkMissingMilestone = checkActualDates(c_dates, a_dates);
+  console.log("checkMissingMilestone", checkMissingMilestone);
+  if (!checkMissingMilestone.success) {
+    return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
+  }
+
 
   // created at
   let created_at = getEpochTime();
@@ -837,8 +850,14 @@ const submitBTNByDO = async (req, res) => {
   }
   //let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
   const result = await getQuery({ query: btn_do_q.q, values: btn_do_q.val });
+
+  try {
+    btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData)
+    handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+  } catch (error) {
+
+  }
   console.log("insert1..");
-  handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
   console.log(result);
 
   if (!result.error) {
@@ -886,24 +905,52 @@ const submitBTNByDO = async (req, res) => {
 
 async function btnSaveToSap(btnPayload, tokenData) {
   try {
-    const vendorQuery = `
-              SELECT 
-	                          btn.btn_num, 
-	                          btn.purchasing_doc_no, 
-	                          btn.invoice_no, btn.cgst, 
-	                          btn.sgst, 
-	                          btn.igst, 
-	                          btn.net_claim_amount, 
-	                          vendor.lifnr as vendor_code,
-	                          vendor.name1 as vendor_name
-              FROM  btn as btn
-              	left join lfa1 as vendor
-              		ON(vendor.lifnr = btn.vendor_code)
-              		where btn.btn_num = $1`;
+    const vendorQuery =
+      `WITH ranked_assignments AS (
+          SELECT
+              btn_assign.*,
+              ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+          FROM
+              btn_assign
+      )
+      SELECT 
+        btn.btn_num, 
+        btn.purchasing_doc_no,
+        btn.cgst, 
+        btn.sgst, 
+        btn.igst, 
+        btn.net_claim_amount, 
+        btn.invoice_no,
+        ged.invno, 
+        ged.vendor_code, 
+        ged.inv_date as invoice_date,
+        vendor.stcd3,
+        users.pernr as finance_auth_id,
+        users.cname as finance_auth_name,
+        vendor.name1 as vendor_name,
+        assign_users.cname as assign_name,
+        ranked_assignments.assign_to as assign_to
+
+      FROM 
+          public.btn AS btn
+      LEFT JOIN 
+          ranked_assignments
+          ON (btn.btn_num = ranked_assignments.btn_num
+          AND ranked_assignments.rn = 1)
+      LEFT JOIN  zmm_gate_entry_d as ged
+          ON( btn.purchasing_doc_no = ged.ebeln AND btn.invoice_no = ged.invno)
+      LEFT JOIN  lfa1 as vendor
+          ON(btn.vendor_code = vendor.lifnr)
+      LEFT JOIN  pa0002 as users
+          ON(users.pernr::character varying = $1)
+      LEFT JOIN  pa0002 as assign_users
+          ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+      WHERE 
+          btn.btn_num = $2`;
 
     let btnDetails = await getQuery({
       query: vendorQuery,
-      values: [btnPayload.btn_num],
+      values: [assign_to_fi, btnPayload.btn_num],
     });
 
     // CALCULATION
@@ -928,21 +975,27 @@ async function btnSaveToSap(btnPayload, tokenData) {
 
     const btn_payload = {
       ZBTNO: btnPayload?.btn_num || "", // BTN Number
-      ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
-      ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
+      // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+      // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
       ERNAM: tokenData?.vendor_code || "", // Created Person Name
       LAEDA: "", // Not Needed
       AENAM: btnDetails[0]?.vendor_name || "", // Vendor Name
       LIFNR: btnDetails[0]?.vendor_code || "", // Vendor Codebtn_v2
       ZVBNO: btnDetails[0]?.invoice_no || "", // Invoice Number
       EBELN: btnDetails[0]?.purchasing_doc_no || "", // PO Number
-      DPERNR1: btnPayload?.assign_to_fi || "", // assigned_to
-      DSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
+      ACC: btnDetails[0]?.yard,// yard number
+      FSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
       CGST: cgst_ammount,
       IGST: igst_ammount,
       SGST: sgst_ammount,
       BASICAMT: basic_ammount?.toFixed(3),
+      ACTIVITY: btnPayload.activity || "", // activity
+      FRERDAT: getYyyyMmDd(getEpochTime()),
+      FRERZET: timeInHHMMSS(),
+      FRERNAM: btnDetails[0]?.assign_to || "", // SET BY DO FINACE AUTHIRITY  PERSON (DO SUBMIT)
+      FPERNR1: btnPayload?.assign_to_fi || "", // assigned_to
+      FPERNAM: btnDetails[0]?.finance_auth_name || "" // ASSINGEE NAME
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
@@ -954,6 +1007,103 @@ async function btnSaveToSap(btnPayload, tokenData) {
     console.error("Error making the request:", error.message);
   }
 }
+async function btnSubmitByDo(btnPayload, tokenData) {
+  try {
+    const vendorQuery =
+      `WITH ranked_assignments AS (
+            SELECT
+                btn_assign.*,
+                ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+            FROM
+                btn_assign
+        )
+        SELECT 
+          btn.btn_num, 
+        	btn.purchasing_doc_no,
+        	btn.cgst, 
+        	btn.sgst, 
+        	btn.igst, 
+        	btn.net_claim_amount, 
+        	btn.invoice_no,
+        	btn.vendor_code,
+        	ged.invno, 
+        	ged.inv_date as invoice_date,
+        	vendor.stcd3,
+        	users.pernr as finance_auth_id,
+        	users.cname as finance_auth_name,
+        	vendor.name1 as vendor_name,
+        	assign_users.cname as assign_name,
+        	ranked_assignments.assign_by as assign_id
+
+        FROM 
+            public.btn AS btn
+        LEFT JOIN 
+            ranked_assignments
+            ON (btn.btn_num = ranked_assignments.btn_num
+            AND ranked_assignments.rn = 1)
+        LEFT JOIN zmm_gate_entry_d as ged
+        		ON( btn.purchasing_doc_no = ged.ebeln AND btn.invoice_no = ged.invno)
+        LEFT JOIN lfa1 as vendor
+        		ON(btn.vendor_code = vendor.lifnr)
+        LEFT JOIN pa0002 as users
+        		ON(users.pernr::character varying = $1)
+        LEFT JOIN pa0002 as assign_users
+        		ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
+        WHERE 
+            btn.btn_num = $2`;
+
+    let btnDetails = await getQuery({
+      query: vendorQuery,
+      values: [btnPayload.assign_to, btnPayload.btn_num],
+    });
+
+    const btn_payload = {
+      EBELN: btnPayload.purchasing_doc_no, // PO NUMBER
+      LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
+      RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
+      STCD3: btnDetails[0]?.stcd3,// VENDOR GSTIN NUMBER
+      ZVBNO: btnDetails[0]?.invno, // GATE ENTRY INVOCE NUMBER
+      VEN_BILL_DATE: getYyyyMmDd(new Date(btnDetails[0]?.invoice_date).getTime()), // GATE ENTRY INVOICE DATE
+      PERNR: tokenData.vendor_code, // DO ID
+      ZBTNO: btnPayload.btn_num, //  BTN NUMBER
+      ERDAT: getYyyyMmDd(getEpochTime()),  // VENDOR BILL SUBMIT DATE
+      ERZET: timeInHHMMSS(), // VENDOR BILL SUBMIT TIME
+      RERDAT: getYyyyMmDd(getEpochTime()), //REGISTRATION NUMBER --- VENDOR BILL SUBMIT DATE
+      RERZET: timeInHHMMSS(), //REGISTRATION NUMBER --- VENDOR BILL SUBMIT TIME
+      DPERNR1: tokenData.vendor_code, // DO NUMBER
+      DRERDAT1: getYyyyMmDd(getEpochTime()), // DEPARTMETN RECECE DATE --> WHEN SUBMIT DO
+      DRERZET1: timeInHHMMSS(), // DEPARTMETN RECECE TIME --> WHEN SUBMIT DO
+      DRERNAM1: tokenData.name, // DEPARTMETN RECECE DO ID --> WHEN SUBMIT DO
+      DAERDAT: getYyyyMmDd(getEpochTime()), // DEPARTMENT APPROVAL DATE --> DO SUBMISSION DATE
+      DAERZET: timeInHHMMSS(), // DEPARTMENT APPROVAL DATE --> DO SUBMISSION TIME
+      DAERNAM: tokenData.name, // DEPARTMENT APPROVAL NAME --> DO NAME
+
+      // DEERDAT: "", // REJECTION DATE
+      // DEERZET: timeInHHMMSS(), // REJECTION TIME
+      // DEERNAM: "", // DO ( WHO REJECTED)
+      // ZRMK2: "", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
+
+      DFERDAT: getYyyyMmDd(getEpochTime()), // DO SUBMIT DATE
+      DEFRZET: timeInHHMMSS(), // DO SUBMIT TIEM
+      DEFRNAM: tokenData.name, // DO SUBMIT NAME ( DO NAME)
+      DSTATUS: "4", // "4"
+      DPERNR: tokenData.vendor_code, //  (DO)
+
+      FPRNR1: btnPayload.assign_to, // FINACE AUTHIRITY ID ( )
+      FPRNAM1: btnDetails[0]?.assign_name, // FINANCE
+    };
+
+    const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
+    const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
+    console.log("btnPayload", postUrl, btn_payload);
+    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+    console.log("POST Response from the server:", postResponse);
+  } catch (error) {
+    console.error("Error making the request:", error.message);
+  }
+}
+
+
 
 const getGrnIcgrnByInvoice = async (req, res) => {
   try {
@@ -1007,16 +1157,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: [gate_entry_v?.grn_no],
     });
-    if (icgrn_no.length == 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Plese do ICGRN to Process BTN",
-        null,
-        null
-      );
-    }
+    // if (icgrn_no.length == 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "Plese do ICGRN to Process BTN",
+    //     null,
+    //     null
+    //   );
+    // }
     console.log("icgrn_no", icgrn_no);
 
     let total_price = 0;
@@ -1294,6 +1444,43 @@ const assignToFiStaffHandler = async (req, res) => {
     console.log("ERROR", err.message);
   }
 };
+
+
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD 
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkActualDates(c_dates, a_dates) {
+
+
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    [MID_SDBG]: "SDBG",
+    [MID_DRAWING]: "Drawing",
+    [MID_QAP]: "QAP",
+    [MID_ILMS]: "ILMS",
+  }
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex((el) => parseInt(el.MID) == parseInt(item.MID));
+    if (i < 0) {
+      return { success: false, msg: `Please submit ${mtextObj[item.MID]} to process BTN !` };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" }
+}
+
+
+
+
 
 module.exports = {
   // fetchAllBTNs,

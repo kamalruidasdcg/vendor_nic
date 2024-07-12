@@ -30,6 +30,7 @@ const {
   ACTION_SDBG,
   ACTION_DD,
   ACTION_IB,
+  MID_SDBG,
 } = require("../../lib/constant");
 const {
   EKKO,
@@ -907,7 +908,7 @@ const sdbgUpdateByFinance = async (req, res) => {
       ) {
         const actual_subminission = await setActualSubmissionDate(
           insertPayloadForSdbg,
-          "01",
+          MID_SDBG,
           tokenData,
           SUBMITTED
         );

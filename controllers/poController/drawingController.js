@@ -20,6 +20,7 @@ const {
   USER_TYPE_VENDOR,
   USER_TYPE_GRSE_DRAWING,
   STAFF,
+  MID_DRAWING,
 } = require("../../lib/constant");
 
 const {
@@ -189,7 +190,7 @@ const submitDrawing = async (req, res) => {
 
             const actual_subminission = await setActualSubmissionDate(
               payload,
-              "02",
+              MID_DRAWING,
               tokenData,
               SUBMITTED
             );
