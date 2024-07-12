@@ -57,7 +57,6 @@ exports.getICGRNs = async (body) => {
     values: [purchasing_doc_no, invoice_no],
   });
 
-  console.log("gate_entry_v", gate_entry_v);
   if (!checkTypeArr(gate_entry_v)) {
     return null;
   }
@@ -73,7 +72,6 @@ exports.getICGRNs = async (body) => {
   let total_price = 0;
   let total_quantity = 0;
 
-  console.log("icgrn_no", icgrn_no);
   if (checkTypeArr(icgrn_no)) {
     await Promise.all(
       await icgrn_no.map(async (item) => {
@@ -85,14 +83,12 @@ exports.getICGRNs = async (body) => {
         total_quantity += parseFloat(item?.quantity);
         await Promise.all(
           await unit_price.map(async (it) => {
-            // console.log("it_price", it.price, parseFloat(it?.price));
             total_price += parseFloat(it?.price) * total_quantity;
           })
         );
       })
     );
   }
-  console.log("total_price", total_price);
   gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
   return {
     icgrn_nos: icgrn_no,
@@ -141,7 +137,6 @@ exports.getVendorCodeName = async (po_no) => {
 };
 
 exports.fetchBTNListByPOAndBTNNum = async (btn, po) => {
-  console.log(po, btn);
   if (!po || !btn) {
     return {
       status: false,

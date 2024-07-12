@@ -1,16 +1,25 @@
 // const { query } = require("../config/dbConfig");
 const { insertTableData } = require("../controllers/genralControlles");
-const { INSERT, ARCHIVE, MAIL_SEND_DEFAULT_RETRY_COUNT } = require("../lib/constant");
+const {
+  INSERT,
+  ARCHIVE,
+  MAIL_SEND_DEFAULT_RETRY_COUNT,
+} = require("../lib/constant");
 const { NEW } = require("../lib/status");
 const { EMAILS, ARCHIVE_EMAILS } = require("../lib/tableName");
-const { generateQuery, getEpochTime, getDateTime, generateQueryForMultipleData } = require("../lib/utils");
+const {
+  generateQuery,
+  getEpochTime,
+  getDateTime,
+  generateQueryForMultipleData,
+} = require("../lib/utils");
 // const mailBody = require("../lib/mailBody");
 // const { EMAIL_TEMPLAE } = require("../templates/mail-template");
 const { query, getQuery } = require("../config/pgDbConfig");
 const mailjson = require("../lib/mailConfig.json");
 /**
  * Insert mail in to db with new status
- * @param {Object} data 
+ * @param {Object} data
  * @param {String} eventName
  */
 // const mailInsert = async (data, event, activity_name, heading = "") => {
@@ -59,37 +68,32 @@ const mailjson = require("../lib/mailConfig.json");
 // }
 
 const sendMail = async (eventName, data, userInfo, activity_name) => {
-    try {
-        if (!data || !eventName) {
-            throw new Error("recipent, email_subject and event required");
-        }
-
-        const email_info = await getEmailInfo(eventName);
-        const mailjsonConfig =  {};
-        mailjsonConfig.data = data;
-        const m_user = userInfo.users || [];
-        console.log("userInfo.users", userInfo.users);
-        mailjsonConfig.users = replaceUserValues(email_info, m_user);
-        // const m_cc_user = userInfo.cc_users || [];
-        // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
-        // const m_bcc_user = userInfo.bcc_users || [];
-        // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
-        console.log("mailjsonConfig", mailjsonConfig);
-
-        if (!mailjsonConfig.users.length) return;
-
-        await mailInsert(mailjsonConfig, eventName, eventName, activity_name)
-
-    } catch (error) {
-        console.log("sendMail", error.toString(), error.stack);
-        throw error;
+  try {
+    if (!data || !eventName) {
+      throw new Error("recipent, email_subject and event required");
     }
-}
 
+    const email_info = await getEmailInfo(eventName);
+    const mailjsonConfig = {};
+    mailjsonConfig.data = data;
+    const m_user = userInfo.users || [];
+    mailjsonConfig.users = replaceUserValues(email_info, m_user);
+    // const m_cc_user = userInfo.cc_users || [];
+    // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
+    // const m_bcc_user = userInfo.bcc_users || [];
+    // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
+
+    if (!mailjsonConfig.users.length) return;
+
+    await mailInsert(mailjsonConfig, eventName, eventName, activity_name);
+  } catch (error) {
+    console.log("sendMail", error.toString(), error.stack);
+    throw error;
+  }
+};
 
 const getEmailInfo = async (event_name) => {
-    const q =
-        `SELECT e_info.event_name,
+  const q = `SELECT e_info.event_name,
                 e_info.u_id,
                 e_info.u_name,
                 e_info.u_type,
@@ -100,20 +104,25 @@ const getEmailInfo = async (event_name) => {
                 LEFT JOIN email_body AS e_body
                        ON( e_body.email_body_name = e_info.email_body_name )
          WHERE  e_info.event_name = $1`;
-    return await getQuery({ query: q, values: [event_name] })
-}
+  return await getQuery({ query: q, values: [event_name] });
+};
 function replaceUserValues(email_info, m_user) {
-    let result = [];
-    m_user.forEach(darr => {
-        const matchingData = email_info.find(user => user.u_type === darr.u_type);
-        if (matchingData) {
-            result.push({ ...matchingData, u_id: darr.u_id, u_name: darr.u_name, u_email: darr.u_email })
-        }
-    });
-    const u_typeArr = new Set([...result.map((inf) => inf.u_type)]);
-    const restOfUsers = email_info.filter((info) => !u_typeArr.has(info.u_type));
-    result = result.concat(restOfUsers)
-    return result;
+  let result = [];
+  m_user.forEach((darr) => {
+    const matchingData = email_info.find((user) => user.u_type === darr.u_type);
+    if (matchingData) {
+      result.push({
+        ...matchingData,
+        u_id: darr.u_id,
+        u_name: darr.u_name,
+        u_email: darr.u_email,
+      });
+    }
+  });
+  const u_typeArr = new Set([...result.map((inf) => inf.u_type)]);
+  const restOfUsers = email_info.filter((info) => !u_typeArr.has(info.u_type));
+  result = result.concat(restOfUsers);
+  return result;
 }
 
 // function replaceUserValues(users, data_arr) {
@@ -128,8 +137,6 @@ function replaceUserValues(email_info, m_user) {
 
 //     return users; // Return the updated users array
 // }
-
-
 
 // function replaceUserValues(dataArray, usersArray) {
 //     const dataMap = new Map(dataArray.map(user => [user.user_type, user]));
@@ -147,69 +154,75 @@ function replaceUserValues(email_info, m_user) {
 // }
 
 const mailInsert = async (data, event, activity_name, heading = "") => {
+  try {
+    const dd = data.created_at ? new Date(data.created_at) : new Date();
+    const now = getDateTime(dd);
 
-    try {
+    const mailPayload = {
+      event_name: event,
+      email_to: "",
+      email_subject: data.email_subject || "",
+      email_cc: "",
+      email_bcc: "",
+      email_body: "",
+      email_send_on: now.dateTime,
+      created_on: now.date,
+      created_by: data.created_by_id || data.created_by || "",
+      modified_by: data.modified_by || "",
+      modified_on: data.modified_on || null,
+      attachment_path: data.attachment_path || "",
+      activity_name: activity_name || "",
+      retry_count: MAIL_SEND_DEFAULT_RETRY_COUNT,
+    };
 
-        const dd = data.created_at ? new Date(data.created_at) : new Date();
-        const now = getDateTime(dd);
+    const mailArr = data.users.map((el) => ({
+      ...mailPayload,
+      email_to: el.u_email,
+      email_cc: el.cc_users
+        ? data.cc_users.map((mail) => mail.u_email).join(",")
+        : "",
+      email_bcc: el.bcc_users
+        ? data.bcc_users.map((mail) => mail.u_email).join(",")
+        : "",
+      email_subject: el.email_subject || "",
+      email_body: el.email_body
+        ? el.email_body.replace(
+            /{{(.*?)}}/g,
+            (match, p1) => data.data[p1.trim()] || match
+          )
+        : "Mail from GRSE",
+    }));
 
-        const mailPayload = {
-            "event_name": event,
-            "email_to": "",
-            "email_subject": data.email_subject || "",
-            "email_cc": "",
-            "email_bcc": "",
-            "email_body": "",
-            "email_send_on": now.dateTime,
-            "created_on": now.date,
-            "created_by": data.created_by_id || data.created_by || "",
-            "modified_by": data.modified_by || "",
-            "modified_on": data.modified_on || null,
-            "attachment_path": data.attachment_path || "",
-            "activity_name": activity_name || "",
-            "retry_count": MAIL_SEND_DEFAULT_RETRY_COUNT
-        }
+    console.log("mailArr", mailArr);
 
-        const mailArr = data.users.map((el) => ({
-            ...mailPayload,
-            email_to: el.u_email,
-            email_cc: el.cc_users ? data.cc_users.map((mail) => mail.u_email).join(",") : "",
-            email_bcc: el.bcc_users ? data.bcc_users.map((mail) => mail.u_email).join(",") : "",
-            email_subject: el.email_subject || "",
-            email_body: el.email_body ? el.email_body.replace(/{{(.*?)}}/g, (match, p1) => data.data[p1.trim()] || match) : "Mail from GRSE"
-        }));
-
-        console.log("mailArr", mailArr);
-
-        const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, ['id']);
-        await query({ query: q, values: val });
-
-    } catch (error) {
-        console.log("mailInsert function", error.toString());
-        throw error;
-    }
-}
-
-
-
+    const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, [
+      "id",
+    ]);
+    await query({ query: q, values: val });
+  } catch (error) {
+    console.error("ERROR", error.message);
+    throw error;
+  }
+};
 
 const archiveEmails = async (data) => {
-
-    try {
-        const archiveEmailPayload = { ...data };
-        delete archiveEmailPayload.email_send_on;
-        delete archiveEmailPayload.sync_id;
-        delete archiveEmailPayload.sync;
-        delete archiveEmailPayload.sync_updated_at;
-        const { q, val } = generateQuery(INSERT, ARCHIVE_EMAILS, archiveEmailPayload)
-        const response = await query({ query: q, values: val });
-        return response;
-    } catch (error) {
-        throw error;
-    }
-}
-
-
+  try {
+    const archiveEmailPayload = { ...data };
+    delete archiveEmailPayload.email_send_on;
+    delete archiveEmailPayload.sync_id;
+    delete archiveEmailPayload.sync;
+    delete archiveEmailPayload.sync_updated_at;
+    const { q, val } = generateQuery(
+      INSERT,
+      ARCHIVE_EMAILS,
+      archiveEmailPayload
+    );
+    const response = await query({ query: q, values: val });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // const updateMailStatus = async (data) => {
 //     try {

@@ -57,10 +57,9 @@ const logPayload = [
   },
 ];
 
-
 /**
  * log entry
- * @param {*} data 
+ * @param {*} data
  *  dat contains arry obj [{ user_id, depertment, action, item_info_id, remarks, purchasing_doc_no, created_at, created_by_id}]
  */
 const deptLogEntry = async (data) => {
@@ -74,9 +73,8 @@ const deptLogEntry = async (data) => {
     const dString = constractDataString(data);
     que = que.concat(dString);
     const res = await query({ query: que, values: [] });
-
   } catch (error) {
-    console.log("deptLogEntry log entry ", error);
+    console.error(error.message);
   }
 };
 
@@ -85,9 +83,9 @@ function constractDataString(logPayload) {
   logPayload.forEach((el, idx) => {
     let stringWithData = `( ${el.user_id},${el.vendor_code}, ${el.depertment}, "${el.action}", ${el.item_info_id}, "${el.remarks}", "${el.purchasing_doc_no}",${el.created_at}, ${el.created_by_id})`;
     if (idx + 1 === logPayload.length) {
-        stringWithData = stringWithData.concat(";");
+      stringWithData = stringWithData.concat(";");
     } else {
-        stringWithData = stringWithData.concat(",");
+      stringWithData = stringWithData.concat(",");
     }
     dataString = dataString.concat(stringWithData);
   });
@@ -95,7 +93,4 @@ function constractDataString(logPayload) {
   return dataString;
 }
 
-module.exports = { deptLogEntry}
-
-
-
+module.exports = { deptLogEntry };

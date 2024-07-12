@@ -101,8 +101,6 @@ const advBillHybridbtnPayload = async (payload, btn_type) => {
   //     btn_type
   // }))
 
-  console.log("payload", pl);
-
   return pl;
 };
 const advBillHybridbtnDOPayload = async (payload) => {
@@ -126,7 +124,6 @@ const advBillHybridbtnDOPayload = async (payload) => {
     a_ilms_date: payload.a_ilms_date || null,
   };
 
-  console.log("pl", pl);
   return pl;
 };
 
@@ -152,7 +149,6 @@ const getSDBGApprovedFiles = async (po, client) => {
   // GET Approved SDBG by PO Number
   let q = `SELECT file_name, file_path FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
   let [results] = await client.execute(q, [po, APPROVED, ACTION_SDBG]);
-  console.log("results000000000000000", results);
   return results;
 };
 
@@ -186,7 +182,6 @@ const getPBGApprovedFiles = async (po) => {
 
 const getICGRNs = async (body) => {
   const { purchasing_doc_no, invoice_no } = body;
-  console.log("bd", body);
 
   const gate_entry_q = `SELECT ENTRY_NO AS gate_entry_no,
     ZMBLNR AS grn_no, EBELP as po_lineitem,
@@ -199,8 +194,6 @@ const getICGRNs = async (body) => {
 
   gate_entry_v = gate_entry_v[0];
 
-  console.log("gate_entry_v", gate_entry_v);
-
   const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity 
   FROM qals WHERE MBLNR = ?`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
   let icgrn_no = await query({
@@ -211,7 +204,6 @@ const getICGRNs = async (body) => {
   let total_price = 0;
   let total_quantity = 0;
 
-  console.log("icgrn_no", icgrn_no);
   if (checkTypeArr(icgrn_no)) {
     await Promise.all(
       await icgrn_no.map(async (item) => {
@@ -223,14 +215,12 @@ const getICGRNs = async (body) => {
         total_quantity += parseFloat(item?.quantity);
         await Promise.all(
           await unit_price.map(async (it) => {
-            console.log("it_price", it.price, parseFloat(it?.price));
             total_price += parseFloat(it?.price) * total_quantity;
           })
         );
       })
     );
   }
-  console.log("total_price", total_price);
   gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
   return {
     total_icgrn_value: parseFloat(total_price.toFixed(2)),
@@ -240,7 +230,6 @@ const getICGRNs = async (body) => {
 const checkBTNRegistered = async (btn_num, btn_table_name, client) => {
   let q = `SELECT count("btn_num") as count FROM ${btn_table_name} WHERE btn_num = ?`;
   let [results] = await client.execute(q, [btn_num]);
-  console.log(results);
   if (results.length) {
     return results[0].count > 0;
   }
@@ -294,9 +283,7 @@ const filesData = (payloadFiles) => {
 
 const contractualSubmissionDate = async (purchasing_doc_no, client) => {
   let c_sdbg_date_q = `SELECT PLAN_DATE, MTEXT FROM zpo_milestone WHERE EBELN = ?`;
-  console.log("c_sdbg_date_q", c_sdbg_date_q);
   const [results] = await client.execute(c_sdbg_date_q, [purchasing_doc_no]);
-  console.log("results", results);
   // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
   let c_dates = results;
   const dates_arr = [C_SDBG_DATE, C_DRAWING_DATE, C_QAP_DATE, C_ILMS_DATE];
@@ -343,13 +330,10 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
   const [results] = await client.execute(a_sdbg_date_q, [purchasing_doc_no]);
   let a_dates = results;
 
-  console.log(a_dates, "ooooooooooooooooo");
-
   // if(!a_dates.length) throw new Error(`All milestone is missing!`)
   if (!a_dates.length)
     return { status: false, data: {}, msg: `All milestone is missing!` };
   const a_dates_arr = [A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE];
-  console.log(a_dates_arr, "a_dates_arra_dates_arra_dates_arr");
   // for (const item of a_dates_arr) {
   //     const i = a_dates.findIndex((el) => el.MTEXT == item);
   //     if (i < 0) {

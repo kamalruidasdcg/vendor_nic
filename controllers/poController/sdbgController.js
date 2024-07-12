@@ -86,7 +86,6 @@ const submitSDBG = async (req, res) => {
   try {
     // Handle Image Upload
     let fileData = {};
-    console.log(req.file);
     if (req.file) {
       fileData = {
         fileName: req.file.filename,
@@ -96,7 +95,6 @@ const submitSDBG = async (req, res) => {
       };
 
       const tokenData = { ...req.tokenData };
-      console.log(tokenData);
       // create_reference_no = async (type, vendor_code)
       let action_type = req.body.action_type;
 
@@ -130,9 +128,7 @@ const submitSDBG = async (req, res) => {
       payload.vendor_code = tokenData.vendor_code;
       payload.updated_by = "VENDOR";
       payload.created_by_id = tokenData.vendor_code;
-      // console.log("#$%^&*())(*&^$");
-      // console.log(payload);
-      // return;
+
       const verifyStatus = [SUBMITTED, RE_SUBMITTED];
 
       if (!payload.purchasing_doc_no && verifyStatus.includes(payload.status)) {
@@ -176,8 +172,7 @@ const submitSDBG = async (req, res) => {
       resSend(res, false, 400, "Please upload a valid File", fileData, null);
     }
   } catch (error) {
-    console.log("SDGB Submission api", error);
-
+    console.error(error.message);
     return resSend(res, false, 500, "internal server error", [], null);
   }
 };
@@ -205,23 +200,16 @@ const get_latest_sdbg_with_reference = async (
     query: GET_LATEST_SDBG,
     values: [reference_no, purchasing_doc_no],
   });
-
-  console.log("#$%^&*()(*&^%$#$%^&*");
-  console.log(result);
   return result;
 };
 
 const get_action_type_with_vendor_code = async (purchasing_doc_no) => {
   const GET_LATEST_SDBG = `SELECT action_type,vendor_code FROM sdbg WHERE purchasing_doc_no = '4700026717' ORDER BY sdbg.created_at DESC LIMIT 1`;
-  console.log(GET_LATEST_SDBG);
   const result = await getQuery({
     query: GET_LATEST_SDBG,
     values: [],
   });
 
-  console.log("@@@@@@@@@@@");
-  console.log(result);
-  console.log("##########");
   return result;
 };
 
@@ -292,14 +280,11 @@ const getSdbgEntry = async (req, res) => {
 };
 
 const checkIsDealingOfficer = async (purchasing_doc_no, vendor_code) => {
-  console.log([purchasing_doc_no, vendor_code]);
-  console.log("#$%^&*");
   const query = `SELECT COUNT(EBELN) AS man_no FROM ${EKKO} WHERE EBELN = $1 AND ERNAM = $2`;
   const result = await getQuery({
     query: query,
     values: [purchasing_doc_no, vendor_code],
   });
-  console.log(result);
   return result[0].man_no;
 };
 
@@ -647,15 +632,13 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         values: insertsdbg_q["val"],
       });
 
-      // console.log("rt67898uygy");
-      // console.log(sdbgQuery);
       let msg =
         obj.status === REJECTED
           ? `This BG is Rejected.`
           : `Forworded to finance successfully!`;
       return resSend(res, true, 200, msg, sdbgQuery[0], null);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return resSend(res, false, 201, "Data not insert!!", error, null);
     } finally {
       client.release();
@@ -1008,7 +991,7 @@ const sdbgUpdateByFinance = async (req, res) => {
             );
           }
         } catch (error) {
-          console.error(error);
+          console.error(error.message);
         }
       }
 
@@ -1021,13 +1004,13 @@ const sdbgUpdateByFinance = async (req, res) => {
         null
       );
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return resSend(res, false, 400, "somthing went wrong!", error, null);
     } finally {
       client.release();
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     resSend(res, false, 500, "error in db conn!", error, "");
   }
 };
@@ -1109,7 +1092,7 @@ const unlock = async (req, res) => {
       resSend(res, false, 400, "No data inserted", response, null);
     }
   } catch (error) {
-    console.log("sdbg unlock api");
+    console.error("sdbg unlock api");
   }
 };
 
@@ -1180,7 +1163,6 @@ async function handelEmail(payload, tokenData) {
       values: [payload.purchasing_doc_no],
     });
     dataObj = { ...dataObj, vendor_name: emailUserDetails2[0]?.u_name };
-    console.log("dataObj", dataObj, emailUserDetails);
     await sendMail(
       BG_UPLOAD_BY_VENDOR,
       dataObj,
@@ -1257,12 +1239,8 @@ async function sendBgToSap(payload) {
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
     const postUrl = `${host}/sap/bc/zobps_sdbg_ent`;
-    console.log("postUrl", postUrl);
-    console.log("wdc_payload -->");
     let modified = await zfi_bgm_1_Payload(payload);
-    console.log("___________modified");
     console.log(modified);
-    console.log("modified_________");
     const postResponse = await makeHttpRequest(postUrl, "POST", modified);
 
     if (
@@ -1341,8 +1319,7 @@ async function recommendationBGextensionRelease(req, res) {
     try {
       const tokenData = { ...req.tokenData };
       const { ...obj } = req.body;
-      console.log(111111111111);
-      console.log(obj);
+
       await update_in_all_obps_sdbgs_table(obj);
       return;
       if (
@@ -1699,11 +1676,9 @@ async function insertSdbgSave(req, res) {
         );
       }
 
-      console.log("OBJ", obj);
       let sdbgEntryQuery = await insertSdbgEntrySave(SDBG_SAVE, obj, tokenData);
 
       if (sdbgEntryQuery.error) {
-        console.log(sdbgEntryQuery.error);
         return resSend(
           res,
           false,

@@ -147,7 +147,6 @@ exports.statsForBTN = async (req, res) => {
           });
         }
         str = str.slice(0, -1);
-        console.log(str);
 
         // For grse_FINANCE_ASSIGNER
         if (
@@ -156,12 +155,29 @@ exports.statsForBTN = async (req, res) => {
         ) {
           const Q = `SELECT * FROM ${BTN_LIST} WHERE created_at IN(${str}) ORDER BY created_at DESC`;
 
+          // SELECT t1.*, t2.name as depertment_name, t3.name as internal_role, t4.email, t4.cname as name FROM auth AS t1
+          //       LEFT JOIN
+          //           depertment_master AS t2
+          //       ON
+          //           t1.department_id = t2.id
+          //           LEFT JOIN
+          //           internal_role_master AS t3
+          //       ON
+          //           t1.internal_role_id = t3.id
+          //           LEFT JOIN
+          //           pa0002 AS t4
+          //       ON
+          //           t1.vendor_code = t4.pernr :: character varying
+
+          //           WHERE t1.vendor_code != $1 AND
+          //       t1.department_id = $2 AND t1.internal_role_id = $3 AND t1.is_active = $4
+
           const result = await poolQuery({
             client,
             query: Q,
             values: [],
           });
-
+          console.log(result);
           let requiredRes = {
             btn_num: "",
             purchasing_doc_no: "",
@@ -186,7 +202,6 @@ exports.statsForBTN = async (req, res) => {
           tokenData.internal_role_id === 2 &&
           tokenData.department_id === 15
         ) {
-
           const query = `SELECT * FROM ${BTN_LIST} bl 
                          JOIN ${BTN_MATERIAL_DO} bdo ON bl.btn_num = bdo.btn_num
                          JOIN ${BTN_ASSIGN} ba ON bdo.btn_num = ba.btn_num WHERE 
