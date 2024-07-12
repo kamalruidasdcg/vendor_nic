@@ -36,6 +36,7 @@ const syncDownloadMain = async () => {
       );
       // Store in CSV file for each tables
       let file_path = await convertToCSV(rows, item);
+      console.log("resData", JSON.stringify(rows), item);
       let resRow = {
         rows: rows,
         file_path: file_path,
@@ -43,7 +44,6 @@ const syncDownloadMain = async () => {
       resData = { ...resData, [item]: resRow };
     })
   );
-  console.log("resData", resData);
   return resData;
 };
 
