@@ -15,7 +15,7 @@ exports.convertToCSV = async (rows, item) => {
   await fastcsv
     .write(rows, { headers: true })
     .on("finish", () => {
-      console.log("Write to CSV successfully!");
+      console.log(`Write to CSV for ${item}!`);
     })
     .pipe(ws);
   return filePath;
