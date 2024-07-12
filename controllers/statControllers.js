@@ -153,24 +153,25 @@ exports.statsForBTN = async (req, res) => {
           tokenData.internal_role_id === 1 &&
           tokenData.department_id === 15
         ) {
-          const Q = `SELECT * FROM ${BTN_LIST} WHERE created_at IN(${str}) ORDER BY created_at DESC`;
+          // const Q = `SELECT * FROM ${BTN_LIST} WHERE created_at IN(${str}) ORDER BY created_at DESC`;
 
-          // SELECT t1.*, t2.name as depertment_name, t3.name as internal_role, t4.email, t4.cname as name FROM auth AS t1
-          //       LEFT JOIN
-          //           depertment_master AS t2
-          //       ON
-          //           t1.department_id = t2.id
-          //           LEFT JOIN
-          //           internal_role_master AS t3
-          //       ON
-          //           t1.internal_role_id = t3.id
-          //           LEFT JOIN
-          //           pa0002 AS t4
-          //       ON
-          //           t1.vendor_code = t4.pernr :: character varying
+          const Q = `SELECT t1.btn_num,t1.purchasing_doc_no, t1.status, t1.btn_type, t2.yard, t2.invoice_no,t2.invoice_filename, t3.lifnr as vendor_code,t4.name1 as vendor_name FROM btn_list AS t1
+                LEFT JOIN
+                    btn AS t2
+                ON
+                    t1.btn_num = t2.btn_num
 
-          //           WHERE t1.vendor_code != $1 AND
-          //       t1.department_id = $2 AND t1.internal_role_id = $3 AND t1.is_active = $4
+                              LEFT JOIN
+                    ekko AS t3
+                ON
+                    t1.purchasing_doc_no = t3.ebeln
+
+                               LEFT JOIN
+                    lfa1 AS t4
+                ON
+                    t3.lifnr = t4.lifnr
+
+          WHERE t1.created_at IN(${str}) ORDER BY t1.created_at DESC`;
 
           const result = await poolQuery({
             client,
@@ -202,20 +203,49 @@ exports.statsForBTN = async (req, res) => {
           tokenData.internal_role_id === 2 &&
           tokenData.department_id === 15
         ) {
-          const query = `SELECT * FROM ${BTN_LIST} bl 
-                         JOIN ${BTN_MATERIAL_DO} bdo ON bl.btn_num = bdo.btn_num
-                         JOIN ${BTN_ASSIGN} ba ON bdo.btn_num = ba.btn_num WHERE 
-                         (ba.assign_to = $1 AND ba.last_assign = 'true') OR
-                         (ba.assign_to_fi = $1 AND ba.last_assign_fi = 'false') 
-                         AND bl.created_at IN(${str})
-                         ORDER BY bl.created_at DESC`;
+          // const query = `SELECT * FROM ${BTN_LIST} bl
+          //                JOIN ${BTN_MATERIAL_DO} bdo ON bl.btn_num = bdo.btn_num
+          //                JOIN ${BTN_ASSIGN} ba ON bdo.btn_num = ba.btn_num WHERE
+          //                (ba.assign_to = $1 AND ba.last_assign = 'true') OR
+          //                (ba.assign_to_fi = $1 AND ba.last_assign_fi = 'false')
+          //                AND bl.created_at IN(${str})
+          //                ORDER BY bl.created_at DESC`;
+
+          const query = `SELECT t1.btn_num,t1.purchasing_doc_no, t1.status, t1.btn_type, t2.yard, t2.invoice_no,t2.invoice_filename, t3.lifnr as vendor_code,t4.name1 as vendor_name FROM btn_list AS t1
+                LEFT JOIN
+                    btn AS t2
+                ON
+                    t1.btn_num = t2.btn_num
+
+                              LEFT JOIN
+                    ekko AS t3
+                ON
+                    t1.purchasing_doc_no = t3.ebeln
+
+                               LEFT JOIN
+                    lfa1 AS t4
+                ON
+                    t3.lifnr = t4.lifnr
+
+                                LEFT JOIN
+                    btn_assign AS t5
+                ON
+                    t1.btn_num = t5.btn_num
+
+          WHERE 
+          (t5.assign_to = $1 AND t5.last_assign = 'true') OR
+                         (t5.assign_to_fi = $1 AND t5.last_assign_fi = 'false') 
+                         AND
+          
+          
+          t1.created_at IN(${str}) ORDER BY t1.created_at DESC`;
 
           const result = await poolQuery({
             client,
             query: query,
             values: [tokenData.vendor_code],
           });
-
+          //console.log(result);
           return resSend(
             res,
             true,

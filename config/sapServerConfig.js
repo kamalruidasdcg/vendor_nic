@@ -1,16 +1,16 @@
-const http = require('http');
-const { failedDataSave } = require('../utils/sapApiHandel');
+const http = require("http");
+const { failedDataSave } = require("../utils/sapApiHandel");
 require("dotenv").config();
 
 /**
  * makeHttpRequest function to call external api from node backend
- * @param {String} url 
- * @param {String} method 
- * @param {JSON} postData 
+ * @param {String} url
+ * @param {String} method
+ * @param {JSON} postData
  * @returns Promise
  */
 
-function makeHttpRequest(url, method = 'GET', postData = null) {
+function makeHttpRequest(url, method = "GET", postData = null) {
   return new Promise((resolve, reject) => {
     // Parse the URL
     const urlParts = new URL(url);
@@ -19,8 +19,8 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
     const Username = process.env.SAP_API_AUTH_USERNAME || "dcg1";
     const Password = process.env.SAP_API_AUTH_PASSWORD || "test#100";
     const credential = Username + ":" + Password;
-    const base64Credentials = Buffer.from(credential).toString('base64');
-    console.log(base64Credentials, "base64Credentials");
+    const base64Credentials = Buffer.from(credential).toString("base64");
+    // console.log(base64Credentials, "base64Credentials");
     let statusCode = null;
 
     const options = {
@@ -29,41 +29,41 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
       path: urlParts.pathname,
       method: method.toUpperCase(),
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + base64Credentials
+        "Content-Type": "application/json",
+        Authorization: "Basic " + base64Credentials,
       },
-      'maxRedirects': 5
+      maxRedirects: 5,
     };
 
     // Add postData to the request if provided
-    if (method.toUpperCase() === 'POST' && postData !== null) {
+    if (method.toUpperCase() === "POST" && postData !== null) {
       const postDataString = JSON.stringify(postData);
-      options.headers['Content-Length'] = Buffer.byteLength(postDataString);
+      options.headers["Content-Length"] = Buffer.byteLength(postDataString);
     }
 
     // Make the HTTP request
     const req = http.request(options, (res) => {
-      let data = '';
+      let data = "";
 
       // A chunk of data has been received.
-      res.on('data', (chunk) => {
+      res.on("data", (chunk) => {
         data += chunk;
       });
 
       // The whole response has been received.
-      res.on('end', () => {
+      res.on("end", () => {
         resolve({ statusCode, data });
       });
       statusCode = res.statusCode;
     });
 
     // Handle errors
-    req.on('error', (error) => {
+    req.on("error", (error) => {
       reject({ statusCode, error });
     });
 
     // If it's a POST request, write the postData to the request
-    if (method.toUpperCase() === 'POST' && postData !== null) {
+    if (method.toUpperCase() === "POST" && postData !== null) {
       req.write(JSON.stringify(postData));
     }
 
@@ -72,31 +72,24 @@ function makeHttpRequest(url, method = 'GET', postData = null) {
   });
 }
 
-
 const sendDataToSapServer = async (endpoint, payload) => {
-
-  if (!endpoint || !payload) throw new Error('Send valid paylaod || Send Valid endpoint');
+  if (!endpoint || !payload)
+    throw new Error("Send valid paylaod || Send Valid endpoint");
   let postUrl = process.env.SAP_HOST_URL || `http://10.181.1.31:8010`;
-  postUrl = postUrl.concat(endpoint)
+  postUrl = postUrl.concat(endpoint);
   console.log("postUrl", postUrl);
   try {
-    const postResponse = await makeHttpRequest(postUrl, 'POST', payload);
-    console.log('POST Response from the server:', postResponse);
+    const postResponse = await makeHttpRequest(postUrl, "POST", payload);
+    console.log("POST Response from the server:", postResponse);
   } catch (error) {
-
-    console.error('Error making the request:', error.message, payload);
-    await failedDataSave(payload, '10.18.7.123', endpoint, error);
+    console.error("Error making the request:", error.message, payload);
+    await failedDataSave(payload, "10.18.7.123", endpoint, error);
   }
+};
 
-}
-
-
-
-module.exports = { makeHttpRequest, sendDataToSapServer }
-
+module.exports = { makeHttpRequest, sendDataToSapServer };
 
 // sendDataToSapServer('/get', {name: 'ruid'})
-
 
 // Example usage with async/await
 // async function fetchData() {
@@ -111,7 +104,6 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //       "wdc": "d/wdc"
 //     }
 
-
 //     console.log("postUrl", postUrl);
 //     console.log("wdc_payload", wdc_payload);
 
@@ -124,8 +116,6 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 
 // // Call the async function
 // fetchData();
-
-
 
 // sendDataToSapServer("/zobps_sdbg_ent", {
 //   ZBTNO: "20240318501",
@@ -140,7 +130,6 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //   DPERNR1: "",
 //   ZRMK1: "REMARKS",
 // })
-
 
 // Example BTN SAVE INTO SAP
 // // CALL THIS FUNCTION IN BTN CONTROLLER AS PER CONDITION
@@ -169,7 +158,6 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //       BASICAMT: "7000"
 //     }
 
-
 //     console.log("postUrl", postUrl);
 //     console.log("btn_payload", btn_payload);
 
@@ -179,9 +167,6 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //     console.error('Error making the request:', error.message);
 //   }
 // }
-
-
-
 
 // btnSaveToSap();
 
@@ -203,11 +188,8 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 //   }
 // }
 
-
-
 async function btnSaveToSap(btnPayload, tokenData) {
   try {
-
     const btn_payload = {
       ZBTNO: "202407011999", // BTN Number
       // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
@@ -215,27 +197,27 @@ async function btnSaveToSap(btnPayload, tokenData) {
       ERNAM: "0050007545", // Created Person Name
       LAEDA: "", // Not Needed
       AENAM: "DCG", // Vendor Name
-      LIFNR:  "0050007545", // Vendor Codebtn_v2
+      LIFNR: "0050007545", // Vendor Codebtn_v2
       ZVBNO: "789", // Invoice Number
       EBELN: "", // PO Number
-      ACC: btnDetails[0]?.yard,// yard number
-      FSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
+      ACC: btnPayload[0]?.yard, // yard number
+      FSTATUS: "FORWARDED_TO_FINANCE", // FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
       CGST: (parseFloat("7000") / parseFloat("5")).toFixed(2),
       IGST: (parseFloat("7000") / parseFloat("10.50")).toFixed(2),
       SGST: (parseFloat("7000") / parseFloat("5.50")).toFixed(2),
       BASICAMT: "7000",
-      ACTIVITY:  "90%", // activity
+      ACTIVITY: "90%", // activity
       FRERDAT: "20240711",
       FRERZET: "221045",
       FRERNAM: "600200", // SET BY DO FINACE AUTHIRITY  PERSON (DO SUBMIT)
-      FPERNR1:  "600400", // assigned_to
-      FPERNAM: "demo name" // ASSINGEE NAME
+      FPERNR1: "600400", // assigned_to
+      FPERNAM: "demo name", // ASSINGEE NAME
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("btnPayload", postUrl, btn_payload);
+    // console.log("btnPayload", postUrl, btn_payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
@@ -243,23 +225,18 @@ async function btnSaveToSap(btnPayload, tokenData) {
   }
 }
 
-
-btnSaveToSap({}, {})
-
-
 async function btnSubmitByDo(btnPayload, tokenData) {
   try {
-
     const btn_payload = {
       EBELN: "4700026717", // PO NUMBER
       LIFNR: "0050007545", // VENDOR CODE
       RERNAM: "DCG", // REG CREATOR NAME --> VENDOR NUMBER
-      STCD3: "GSTIN12112",// VENDOR GSTIN NUMBER
+      STCD3: "GSTIN12112", // VENDOR GSTIN NUMBER
       ZVBNO: "789", // GATE ENTRY INVOCE NUMBER
       VEN_BILL_DATE: "20240711", // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
-      ERDAT: "20240711",  // VENDOR BILL SUBMIT DATE
+      ERDAT: "20240711", // VENDOR BILL SUBMIT DATE
       ERZET: "104556", // VENDOR BILL SUBMIT TIME
       RERDAT: "20240711", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT DATE
       RERZET: "104556", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT TIME
@@ -288,13 +265,10 @@ async function btnSubmitByDo(btnPayload, tokenData) {
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("btnPayload", postUrl, btn_payload);
+    // console.log("btnPayload", postUrl, btn_payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
   }
 }
-
-
-btnSubmitByDo({},{});
