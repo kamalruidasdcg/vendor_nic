@@ -654,6 +654,7 @@ const sdbgUpdateByFinance = async (req, res) => {
   let sdgbRollBackId;
   try {
     const client = await poolClient();
+    await client.query("BEGIN");
     try {
       if (
         !obj.purchasing_doc_no ||
@@ -678,11 +679,13 @@ const sdbgUpdateByFinance = async (req, res) => {
       }
 
       const star = `file_name,file_path,vendor_code,action_type`;
-      const action_type_with_vendor_code = await getFristRow(
-        SDBG,
-        star,
-        obj.purchasing_doc_no
-      );
+
+      const get_sdbg_query = `SELECT ${star} FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      const action_type_with_vendor_code = await poolQuery({
+        client,
+        query: get_sdbg_query,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
 
       if (
         tokenData.internal_role_id == ASSIGNER &&
@@ -691,8 +694,6 @@ const sdbgUpdateByFinance = async (req, res) => {
       ) {
         const insertPayloadForSdbg = {
           reference_no: "SDBG ASSIGNED",
-          purchasing_doc_no: obj.purchasing_doc_no,
-          remarks: obj.remarks,
           status: obj.status,
           file_name: action_type_with_vendor_code.file_name,
           file_path: action_type_with_vendor_code.file_path,
@@ -956,30 +957,33 @@ const sdbgUpdateByFinance = async (req, res) => {
             sdgbRollBackId
           );
           if (sendSap == false) {
-            if (sdgbRollBackId) {
-              const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
-              const deleteRollBack = await getQuery({
-                query: deleteRollBackQuery,
-                values: [sdgbRollBackId],
-              });
-            }
-            const whereCondition = {
-              purchasing_doc_no: obj.purchasing_doc_no,
-              reference_no: obj.reference_no,
-            };
+            console.log("***********");
+            console.log(sdgbRollBackId);
+            await client.query("ROLLBACK");
+            // if (sdgbRollBackId) {
+            //   const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
+            //   const deleteRollBack = await getQuery({
+            //     query: deleteRollBackQuery,
+            //     values: [sdgbRollBackId],
+            //   });
+            // }
+            // const whereCondition = {
+            //   purchasing_doc_no: obj.purchasing_doc_no,
+            //   reference_no: obj.reference_no,
+            // };
 
-            ({ q, val } = generateQuery(
-              UPDATE,
-              SDBG_ENTRY,
-              { status: FORWARD_TO_FINANCE, bg_file_no: null },
-              whereCondition
-            ));
+            // ({ q, val } = generateQuery(
+            //   UPDATE,
+            //   SDBG_ENTRY,
+            //   { status: FORWARD_TO_FINANCE, bg_file_no: null },
+            //   whereCondition
+            // ));
 
-            let sdbgEntryQuery2 = await poolQuery({
-              client,
-              query: q,
-              values: val,
-            });
+            // let sdbgEntryQuery2 = await poolQuery({
+            //   client,
+            //   query: q,
+            //   values: val,
+            // });
 
             return resSend(
               res,
@@ -989,6 +993,8 @@ const sdbgUpdateByFinance = async (req, res) => {
               sdbgQuery,
               null
             );
+          } else if (sendSap == true) {
+            await client.query("COMMIT");
           }
         } catch (error) {
           console.error(error.message);
@@ -1320,8 +1326,8 @@ async function recommendationBGextensionRelease(req, res) {
       const tokenData = { ...req.tokenData };
       const { ...obj } = req.body;
 
-      await update_in_all_obps_sdbgs_table(obj);
-      return;
+      //await update_in_all_obps_sdbgs_table(obj);
+      // return;
       if (
         !obj.reference_no ||
         !obj.purchasing_doc_no ||
@@ -1811,8 +1817,7 @@ async function update_in_all_obps_sdbgs_table(payload) {
 
       if (payload.FILE_NO && payload.REF_NO && payload.PO_NUMBER) {
         const status =
-          payload.RELEASE_DATE &&
-          (payload.RELEASE_DATE != "" || payload.RELEASE_DATE != 0)
+          payload.RELEASE_DATE && parseInt(payload.RELEASE_DATE)
             ? "RELEASE"
             : "EXTENTION";
         console.log("update in all sdgds table.");
