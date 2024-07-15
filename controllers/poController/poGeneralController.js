@@ -496,6 +496,7 @@ const poList = async (req, res) => {
           break;
         case USER_TYPE_GRSE_PURCHASE:
           Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+
           break;
         case USER_TYPE_PPNC_DEPARTMENT:
           Query = poListByEcko(); // poListByPPNC(req.query);

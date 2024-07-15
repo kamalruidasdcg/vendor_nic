@@ -70,7 +70,7 @@ exports.statsForBG = async (req, res) => {
           result[0].internal_role_id === 2 &&
           result[0].department_id === 15
         ) {
-          const Q = `
+          const Q = ` 
           SELECT se.*
           FROM ${SDBG_ENTRY} se
           JOIN ${SDBG} s ON se.purchasing_doc_no = s.purchasing_doc_no
