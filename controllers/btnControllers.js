@@ -707,7 +707,7 @@ const submitBTNByDO = async (req, res) => {
       const tokenData = { ...req.tokenData };
 
       if (status === REJECTED) {
-        const res = await btnReject(req.body, tokenData, client);
+        const response1 = await btnReject(req.body, tokenData, client);
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
       }
 
@@ -1084,7 +1084,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
     });
 
     let btn_payload = {
-      EBELN: btnPayload.purchasing_doc_no, // PO NUMBER
+      EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
       LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
       STCD3: btnDetails[0]?.stcd3,// VENDOR GSTIN NUMBER
