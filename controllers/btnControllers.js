@@ -1,5 +1,5 @@
 // const { query } = require("../config/dbConfig");
-const { getQuery, query, poolClient } = require("../config/pgDbConfig");
+const { getQuery, query, poolClient, poolQuery } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
 const {
   C_SDBG_DATE,
@@ -697,179 +697,197 @@ const submitBTN = async (req, res) => {
 };
 
 const submitBTNByDO = async (req, res) => {
-  let { btn_num, purchasing_doc_no, net_payable_amount, assign_to, status } = req.body;
-  const tokenData = { ...req.tokenData };
-
-  if (status === REJECTED) {
-    const res = await btnReject(req.body, tokenData);
-    return resSend(res, true, 200, "Rejected successfully !!", null, null);
-  }
-
-  console.log("tokenData", tokenData);
-  let payload = { ...req.body, created_by: tokenData?.vendor_code };
-
-  console.log(payload);
-
-  // Check required fields
-  if (!net_payable_amount) {
-    return resSend(res, false, 200, "Net payable is missing!", null, null);
-  }
-
-  if (!btn_num) {
-    return resSend(res, false, 200, "BTN number is missing!", null, null);
-  }
-
-  // Check BTN by BTN Number
-  let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
-  let isInserted = false;
-  let whereCondition;
-  if (checkBTNR) {
-    //return resSend(res, false, 200, "BTN is already submitted!", null, null);
-    isInserted = true;
-  }
-
-  // created at
-  let created_at = getEpochTime(); //new Date().toLocaleDateString();
-  payload = { ...payload, created_at };
-
-  // INSERT data into BTN List Table
-  let d = await fetchBTNListByPOAndBTNNum(btn_num, purchasing_doc_no);
-  if (d?.status) {
-    let btn_list_payload = d?.data;
-    console.log("btn_list_payload: ", btn_list_payload);
-    btn_list_payload.net_payable_amount = net_payable_amount;
-    payload = {
-      ...payload,
-      net_claim_amount: btn_list_payload?.net_claim_amount,
-      btn_type: btn_list_payload?.btn_type,
-    };
-    // let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
-    // console.log("list_q", list_q);
-    // const res_list = await getQuery({
-    //   query: list_q.q,
-    //   values: list_q.val,
-    // });
-    // console.log("res_list", res_list);
-  } else {
-    return resSend(res, false, 200, d?.message, null, null);
-  }
-
-  // INSERT data into BTN ASSIGN Table
-  let assign_payload = {
-    btn_num,
-    purchasing_doc_no,
-    assign_by: payload.created_by,
-    assign_to,
-    last_assign: true,
-    assign_by_fi: "",
-    assign_to_fi: "",
-    last_assign_fi: false,
-  };
-
-  console.log("assign_payload", assign_payload);
-  let assign_q;
-  if (isInserted == true) {
-    // update
-    whereCondition = {
-      btn_num: assign_payload.btn_num,
-      purchasing_doc_no: assign_payload.purchasing_doc_no,
-    };
-    assign_q = await generateQuery(
-      UPDATE,
-      BTN_ASSIGN,
-      assign_payload,
-      whereCondition
-    );
-  } else {
-    //insert
-    assign_q = await generateQuery(INSERT, BTN_ASSIGN, assign_payload);
-  }
-
-  // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
-  const res_assign = await getQuery({
-    query: assign_q.q,
-    values: assign_q.val,
-  });
-
-  console.log("res_assign", res_assign);
-
-  // if (res_assign <= 0) {
-  //   return resSend(
-  //     res,
-  //     false,
-  //     200,
-  //     "Something went wrong. Please restart and try again!",
-  //     null,
-  //     null
-  //   );
-  // }
-  // return false;
-  console.log("BTN LIST PAYLOAD", payload);
-  payload.vendor_code = tokenData?.vendor_code;
-  let resBtnList = await insertUpdateToBTNList(
-    payload,
-    SUBMITTED_BY_DO,
-    isInserted
-  );
-  console.log("BTN LIST RESPONSE", resBtnList);
-  if (!resBtnList?.status) {
-    return resSend(
-      res,
-      false,
-      200,
-      `Something went wrong in BTN List!`,
-      null,
-      null
-    );
-  }
-  // return false;
-  // INSERT Data into btn_do BTN_MATERIAL_DO table
-  // console.log("payload", payload);
-  delete payload.assign_to;
-  delete payload.p_sdbg_amount;
-  delete payload.p_estimate_amount;
-  delete payload.created_by;
-  delete payload.net_claim_amount;
-  delete payload.btn_type;
-  delete payload.vendor_code;
-  payload.created_at = convertToEpoch(new Date());
-  payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
-
-  let btn_do_q;
-  if (isInserted == true) {
-    // update
-    whereCondition = {
-      btn_num: payload.btn_num,
-      purchasing_doc_no: payload.purchasing_doc_no,
-    };
-    btn_do_q = await generateQuery(
-      UPDATE,
-      BTN_MATERIAL_DO,
-      payload,
-      whereCondition
-    );
-    console.log("update1..");
-  } else {
-    //insert
-    btn_do_q = await generateQuery(INSERT, BTN_MATERIAL_DO, payload);
-    console.log("insert1..");
-  }
-  //let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
-  const result = await getQuery({ query: btn_do_q.q, values: btn_do_q.val });
 
   try {
-    btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData)
-    handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+    const client = await poolClient();
+
+    try {
+
+      let { btn_num, purchasing_doc_no, net_payable_amount, assign_to, status } = req.body;
+      const tokenData = { ...req.tokenData };
+
+      if (status === REJECTED) {
+        const res = await btnReject(req.body, tokenData, client);
+        return resSend(res, true, 200, "Rejected successfully !!", null, null);
+      }
+
+      console.log("tokenData", tokenData);
+      let payload = { ...req.body, created_by: tokenData?.vendor_code };
+
+      console.log(payload);
+
+      // Check required fields
+      if (!net_payable_amount) {
+        return resSend(res, false, 200, "Net payable is missing!", null, null);
+      }
+
+      if (!btn_num) {
+        return resSend(res, false, 200, "BTN number is missing!", null, null);
+      }
+
+      // Check BTN by BTN Number
+      let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
+      let isInserted = false;
+      let whereCondition;
+      if (checkBTNR) {
+        //return resSend(res, false, 200, "BTN is already submitted!", null, null);
+        isInserted = true;
+      }
+
+      // created at
+      let created_at = getEpochTime(); //new Date().toLocaleDateString();
+      payload = { ...payload, created_at };
+
+      // INSERT data into BTN List Table
+      let d = await fetchBTNListByPOAndBTNNum(btn_num, purchasing_doc_no);
+      if (d?.status) {
+        let btn_list_payload = d?.data;
+        console.log("btn_list_payload: ", btn_list_payload);
+        btn_list_payload.net_payable_amount = net_payable_amount;
+        payload = {
+          ...payload,
+          net_claim_amount: btn_list_payload?.net_claim_amount,
+          btn_type: btn_list_payload?.btn_type,
+        };
+        // let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
+        // console.log("list_q", list_q);
+        // const res_list = await getQuery({
+        //   query: list_q.q,
+        //   values: list_q.val,
+        // });
+        // console.log("res_list", res_list);
+      } else {
+        return resSend(res, false, 200, d?.message, null, null);
+      }
+
+      // INSERT data into BTN ASSIGN Table
+      let assign_payload = {
+        btn_num,
+        purchasing_doc_no,
+        assign_by: payload.created_by,
+        assign_to,
+        last_assign: true,
+        assign_by_fi: "",
+        assign_to_fi: "",
+        last_assign_fi: false,
+      };
+
+      console.log("assign_payload", assign_payload);
+      let assign_q;
+      if (isInserted == true) {
+        // update
+        whereCondition = {
+          btn_num: assign_payload.btn_num,
+          purchasing_doc_no: assign_payload.purchasing_doc_no,
+        };
+        assign_q =  generateQuery(
+          UPDATE,
+          BTN_ASSIGN,
+          assign_payload,
+          whereCondition
+        );
+      } else {
+        //insert
+        assign_q =  generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+      }
+
+      // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+      const res_assign = await poolQuery({client,
+        query: assign_q.q,
+        values: assign_q.val,
+      });
+
+      console.log("res_assign", res_assign);
+
+      // if (res_assign <= 0) {
+      //   return resSend(
+      //     res,
+      //     false,
+      //     200,
+      //     "Something went wrong. Please restart and try again!",
+      //     null,
+      //     null
+      //   );
+      // }
+      // return false;
+      console.log("BTN LIST PAYLOAD", payload);
+      payload.vendor_code = tokenData?.vendor_code;
+      let resBtnList = await insertUpdateToBTNList(
+        payload,
+        SUBMITTED_BY_DO,
+        isInserted
+      );
+      console.log("BTN LIST RESPONSE", resBtnList);
+      if (!resBtnList?.status) {
+        return resSend(
+          res,
+          false,
+          200,
+          `Something went wrong in BTN List!`,
+          null,
+          null
+        );
+      }
+      // return false;
+      // INSERT Data into btn_do BTN_MATERIAL_DO table
+      // console.log("payload", payload);
+      delete payload.assign_to;
+      delete payload.p_sdbg_amount;
+      delete payload.p_estimate_amount;
+      delete payload.created_by;
+      delete payload.net_claim_amount;
+      delete payload.btn_type;
+      delete payload.vendor_code;
+      payload.created_at = convertToEpoch(new Date());
+      payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
+
+      let btn_do_q;
+      if (isInserted == true) {
+        // update
+        whereCondition = {
+          btn_num: payload.btn_num,
+          purchasing_doc_no: payload.purchasing_doc_no,
+        };
+        btn_do_q = await generateQuery(
+          UPDATE,
+          BTN_MATERIAL_DO,
+          payload,
+          whereCondition
+        );
+        console.log("update1..");
+      } else {
+        //insert
+        btn_do_q = await generateQuery(INSERT, BTN_MATERIAL_DO, payload);
+        console.log("insert1..");
+      }
+      //let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
+      const result = await poolQuery({ client, query: btn_do_q.q, values: btn_do_q.val });
+
+      try {
+        btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData)
+        handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+      } catch (error) {
+
+        console.log("error", error.message);
+      }
+      console.log("insert1..");
+      console.log(result);
+
+      if (!result.error) {
+        return resSend(res, true, 200, "BTN has been updated!", null, null);
+      } else {
+        // return resSend(res, false, 200, JSON.stringify(result), null, null);
+      }
+
+    } catch (error) {
+      resSend(res, false, 200, "Server error", error.message, null);
+
+    } finally {
+      client.release();
+    }
+
   } catch (error) {
-
-  }
-  console.log("insert1..");
-  console.log(result);
-
-  if (!result.error) {
-    return resSend(res, true, 200, "BTN has been updated!", null, null);
-  } else {
-    return resSend(res, false, 200, JSON.stringify(result), null, null);
+    resSend(res, false, 200, "DB connection error", error.message, null);
   }
 
   //return;
@@ -1109,6 +1127,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
         DEERZET: timeInHHMMSS(), // REJECTION TIME
         DEERNAM: tokenData.name,  // DO ( WHO REJECTED)
         ZRMK2: btnPayload.rejectedMessage || "Rejeced by DO", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
+        DSTATUS: "2" // rejected status
       }
     }
 
@@ -1498,25 +1517,67 @@ function checkActualDates(c_dates, a_dates) {
 }
 
 
-async function btnReject(data, tokenData) {
+async function btnReject(data, tokenData, client) {
   try {
     const obj = {
-      btn_num: btn_num.data,
-      purchasing_doc_no: purchasing_doc_no.data,
+      btn_num: data.btn_num,
+      // purchasing_doc_no: purchasing_doc_no.data,
     };
 
-    const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
-    const result = await query({ query: q, values: val });
+    // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
+    // const result = await query({ query: q, values: val });
 
-    btnSubmitByDo({ ...data, assign_to: null }, tokenData);
+    await updateBtnListTable(client, obj);
 
-    return purchasing_doc_no.data;
+    await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
+
+    return data.btn_num;
 
   } catch (error) {
     throw error;
   }
 }
 
+
+const updateBtnListTable = async (client, data) => {
+  try {
+    // const btnListPayload = { btn_num: data.zbtno, status: data.dstatus };
+    // const statusObj = {
+    //   "1": "RECEIVED",
+    //   "2": "REJECTED",
+    //   "3": "APPROVE",
+    //   "4": "BANK",
+    //   "5": "D-RETURN"
+    // }
+    const getLatestDataQuery = `
+      SELECT 
+          btn_num, 
+          purchasing_doc_no, 
+          net_claim_amount, 
+          net_payable_amount, 
+          vendor_code, 
+          status, 
+          btn_type,
+          created_at
+      FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+    const lasBtnDetails = await poolQuery({ client, query: getLatestDataQuery, values: [data.btn_num] });
+    let btnListTablePaylod = { btn_num: data.btn_num };
+
+    if (lasBtnDetails.length) {
+      btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, status: REJECTED, created_at: getEpochTime() };
+      const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod);
+      await poolQuery({ client, query: q, values: val });
+      // if (data.fstatus == "5" || data.fstatus == 5) {
+      //     await handelMail(btnListTablePaylod, client);
+      // }
+    } else {
+      console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
 
 
 
