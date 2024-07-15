@@ -37,6 +37,7 @@ const {
   SUBMITTED_BY_DO,
   SUBMITTED_BY_VENDOR,
   D_STATUS_FORWARDED_TO_FINANCE,
+  F_STATUS_FORWARDED_TO_FINANCE,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -696,8 +697,13 @@ const submitBTN = async (req, res) => {
 };
 
 const submitBTNByDO = async (req, res) => {
-  let { btn_num, purchasing_doc_no, net_payable_amount, assign_to } = req.body;
+  let { btn_num, purchasing_doc_no, net_payable_amount, assign_to, status } = req.body;
   const tokenData = { ...req.tokenData };
+
+  if (status === REJECTED) {
+    const res = await btnReject(req.body, tokenData);
+    return resSend(res, true, 200, "Rejected successfully !!", null, null);
+  }
 
   console.log("tokenData", tokenData);
   let payload = { ...req.body, created_by: tokenData?.vendor_code };
@@ -919,10 +925,11 @@ async function btnSaveToSap(btnPayload, tokenData) {
         btn.cgst, 
         btn.sgst, 
         btn.igst, 
+        btn.yard, 
         btn.net_claim_amount, 
         btn.invoice_no,
+        btn.vendor_code, 
         ged.invno, 
-        ged.vendor_code, 
         ged.inv_date as invoice_date,
         vendor.stcd3,
         users.pernr as finance_auth_id,
@@ -950,7 +957,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
 
     let btnDetails = await getQuery({
       query: vendorQuery,
-      values: [assign_to_fi, btnPayload.btn_num],
+      values: [btnPayload.assign_to_fi, btnPayload.btn_num],
     });
 
     // CALCULATION
@@ -979,12 +986,13 @@ async function btnSaveToSap(btnPayload, tokenData) {
       // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
       // ERNAM: tokenData?.vendor_code || "", // Created Person Name
       // LAEDA: "", // Not Needed
+      STCD3: btnDetails[0]?.stcd3 || "",
       AENAM: btnDetails[0]?.vendor_name || "", // Vendor Name
       LIFNR: btnDetails[0]?.vendor_code || "", // Vendor Codebtn_v2
       ZVBNO: btnDetails[0]?.invoice_no || "", // Invoice Number
       EBELN: btnDetails[0]?.purchasing_doc_no || "", // PO Number
-      ACC: btnDetails[0]?.yard,// yard number
-      FSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
+      ACC: btnDetails[0]?.yard || "",// yard number
+      FSTATUS: F_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
       ZRMK1: "Forwared To Finance", // REMARKS
       CGST: cgst_ammount,
       IGST: igst_ammount,
@@ -1085,12 +1093,13 @@ async function btnSubmitByDo(btnPayload, tokenData) {
 
       DFERDAT: getYyyyMmDd(getEpochTime()), // DO SUBMIT DATE
       DEFRZET: timeInHHMMSS(), // DO SUBMIT TIEM
-      DEFRNAM: tokenData.name, // DO SUBMIT NAME ( DO NAME)
+      DEFRNAM: tokenData.name || "", // DO SUBMIT NAME ( DO NAME)
       DSTATUS: "4", // "4"
       DPERNR: tokenData.vendor_code, //  (DO)
 
-      FPRNR1: btnPayload.assign_to, // FINACE AUTHIRITY ID ( )
-      FPRNAM1: btnDetails[0]?.assign_name, // FINANCE
+      FPRNR1: btnPayload.assign_to || "", // FINACE AUTHIRITY ID ( )
+      FPRNAM1: btnDetails[0]?.assign_name || "", // FINANCE
+      FSTATUS: "" // BLANK STATUS
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
@@ -1478,6 +1487,25 @@ function checkActualDates(c_dates, a_dates) {
   return { success: true, msg: "No milestone missing" }
 }
 
+
+async function btnReject(data, tokenData) {
+  try {
+    const obj = {
+      btn_num: btn_num.data,
+      purchasing_doc_no: purchasing_doc_no.data,
+    };
+
+    const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
+    const result = await query({ query: q, values: val });
+
+    btnSubmitByDo({ ...data, assign_to: null }, tokenData);
+
+    return purchasing_doc_no.data;
+
+  } catch (error) {
+    throw error;
+  }
+}
 
 
 

@@ -17,7 +17,7 @@ const asyncPool = async () => {
     return pool;
   } catch (error) {
     console.log("error", error);
-    return error;
+    throw error;
     // throw new Error(`Error creating connection pool: ${error.message}`);
   }
 };
@@ -29,7 +29,7 @@ const query = async ({ query, values }) => {
     return result;
   } catch (error) {
     console.log("error", error);
-    return error;
+    throw error;
     // throw new Error(`Error executing query (query fn): ${error}`);
   } finally {
     // Consider using pool.end() for graceful shutdown on application exit
@@ -62,7 +62,7 @@ const poolClient = async () => {
     return client;
   } catch (error) {
     console.log("error", error);
-    return error;
+    throw error;
     // throw new Error(`Error connecting to database: ${error.message}`);
   }
 };
@@ -73,7 +73,7 @@ const poolQuery = async ({ client, query, values }) => {
     return rows;
   } catch (error) {
     console.log("error", error);
-    return error;
+    throw error;
     // throw new Error(`Error executing query(poolQuery fn): ${error.message}`);
   }
 };
