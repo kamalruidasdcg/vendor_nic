@@ -1065,7 +1065,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       values: [btnPayload.assign_to, btnPayload.btn_num],
     });
 
-    const btn_payload = {
+    let btn_payload = {
       EBELN: btnPayload.purchasing_doc_no, // PO NUMBER
       LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
@@ -1101,6 +1101,16 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       FPRNAM1: btnDetails[0]?.assign_name || "", // FINANCE
       FSTATUS: "" // BLANK STATUS
     };
+
+    if (btnPayload.status === REJECTED) {
+      btn_payload = {
+        ...btn_payload,
+        DEERDAT: getYyyyMmDd(getEpochTime()), // REJECTION DATE
+        DEERZET: timeInHHMMSS(), // REJECTION TIME
+        DEERNAM: tokenData.name,  // DO ( WHO REJECTED)
+        ZRMK2: btnPayload.rejectedMessage || "Rejeced by DO", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
+      }
+    }
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_do_out`;
