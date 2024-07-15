@@ -977,8 +977,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
       ZBTNO: btnPayload?.btn_num || "", // BTN Number
       // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
       // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
-      ERNAM: tokenData?.vendor_code || "", // Created Person Name
-      LAEDA: "", // Not Needed
+      // ERNAM: tokenData?.vendor_code || "", // Created Person Name
+      // LAEDA: "", // Not Needed
       AENAM: btnDetails[0]?.vendor_name || "", // Vendor Name
       LIFNR: btnDetails[0]?.vendor_code || "", // Vendor Codebtn_v2
       ZVBNO: btnDetails[0]?.invoice_no || "", // Invoice Number
