@@ -977,8 +977,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
       ZBTNO: btnPayload?.btn_num || "", // BTN Number
       // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
       // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
-      ERNAM: tokenData?.vendor_code || "", // Created Person Name
-      LAEDA: "", // Not Needed
+      // ERNAM: tokenData?.vendor_code || "", // Created Person Name
+      // LAEDA: "", // Not Needed
       AENAM: btnDetails[0]?.vendor_name || "", // Vendor Name
       LIFNR: btnDetails[0]?.vendor_code || "", // Vendor Codebtn_v2
       ZVBNO: btnDetails[0]?.invoice_no || "", // Invoice Number
@@ -1094,7 +1094,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
     };
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
-    const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
+    const postUrl = `${sapBaseUrl}/sap/bc/zobps_do_out`;
     console.log("btnPayload", postUrl, btn_payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
     console.log("POST Response from the server:", postResponse);

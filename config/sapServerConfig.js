@@ -205,96 +205,96 @@ module.exports = { makeHttpRequest, sendDataToSapServer }
 
 
 
-async function btnSaveToSap(btnPayload, tokenData) {
-  try {
+// async function btnSaveToSap(btnPayload, tokenData) {
+//   try {
 
-    const btn_payload = {
-      ZBTNO: "202407011999", // BTN Number
-      // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
-      // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
-      ERNAM: "0050007545", // Created Person Name
-      LAEDA: "", // Not Needed
-      AENAM: "DCG", // Vendor Name
-      LIFNR:  "0050007545", // Vendor Codebtn_v2
-      ZVBNO: "789", // Invoice Number
-      EBELN: "", // PO Number
-      ACC: btnDetails[0]?.yard,// yard number
-      FSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
-      ZRMK1: "Forwared To Finance", // REMARKS
-      CGST: (parseFloat("7000") / parseFloat("5")).toFixed(2),
-      IGST: (parseFloat("7000") / parseFloat("10.50")).toFixed(2),
-      SGST: (parseFloat("7000") / parseFloat("5.50")).toFixed(2),
-      BASICAMT: "7000",
-      ACTIVITY:  "90%", // activity
-      FRERDAT: "20240711",
-      FRERZET: "221045",
-      FRERNAM: "600200", // SET BY DO FINACE AUTHIRITY  PERSON (DO SUBMIT)
-      FPERNR1:  "600400", // assigned_to
-      FPERNAM: "demo name" // ASSINGEE NAME
-    };
+//     const btn_payload = {
+//       ZBTNO: "202407011999", // BTN Number
+//       // ERDAT: getYyyyMmDd(getEpochTime()), // BTN Create Date
+//       // ERZET: timeInHHMMSS(), // 134562,  // BTN Create Time
+//       ERNAM: "0050007545", // Created Person Name
+//       LAEDA: "", // Not Needed
+//       AENAM: "DCG", // Vendor Name
+//       LIFNR:  "0050007545", // Vendor Codebtn_v2
+//       ZVBNO: "789", // Invoice Number
+//       EBELN: "", // PO Number
+//       ACC: btnDetails[0]?.yard,// yard number
+//       FSTATUS: D_STATUS_FORWARDED_TO_FINANCE, // sap deparment forword status
+//       ZRMK1: "Forwared To Finance", // REMARKS
+//       CGST: (parseFloat("7000") / parseFloat("5")).toFixed(2),
+//       IGST: (parseFloat("7000") / parseFloat("10.50")).toFixed(2),
+//       SGST: (parseFloat("7000") / parseFloat("5.50")).toFixed(2),
+//       BASICAMT: "7000",
+//       ACTIVITY:  "90%", // activity
+//       FRERDAT: "20240711",
+//       FRERZET: "221045",
+//       FRERNAM: "600200", // SET BY DO FINACE AUTHIRITY  PERSON (DO SUBMIT)
+//       FPERNR1:  "600400", // assigned_to
+//       FPERNAM: "demo name" // ASSINGEE NAME
+//     };
 
-    const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
-    const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("btnPayload", postUrl, btn_payload);
-    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
-    console.log("POST Response from the server:", postResponse);
-  } catch (error) {
-    console.error("Error making the request:", error.message);
-  }
-}
-
-
-btnSaveToSap({}, {})
+//     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
+//     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
+//     console.log("btnPayload", postUrl, btn_payload);
+//     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+//     console.log("POST Response from the server:", postResponse);
+//   } catch (error) {
+//     console.error("Error making the request:", error.message);
+//   }
+// }
 
 
-async function btnSubmitByDo(btnPayload, tokenData) {
-  try {
-
-    const btn_payload = {
-      EBELN: "4700026717", // PO NUMBER
-      LIFNR: "0050007545", // VENDOR CODE
-      RERNAM: "DCG", // REG CREATOR NAME --> VENDOR NUMBER
-      STCD3: "GSTIN12112",// VENDOR GSTIN NUMBER
-      ZVBNO: "789", // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: "20240711", // GATE ENTRY INVOICE DATE
-      PERNR: tokenData.vendor_code, // DO ID
-      ZBTNO: btnPayload.btn_num, //  BTN NUMBER
-      ERDAT: "20240711",  // VENDOR BILL SUBMIT DATE
-      ERZET: "104556", // VENDOR BILL SUBMIT TIME
-      RERDAT: "20240711", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT DATE
-      RERZET: "104556", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT TIME
-      DPERNR1: tokenData.vendor_code, // DO NUMBER
-      DRERDAT1: "20240711", // DEPARTMETN RECECE DATE --> WHEN SUBMIT DO
-      DRERZET1: "104556", // DEPARTMETN RECECE TIME --> WHEN SUBMIT DO
-      DRERNAM1: tokenData.name, // DEPARTMETN RECECE DO ID --> WHEN SUBMIT DO
-      DAERDAT: "20240711", // DEPARTMENT APPROVAL DATE --> DO SUBMISSION DATE
-      DAERZET: "104556", // DEPARTMENT APPROVAL DATE --> DO SUBMISSION TIME
-      DAERNAM: tokenData.name, // DEPARTMENT APPROVAL NAME --> DO NAME
-
-      // DEERDAT: "", // REJECTION DATE
-      // DEERZET: "104556", // REJECTION TIME
-      // DEERNAM: "", // DO ( WHO REJECTED)
-      // ZRMK2: "", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
-
-      DFERDAT: "20240711", // DO SUBMIT DATE
-      DEFRZET: "104556", // DO SUBMIT TIEM
-      DEFRNAM: "UN KNOWN", // DO SUBMIT NAME ( DO NAME)
-      DSTATUS: "4", // "4"
-      DPERNR: "600200", //  (DO)
-
-      FPRNR1: "600400", // FINACE AUTHIRITY ID ( )
-      FPRNAM1: "DEMO NAME", // FINANCE
-    };
-
-    const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
-    const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
-    console.log("btnPayload", postUrl, btn_payload);
-    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
-    console.log("POST Response from the server:", postResponse);
-  } catch (error) {
-    console.error("Error making the request:", error.message);
-  }
-}
+// btnSaveToSap({}, {})
 
 
-btnSubmitByDo({},{});
+// async function btnSubmitByDo(btnPayload, tokenData) {
+//   try {
+
+//     const btn_payload = {
+//       EBELN: "4700026717", // PO NUMBER
+//       LIFNR: "0050007545", // VENDOR CODE
+//       RERNAM: "DCG", // REG CREATOR NAME --> VENDOR NUMBER
+//       STCD3: "GSTIN12112",// VENDOR GSTIN NUMBER
+//       ZVBNO: "789", // GATE ENTRY INVOCE NUMBER
+//       VEN_BILL_DATE: "20240711", // GATE ENTRY INVOICE DATE
+//       PERNR: tokenData.vendor_code, // DO ID
+//       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
+//       ERDAT: "20240711",  // VENDOR BILL SUBMIT DATE
+//       ERZET: "104556", // VENDOR BILL SUBMIT TIME
+//       RERDAT: "20240711", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT DATE
+//       RERZET: "104556", //REGISTRATION NUMBER --- VENDOR BILL SUBMIT TIME
+//       DPERNR1: tokenData.vendor_code, // DO NUMBER
+//       DRERDAT1: "20240711", // DEPARTMETN RECECE DATE --> WHEN SUBMIT DO
+//       DRERZET1: "104556", // DEPARTMETN RECECE TIME --> WHEN SUBMIT DO
+//       DRERNAM1: tokenData.name, // DEPARTMETN RECECE DO ID --> WHEN SUBMIT DO
+//       DAERDAT: "20240711", // DEPARTMENT APPROVAL DATE --> DO SUBMISSION DATE
+//       DAERZET: "104556", // DEPARTMENT APPROVAL DATE --> DO SUBMISSION TIME
+//       DAERNAM: tokenData.name, // DEPARTMENT APPROVAL NAME --> DO NAME
+
+//       // DEERDAT: "", // REJECTION DATE
+//       // DEERZET: "104556", // REJECTION TIME
+//       // DEERNAM: "", // DO ( WHO REJECTED)
+//       // ZRMK2: "", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
+
+//       DFERDAT: "20240711", // DO SUBMIT DATE
+//       DEFRZET: "104556", // DO SUBMIT TIEM
+//       DEFRNAM: "UN KNOWN", // DO SUBMIT NAME ( DO NAME)
+//       DSTATUS: "4", // "4"
+//       DPERNR: "600200", //  (DO)
+
+//       FPRNR1: "600400", // FINACE AUTHIRITY ID ( )
+//       FPRNAM1: "DEMO NAME", // FINANCE
+//     };
+
+//     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
+//     const postUrl = `${sapBaseUrl}/sap/bc/zobps_do_out`;
+//     console.log("btnPayload", postUrl, btn_payload);
+//     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+//     console.log("POST Response from the server:", postResponse);
+//   } catch (error) {
+//     console.error("Error making the request:", error.message);
+//   }
+// }
+
+
+// btnSubmitByDo({},{});
