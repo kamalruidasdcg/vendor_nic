@@ -709,7 +709,7 @@ const submitBTNByDO = async (req, res) => {
 
       const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
-      if (btnRejectCheck.count) {
+      if (parseInt(btnRejectCheck.count)) {
         return resSend(res, true, 200, `BTN ${btn_num} rejectd`, btn_num, null);
       }
 
@@ -1419,7 +1419,7 @@ const assignToFiStaffHandler = async (req, res) => {
 
       const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
-      if (btnRejectCheck.count) {
+      if (parseInt(btnRejectCheck.count)) {
         return resSend(res, true, 200, `BTN ${btn_num} rejectd`, btn_num, null);
       }
 
@@ -1567,7 +1567,7 @@ async function btnReject(data, tokenData, client) {
 
     await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
 
-    return data.btn_num;
+    return { btn_num: data.btn_num };
 
   } catch (error) {
     throw error;
@@ -1623,11 +1623,11 @@ async function btnDetailsCheck(client, data) {
     const valueArr = [];
     let count = 0;
     if (data.btn_num) {
-      btnstausCount += `btn_num = ${++count}`;
+      btnstausCount += ` AND btn_num = $${++count}`;
       valueArr.push(data.btn_num);
     }
     if (data.status) {
-      btnstausCount += `AND status = ${++count}`;
+      btnstausCount += `AND status = $${++count}`;
       valueArr.push(data.status);
     }
 
