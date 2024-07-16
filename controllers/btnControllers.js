@@ -1417,14 +1417,15 @@ const assignToFiStaffHandler = async (req, res) => {
     const client = await poolClient();
     try {
 
+      const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+      const tokenData = { ...req.tokenData };
+      
       const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
       if (parseInt(btnRejectCheck.count)) {
         return resSend(res, false, 200, `BTN ${btn_num} already rejected`, btn_num, null);
       }
 
-      const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
-      const tokenData = { ...req.tokenData };
 
       if (
         !btn_num ||
