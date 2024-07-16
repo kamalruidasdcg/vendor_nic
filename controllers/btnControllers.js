@@ -1627,7 +1627,7 @@ async function btnDetailsCheck(client, data) {
       valueArr.push(data.btn_num);
     }
     if (data.status) {
-      btnstausCount += `AND status = $${++count}`;
+      btnstausCount += ` AND status = $${++count}`;
       valueArr.push(data.status);
     }
 
