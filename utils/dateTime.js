@@ -47,3 +47,24 @@ exports.getEpochFirstLastToday = () => {
     lastEpochTime,
   };
 };
+
+exports.formatDashedDate = (epochTime) => {
+  // let date = new Date(epochTime);
+  // console.log(epochTime);
+  const et = isNaN(epochTime) ? epochTime : parseInt(epochTime);
+  // const et = isNaN(parseInt(epochTime)) ? epochTime : parseInt(epochTime);
+  let date = new Date(et);
+
+  let day = date.getDate();
+  let month = date.getMonth() + 1;
+  let year = date.getFullYear();
+
+  if (day < 10) {
+    day = "0" + day;
+  }
+  if (month < 10) {
+    month = "0" + month;
+  }
+
+  return year + "-" + month + "-" + day;
+};
