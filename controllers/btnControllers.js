@@ -62,6 +62,7 @@ const {
 const { convertToEpoch } = require("../utils/dateTime");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { checkTypeArr } = require("../utils/smallFun");
+const Message = require("../utils/messages");
 
 const fetchAllBTNs = async (req, res) => {
   const { id } = req.query;
@@ -706,6 +707,12 @@ const submitBTNByDO = async (req, res) => {
       let { btn_num, purchasing_doc_no, net_payable_amount, assign_to, status } = req.body;
       const tokenData = { ...req.tokenData };
 
+      const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
+
+      if (btnRejectCheck.count) {
+        return resSend(res, true, 200, `BTN ${btn_num} rejectd`, btn_num, null);
+      }
+
       if (status === REJECTED) {
         const response1 = await btnReject(req.body, tokenData, client);
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
@@ -780,7 +787,7 @@ const submitBTNByDO = async (req, res) => {
           btn_num: assign_payload.btn_num,
           purchasing_doc_no: assign_payload.purchasing_doc_no,
         };
-        assign_q =  generateQuery(
+        assign_q = generateQuery(
           UPDATE,
           BTN_ASSIGN,
           assign_payload,
@@ -788,11 +795,12 @@ const submitBTNByDO = async (req, res) => {
         );
       } else {
         //insert
-        assign_q =  generateQuery(INSERT, BTN_ASSIGN, assign_payload);
+        assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
       }
 
       // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
-      const res_assign = await poolQuery({client,
+      const res_assign = await poolQuery({
+        client,
         query: assign_q.q,
         values: assign_q.val,
       });
@@ -880,14 +888,14 @@ const submitBTNByDO = async (req, res) => {
       }
 
     } catch (error) {
-      resSend(res, false, 200, "Server error", error.message, null);
+      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
 
     } finally {
       client.release();
     }
 
   } catch (error) {
-    resSend(res, false, 200, "DB connection error", error.message, null);
+    resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 
   //return;
@@ -926,6 +934,12 @@ const submitBTNByDO = async (req, res) => {
   //   return resSend(res, false, 200, JSON.stringify(result), null, null);
   // }
 };
+
+/**
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
+ * @param {Object} btnPayload 
+ * @param {Object} tokenData 
+ */
 
 async function btnSaveToSap(btnPayload, tokenData) {
   try {
@@ -1033,6 +1047,12 @@ async function btnSaveToSap(btnPayload, tokenData) {
     console.error("Error making the request:", error.message);
   }
 }
+
+/**
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
+ * @param {Object} btnPayload 
+ * @param {Object} tokenData 
+ */
 async function btnSubmitByDo(btnPayload, tokenData) {
   try {
     const vendorQuery =
@@ -1120,6 +1140,9 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       FSTATUS: "" // BLANK STATUS
     };
 
+    /**
+     * IF BTN REJECTED BY DO
+     */
     if (btnPayload.status === REJECTED) {
       btn_payload = {
         ...btn_payload,
@@ -1389,97 +1412,110 @@ async function handelMail(tokenData, payload, event) {
 }
 
 const assignToFiStaffHandler = async (req, res) => {
-  const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
-  const tokenData = { ...req.tokenData };
-
-  console.log("req.body", req.body);
-
-  if (
-    !btn_num ||
-    btn_num === "" ||
-    !purchasing_doc_no ||
-    purchasing_doc_no === "" ||
-    !assign_to_fi ||
-    assign_to_fi === ""
-  ) {
-    return resSend(res, false, 200, "Assign To is the mandatory!", null, null);
-  }
-
-  const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
-  let assign_fi_staff_v = await getQuery({
-    query: assign_q,
-    values: [btn_num, true],
-  });
-  if (!checkTypeArr(assign_fi_staff_v)) {
-    return resSend(
-      res,
-      false,
-      200,
-      "You're not authorized to perform the action!",
-      null,
-      null
-    );
-  }
-
-  const whereCon = {
-    btn_num: btn_num,
-  };
-  const payload = {
-    assign_by_fi: tokenData?.vendor_code,
-    assign_to_fi: assign_to_fi,
-    last_assign_fi: true,
-  };
 
   try {
-    let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
-    let resp = await getQuery({ query: q, values: val });
-    console.log("resp", resp);
+    const client = await poolClient();
+    try {
 
-    let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
-    let btn_list = await getQuery({
-      query: btn_list_q,
-      values: [purchasing_doc_no],
-    });
-    if (btn_list.length < 0) {
-      return resSend(
-        res,
-        false,
-        200,
-        "Vendor have to submit BTN first.",
-        btn_list,
-        null
-      );
-    }
+      const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
-    let data = {
-      btn_num,
-      purchasing_doc_no,
-      net_claim_amount: btn_list?.net_claim_amount,
-      net_payable_amount: btn_list?.net_payable_amount,
-      vendor_code: btn_list?.vendor_code,
-      created_at: convertToEpoch(new Date()),
-      btn_type: btn_list?.btn_type,
-    };
-
-    let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
-
-    if (result?.status) {
-      handelMail(tokenData, {
-        ...req.body,
-        assign_to_fi,
-        status: FORWARDED_TO_FI_STAFF,
-      });
-      try {
-        btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      } catch (error) {
-        console.log("btnSaveToSap", error.message);
+      if (btnRejectCheck.count) {
+        return resSend(res, true, 200, `BTN ${btn_num} rejectd`, btn_num, null);
       }
-      resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
-    } else {
-      resSend(res, false, 200, "Something went wrong in BTN List", null, null);
+
+      const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+      const tokenData = { ...req.tokenData };
+
+      if (
+        !btn_num ||
+        btn_num === "" ||
+        !purchasing_doc_no ||
+        purchasing_doc_no === "" ||
+        !assign_to_fi ||
+        assign_to_fi === ""
+      ) {
+        return resSend(res, false, 200, "Assign To is the mandatory!", null, null);
+      }
+
+      const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
+      let assign_fi_staff_v = await poolQuery({
+        client,
+        query: assign_q,
+        values: [btn_num, true],
+      });
+      if (!checkTypeArr(assign_fi_staff_v)) {
+        return resSend(
+          res,
+          false,
+          200,
+          "You're not authorized to perform the action!",
+          null,
+          null
+        );
+      }
+
+      const whereCon = {
+        btn_num: btn_num,
+      };
+      const payload = {
+        assign_by_fi: tokenData?.vendor_code,
+        assign_to_fi: assign_to_fi,
+        last_assign_fi: true,
+      };
+
+
+      let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
+      let resp = await poolQuery({ client, query: q, values: val });
+      console.log("resp", resp);
+
+      let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+      let btn_list = await poolQuery({
+        client,
+        query: btn_list_q,
+        values: [purchasing_doc_no],
+      });
+      if (btn_list.length < 0) {
+        return resSend(
+          res,
+          false,
+          200,
+          "Vendor have to submit BTN first.",
+          btn_list,
+          null
+        );
+      }
+
+      let data = {
+        btn_num,
+        purchasing_doc_no,
+        net_claim_amount: btn_list?.net_claim_amount,
+        net_payable_amount: btn_list?.net_payable_amount,
+        vendor_code: btn_list?.vendor_code,
+        created_at: convertToEpoch(new Date()),
+        btn_type: btn_list?.btn_type,
+      };
+
+      let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
+
+      if (result?.status) {
+        handelMail(tokenData, { ...req.body, assign_to_fi, status: FORWARDED_TO_FI_STAFF });
+        try {
+          btnSaveToSap({ ...req.body, ...payload }, tokenData);
+        } catch (error) {
+          console.log("btnSaveToSap", error.message);
+        }
+        resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
+      } else {
+        resSend(res, false, 200, "Something went wrong in BTN List", null, null);
+      }
+    } catch (error) {
+      console.log("data not inserted", error);
+      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+    } finally {
+      client.release();
     }
-  } catch (err) {
-    console.log("ERROR", err.message);
+  } catch (error) {
+    resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 
@@ -1577,6 +1613,33 @@ const updateBtnListTable = async (client, data) => {
   } catch (error) {
     throw error;
   }
+}
+
+
+async function btnDetailsCheck(client, data) {
+
+  try {
+    let btnstausCount = `SELECT count(btn_num) as count  FROM btn_list WHERE 1 = 1`;
+    const valueArr = [];
+    let count = 0;
+    if (data.btn_num) {
+      btnstausCount += `btn_num = ${++count}`;
+      valueArr.push(data.btn_num);
+    }
+    if (data.status) {
+      btnstausCount += `AND status = ${++count}`;
+      valueArr.push(data.status);
+    }
+
+    const result = await poolQuery({ client, query: btnstausCount, values: valueArr });
+
+    return result.length ? result[0] : {};
+
+  } catch (error) {
+    throw error;
+  }
+
+
 }
 
 
