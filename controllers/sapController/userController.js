@@ -3,7 +3,7 @@ const {
   RESERVATION_RESB_TABLE,
   SERVICE_ENTRY_TABLE_SAP,
 } = require("../../lib/tableName");
-const { connection, query } = require("../../config/dbConfig");
+// const { connection, query } = require("../../config/dbConfig");
 const { responseSend, resSend } = require("../../lib/resSend");
 const {
   generateInsertUpdateQuery,
@@ -120,7 +120,8 @@ const serviceEntry = async (req, res) => {
   let payload = [];
 
   try {
-    const promiseConnection = await connection();
+    // const promiseConnection = await connection();
+    const client = await poolClient();
     let transactionSuccessful = false;
 
     if (Array.isArray(req.body)) {
@@ -130,27 +131,22 @@ const serviceEntry = async (req, res) => {
     }
 
     try {
-      await promiseConnection.beginTransaction();
+      // await client.beginTransaction();
+
+
       const essrPayload = await serviceEntryPayload(payload);
       const essrTableInsert = await generateQueryForMultipleData(
         essrPayload,
         SERVICE_ENTRY_TABLE_SAP,
         "lblni"
       );
-      const [results] = await promiseConnection.execute(essrTableInsert);
-      const comm = await promiseConnection.commit(); // Commit the transaction if everything was successful
-      transactionSuccessful = true;
+      const results = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
+      // Commit the transaction if everything was successful
+      // transactionSuccessful = true;
     } catch (error) {
       responseSend(res, "F", 502, "Data insert failed !!", error, null);
     } finally {
-      if (transactionSuccessful === FALSE) {
-        await promiseConnection.rollback();
-      }
-      const connEnd = await promiseConnection.end();
-
-      if (transactionSuccessful === TRUE) {
-        responseSend(res, "S", 200, "data insert succeed", null, null);
-      }
+      client.release();
     }
   } catch (error) {
     console.error(error.message);
