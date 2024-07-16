@@ -146,7 +146,9 @@ const syncCompressMain = async () => {
 exports.syncDownload = async (req, res) => {
   try {
     let resData = await syncDownloadMain();
-    resSend(res, 200, true, null, "Unsynced data downloaded!", null);
+    setTimeout(() => {
+      resSend(res, 200, true, null, "Unsynced data downloaded!", null);
+    }, [10000]);
   } catch (err) {
     console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
@@ -156,7 +158,10 @@ exports.syncDownload = async (req, res) => {
 exports.syncCompress = async (req, res) => {
   try {
     let zipDataPath = await syncCompressMain();
-    resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
+
+    setTimeout(() => {
+      resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
+    }, [5000]);
   } catch (err) {
     console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
