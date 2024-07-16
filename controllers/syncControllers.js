@@ -10,7 +10,11 @@ const pool = require("../config/pgDBConfigSync");
 const { generateUnique, isZipFile } = require("../utils/smallFun");
 const { synced_tables } = require("../config/configTable");
 const { convertToCSV } = require("../utils/converts");
-const { formatDateSync, convertToEpoch } = require("../utils/dateTime");
+const {
+  formatDateSync,
+  convertToEpoch,
+  formatDashedDate,
+} = require("../utils/dateTime");
 const { resSend } = require("../utils/resSend");
 const unzipper = require("unzipper");
 const {
@@ -21,6 +25,7 @@ const {
   UNSYNCED_FILES,
   OTHER_SERVER_FILE_PATH,
 } = require("../lib/constant");
+const { getColumnDataType } = require("../utils/syncUtils");
 const todayDate = formatDateSync(new Date());
 
 // SYNCRONISATION OF DATA
@@ -34,6 +39,14 @@ const syncDownloadMain = async () => {
         `SELECT * FROM ${item} WHERE sync = ${false}`,
         []
       );
+      // if (item === "btn") {
+      //   await Promise.all(
+      //     rows.map(async (item) => {
+      //       console.log(item.key(icgrn_nos));
+      //     })
+      //   );
+      //   // console.log(rows);
+      // }
       // Store in CSV file for each tables
       let file_path = await convertToCSV(rows, item);
       let resRow = {
@@ -133,7 +146,9 @@ const syncCompressMain = async () => {
 exports.syncDownload = async (req, res) => {
   try {
     let resData = await syncDownloadMain();
-    resSend(res, 200, true, resData, "Unsynced data downloaded!", null);
+    setTimeout(() => {
+      resSend(res, 200, true, null, "Unsynced data downloaded!", null);
+    }, [10000]);
   } catch (err) {
     console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
@@ -143,7 +158,10 @@ exports.syncDownload = async (req, res) => {
 exports.syncCompress = async (req, res) => {
   try {
     let zipDataPath = await syncCompressMain();
-    resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
+
+    setTimeout(() => {
+      resSend(res, 200, true, zipDataPath, "Compressed file downloaded!", null);
+    }, [5000]);
   } catch (err) {
     console.error(err.message);
     resSend(res, 500, false, err, "Failed to download unsynced data", null);
@@ -254,65 +272,127 @@ exports.syncDataUpload = async (req, res) => {
       });
 
       // Insert Or Update rows into the respective table
-      rData.map(async (item) => {
+      for (const item of rData) {
         // Check sync_id is present in DB (UPDATE Query) or Not (INSERT Query)
 
         const check_q = `SELECT sync_id FROM ${tableName} WHERE sync_id = '${item.sync_id}'`;
         const { rowCount } = await pool.query(check_q, []);
         // console.log("res_check", rowCount);
-        if (rowCount > 0) {
-          const keys = Object.keys(item);
-          let index = 0;
-          const updateColumns = keys
-            .map((key, i) => {
-              index += 1;
-              return `${key} = $${index}`;
-            })
-            .join(",");
-          const values = keys.map((key, i) => {
-            if (keys.length - 2 === i) {
-              return true;
-            } else if (keys.length - 1 === i) {
-              return new Date();
-            }
-            return item[key];
-          });
-          const sync_id = item.sync_id;
+        const keys = Object.keys(item);
+        // if (rowCount > 0) {
+        //   let index = 0;
+        //   const updateColumns = keys
+        //     .map((key, i) => {
+        //       index += 1;
+        //       return `${key} = $${index}`;
+        //     })
+        //     .join(",");
+        //   let values = [];
+        //   for (let i = 0; i < keys.length; i++) {
+        //     const key = keys[i];
+        //     const d_type = await getColumnDataType("public", tableName, key);
+        //     if (keys.length - 2 === i) {
+        //       item[key] = true;
+        //     } else if (keys.length - 1 === i) {
+        //       item[key] = new Date();
+        //     } else if (d_type === "integer" || d_type === "bigint") {
+        //       item[key] = Number(item[key]);
+        //     } else if (d_type === "timestamp with time zone") {
+        //       item[key] = item[key] ? new Date(item[key]) : null;
+        //     }
+        //     // console.log(`tableName: ${tableName}`);
+        //     // console.log(`Column: ${key}`);
+        //     // console.log(`Value: ${item[key]}`);
+        //     console.log("d_type: ", d_type, "for", key, tableName);
+        //     values.push(item[key]);
+        //   }
 
-          // console.log(updateColumns);
-          // console.log("values", values);
-          const query = `UPDATE ${tableName} SET ${updateColumns} 
-                        WHERE sync_id = $${index + 1}`;
-          // console.log(query);
-          const data = await pool.query(query, [...values, sync_id]);
-          // console.log("Data", data);
-        } else {
-          const keys = Object.keys(item);
-          const columns = keys.join(",");
-          const placeholders = `(${keys
-            .map((it, i) => `$${i + 1}`)
-            .join(",")})`;
-          const values = keys.map((key, i) => {
-            if (keys.length - 2 === i) {
-              return true;
-            } else if (keys.length - 1 === i) {
-              return new Date();
-            }
-            return item[key];
-          });
+        //   const sync_id = item.sync_id;
 
-          const query = `INSERT INTO ${tableName} (${columns}) VALUES ${placeholders}`;
-          console.log("query", query);
+        //   // console.log(updateColumns);
+        //   // console.log("values1", values);
+        //   const query = `UPDATE ${tableName} SET ${updateColumns}
+        //                 WHERE sync_id = $${index + 1}`;
+        //   // console.log(query);
+        //   const data = await pool.query(query, [...values, sync_id]);
+        //   // console.log("Data", data);
+        // } else {
+        //   const columns = keys.join(",");
+        //   const placeholders = `(${keys
+        //     .map((it, i) => `$${i + 1}`)
+        //     .join(",")})`;
+        //   const values = keys.map((key, i) => {
+        //     if (keys.length - 2 === i) {
+        //       return true;
+        //     } else if (keys.length - 1 === i) {
+        //       return new Date();
+        //     }
+        //     return item[key];
+        //   });
 
-          console.log("query2", query);
-          // console.log("values2", values);
-          const data = await pool.query(query, values);
-          console.log("data2", data);
+        //   const query = `INSERT INTO ${tableName} (${columns}) VALUES ${placeholders}`;
+
+        //   console.log("query2", query);
+        //   console.log("values2", values);
+        //   const data = await pool.query(query, values);
+        //   console.log("data2", data);
+        // }
+        let values = [];
+
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const d_type = await getColumnDataType("public", tableName, key);
+          if (key === "sync") {
+            item[key] = true;
+          } else if (key === "sync_updated_at") {
+            item[key] = new Date();
+          } else if (d_type === "numeric" && item[key] === "") {
+            item[key] = 0;
+          } else if (d_type === "integer" || d_type === "bigint") {
+            item[key] = Number(item[key]);
+          } else if (
+            (d_type === "timestamp with time zone" ||
+              d_type === "time without time zone" ||
+              d_type === "timestamp without time zone" ||
+              d_type === "double precision") &&
+            item[key] === ""
+          ) {
+            item[key] = null;
+          } else if (d_type === "date" && item[key] === "") {
+            item[key] = null;
+          } else if (
+            d_type === "date" ||
+            d_type === "timestamp without time zone"
+          ) {
+            item[key] = formatDashedDate(item[key]);
+          }
+          values.push(item[key]);
+          // console.log("val", d_type, tableName, key, rowCount, item[key]);
         }
-      });
+        // console.log("values", values);
+
+        if (rowCount > 0) {
+          const updateColumns = keys
+            .map((key, i) => `${key} = $${i + 1}`)
+            .join(", ");
+          console.log("q", tableName, updateColumns, values);
+          const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${
+            keys.length + 1
+          }`;
+          await pool.query(query, [...values, item.sync_id]);
+        } else {
+          const columns = keys.join(", ");
+          const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+          console.log("q2", tableName, columns, placeholders);
+          const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`;
+          await pool.query(query, values);
+        }
+      }
     }
 
-    resSend(res, 200, true, null, "Data uploaded successfully!", null);
+    setTimeout(() => {
+      resSend(res, 200, true, null, "Data uploaded successfully!", null);
+    }, [5000]);
   } catch (err) {
     console.error("Error unzipping file:", err);
     resSend(
