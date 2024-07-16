@@ -710,7 +710,7 @@ const submitBTNByDO = async (req, res) => {
       const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
       if (parseInt(btnRejectCheck.count)) {
-        return resSend(res, false, 200, `BTN ${btn_num} already rejectd`, btn_num, null);
+        return resSend(res, false, 200, `BTN ${btn_num} already rejected`, btn_num, null);
       }
 
       if (status === REJECTED) {
@@ -1420,7 +1420,7 @@ const assignToFiStaffHandler = async (req, res) => {
       const btnRejectCheck = await btnDetailsCheck(client, { btn_num, status: REJECTED });
 
       if (parseInt(btnRejectCheck.count)) {
-        return resSend(res, false, 200, `BTN ${btn_num} already rejectd`, btn_num, null);
+        return resSend(res, false, 200, `BTN ${btn_num} already rejected`, btn_num, null);
       }
 
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
