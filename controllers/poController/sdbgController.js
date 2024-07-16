@@ -19,6 +19,7 @@ const {
   getEpochTime,
   getDateString,
   generateInsertUpdateQuery,
+  sapToGetEpochTime,
 } = require("../../lib/utils");
 const {
   INSERT,
@@ -1822,15 +1823,16 @@ async function update_in_all_obps_sdbgs_table(payload) {
             : "EXTENTION";
         console.log("update in all sdgds table.");
         let whereCondition;
+
         const sdbg_entry_payload = {
-          extension_date1: payload.EXTENTION_DATE1,
-          extension_date2: payload.EXTENTION_DATE2,
-          extension_date3: payload.EXTENTION_DATE3,
-          extension_date4: payload.EXTENTION_DATE4,
-          extension_date5: payload.EXTENTION_DATE5,
-          extension_date6: payload.EXTENTION_DATE6,
-          release_date: payload.RELEASE_DATE,
-          status: status,
+          extension_date1: sapToGetEpochTime(payload.EXTENTION_DATE1),
+          extension_date2: sapToGetEpochTime(payload.EXTENTION_DATE2),
+          extension_date3: sapToGetEpochTime(payload.EXTENTION_DATE3),
+          extension_date4: sapToGetEpochTime(payload.EXTENTION_DATE4),
+          extension_date5: sapToGetEpochTime(payload.EXTENTION_DATE5),
+          extension_date6: sapToGetEpochTime(payload.EXTENTION_DATE6),
+          release_date: sapToGetEpochTime(payload.RELEASE_DATE),
+          status: sapToGetEpochTime(status),
         };
         whereCondition = {
           purchasing_doc_no: payload.PO_NUMBER,
