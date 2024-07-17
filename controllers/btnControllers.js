@@ -135,6 +135,18 @@ const fetchBTNByNum = async (req, res) => {
 
   // console.log(gate_entry_v);
 
+
+  result = result.map((el) => {
+    if (el.icgrn_nos) {
+      try {
+        el.icgrn_nos = JSON.parse(el.icgrn_nos);
+      } catch (error) {
+        el.icgrn_nos = el.icgrn_nos;
+      }
+    }
+    return el
+  });
+
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
 
@@ -388,6 +400,8 @@ const submitBTN = async (req, res) => {
     btn_type: "hybrid-bill-material",
     updated_by: "VENDOR",
   };
+
+
   delete payload.associated_po;
 
   // Check required fields
@@ -457,8 +471,7 @@ const submitBTN = async (req, res) => {
   // GET Approved SDBG by PO Number
   let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
   let pbg_filename_result = await getPBGApprovedFiles(purchasing_doc_no);
-  console.log("sdbg_filename_result", sdbg_filename_result);
-  console.log("pbg_filename_result", pbg_filename_result);
+
 
   // // GET GRN Number by PO Number
   // let grn_nos = await getGRNs(purchasing_doc_no);
@@ -472,7 +485,7 @@ const submitBTN = async (req, res) => {
   payload = {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
-    icgrn_nos: resICGRN.icgrn_nos
+    icgrn_nos: JSON.stringify(resICGRN.icgrn_nos)
   };
 
   // // GET GRN Number by PO Number
@@ -612,7 +625,6 @@ const submitBTN = async (req, res) => {
 
   // checking no submitted milestones by vendor
   const checkMissingMilestone = checkActualDates(c_dates, a_dates);
-  console.log("checkMissingMilestone", checkMissingMilestone);
   if (!checkMissingMilestone.success) {
     return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
   }
@@ -622,7 +634,7 @@ const submitBTN = async (req, res) => {
   let created_at = getEpochTime();
   payload = { ...payload, created_at };
 
-  console.log("payload", payload);
+
 
   // INSERT Data into btn table
   let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
@@ -1211,7 +1223,7 @@ const getGrnIcgrnByInvoice = async (req, res) => {
     }
     const grn_values = gate_entry_v.map((el) => el.grn_no)
     const placeholder = grn_values.map((_, index) => `$${index + 1}`).join(",");
-    
+
     gate_entry_v = gate_entry_v[0];
 
     // const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity
@@ -1228,31 +1240,31 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       left join ekpo as ekpo
         ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
     WHERE MBLNR IN (${placeholder})`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
-    
+
     console.log("icgrn_q", grn_values, placeholder, icgrn_q);
-    
+
     let icgrn_no = await getQuery({
       query: icgrn_q,
       values: grn_values,
     });
-    // if (icgrn_no.length == 0) {
-    //   return resSend(
-    //     res,
-    //     false,
-    //     200,
-    //     "Plese do ICGRN to Process BTN",
-    //     null,
-    //     null
-    //   );
-    // }
+    if (icgrn_no.length == 0) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Plese do ICGRN to Process BTN",
+        null,
+        null
+      );
+    }
     console.log("icgrn_no", icgrn_q, icgrn_no);
 
     let total_price = 0;
     let total_quantity = 0;
-    
-    if(icgrn_no.length) {
+
+    if (icgrn_no.length) {
       const totals = calculateTotals(icgrn_no);
-      total_price = totals.totalPrice;
+      total_price = totals.totalPrice || 0;
       total_quantity = totals.totalQuantity;
     }
 

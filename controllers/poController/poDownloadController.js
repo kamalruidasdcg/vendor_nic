@@ -230,7 +230,8 @@ const getPaymentAdvliceList = async (req, res) => {
 
       if (files.success && files?.data?.length) {
         const queryValues = files?.data?.map((el) => el.split("_")[0]);
-        const placeholders = queryValues.map(() => "?").join(",");
+        // const placeholders = queryValues.map(() => "?").join(",");
+        const placeholders = queryValues.map((_, index) => `$${index + 1}`).join(",");
 
         console.log(placeholders);
 
