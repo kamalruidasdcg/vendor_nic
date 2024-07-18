@@ -1321,98 +1321,97 @@ async function getBGForFinance(req, res) {
 }
 
 async function recommendationBGextensionRelease(req, res) {
-  update_in_all_obps_sdbgs_table(req.body);
-  // try {
-  //   const client = await poolClient();
-  //   try {
-  //     const tokenData = { ...req.tokenData };
-  //     const { ...obj } = req.body;
+  try {
+    const client = await poolClient();
+    try {
+      const tokenData = { ...req.tokenData };
+      const { ...obj } = req.body;
 
-  //     //await update_in_all_obps_sdbgs_table(obj);
-  //     // return;
-  //     if (
-  //       !obj.reference_no ||
-  //       !obj.purchasing_doc_no ||
-  //       !obj.bg_file_no ||
-  //       !obj.recommendation_type ||
-  //       !obj.remarks
-  //     ) {
-  //       return resSend(
-  //         res,
-  //         false,
-  //         200,
-  //         "please send valid payload.",
-  //         req.body,
-  //         null
-  //       );
-  //     }
+      //await update_in_all_obps_sdbgs_table(obj);
+      // return;
+      if (
+        !obj.reference_no ||
+        !obj.purchasing_doc_no ||
+        !obj.bg_file_no ||
+        !obj.recommendation_type ||
+        !obj.remarks
+      ) {
+        return resSend(
+          res,
+          false,
+          200,
+          "please send valid payload.",
+          req.body,
+          null
+        );
+      }
 
-  //     const isDO = await checkIsDealingOfficer(
-  //       obj.purchasing_doc_no,
-  //       tokenData.vendor_code
-  //     );
-  //     if (isDO == 0) {
-  //       return resSend(
-  //         res,
-  //         false,
-  //         200,
-  //         "Please Login as dealing officer.",
-  //         null,
-  //         null
-  //       );
-  //     }
+      const isDO = await checkIsDealingOfficer(
+        obj.purchasing_doc_no,
+        tokenData.vendor_code
+      );
+      if (isDO == 0) {
+        return resSend(
+          res,
+          false,
+          200,
+          "Please Login as dealing officer.",
+          null,
+          null
+        );
+      }
 
-  //     const query = `SELECT COUNT(status) AS pending_status FROM ${SDBG_RECOMMENDATION} WHERE reference_no = $1 AND purchasing_doc_no = $2 AND bg_file_no = $3 AND recommendation_type = $4 AND status = $5`;
-  //     let pending_status = await getQuery({
-  //       query: query,
-  //       values: [
-  //         obj.reference_no,
-  //         obj.purchasing_doc_no,
-  //         obj.bg_file_no,
-  //         obj.recommendation_type,
-  //         "PENDING",
-  //       ],
-  //     });
+      const query = `SELECT COUNT(status) AS pending_status FROM ${SDBG_RECOMMENDATION} WHERE reference_no = $1 AND purchasing_doc_no = $2 AND bg_file_no = $3 AND recommendation_type = $4 AND status = $5`;
+      let pending_status = await getQuery({
+        query: query,
+        values: [
+          obj.reference_no,
+          obj.purchasing_doc_no,
+          obj.bg_file_no,
+          obj.recommendation_type,
+          "PENDING",
+        ],
+      });
 
-  //     pending_status = pending_status[0].pending_status;
-  //     if (pending_status != 0) {
-  //       return resSend(
-  //         res,
-  //         false,
-  //         200,
-  //         `you have allready recommendation this BG for ${obj.recommendation_type}`,
-  //         null,
-  //         null
-  //       );
-  //     }
-  //     let payload = {
-  //       ...req.body,
-  //       created_at: getEpochTime(),
-  //       created_by_id: tokenData.vendor_code,
-  //       updated_by: "GRSE",
-  //       status: "PENDING",
-  //     };
+      pending_status = pending_status[0].pending_status;
+      if (pending_status != 0) {
+        return resSend(
+          res,
+          false,
+          200,
+          `you have allready recommendation this BG for ${obj.recommendation_type}`,
+          null,
+          null
+        );
+      }
+      let payload = {
+        ...req.body,
+        created_at: getEpochTime(),
+        created_by_id: tokenData.vendor_code,
+        updated_by: "GRSE",
+        status: "PENDING",
+      };
 
-  //     const { q, val } = generateQuery(INSERT, SDBG_RECOMMENDATION, payload);
-  //     const response = await poolQuery({ client, query: q, values: val });
+      const { q, val } = generateQuery(INSERT, SDBG_RECOMMENDATION, payload);
+      const response = await poolQuery({ client, query: q, values: val });
 
-  //     return resSend(
-  //       res,
-  //       true,
-  //       200,
-  //       `This BG recommendation for ${obj.recommendation_type}.`,
-  //       response,
-  //       null
-  //     );
-  //   } catch (error) {
-  //     console.error("Error  recommendation BG extension/release:", error);
-  //     return resSend(res, false, 500, "Internal Server Error", error, null);
-  //   } finally {
-  //     client.release();
-  //   }
-  // } catch (error) {
-  //   resSend(res, false, 500, "error in db conn!", error, "");
-  // }
+      return resSend(
+        res,
+        true,
+        200,
+        `This BG recommendation for ${obj.recommendation_type}.`,
+        response,
+        null
+      );
+    } catch (error) {
+      console.error("Error  recommendation BG extension/release:", error);
+      return resSend(res, false, 500, "Internal Server Error", error, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, "error in db conn!", error, "");
+  }
 }
 
 async function UpdateBGextensionRelease(req, res) {
