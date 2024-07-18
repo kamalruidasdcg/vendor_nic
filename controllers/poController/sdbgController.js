@@ -655,7 +655,7 @@ const sdbgUpdateByFinance = async (req, res) => {
   let sdgbRollBackId;
   try {
     const client = await poolClient();
-    await client.query("BEGIN");
+    // await client.query("BEGIN");
     try {
       if (
         !obj.purchasing_doc_no ||
@@ -960,7 +960,7 @@ const sdbgUpdateByFinance = async (req, res) => {
           if (sendSap == false) {
             console.log("***********");
             console.log(sdgbRollBackId);
-            await client.query("ROLLBACK");
+            // await client.query("ROLLBACK");
             // if (sdgbRollBackId) {
             //   const deleteRollBackQuery = `DELETE FROM ${SDBG} WHERE id = $1`;
             //   const deleteRollBack = await getQuery({
@@ -995,7 +995,7 @@ const sdbgUpdateByFinance = async (req, res) => {
               null
             );
           } else if (sendSap == true) {
-            await client.query("COMMIT");
+            //  await client.query("COMMIT");
           }
         } catch (error) {
           console.error(error.message);
