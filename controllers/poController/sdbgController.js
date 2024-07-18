@@ -885,6 +885,23 @@ const sdbgUpdateByFinance = async (req, res) => {
       sdgbRollBackId = sdbgQuery[0].id;
 
       handelEmail(insertPayloadForSdbg, tokenData);
+      const whereCondition = {
+        purchasing_doc_no: obj.purchasing_doc_no,
+        reference_no: obj.reference_no,
+      };
+
+      ({ q, val } = generateQuery(
+        UPDATE,
+        SDBG_ENTRY,
+        { status: obj.status, bg_file_no: obj.bg_file_no },
+        whereCondition
+      ));
+
+      let sdbgEntryQuery2 = await poolQuery({
+        client,
+        query: q,
+        values: val,
+      });
       if (obj.status === RETURN_TO_DO) {
         await client.query("COMMIT");
         return resSend(res, true, 200, "this is return to do.", null, null);
@@ -919,23 +936,23 @@ const sdbgUpdateByFinance = async (req, res) => {
         insertPayloadForSdbg.status == "HOLD"
       ) {
         try {
-          const whereCondition = {
-            purchasing_doc_no: obj.purchasing_doc_no,
-            reference_no: obj.reference_no,
-          };
+          // const whereCondition = {
+          //   purchasing_doc_no: obj.purchasing_doc_no,
+          //   reference_no: obj.reference_no,
+          // };
 
-          ({ q, val } = generateQuery(
-            UPDATE,
-            SDBG_ENTRY,
-            { status: obj.status, bg_file_no: obj.bg_file_no },
-            whereCondition
-          ));
+          // ({ q, val } = generateQuery(
+          //   UPDATE,
+          //   SDBG_ENTRY,
+          //   { status: obj.status, bg_file_no: obj.bg_file_no },
+          //   whereCondition
+          // ));
 
-          let sdbgEntryQuery2 = await poolQuery({
-            client,
-            query: q,
-            values: val,
-          });
+          // let sdbgEntryQuery2 = await poolQuery({
+          //   client,
+          //   query: q,
+          //   values: val,
+          // });
 
           const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
           let get_sdbg_entry_data = await poolQuery({
