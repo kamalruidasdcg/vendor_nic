@@ -135,6 +135,18 @@ const fetchBTNByNum = async (req, res) => {
 
   // console.log(gate_entry_v);
 
+
+  result = result.map((el) => {
+    if (el.icgrn_nos) {
+      try {
+        el.icgrn_nos = JSON.parse(el.icgrn_nos);
+      } catch (error) {
+        el.icgrn_nos = el.icgrn_nos;
+      }
+    }
+    return el
+  });
+
   return resSend(res, true, 200, "ALL data from BTNs", result, null);
 };
 
@@ -388,6 +400,8 @@ const submitBTN = async (req, res) => {
     btn_type: "hybrid-bill-material",
     updated_by: "VENDOR",
   };
+
+
   delete payload.associated_po;
 
   // Check required fields
@@ -457,8 +471,7 @@ const submitBTN = async (req, res) => {
   // GET Approved SDBG by PO Number
   let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
   let pbg_filename_result = await getPBGApprovedFiles(purchasing_doc_no);
-  console.log("sdbg_filename_result", sdbg_filename_result);
-  console.log("pbg_filename_result", pbg_filename_result);
+
 
   // // GET GRN Number by PO Number
   // let grn_nos = await getGRNs(purchasing_doc_no);
@@ -472,7 +485,7 @@ const submitBTN = async (req, res) => {
   payload = {
     ...payload,
     icgrn_total: resICGRN.total_icgrn_value,
-    icgrn_nos: resICGRN.icgrn_nos
+    icgrn_nos: JSON.stringify(resICGRN.icgrn_nos)
   };
 
   // // GET GRN Number by PO Number
@@ -612,7 +625,6 @@ const submitBTN = async (req, res) => {
 
   // checking no submitted milestones by vendor
   const checkMissingMilestone = checkActualDates(c_dates, a_dates);
-  console.log("checkMissingMilestone", checkMissingMilestone);
   if (!checkMissingMilestone.success) {
     return resSend(res, false, 200, checkMissingMilestone.msg, null, null);
   }
@@ -622,7 +634,7 @@ const submitBTN = async (req, res) => {
   let created_at = getEpochTime();
   payload = { ...payload, created_at };
 
-  console.log("payload", payload);
+
 
   // INSERT Data into btn table
   let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
@@ -1237,16 +1249,16 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       query: icgrn_q,
       values: grn_values,
     });
-    // if (icgrn_no.length == 0) {
-    //   return resSend(
-    //     res,
-    //     false,
-    //     200,
-    //     "Plese do ICGRN to Process BTN",
-    //     null,
-    //     null
-    //   );
-    // }
+    if (icgrn_no.length == 0) {
+      return resSend(
+        res,
+        false,
+        200,
+        "Plese do ICGRN to Process BTN",
+        null,
+        null
+      );
+    }
     console.log("icgrn_no", icgrn_q, icgrn_no);
 
     let total_price = 0;
@@ -1254,7 +1266,7 @@ const getGrnIcgrnByInvoice = async (req, res) => {
 
     if (icgrn_no.length) {
       const totals = calculateTotals(icgrn_no);
-      total_price = totals.totalPrice;
+      total_price = totals.totalPrice || 0;
       total_quantity = totals.totalQuantity;
     }
 
@@ -1276,8 +1288,8 @@ const getGrnIcgrnByInvoice = async (req, res) => {
     //   })
     // );
     gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
-    gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
-    gate_entry_v.grn_nos = gate_entry_v.grn_no;
+    gate_entry_v.icgrn_nos = icgrn_no;
+    gate_entry_v.grn_nos = icgrn_no;
 
     console.log;
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
@@ -1512,11 +1524,11 @@ const assignToFiStaffHandler = async (req, res) => {
       let data = {
         btn_num,
         purchasing_doc_no,
-        net_claim_amount: btn_list?.net_claim_amount,
-        net_payable_amount: btn_list?.net_payable_amount,
-        vendor_code: btn_list?.vendor_code,
-        created_at: convertToEpoch(new Date()),
-        btn_type: btn_list?.btn_type,
+        net_claim_amount: btn_list[0]?.net_claim_amount,
+        net_payable_amount: btn_list[0]?.net_payable_amount,
+        vendor_code: btn_list[0]?.vendor_code,
+        created_at: getEpochTime(),
+        btn_type: btn_list[0]?.btn_type,
       };
 
       let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
