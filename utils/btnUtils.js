@@ -94,7 +94,7 @@ exports.getICGRNs = async (body) => {
     total_price = totals.totalPrice || 0;
     total_quantity = totals.totalQuantity;
   }
-  
+
 
   // if (checkTypeArr(icgrn_no)) {
   //   await Promise.all(
@@ -119,6 +119,21 @@ exports.getICGRNs = async (body) => {
     total_icgrn_value: parseFloat(total_price.toFixed(2)),
   };
 };
+
+function calculateTotals(data) {
+  let totalQuantity = 0;
+  let totalPrice = 0;
+
+  data.forEach(item => {
+    totalQuantity += parseFloat(item.quantity);
+    totalPrice += parseFloat(item.price) * parseFloat(item.quantity);
+  });
+
+  return {
+    totalQuantity,
+    totalPrice
+  };
+}
 
 exports.checkBTNRegistered = async (btn_num, po) => {
   let q = `SELECT count(btn_num) as count FROM ${BTN_MATERIAL_DO} WHERE btn_num = $1 and purchasing_doc_no = $2`;
