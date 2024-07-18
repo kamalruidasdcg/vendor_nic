@@ -959,6 +959,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
         btn.igst, 
         btn.yard, 
         btn.net_claim_amount, 
+        btn.net_with_gst, 
         btn.invoice_no,
         btn.vendor_code, 
         ged.invno, 
@@ -1030,6 +1031,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
       IGST: igst_ammount,
       SGST: sgst_ammount,
       BASICAMT: basic_ammount?.toFixed(3),
+      TOT_AMT: btnDetails[0]?.net_with_gst || "0",
       ACTIVITY: btnPayload.activity || "", // activity
       FRERDAT: getYyyyMmDd(getEpochTime()),
       FRERZET: timeInHHMMSS(),
@@ -1211,7 +1213,7 @@ const getGrnIcgrnByInvoice = async (req, res) => {
     }
     const grn_values = gate_entry_v.map((el) => el.grn_no)
     const placeholder = grn_values.map((_, index) => `$${index + 1}`).join(",");
-    
+
     gate_entry_v = gate_entry_v[0];
 
     // const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity
@@ -1228,9 +1230,9 @@ const getGrnIcgrnByInvoice = async (req, res) => {
       left join ekpo as ekpo
         ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
     WHERE MBLNR IN (${placeholder})`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
-    
+
     console.log("icgrn_q", grn_values, placeholder, icgrn_q);
-    
+
     let icgrn_no = await getQuery({
       query: icgrn_q,
       values: grn_values,
@@ -1249,8 +1251,8 @@ const getGrnIcgrnByInvoice = async (req, res) => {
 
     let total_price = 0;
     let total_quantity = 0;
-    
-    if(icgrn_no.length) {
+
+    if (icgrn_no.length) {
       const totals = calculateTotals(icgrn_no);
       total_price = totals.totalPrice;
       total_quantity = totals.totalQuantity;
