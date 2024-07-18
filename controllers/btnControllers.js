@@ -1524,11 +1524,11 @@ const assignToFiStaffHandler = async (req, res) => {
       let data = {
         btn_num,
         purchasing_doc_no,
-        net_claim_amount: btn_list?.net_claim_amount,
-        net_payable_amount: btn_list?.net_payable_amount,
-        vendor_code: btn_list?.vendor_code,
-        created_at: convertToEpoch(new Date()),
-        btn_type: btn_list?.btn_type,
+        net_claim_amount: btn_list[0]?.net_claim_amount,
+        net_payable_amount: btn_list[0]?.net_payable_amount,
+        vendor_code: btn_list[0]?.vendor_code,
+        created_at: getEpochTime(),
+        btn_type: btn_list[0]?.btn_type,
       };
 
       let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
