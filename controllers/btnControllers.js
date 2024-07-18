@@ -1569,7 +1569,8 @@ function checkActualDates(c_dates, a_dates) {
 
   console.log("lllllllllllllll", c_dates, a_dates);
 
-  const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  // const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const arr = new Set([parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
   const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
   const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
   const mtextObj = {
