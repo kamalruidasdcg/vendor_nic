@@ -32,7 +32,7 @@ const {
   FORWARD_TO_FINANCE,
   REJECTED,
   ASSIGNED,
-  FORWARDED_TO_FI_STAFF,
+  STATUS_RECEIVED,
   SUBMIT_BY_DO,
   SUBMITTED_BY_DO,
   SUBMITTED_BY_VENDOR,
@@ -1358,7 +1358,7 @@ async function handelMail(tokenData, payload, event) {
     }
     if (
       tokenData.user_type != USER_TYPE_VENDOR &&
-      payload.status == FORWARDED_TO_FI_STAFF
+      payload.status == STATUS_RECEIVED
     ) {
       emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
       emailUserDetails = await getQuery({
@@ -1531,10 +1531,10 @@ const assignToFiStaffHandler = async (req, res) => {
         btn_type: btn_list[0]?.btn_type,
       };
 
-      let result = await addToBTNList(data, FORWARDED_TO_FI_STAFF);
+      let result = await addToBTNList(data, STATUS_RECEIVED);
 
       if (result?.status) {
-        handelMail(tokenData, { ...req.body, assign_to_fi, status: FORWARDED_TO_FI_STAFF });
+        handelMail(tokenData, { ...req.body, assign_to_fi, status: STATUS_RECEIVED });
         try {
           btnSaveToSap({ ...req.body, ...payload }, tokenData);
         } catch (error) {
