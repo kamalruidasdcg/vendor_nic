@@ -872,7 +872,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         created_by_id: tokenData.vendor_code,
         updated_by: "GRSE",
       };
-
+      console.log(insertPayloadForSdbg);
       const insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);
 
       let sdbgQuery = await poolQuery({
