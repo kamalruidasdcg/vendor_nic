@@ -60,41 +60,80 @@ exports.getICGRNs = async (body) => {
   if (!checkTypeArr(gate_entry_v)) {
     return null;
   }
-  gate_entry_v = gate_entry_v[0];
+  const grn_values = gate_entry_v.map((el) => el.grn_no)
+  const placeholder = grn_values.map((_, index) => `$${index + 1}`).join(",");
 
-  const icgrn_q = `SELECT PRUEFLOS AS icgrn_nos, MATNR as mat_no, LMENGE01 as quantity 
-  FROM qals WHERE MBLNR = $1`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
-  let icgrn_no = await getQuery({
-    query: icgrn_q,
-    values: [gate_entry_v?.grn_no],
-  });
+  gate_entry_v = gate_entry_v[0];
+ 
+
+  const icgrn_q = `SELECT 
+    qals.PRUEFLOS AS icgrn_nos, 
+    qals.MATNR as mat_no,
+    qals.MBLNR as grn_no,
+    qals.LMENGE01 as quantity,
+    qals.ebeln as purchasing_doc_no,
+    qals.ebelp as po_lineitem,
+    ekpo.NETPR as price
+    FROM qals as qals
+      left join ekpo as ekpo
+        ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
+    WHERE MBLNR IN (${placeholder})`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+
+    console.log("icgrn_q", grn_values, placeholder, icgrn_q);
+
+    let icgrn_no = await getQuery({
+      query: icgrn_q,
+      values: grn_values,
+    });
 
   let total_price = 0;
   let total_quantity = 0;
 
-  if (checkTypeArr(icgrn_no)) {
-    await Promise.all(
-      await icgrn_no.map(async (item) => {
-        const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = $1 and EBELN = $2 and EBELP = $3`;
-        let unit_price = await getQuery({
-          query: price_q,
-          values: [item?.mat_no, purchasing_doc_no, gate_entry_v.po_lineitem],
-        });
-        total_quantity += parseFloat(item?.quantity);
-        await Promise.all(
-          await unit_price.map(async (it) => {
-            total_price += parseFloat(it?.price) * total_quantity;
-          })
-        );
-      })
-    );
+  if (icgrn_no.length) {
+    const totals = calculateTotals(icgrn_no);
+    total_price = totals.totalPrice || 0;
+    total_quantity = totals.totalQuantity;
   }
+
+
+  // if (checkTypeArr(icgrn_no)) {
+  //   await Promise.all(
+  //     await icgrn_no.map(async (item) => {
+  //       const price_q = `SELECT NETPR AS price FROM ekpo WHERE MATNR = $1 and EBELN = $2 and EBELP = $3`;
+  //       let unit_price = await getQuery({
+  //         query: price_q,
+  //         values: [item?.mat_no, purchasing_doc_no, gate_entry_v.po_lineitem],
+  //       });
+  //       total_quantity += parseFloat(item?.quantity);
+  //       await Promise.all(
+  //         await unit_price.map(async (it) => {
+  //           total_price += parseFloat(it?.price) * total_quantity;
+  //         })
+  //       );
+  //     })
+  //   );
+  // }
   gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
   return {
     icgrn_nos: icgrn_no,
     total_icgrn_value: parseFloat(total_price.toFixed(2)),
   };
 };
+
+function calculateTotals(data) {
+  let totalQuantity = 0;
+  let totalPrice = 0;
+
+  data.forEach(item => {
+    totalQuantity += parseFloat(item.quantity);
+    totalPrice += parseFloat(item.price) * parseFloat(item.quantity);
+  });
+
+  return {
+    totalQuantity,
+    totalPrice
+  };
+}
 
 exports.checkBTNRegistered = async (btn_num, po) => {
   let q = `SELECT count(btn_num) as count FROM ${BTN_MATERIAL_DO} WHERE btn_num = $1 and purchasing_doc_no = $2`;
