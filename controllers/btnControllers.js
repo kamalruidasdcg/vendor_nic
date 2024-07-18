@@ -1288,8 +1288,8 @@ const getGrnIcgrnByInvoice = async (req, res) => {
     //   })
     // );
     gate_entry_v.total_price = parseFloat(total_price.toFixed(2));
-    gate_entry_v.icgrn_nos = gate_entry_v.grn_no;
-    gate_entry_v.grn_nos = gate_entry_v.grn_no;
+    gate_entry_v.icgrn_nos = icgrn_no;
+    gate_entry_v.grn_nos = icgrn_no;
 
     console.log;
     return resSend(res, true, 200, "Data gate!", gate_entry_v, null);
