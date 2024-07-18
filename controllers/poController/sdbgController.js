@@ -887,7 +887,7 @@ const sdbgUpdateByFinance = async (req, res) => {
       handelEmail(insertPayloadForSdbg, tokenData);
       if (obj.status === RETURN_TO_DO) {
         await client.query("COMMIT");
-        return resSend(res, false, 200, "this is return to do.", null, null);
+        return resSend(res, true, 200, "this is return to do.", null, null);
       }
 
       if (
