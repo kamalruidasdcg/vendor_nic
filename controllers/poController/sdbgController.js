@@ -696,10 +696,10 @@ const sdbgUpdateByFinance = async (req, res) => {
         const insertPayloadForSdbg = {
           reference_no: "SDBG ASSIGNED",
           status: obj.status,
-          file_name: action_type_with_vendor_code.file_name,
-          file_path: action_type_with_vendor_code.file_path,
-          action_type: action_type_with_vendor_code.action_type,
-          vendor_code: action_type_with_vendor_code.vendor_code,
+          file_name: action_type_with_vendor_code[0]?.file_name,
+          file_path: action_type_with_vendor_code[0]?.file_path,
+          action_type: action_type_with_vendor_code[0]?.action_type,
+          vendor_code: action_type_with_vendor_code[0]?.vendor_code,
           assigned_from: tokenData.vendor_code,
           assigned_to: obj.assigned_to,
           last_assigned: 1,
@@ -862,10 +862,10 @@ const sdbgUpdateByFinance = async (req, res) => {
         purchasing_doc_no: obj.purchasing_doc_no,
         remarks: obj.remarks,
         status: obj.status,
-        action_type: action_type_with_vendor_code.action_type,
-        vendor_code: action_type_with_vendor_code.vendor_code,
-        file_name: action_type_with_vendor_code.file_name,
-        file_path: action_type_with_vendor_code.file_path,
+        action_type: action_type_with_vendor_code[0]?.action_type,
+        vendor_code: action_type_with_vendor_code[0]?.vendor_code,
+        file_name: action_type_with_vendor_code[0]?.file_name,
+        file_path: action_type_with_vendor_code[0]?.file_path,
         last_assigned: 0,
         created_at: getEpochTime(),
         created_by_name: "finance dept",
@@ -887,9 +887,9 @@ const sdbgUpdateByFinance = async (req, res) => {
 
       if (
         insertPayloadForSdbg.status == APPROVED &&
-        (action_type_with_vendor_code.action_type == ACTION_SDBG ||
-          action_type_with_vendor_code.action_type == ACTION_IB ||
-          action_type_with_vendor_code.action_type == ACTION_DD)
+        (action_type_with_vendor_code[0]?.action_type == ACTION_SDBG ||
+          action_type_with_vendor_code[0]?.action_type == ACTION_IB ||
+          action_type_with_vendor_code[0]?.action_type == ACTION_DD)
       ) {
         const actual_subminission = await setActualSubmissionDate(
           insertPayloadForSdbg,
