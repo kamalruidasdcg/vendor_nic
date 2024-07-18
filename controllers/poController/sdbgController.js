@@ -1834,6 +1834,7 @@ async function update_in_all_obps_sdbgs_table(payload) {
           release_date: sapToGetEpochTime(payload.RELEASE_DATE),
           status: sapToGetEpochTime(status),
         };
+
         whereCondition = {
           purchasing_doc_no: payload.PO_NUMBER,
           reference_no: payload.REF_NO,
