@@ -971,6 +971,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
         btn.igst, 
         btn.yard, 
         btn.net_claim_amount, 
+        btn.net_with_gst, 
         btn.invoice_no,
         btn.vendor_code, 
         ged.invno, 
@@ -1042,6 +1043,7 @@ async function btnSaveToSap(btnPayload, tokenData) {
       IGST: igst_ammount,
       SGST: sgst_ammount,
       BASICAMT: basic_ammount?.toFixed(3),
+      TOT_AMT: btnDetails[0]?.net_with_gst || "0",
       ACTIVITY: btnPayload.activity || "", // activity
       FRERDAT: getYyyyMmDd(getEpochTime()),
       FRERZET: timeInHHMMSS(),
