@@ -679,6 +679,25 @@ const sdbgUpdateByFinance = async (req, res) => {
         return resSend(res, false, 200, "please login as finance!", null, null);
       }
 
+      const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      let get_sdbg_entry_data = await poolQuery({
+        client,
+        query: get_sdbg_entry_query,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
+      console.log(get_sdbg_entry_data);
+      if (get_sdbg_entry_data[0].status === RETURN_TO_DO) {
+        return resSend(
+          res,
+          false,
+          200,
+          `This BG is ${RETURN_TO_DO}.Befoure take action by DO YOU CAN not do any action!`,
+          null,
+          null
+        );
+      }
+
+      // return;
       const star = `file_name,file_path,vendor_code,action_type`;
 
       const get_sdbg_query = `SELECT ${star} FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
@@ -889,11 +908,13 @@ const sdbgUpdateByFinance = async (req, res) => {
         purchasing_doc_no: obj.purchasing_doc_no,
         reference_no: obj.reference_no,
       };
-
+      let uFile = obj.status === RETURN_TO_DO ? null : obj.bg_file_no;
+      console.log("uStatus)))))))))))))))))))");
+      console.log(uFile);
       ({ q, val } = generateQuery(
         UPDATE,
         SDBG_ENTRY,
-        { status: obj.status, bg_file_no: obj.bg_file_no },
+        { status: obj.status, bg_file_no: uFile },
         whereCondition
       ));
 
@@ -954,12 +975,12 @@ const sdbgUpdateByFinance = async (req, res) => {
           //   values: val,
           // });
 
-          const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
-          let get_sdbg_entry_data = await poolQuery({
-            client,
-            query: get_sdbg_entry_query,
-            values: [obj.purchasing_doc_no, obj.reference_no],
-          });
+          // const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+          // let get_sdbg_entry_data = await poolQuery({
+          //   client,
+          //   query: get_sdbg_entry_query,
+          //   values: [obj.purchasing_doc_no, obj.reference_no],
+          // });
 
           const get_po_date_query = `SELECT aedat FROM ${EKKO} WHERE EBELN = $1`;
           let get_po_date_data = await poolQuery({
