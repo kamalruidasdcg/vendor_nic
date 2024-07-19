@@ -24,7 +24,7 @@ const { handleFileDeletion } = require("../../lib/deleteFile");
 const { getFilteredData, updatTableData, insertTableData } = require("../../controllers/genralControlles");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
-const { SHIPPING_DOC_UPLOAD } = require("../../lib/event");
+const { SHIPPING_DOC_UPLOAD, SHIPPING_DOC_REQ_UPLOAD } = require("../../lib/event");
 
 
 const shippingDocuments = async (req, res) => {
@@ -136,11 +136,21 @@ const List = async (req, res) => {
 async function handleEmail(data) {
     // Maill trigger to QA, user dept and dealing officer upon uploading of each inspection call letters
     try {
-        
-        const getDoQuery = getUserDetailsQuery('do', '$1');
-        const doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
-        const dataObj = { ...data };
-        await sendMail(SHIPPING_DOC_UPLOAD, dataObj, { users: doDetails }, SHIPPING_DOC_UPLOAD);
+        let getDoQuery;
+        let doDetails;
+
+        if(data.updated_by === "VENDOR") {
+            getDoQuery = getUserDetailsQuery('do', '$1');
+            doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
+            const dataObj = { ...data };
+            await sendMail(SHIPPING_DOC_UPLOAD, dataObj, { users: doDetails }, SHIPPING_DOC_UPLOAD);
+        } else if(data.updated_by === "GRSE") {
+            getDoQuery = getUserDetailsQuery('vendor_by_po', '$1');
+            doDetails = await getQuery({ query: getDoQuery, values: [data.purchasing_doc_no] });
+            const dataObj = { ...data };
+            await sendMail(SHIPPING_DOC_REQ_UPLOAD, dataObj, { users: doDetails }, SHIPPING_DOC_REQ_UPLOAD);
+        }
+
     } catch (error) {
         console.log("handleEmail", error.toString(), error.stack)
     }
