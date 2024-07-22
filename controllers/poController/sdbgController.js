@@ -997,7 +997,7 @@ const sdbgUpdateByFinance = async (req, res) => {
           }
 
           const sendSap = await sendBgToSap(
-            get_sdbg_entry_data[0],
+            { ...get_sdbg_entry_data[0], bg_file_no: uFile },
             sdgbRollBackId
           );
           if (sendSap == false) {
@@ -1131,9 +1131,8 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${
-                  payload.purchasing_doc_no
-                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
+      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -1283,8 +1282,9 @@ async function handelEmail(payload, tokenData) {
   }
 }
 
-async function sendBgToSap(payload) {
+async function sendBgToSap(payload, id) {
   let status = false;
+  console.log("send to sap payload" , payload);
 
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
