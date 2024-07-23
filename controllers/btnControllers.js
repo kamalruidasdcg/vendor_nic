@@ -22,6 +22,7 @@ const {
   MID_ILMS,
   MID_QAP,
   MID_DRAWING,
+  USER_TYPE_GRSE_FINANCE,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -1742,6 +1743,36 @@ function calculateTotals(data) {
   };
 }
 
+const getFinanceEmpList = async (req, res) => {
+  try {
+    const q = `SELECT t1.pernr as userCode, t1.cname as empName, t3.name as role 
+	FROM pa0002 
+    	AS t1 
+      LEFT JOIN 
+      	auth 
+       AS t2 
+       ON 
+       	t2.vendor_code = t1.PERNR :: character varying
+
+	LEFT JOIN 
+      	internal_role_master 
+       AS t3 
+       ON 
+       	t3.id = t2.internal_role_id
+	
+        WHERE 
+        t2.department_id = $1`;
+
+    const response = await getQuery({
+      query: q,
+      values: [USER_TYPE_GRSE_FINANCE],
+    });
+    resSend(res, true, 200, "oded!", response, null);
+  } catch (err) {
+    console.log("data not fetched", err);
+  }
+};
+
 module.exports = {
   // fetchAllBTNs,
   fetchBTNList,
@@ -1754,4 +1785,5 @@ module.exports = {
   btnSaveToSap,
   timeInHHMMSS,
   assignToFiStaffHandler,
+  getFinanceEmpList,
 };
