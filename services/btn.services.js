@@ -1,5 +1,5 @@
 // const { query } = require("../config/dbConfig");
-const { query } = require("../config/pgDbConfig");
+const { query, getQuery } = require("../config/pgDbConfig");
 const {
   ACTION_SDBG,
   ACTION_PBG,
@@ -12,8 +12,10 @@ const {
   C_QAP_DATE,
   C_ILMS_DATE,
   BTN_STATUS_PROCESS_ID,
+  INSERT,
 } = require("../lib/constant");
 const { APPROVED, BTN_STATUS_PROCESS } = require("../lib/status");
+const { getEpochTime, generateQuery } = require("../lib/utils");
 const { checkTypeArr } = require("../utils/smallFun");
 
 const advBillHybridbtnPayload = async (payload, btn_type) => {
@@ -450,7 +452,7 @@ const updateBtnListTable = async (data) => {
           btn_type,
           created_at
       FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
-      const lasBtnDetails = await query({ query: getLatestDataQuery, values: [data.ZREGNUM] });
+      const lasBtnDetails = await getQuery({ query: getLatestDataQuery, values: [data.ZREGNUM] });
       let btnListTablePaylod = { btn_num: data.ZREGNUM };
 
       if (lasBtnDetails.length) {
