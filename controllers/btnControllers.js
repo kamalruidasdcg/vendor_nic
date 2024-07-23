@@ -334,7 +334,7 @@ const insertUpdateToBTNList = async (data, status, isInserted) => {
   // } else {
   //   //insert
   // }
-  assign_q = await generateQuery(INSERT, BTN_LIST, payload);
+  let assign_q = await generateQuery(INSERT, BTN_LIST, payload);
   console.log("insert..");
 
   let res = await getQuery({ query: assign_q.q, values: assign_q.val });
