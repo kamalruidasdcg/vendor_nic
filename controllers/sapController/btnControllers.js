@@ -2,6 +2,7 @@ const { asyncPool, poolQuery, poolClient, getQuery } = require("../../config/pgD
 const { UPDATE, INSERT } = require("../../lib/constant");
 const { BTN_RETURN_DO } = require("../../lib/event");
 const { responseSend } = require("../../lib/resSend");
+const { BTN_STATUS_HOLD_TEXT, BTN_STATUS_HOLD_CODE, BTN_STATUS_UNHOLD_TEXT } = require("../../lib/status");
 const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery, getEpochTime } = require("../../lib/utils");
 const { sendMail } = require("../../services/mail.services");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
@@ -114,14 +115,29 @@ const updateBtnListTable = async (client, data) => {
         let btnListTablePaylod = { btn_num: data.zbtno };
 
         if (lasBtnDetails.length) {
-            btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, status: statusObj[data.fstatus] || "", created_at: getEpochTime() };
+            btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, created_at: getEpochTime() };
+
+            /**
+             * status save in obps server
+             * if status  BTN_STATUS_HOLD_CODE then obps list show BTN_STATUS_HOLD_TEXT
+             * if un hold this, then status show default fstatus
+             */
+            let currentStatus = statusObj[data.fstatus] || "";
+            if (data.hold && data.hold === BTN_STATUS_HOLD_CODE) {
+                currentStatus = BTN_STATUS_HOLD_TEXT;
+            }
+            if ( btnListTablePaylod.status === BTN_STATUS_HOLD_CODE && !data.hold) {
+                currentStatus = BTN_STATUS_UNHOLD_TEXT;
+            }
+            btnListTablePaylod.status = currentStatus;
+
             const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod);
             await poolQuery({ client, query: q, values: val });
             if (data.fstatus == "5" || data.fstatus == 5) {
                 await handelMail(btnListTablePaylod, client);
             }
         } else {
-            console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+            console.log("NO BTN FOUND IN LIST TO BE UPDATED btn controller");
         }
 
     } catch (error) {
