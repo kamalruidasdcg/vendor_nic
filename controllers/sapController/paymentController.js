@@ -14,6 +14,7 @@ const Message = require("../../utils/messages");
 const { PAYMENT_ADVICE_DOC_GENERATE } = require("../../lib/event");
 const { sendMail } = require("../../services/mail.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { updateBtnListTable } = require("../../services/btn.services");
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -131,6 +132,8 @@ const ztfi_bil_deface = async (req, res) => {
             const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", ["ZREGNUM", "SEQNO", "ZBILLPER"]);
 
             const response = await query({ query: zdefaceInsertQuery.q, values: zdefaceInsertQuery.val });
+            await updateBtnListTable(payloadObj)
+
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (error) {
             responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
@@ -189,7 +192,7 @@ const newPaymentAdvice = async (req, res) => {
 
 async function handleEmail(data) {
     try {
-        
+
         const getDoQuery = getUserDetailsQuery('vendor', '$1');
         const venodrDetails = await getQuery({ query: getDoQuery, values: [data.lifnr] });
         const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0]?.u_name, };
