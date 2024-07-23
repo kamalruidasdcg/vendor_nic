@@ -476,7 +476,7 @@ const updateBtnListTable = async (data) => {
         await query({ query: q, values: val });
 
       } else {
-        console.log("NO BTN FOUND IN LIST TO BE UPDATED btn.servoce");
+        console.log("NO BTN FOUND IN LIST TO BE UPDATED btn.service");
       }
     } else {
       console.log("----------NO ACTION REQUIRED");
