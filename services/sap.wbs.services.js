@@ -26,8 +26,9 @@ const wbsPayload = async (payload) => {
     // C_PKEY: `${obj.EBELN}-${obj.EBELP}`,
     EBELN: obj.EBELN,
     EBELP: obj.EBELP,
-    WBS_ELEMENT: obj.WBS_ELEMENT || null,
-    NETWORK: obj.NETWORK || null,
+    WBS_ELEMENT: obj.WBS_ELEMENT || "",
+    NETWORK: obj.NETWORK || "",
+    PROJECT_CODE: obj.PROJECT_CODE || "",
   }));
   return pl;
 };
