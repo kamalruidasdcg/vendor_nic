@@ -46,8 +46,7 @@ const Message = require("../../utils/messages");
 const addWBSElement = async (req, res) => {
 
     //    http://10.13.1.38:4001/api/v1/po/qap
-    console.log("req.body)", req.body);
-    console.log("req.body)", req.body);
+    
     try {
         if (!req.body) {
             responseSend(res, "F", 400, Message.INVALID_PAYLOAD, "", null);
