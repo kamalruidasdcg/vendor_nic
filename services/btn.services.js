@@ -1,5 +1,5 @@
 // const { query } = require("../config/dbConfig");
-const { query } = require("../config/dbConfig");
+const { query, getQuery } = require("../config/pgDbConfig");
 const {
   ACTION_SDBG,
   ACTION_PBG,
@@ -11,8 +11,11 @@ const {
   C_DRAWING_DATE,
   C_QAP_DATE,
   C_ILMS_DATE,
+  BTN_STATUS_PROCESS_ID,
+  INSERT,
 } = require("../lib/constant");
-const { APPROVED } = require("../lib/status");
+const { APPROVED, BTN_STATUS_PROCESS } = require("../lib/status");
+const { getEpochTime, generateQuery } = require("../lib/utils");
 const { checkTypeArr } = require("../utils/smallFun");
 
 const advBillHybridbtnPayload = async (payload, btn_type) => {
@@ -423,6 +426,67 @@ const dateToEpochTime = (date) => {
   return date ? new Date(date).getTime() : null;
 };
 
+
+
+const updateBtnListTable = async (data) => {
+  try {
+    // const btnListPayload = { btn_num: data.zbtno, status: data.dstatus };
+    // const statusObj = {
+    //     "1": "RECEIVED",
+    //     "2": "REJECTED",
+    //     "3": "APPROVE",
+    //     "4": "BANK",
+    //     "5": "D-RETURN"
+    // }
+
+    if (parseInt(data.CODE) === parseInt(BTN_STATUS_PROCESS_ID)) {
+
+      const getLatestDataQuery = `
+      SELECT 
+          btn_num, 
+          purchasing_doc_no, 
+          net_claim_amount, 
+          net_payable_amount, 
+          vendor_code, 
+          status, 
+          btn_type,
+          created_at
+      FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+      const lasBtnDetails = await getQuery({ query: getLatestDataQuery, values: [data.ZREGNUM] });
+      let btnListTablePaylod = { btn_num: data.ZREGNUM };
+
+      if (lasBtnDetails.length) {
+        btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, created_at: getEpochTime() };
+
+        /**
+         * status save in obps server
+         * if status  BTN_STATUS_HOLD_CODE then obps list show BTN_STATUS_HOLD_TEXT
+         * if un hold this, then status show default fstatus
+         */
+        let currentStatus = BTN_STATUS_PROCESS;
+        // if (data.hold && data.hold === BTN_STATUS_HOLD_CODE) {
+        //   currentStatus = BTN_STATUS_HOLD_TEXT;
+        // }
+        // if (btnListTablePaylod.status === BTN_STATUS_HOLD_CODE && !data.hold) {
+        //   currentStatus = BTN_STATUS_UNHOLD_TEXT;
+        // }
+        btnListTablePaylod.status = currentStatus;
+
+        const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod);
+        await query({ query: q, values: val });
+
+      } else {
+        console.log("NO BTN FOUND IN LIST TO BE UPDATED btn.service");
+      }
+    } else {
+      console.log("----------NO ACTION REQUIRED");
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   advBillHybridbtnPayload,
   getSDBGApprovedFiles,
@@ -440,4 +504,5 @@ module.exports = {
   actualSubmissionDate,
   dateToEpochTime,
   advBillHybridbtnDOPayload,
+  updateBtnListTable
 };

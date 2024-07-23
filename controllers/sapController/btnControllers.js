@@ -1,8 +1,8 @@
 const { asyncPool, poolQuery, poolClient, getQuery } = require("../../config/pgDbConfig");
-const { UPDATE, INSERT } = require("../../lib/constant");
+const { UPDATE, INSERT, BTN_STATUS_HOLD_CODE } = require("../../lib/constant");
 const { BTN_RETURN_DO } = require("../../lib/event");
 const { responseSend } = require("../../lib/resSend");
-const { BTN_STATUS_HOLD_TEXT, BTN_STATUS_HOLD_CODE, BTN_STATUS_UNHOLD_TEXT } = require("../../lib/status");
+const { BTN_STATUS_HOLD_TEXT, BTN_STATUS_UNHOLD_TEXT } = require("../../lib/status");
 const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery, getEpochTime } = require("../../lib/utils");
 const { sendMail } = require("../../services/mail.services");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
