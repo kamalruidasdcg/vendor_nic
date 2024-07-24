@@ -431,10 +431,10 @@ const submitBTN = async (req, res) => {
   }
 
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(invoice_no) as count FROM btn WHERE invoice_no = $1 and vendor_code = $2`;
+  let check_invoice_q = `SELECT count(*) as count FROM btn WHERE (invoice_no = $1 OR e_invoice_no = $1) and vendor_code = $2`;
   let check_invoice = await getQuery({
     query: check_invoice_q,
-    values: [invoice_no, tokenData.vendor_code],
+    values: [inv, tokenData.vendor_code],
   });
   if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
     return resSend(
@@ -477,7 +477,7 @@ const submitBTN = async (req, res) => {
   // let grn_nos = await getGRNs(purchasing_doc_no);
 
   // GET ICGRN Value by PO Number
-  let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
+  let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no: inv });
   if (!resICGRN) {
     return resSend(res, false, 200, `Invoice number is not valid!`, null, null);
   }
