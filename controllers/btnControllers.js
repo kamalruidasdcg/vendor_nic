@@ -424,12 +424,9 @@ const submitBTN = async (req, res) => {
   if (!invoice_value || !invoice_value.trim() === "") {
     return resSend(res, false, 200, "Basic Value is mandatory.", null, null);
   }
-  if (
-    !purchasing_doc_no ||
-    !purchasing_doc_no.trim() === "" ||
-    !invoice_no ||
-    !invoice_no.trim() === ""
-  ) {
+  const inv = invoice_no || e_invoice_no;
+
+  if (!purchasing_doc_no || !inv) {
     return resSend(res, false, 200, "Invoice Number is missing!", null, null);
   }
 

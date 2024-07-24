@@ -859,9 +859,15 @@ const poList = async (req, res) => {
         resultArr.push(obj);
       })
     );
-    const sortedRes = resultArr.sort((a, b) =>
-      a.createdAt < b.createdAt ? 1 : -1
-    );
+    const sortedRes = resultArr.sort((a, b) => {
+      if (a.createdAt > b.createdAt) return -1;
+      if (a.createdAt < b.createdAt) return -1;
+
+      if (parseInt(a.poNumber) > parseInt(b.poNumber)) return -1;
+      if (parseInt(a.poNumber) < parseInt(b.poNumber)) return 1;
+
+      //a.createdAt < b.createdAt ? 1 : -1
+    });
 
     resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
   } catch (error) {
