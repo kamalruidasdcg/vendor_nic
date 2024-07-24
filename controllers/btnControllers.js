@@ -324,19 +324,19 @@ const insertUpdateToBTNList = async (data, status, isInserted) => {
     status: status,
   };
 
-  if (isInserted == true) {
-    // update
-    whereCondition = {
-      btn_num: payload.btn_num,
-      purchasing_doc_no: payload.purchasing_doc_no,
-    };
-    assign_q = await generateQuery(UPDATE, BTN_LIST, payload, whereCondition);
-    console.log("update..");
-  } else {
-    //insert
-    assign_q = await generateQuery(INSERT, BTN_LIST, payload);
-    console.log("insert..");
-  }
+  // if (isInserted == true) {
+  //   // update
+  //   whereCondition = {
+  //     btn_num: payload.btn_num,
+  //     purchasing_doc_no: payload.purchasing_doc_no,
+  //   };
+  //   assign_q = await generateQuery(UPDATE, BTN_LIST, payload, whereCondition);
+  //   console.log("update..");
+  // } else {
+  //   //insert
+  // }
+  let assign_q = await generateQuery(INSERT, BTN_LIST, payload);
+  console.log("insert..");
 
   let res = await getQuery({ query: assign_q.q, values: assign_q.val });
 
