@@ -386,11 +386,11 @@ const submitBTN = async (req, res) => {
   let {
     purchasing_doc_no,
     invoice_no,
+    invoice_type,
     invoice_value,
     cgst,
     igst,
     sgst,
-    e_invoice_no,
     debit_note,
     credit_note,
     hsn_gstn_icgrn,
@@ -424,17 +424,16 @@ const submitBTN = async (req, res) => {
   if (!invoice_value || !invoice_value.trim() === "") {
     return resSend(res, false, 200, "Basic Value is mandatory.", null, null);
   }
-  const inv = invoice_no || e_invoice_no;
 
-  if (!purchasing_doc_no || !inv) {
+  if (!purchasing_doc_no || !invoice_no) {
     return resSend(res, false, 200, "Invoice Number is missing!", null, null);
   }
 
   // check invoice number is already present in DB
-  let check_invoice_q = `SELECT count(*) as count FROM btn WHERE (invoice_no = $1 OR e_invoice_no = $1) and vendor_code = $2`;
+  let check_invoice_q = `SELECT count(*) as count FROM btn WHERE invoice_no = $1 and vendor_code = $2`;
   let check_invoice = await getQuery({
     query: check_invoice_q,
-    values: [inv, tokenData.vendor_code],
+    values: [invoice_no, tokenData.vendor_code],
   });
   if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
     return resSend(
@@ -454,12 +453,12 @@ const submitBTN = async (req, res) => {
     payload = { ...payload, invoice_filename };
   }
 
-  payloadFiles["e_invoice_filename"]
-    ? (payload = {
-        ...payload,
-        e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
-      })
-    : null;
+  // payloadFiles["e_invoice_filename"]
+  //   ? (payload = {
+  //       ...payload,
+  //       e_invoice_filename: payloadFiles["e_invoice_filename"][0]?.filename,
+  //     })
+  //   : null;
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
@@ -477,13 +476,14 @@ const submitBTN = async (req, res) => {
   // let grn_nos = await getGRNs(purchasing_doc_no);
 
   // GET ICGRN Value by PO Number
-  let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no: inv });
+  let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
   if (!resICGRN) {
     return resSend(res, false, 200, `Invoice number is not valid!`, null, null);
   }
 
   payload = {
     ...payload,
+    invoice_type,
     icgrn_total: resICGRN.total_icgrn_value,
     icgrn_nos: JSON.stringify(resICGRN.icgrn_nos),
   };
