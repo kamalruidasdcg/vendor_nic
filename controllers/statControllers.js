@@ -17,7 +17,7 @@ const {
 } = require("../lib/tableName");
 const { checkPoType } = require("../services/lastassignee.servces");
 const { USER_TYPE_GRSE_QAP, ASSIGNER, STAFF } = require("../lib/constant");
-const { ASSIGNED } = require("../lib/status");
+const { ASSIGNED, ACCEPTED } = require("../lib/status");
 
 exports.statsForBG = async (req, res) => {
   try {
@@ -385,23 +385,39 @@ exports.statsForQA = async (req, res) => {
           query: getAsfromAstoQ,
           values: [],
         });
+
+        const getStatusAccepctedQ = `SELECT DISTINCT ON (status) purchasing_doc_no,created_at 
+        FROM qap_submission WHERE purchasing_doc_no IN(${str})
+          AND status = $1`;
+
+        const getStatusAccepctedData = await poolQuery({
+          client,
+          query: getStatusAccepctedQ,
+          values: [ACCEPTED],
+        });
+
         let results = [];
         if (result && Array.isArray(result)) {
           results = result.map((el2) => {
+            let staAcc = getStatusAccepctedData.find(
+              (ele) => ele.purchasing_doc_no == el2.purchasing_doc_no
+            );
+            staAcc
+              ? (el2.accepted_on = staAcc.created_at)
+              : (el2.accepted_on = "N/A");
+
             let DOObj = getAsfromAstoData.find(
               (elms) => elms.purchasing_doc_no == el2.purchasing_doc_no
             );
             if (DOObj) {
-              return { ...DOObj, ...el2, accepted_on: 12345678987 };
+              return { ...DOObj, ...el2 };
             } else {
               return {
                 ...el2,
                 assigned_from: "N/A",
                 assigned_to: "N/A",
-                accepted_on: 12345678987,
               };
             }
-            //return DOObj ? { ...DOObj, ...el2 } : el2;
           });
         }
 
