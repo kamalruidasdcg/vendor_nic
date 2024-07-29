@@ -44,6 +44,12 @@ const {
   SUBMITTED_BY_VENDOR,
   D_STATUS_FORWARDED_TO_FINANCE,
   F_STATUS_FORWARDED_TO_FINANCE,
+  RECEIVED,
+  BTN_STATUS_BANK,
+  BTN_STATUS_HOLD_TEXT,
+  BTN_STATUS_UNHOLD_TEXT,
+  BTN_STATUS_PROCESS,
+  BTN_STATUS_NOT_SUBMITTED,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -462,10 +468,10 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET Approved SDBG by PO Number
@@ -493,17 +499,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -719,21 +725,32 @@ const submitBTNByDO = async (req, res) => {
       } = req.body;
       const tokenData = { ...req.tokenData };
 
-      const btnRejectCheck = await btnDetailsCheck(client, {
-        btn_num,
-        status: REJECTED,
-      });
-
-      if (parseInt(btnRejectCheck.count)) {
-        return resSend(
-          res,
-          false,
-          200,
-          `BTN ${btn_num} already rejected`,
-          btn_num,
-          null
-        );
+      if (!btn_num) {
+        return resSend(res, false, 200, "BTN number is missing!", "No BTN number", null);
       }
+
+      // BTN VALIDATION 
+
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num });
+      if (btnCurrnetStatus.isInvalid) {
+        return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null);
+      }
+      // const btnRejectCheck = await btnDetailsCheck(client, {
+      //   btn_num,
+      //   status: REJECTED,
+      // });
+
+
+      // if (parseInt(btnRejectCheck.count)) {
+      //   return resSend(
+      //     res,
+      //     false,
+      //     200,
+      //     `BTN ${btn_num} already rejected`,
+      //     btn_num,
+      //     null
+      //   );
+      // }
 
       if (status === REJECTED) {
         const response1 = await btnReject(req.body, tokenData, client);
@@ -750,9 +767,6 @@ const submitBTNByDO = async (req, res) => {
         return resSend(res, false, 200, "Net payable is missing!", null, null);
       }
 
-      if (!btn_num) {
-        return resSend(res, false, 200, "BTN number is missing!", null, null);
-      }
 
       // Check BTN by BTN Number
       let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
@@ -1461,21 +1475,25 @@ const assignToFiStaffHandler = async (req, res) => {
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
-      const btnRejectCheck = await btnDetailsCheck(client, {
-        btn_num,
-        status: REJECTED,
-      });
-
-      if (parseInt(btnRejectCheck.count)) {
-        return resSend(
-          res,
-          false,
-          200,
-          `BTN ${btn_num} already rejected`,
-          btn_num,
-          null
-        );
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num });
+      if (btnCurrnetStatus.isInvalid) {
+        return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null);
       }
+      // const btnRejectCheck = await btnDetailsCheck(client, {
+      //   btn_num,
+      //   status: REJECTED,
+      // });
+
+      // if (parseInt(btnRejectCheck.count)) {
+      //   return resSend(
+      //     res,
+      //     false,
+      //     200,
+      //     `BTN ${btn_num} already rejected`,
+      //     btn_num,
+      //     null
+      //   );
+      // }
 
       if (
         !btn_num ||
@@ -1720,6 +1738,60 @@ async function btnDetailsCheck(client, data) {
     });
 
     return result.length ? result[0] : {};
+  } catch (error) {
+    throw error;
+  }
+}
+async function btnCurrentDetailsCheck(client, data) {
+  try {
+    let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
+    const valueArr = [];
+    let count = 0;
+    if (data.btn_num) {
+      btnstausCount += ` AND btn_num = $${++count}`;
+      valueArr.push(data.btn_num);
+    }
+    // if (data.status) {
+    //   btnstausCount += ` AND status = $${++count}`;
+    //   valueArr.push(data.status);
+    // }
+
+    const checkStatus = new Set([
+      STATUS_RECEIVED,
+      REJECTED,
+      BTN_STATUS_BANK,
+      BTN_STATUS_HOLD_TEXT,
+      BTN_STATUS_UNHOLD_TEXT,
+      BTN_STATUS_PROCESS,
+    ]);
+
+    btnstausCount += " ORDER BY created_at DESC";
+    btnstausCount += " LIMIT 1";
+
+    const result = await poolQuery({
+      client,
+      query: btnstausCount,
+      values: valueArr,
+    });
+    let isInvalid = false;
+
+    // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
+    // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
+
+    if (result.length) {
+      const currentStatus = result.at(-1);
+      if (checkStatus.has(currentStatus.status)) {
+        isInvalid = true;
+      }
+      return {
+        isInvalid, currentStatus: currentStatus.status, message: `already ${currentStatus.status}`
+      };
+
+    }
+
+    return {
+      isInvalid: true, currentStatus: BTN_STATUS_NOT_SUBMITTED, message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`
+    };
   } catch (error) {
     throw error;
   }
