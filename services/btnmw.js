@@ -17,6 +17,15 @@ const storageBTNs = multer.diskStorage({
     cb(null, uniqueSuffix + "-" + file.originalname);
   },
 });
+const storageInvoiceSupportingDoc = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/invSupporting");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now();
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  },
+});
 
 const uploadBTNs = multer({
   storage: storageBTNs,
@@ -32,6 +41,19 @@ exports.btnmw = () => {
     { name: "debit_credit_filename", maxCount: 1 },
     { name: "get_entry_filename", maxCount: 1 },
     { name: "demand_raise_filename", maxCount: 1 },
+  ]);
+};
+
+const uploadInvoiceSupportingDoc = multer({
+  storage: storageInvoiceSupportingDoc,
+  dest: "uploads/invSupporting",
+  pdfFileFilter,
+  limits: { fileSize: 1000 * 1000 },
+});
+
+exports.isd = () => {
+  return uploadInvoiceSupportingDoc.fields([
+    { name: "invoice_supporting_doc", maxCount: 1 },
   ]);
 };
 
