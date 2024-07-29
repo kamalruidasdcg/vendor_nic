@@ -254,8 +254,8 @@ const getBTNData = async (req, res) => {
     let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
     let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
 
-    payload = {
-      ...payload,
+    obj = {
+      ...obj,
       ib_filename,
       dd_filename,
     };
