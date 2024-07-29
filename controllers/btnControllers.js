@@ -66,7 +66,6 @@ const {
   getBTNInfo,
   getBTNInfoDO,
   fetchBTNListByPOAndBTNNum,
-  getSDFiles,
 } = require("../utils/btnUtils");
 const { convertToEpoch } = require("../utils/dateTime");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
@@ -252,16 +251,14 @@ const getBTNData = async (req, res) => {
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
-    let ib_filename = await getSDFiles(id, ACTION_IB);
-    let dd_filename = await getSDFiles(id, ACTION_DD);
+    let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
+    let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
 
     obj = {
       ...obj,
       ib_filename,
       dd_filename,
     };
-    console.log("$$$");
-    console.log(obj);
 
     // GET gate by PO Number
     // let gate_entry = await getGateEntry(id);
@@ -489,14 +486,6 @@ const submitBTN = async (req, res) => {
   // GET SD by PO Number
   // let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
   // let pbg_filename_result = await getPBGApprovedFiles(purchasing_doc_no);
-  let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
-  let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
-
-  payload = {
-    ...payload,
-    ib_filename,
-    dd_filename,
-  };
 
   // // GET GRN Number by PO Number
   // let grn_nos = await getGRNs(purchasing_doc_no);
