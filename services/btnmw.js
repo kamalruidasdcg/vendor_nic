@@ -37,6 +37,7 @@ const uploadBTNs = multer({
 exports.btnmw = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
+    { name: "invoice_supporting_doc", maxCount: 1 },
     // { name: "e_invoice_filename", maxCount: 1 },
     { name: "debit_credit_filename", maxCount: 1 },
     { name: "get_entry_filename", maxCount: 1 },

@@ -49,13 +49,9 @@ router.get("/btn_do", [veifyAccessToken], (req, res) => {
 
 const upload = btnmw();
 const invSupportDoc = isd();
-router.post(
-  "/BillsMaterialHybrid",
-  [veifyAccessToken, upload, invSupportDoc],
-  (req, res) => {
-    submitBTN(req, res);
-  }
-);
+router.post("/BillsMaterialHybrid", [veifyAccessToken, upload], (req, res) => {
+  submitBTN(req, res);
+});
 router.post(
   "/BillsMaterialHybridByDO",
   [veifyAccessToken, upload],
