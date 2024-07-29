@@ -18,7 +18,11 @@ const {
   getWdcInfoServiceHybrid,
 } = require("../controllers/btnServiceHybridControllers");
 
-const { btnmw, btnAdvanceBillHybridUploadFile } = require("../services/btnmw");
+const {
+  btnmw,
+  btnAdvanceBillHybridUploadFile,
+  isd,
+} = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const {
   submitAdvanceBillHybrid,
@@ -44,6 +48,7 @@ router.get("/btn_do", [veifyAccessToken], (req, res) => {
 });
 
 const upload = btnmw();
+const invSupportDoc = isd();
 router.post("/BillsMaterialHybrid", [veifyAccessToken, upload], (req, res) => {
   submitBTN(req, res);
 });
