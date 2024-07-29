@@ -52,6 +52,7 @@ const {
   BTN_STATUS_UNHOLD_TEXT,
   BTN_STATUS_PROCESS,
   BTN_STATUS_NOT_SUBMITTED,
+  BTN_STATUS_DRETURN,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -1490,7 +1491,7 @@ const assignToFiStaffHandler = async (req, res) => {
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
-      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num });
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num, status: STATUS_RECEIVED });
       if (btnCurrnetStatus.isInvalid) {
         return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null);
       }
@@ -1778,6 +1779,10 @@ async function btnCurrentDetailsCheck(client, data) {
       BTN_STATUS_HOLD_TEXT,
       BTN_STATUS_PROCESS,
     ]);
+
+    if (data.status === STATUS_RECEIVED) {
+      checkStatus.add(BTN_STATUS_DRETURN);
+    }
 
     btnstausCount += " ORDER BY created_at DESC";
     btnstausCount += " LIMIT 1";
