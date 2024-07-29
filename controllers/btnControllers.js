@@ -23,6 +23,8 @@ const {
   MID_QAP,
   MID_DRAWING,
   USER_TYPE_GRSE_FINANCE,
+  ACTION_DD,
+  ACTION_IB,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -452,7 +454,12 @@ const submitBTN = async (req, res) => {
     invoice_filename = payloadFiles["invoice_filename"][0]?.filename;
     payload = { ...payload, invoice_filename };
   }
-
+  let suppoting_invoice_filename;
+  if (payloadFiles["invoice_supporting_doc"]) {
+    suppoting_invoice_filename =
+      payloadFiles["invoice_supporting_doc"][0]?.filename;
+    payload = { ...payload, suppoting_invoice_filename };
+  }
   // payloadFiles["e_invoice_filename"]
   //   ? (payload = {
   //       ...payload,
@@ -468,9 +475,17 @@ const submitBTN = async (req, res) => {
       })
     : null;
 
-  // GET Approved SDBG by PO Number
-  let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
-  let pbg_filename_result = await getPBGApprovedFiles(purchasing_doc_no);
+  // GET SD by PO Number
+  // let sdbg_filename_result = await getSDBGApprovedFiles(purchasing_doc_no);
+  // let pbg_filename_result = await getPBGApprovedFiles(purchasing_doc_no);
+  let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
+  let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
+
+  payload = {
+    ...payload,
+    ib_filename,
+    dd_filename,
+  };
 
   // // GET GRN Number by PO Number
   // let grn_nos = await getGRNs(purchasing_doc_no);
