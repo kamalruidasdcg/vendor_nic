@@ -73,6 +73,7 @@ const {
   getBTNInfo,
   getBTNInfoDO,
   fetchBTNListByPOAndBTNNum,
+  getSDFiles,
 } = require("../utils/btnUtils");
 const { convertToEpoch } = require("../utils/dateTime");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
@@ -258,6 +259,16 @@ const getBTNData = async (req, res) => {
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
+    let ib_filename = await getSDFiles(id, ACTION_IB);
+    let dd_filename = await getSDFiles(id, ACTION_DD);
+
+    obj = {
+      ...obj,
+      ib_filename,
+      dd_filename,
+    };
+    console.log("$$$");
+    console.log(obj);
 
     // GET gate by PO Number
     // let gate_entry = await getGateEntry(id);

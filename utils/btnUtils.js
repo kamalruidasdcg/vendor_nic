@@ -25,7 +25,7 @@ exports.getPBGApprovedFiles = async (po) => {
   return result;
 };
 exports.getSDFiles = async (po, action_type) => {
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and action_type = $3`;
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and action_type = $2`;
   let result = await getQuery({
     query: q,
     values: [po, action_type],
