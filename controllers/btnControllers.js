@@ -1776,7 +1776,6 @@ async function btnCurrentDetailsCheck(client, data) {
       REJECTED,
       BTN_STATUS_BANK,
       BTN_STATUS_HOLD_TEXT,
-      BTN_STATUS_UNHOLD_TEXT,
       BTN_STATUS_PROCESS,
     ]);
 
