@@ -1782,6 +1782,8 @@ async function btnCurrentDetailsCheck(client, data) {
 
     if (data.status === STATUS_RECEIVED) {
       checkStatus.add(BTN_STATUS_DRETURN);
+      checkStatus.add(SUBMITTED_BY_VENDOR);
+      checkStatus.delete(STATUS_RECEIVED);
     }
 
     btnstausCount += " ORDER BY created_at DESC";
