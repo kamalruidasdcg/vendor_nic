@@ -13,8 +13,11 @@ const {
   AUTH,
   BTN_ASSIGN,
   BTN_MATERIAL_DO,
+  QAP_SUBMISSION,
 } = require("../lib/tableName");
 const { checkPoType } = require("../services/lastassignee.servces");
+const { USER_TYPE_GRSE_QAP, ASSIGNER, STAFF } = require("../lib/constant");
+const { ASSIGNED, ACCEPTED } = require("../lib/status");
 
 exports.statsForBG = async (req, res) => {
   try {
@@ -131,7 +134,12 @@ exports.statsForBTN = async (req, res) => {
     try {
       const tokenData = req.tokenData;
       if (tokenData) {
-        const QbtnNo = `SELECT MAX(created_at) as time, btn_num FROM ${BTN_LIST} GROUP BY btn_num,purchasing_doc_no`;
+        //const QbtnNo = `SELECT MAX(created_at) as time, btn_num FROM ${BTN_LIST} GROUP BY btn_num,purchasing_doc_no`;
+        const QbtnNo = `SELECT DISTINCT ON (btn_num)
+	created_at as time
+  FROM btn_list
+  ORDER BY btn_num, created_at DESC`;
+
         let btn_no_list = await poolQuery({
           client,
           query: QbtnNo,
@@ -280,5 +288,182 @@ exports.statsForBTN = async (req, res) => {
     }
   } catch (error) {
     resSend(res, false, 500, "error in db conn!", error, "");
+  }
+};
+
+exports.statsForQA = async (req, res) => {
+  try {
+    const client = await poolClient();
+    try {
+      const tokenData = { ...req.tokenData };
+
+      // check user from QA
+      if (tokenData.department_id != USER_TYPE_GRSE_QAP) {
+        return resSend(
+          res,
+          false,
+          200,
+          "You are not authorized to view the information",
+          null,
+          null
+        );
+      }
+
+      let str = "";
+      let q;
+      let result;
+      // For grse_QA_ASSIGNER
+      if (tokenData.internal_role_id === ASSIGNER) {
+        q = `SELECT DISTINCT ON (t1.reference_no)
+            t1.reference_no,
+            t1.purchasing_doc_no,
+            t1.vendor_code,
+            t1.status,
+            t1.created_at,
+            t2.name1 as vendor_name
+            FROM qap_submission AS t1
+                          LEFT JOIN
+                              lfa1 AS t2
+                          ON
+                              t1.vendor_code = t2.lifnr
+                        
+          WHERE t1.reference_no != 'QAP ASSIGNED'
+            ORDER BY  t1.reference_no,t1.created_at DESC`;
+
+        result = await poolQuery({
+          client,
+          query: q,
+          values: [],
+        });
+
+        let strArr = [];
+        if (result.length) {
+          result.forEach((item) => {
+            strArr.push(item.purchasing_doc_no);
+          });
+        }
+
+        function removeDuplicates(strArr) {
+          return [...new Set(strArr)];
+        }
+        strArr = removeDuplicates(strArr);
+        console.log("************");
+
+        if (strArr.length) {
+          strArr.forEach((item) => {
+            const no = item.purchasing_doc_no;
+            str = str.concat("'").concat(`${item}`).concat("'").concat(",");
+          });
+        }
+
+        str = str.slice(0, -1);
+      }
+
+      // For grse_QA_STAFF
+      if (tokenData.internal_role_id === STAFF) {
+        const getStrArrQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,assigned_to 
+              FROM qap_submission WHERE assigned_to = $1`;
+
+        const getStrArrData = await poolQuery({
+          client,
+          query: getStrArrQ,
+          values: [tokenData.vendor_code],
+        });
+        console.log(getStrArrData);
+        // return;
+        if (getStrArrData.length) {
+          getStrArrData.forEach((item) => {
+            const no = item.purchasing_doc_no;
+            str = str.concat("'").concat(`${no}`).concat("'").concat(",");
+          });
+        }
+
+        str = str.slice(0, -1);
+
+        let q = `SELECT DISTINCT ON (t1.reference_no)
+            t1.reference_no,
+            t1.purchasing_doc_no,
+            t1.vendor_code,
+            t1.status,
+            t1.created_at,
+            t2.name1 as vendor_name
+            FROM qap_submission AS t1
+                          LEFT JOIN
+                              lfa1 AS t2
+                          ON
+                              t1.vendor_code = t2.lifnr
+                        
+          WHERE t1.purchasing_doc_no IN (${str}) AND t1.reference_no != 'QAP ASSIGNED'
+            ORDER BY  t1.reference_no,t1.created_at DESC`;
+
+        result = await poolQuery({
+          client,
+          query: q,
+          values: [],
+        });
+      }
+      // console.log(str);
+      // console.log(result);
+      // return;
+      const getAsfromAstoQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,assigned_from,assigned_to 
+              FROM qap_submission WHERE purchasing_doc_no IN(${str})
+                AND is_assign = 1`;
+
+      const getAsfromAstoData = await poolQuery({
+        client,
+        query: getAsfromAstoQ,
+        values: [],
+      });
+
+      const getStatusAccepctedQ = `SELECT DISTINCT ON (status) purchasing_doc_no,created_at 
+        FROM qap_submission WHERE purchasing_doc_no IN(${str})
+          AND status = $1`;
+
+      const getStatusAccepctedData = await poolQuery({
+        client,
+        query: getStatusAccepctedQ,
+        values: [ACCEPTED],
+      });
+
+      let results = [];
+      if (result && Array.isArray(result)) {
+        results = result.map((el2) => {
+          let staAcc = getStatusAccepctedData.find(
+            (ele) => ele.purchasing_doc_no == el2.purchasing_doc_no
+          );
+          staAcc
+            ? (el2.accepted_on = staAcc.created_at)
+            : (el2.accepted_on = "N/A");
+
+          let DOObj = getAsfromAstoData.find(
+            (elms) => elms.purchasing_doc_no == el2.purchasing_doc_no
+          );
+          if (DOObj) {
+            return { ...DOObj, ...el2 };
+          } else {
+            return {
+              ...el2,
+              assigned_from: "N/A",
+              assigned_to: "N/A",
+            };
+          }
+        });
+      }
+
+      return resSend(
+        res,
+        true,
+        200,
+        "Data fetched successfully.",
+        results,
+        null
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return resSend(res, false, 400, "Data not fetched!", null, error);
+    }
+  } catch (error) {
+    console.error("Error in DB connection:", error);
+    resSend(res, false, 500, "Error in DB connection!", null, error);
   }
 };
