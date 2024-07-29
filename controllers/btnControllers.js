@@ -251,6 +251,14 @@ const getBTNData = async (req, res) => {
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
+    let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
+    let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
+
+    payload = {
+      ...payload,
+      ib_filename,
+      dd_filename,
+    };
 
     // GET gate by PO Number
     // let gate_entry = await getGateEntry(id);
