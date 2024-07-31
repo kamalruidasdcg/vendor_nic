@@ -25,6 +25,7 @@ const {
   USER_TYPE_GRSE_FINANCE,
   ACTION_DD,
   ACTION_IB,
+  ACTION_PBG,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -259,13 +260,15 @@ const getBTNData = async (req, res) => {
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
-    let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
-    let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
+    let ib_filename = await getSDFiles(id, ACTION_IB);
+    let dd_filename = await getSDFiles(id, ACTION_DD);
+    let pbg_filename = await getSDFiles(id, ACTION_PBG);
 
     obj = {
       ...obj,
       ib_filename,
       dd_filename,
+      pbg_filename,
     };
 
     // GET gate by PO Number
@@ -485,10 +488,10 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-      ...payload,
-      debit_credit_filename:
-        payloadFiles["debit_credit_filename"][0]?.filename,
-    })
+        ...payload,
+        debit_credit_filename:
+          payloadFiles["debit_credit_filename"][0]?.filename,
+      })
     : null;
 
   // GET SD by PO Number
@@ -516,17 +519,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-      ...payload,
-      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-    })
+        ...payload,
+        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+      })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-      ...payload,
-      demand_raise_filename:
-        payloadFiles["demand_raise_filename"][0]?.filename,
-    })
+        ...payload,
+        demand_raise_filename:
+          payloadFiles["demand_raise_filename"][0]?.filename,
+      })
     : null;
 
   // generate btn num
@@ -731,7 +734,7 @@ const submitBTN = async (req, res) => {
 const submitBTNByDO = async (req, res) => {
   try {
     const client = await poolClient();
-
+    await client.query("BEGIN");
     try {
       let {
         btn_num,
@@ -743,20 +746,35 @@ const submitBTNByDO = async (req, res) => {
       const tokenData = { ...req.tokenData };
 
       if (!btn_num) {
-        return resSend(res, false, 200, "BTN number is missing!", "No BTN number", null);
+        return resSend(
+          res,
+          false,
+          200,
+          "BTN number is missing!",
+          "No BTN number",
+          null
+        );
       }
 
-      // BTN VALIDATION 
+      // BTN VALIDATION
 
-      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num });
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
+        btn_num,
+      });
       if (btnCurrnetStatus.isInvalid) {
-        return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null);
+        return resSend(
+          res,
+          false,
+          200,
+          `BTN ${btn_num} ${btnCurrnetStatus.message}`,
+          btn_num,
+          null
+        );
       }
       // const btnRejectCheck = await btnDetailsCheck(client, {
       //   btn_num,
       //   status: REJECTED,
       // });
-
 
       // if (parseInt(btnRejectCheck.count)) {
       //   return resSend(
@@ -783,7 +801,6 @@ const submitBTNByDO = async (req, res) => {
       if (!net_payable_amount) {
         return resSend(res, false, 200, "Net payable is missing!", null, null);
       }
-
 
       // Check BTN by BTN Number
       let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
@@ -929,8 +946,23 @@ const submitBTNByDO = async (req, res) => {
       });
 
       try {
-        btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-        handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+        const sendSap = await btnSubmitByDo(
+          { btn_num, purchasing_doc_no, assign_to },
+          tokenData
+        );
+
+        if (sendSap == false) {
+          console.log(sendSap);
+          await client.query("ROLLBACK");
+          return resSend(res, false, 200, `SAP not connected.`, null, null);
+        } else if (sendSap == true) {
+          await client.query("COMMIT");
+          handelMail(tokenData, {
+            ...payload,
+            assign_to,
+            status: SUBMIT_BY_DO,
+          });
+        }
       } catch (error) {
         console.log("error", error.message);
       }
@@ -995,6 +1027,7 @@ const submitBTNByDO = async (req, res) => {
  */
 
 async function btnSaveToSap(btnPayload, tokenData) {
+  let status = false;
   try {
     const vendorQuery = `WITH ranked_assignments AS (
           SELECT
@@ -1096,9 +1129,18 @@ async function btnSaveToSap(btnPayload, tokenData) {
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_out_api`;
     console.log("btnPayload", postUrl, btn_payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+    if (
+      postResponse.statusCode &&
+      postResponse.statusCode >= 200 &&
+      postResponse.statusCode <= 226
+    ) {
+      status = true;
+    }
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
+  } finally {
+    return status;
   }
 }
 
@@ -1108,6 +1150,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
  * @param {Object} tokenData
  */
 async function btnSubmitByDo(btnPayload, tokenData) {
+  let status = false;
+  console.log("send to sap payload -- >", btnPayload);
   try {
     const vendorQuery = `WITH ranked_assignments AS (
             SELECT
@@ -1211,11 +1255,20 @@ async function btnSubmitByDo(btnPayload, tokenData) {
 
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zobps_do_out`;
-    console.log("btnPayload", postUrl, btn_payload);
+    console.log("btnPayload--", postUrl, btn_payload);
     const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
+    if (
+      postResponse.statusCode &&
+      postResponse.statusCode >= 200 &&
+      postResponse.statusCode <= 226
+    ) {
+      status = true;
+    }
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
+  } finally {
+    return status;
   }
 }
 
@@ -1492,9 +1545,19 @@ const assignToFiStaffHandler = async (req, res) => {
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
-      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num, status: STATUS_RECEIVED });
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
+        btn_num,
+        status: STATUS_RECEIVED,
+      });
       if (btnCurrnetStatus.isInvalid) {
-        return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null);
+        return resSend(
+          res,
+          false,
+          200,
+          `BTN ${btn_num} ${btnCurrnetStatus.message}`,
+          btn_num,
+          null
+        );
       }
       // const btnRejectCheck = await btnDetailsCheck(client, {
       //   btn_num,
@@ -1600,7 +1663,14 @@ const assignToFiStaffHandler = async (req, res) => {
           status: STATUS_RECEIVED,
         });
         try {
-          btnSaveToSap({ ...req.body, ...payload }, tokenData);
+          const sendSap = btnSaveToSap({ ...req.body, ...payload }, tokenData);
+          if (sendSap == false) {
+            await client.query("ROLLBACK");
+
+            return resSend(res, false, 200, `SAP not connected.`, null, null);
+          } else if (sendSap == true) {
+            await client.query("COMMIT");
+          }
         } catch (error) {
           console.log("btnSaveToSap", error.message);
         }
@@ -1806,13 +1876,16 @@ async function btnCurrentDetailsCheck(client, data) {
         isInvalid = true;
       }
       return {
-        isInvalid, currentStatus: currentStatus.status, message: `already ${currentStatus.status}`
+        isInvalid,
+        currentStatus: currentStatus.status,
+        message: `already ${currentStatus.status}`,
       };
-
     }
 
     return {
-      isInvalid: true, currentStatus: BTN_STATUS_NOT_SUBMITTED, message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`
+      isInvalid: true,
+      currentStatus: BTN_STATUS_NOT_SUBMITTED,
+      message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
     };
   } catch (error) {
     throw error;
