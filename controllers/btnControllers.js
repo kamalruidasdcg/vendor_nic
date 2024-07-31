@@ -1542,6 +1542,7 @@ async function handelMail(tokenData, payload, event) {
 const assignToFiStaffHandler = async (req, res) => {
   try {
     const client = await poolClient();
+    await client.query("BEGIN");
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
