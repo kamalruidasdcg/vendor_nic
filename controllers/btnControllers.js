@@ -259,8 +259,8 @@ const getBTNData = async (req, res) => {
     if (checkTypeArr(sdbg_filename_result)) {
       obj = { ...obj, sdbg_filename: sdbg_filename_result };
     }
-    let ib_filename = await getSDFiles(purchasing_doc_no, ACTION_IB);
-    let dd_filename = await getSDFiles(purchasing_doc_no, ACTION_DD);
+    let ib_filename = await getSDFiles(id, ACTION_IB);
+    let dd_filename = await getSDFiles(id, ACTION_DD);
 
     obj = {
       ...obj,
