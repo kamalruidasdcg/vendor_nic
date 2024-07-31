@@ -1805,31 +1805,31 @@ const updateBtnListTable = async (client, data) => {
   }
 };
 
-async function btnDetailsCheck(client, data) {
-  try {
-    let btnstausCount = `SELECT count(btn_num) as count  FROM btn_list WHERE 1 = 1`;
-    const valueArr = [];
-    let count = 0;
-    if (data.btn_num) {
-      btnstausCount += ` AND btn_num = $${++count}`;
-      valueArr.push(data.btn_num);
-    }
-    if (data.status) {
-      btnstausCount += ` AND status = $${++count}`;
-      valueArr.push(data.status);
-    }
+// async function btnDetailsCheck(client, data) {
+//   try {
+//     let btnstausCount = `SELECT count(btn_num) as count  FROM btn_list WHERE 1 = 1`;
+//     const valueArr = [];
+//     let count = 0;
+//     if (data.btn_num) {
+//       btnstausCount += ` AND btn_num = $${++count}`;
+//       valueArr.push(data.btn_num);
+//     }
+//     if (data.status) {
+//       btnstausCount += ` AND status = $${++count}`;
+//       valueArr.push(data.status);
+//     }
 
-    const result = await poolQuery({
-      client,
-      query: btnstausCount,
-      values: valueArr,
-    });
+//     const result = await poolQuery({
+//       client,
+//       query: btnstausCount,
+//       values: valueArr,
+//     });
 
-    return result.length ? result[0] : {};
-  } catch (error) {
-    throw error;
-  }
-}
+//     return result.length ? result[0] : {};
+//   } catch (error) {
+//     throw error;
+//   }
+// }
 async function btnCurrentDetailsCheck(client, data) {
   try {
     let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
@@ -1850,6 +1850,7 @@ async function btnCurrentDetailsCheck(client, data) {
       BTN_STATUS_BANK,
       BTN_STATUS_HOLD_TEXT,
       BTN_STATUS_PROCESS,
+      SUBMIT_BY_DO
     ]);
 
     if (data.status === STATUS_RECEIVED) {
