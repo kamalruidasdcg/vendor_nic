@@ -262,13 +262,11 @@ const getBTNData = async (req, res) => {
     }
     let ib_filename = await getSDFiles(id, ACTION_IB);
     let dd_filename = await getSDFiles(id, ACTION_DD);
-    let pbg_filename = await getSDFiles(id, ACTION_PBG);
 
     obj = {
       ...obj,
       ib_filename,
       dd_filename,
-      pbg_filename,
     };
 
     // GET gate by PO Number
