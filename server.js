@@ -3,7 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const app = express();
 const cron = require("node-cron");
-require("dotenv").config({ path: `.env` });
+require("dotenv").config();
 const PORT = process.env.PORT || 4001;
 // Settings
 app.use(express.json());

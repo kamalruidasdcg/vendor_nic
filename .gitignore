@@ -1,4 +1,7 @@
 /node_modules
 /uploads
 .env
+.env.development
+.env.quality
+.env.production
 /sync
