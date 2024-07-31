@@ -290,7 +290,7 @@ const getBTNData = async (req, res) => {
 
     // GET Approved SDBG by PO Number
     let pbg_filename_result = await getPBGApprovedFiles(id);
-    console.log(pbg_filename_result);
+    console.log("pbg_filename_result", pbg_filename_result);
 
     if (checkTypeArr(pbg_filename_result)) {
       obj = { ...obj, pbg_filename: pbg_filename_result };
