@@ -403,19 +403,24 @@ const submitQAP = async (req, res) => {
       }
 
       const { q, val } = generateQuery(INSERT, QAP_SUBMISSION, insertObj);
+
       const response = await poolQuery({ client, query: q, values: val });
+
       let checkAS = await checkActualSub(payload.purchasing_doc_no, client);
-      if (checkAS) {
-        if (insertObj.status === APPROVED) {
-          const actual_subminission = await setActualSubmissionDate(
-            insertObj,
-            MID_QAP,
-            tokenData,
-            SUBMITTED
-          );
-          console.log("actual_subminission", actual_subminission);
-        }
+      //if (checkAS) {
+      if (insertObj.status === APPROVED) {
+        const actual_subminission = await setActualSubmissionDate(
+          insertObj,
+          MID_QAP,
+          tokenData,
+          SUBMITTED
+        );
+        console.log(
+          "actual_subminission by nodal officer or staff..",
+          actual_subminission
+        );
       }
+      // }
 
       if (response) {
         // payload.insertId = response.insertId;
