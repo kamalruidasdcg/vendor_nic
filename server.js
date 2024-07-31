@@ -79,16 +79,16 @@ cron.schedule("05 00 * * *", async () => {
 let isCompletedTask = false;
 
 const task = cron.schedule(
-  "* */2 * * *",
+  "* */1 * * *",
   async () => {
     if (isCompletedTask == TRUE) {
-      console.log("Job is already running. Skipping this execution.");
+      // console.log("Job is already running. Skipping this execution.");
       return;
     }
     isCompletedTask = true;
     try {
       await mailSentCornJob();
-      console.log("running a task every two minutes");
+      // console.log("running a task every two minutes");
     } catch (error) {
       console.error("Job failed:", error.message);
     } finally {
