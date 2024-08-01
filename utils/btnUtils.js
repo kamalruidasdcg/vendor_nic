@@ -17,12 +17,17 @@ exports.getSDBGApprovedFiles = async (po) => {
 
 exports.getPBGApprovedFiles = async (po) => {
   // GET Approved PBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
-  let result = await getQuery({
-    query: q,
-    values: [po, APPROVED, ACTION_PBG],
-  });
-  return result;
+
+  try {
+    let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+    let result = await getQuery({
+      query: q,
+      values: [po, APPROVED, ACTION_PBG],
+    });
+    return result;
+  } catch (error) {
+    throw error;
+  }
 };
 exports.getSDFiles = async (po, action_type) => {
   let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and action_type = $2`;

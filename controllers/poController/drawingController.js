@@ -271,7 +271,7 @@ const submitDrawing = async (req, res) => {
               tokenData,
               SUBMITTED
             );
-            console.log("actual_subminission", actual_subminission);
+            console.log("actual_subminission by staff ..", actual_subminission);
           }
 
           handelMail(tokenData, payload);
@@ -363,20 +363,22 @@ const submitDrawing = async (req, res) => {
       const response = await poolQuery({ client, query: q, values: val });
 
       console.log("payload", payload);
-      // if (payload.status === APPROVED) {
+      if (payload.status === APPROVED) {
+        // CDO APPROVED DRAWING . .
 
-      //   // CDO APPROVED DRAWING . .
+        // sendMailToVendor(payload);
 
-      //   sendMailToVendor(payload)
-
-      //   const actual_subminission = await setActualSubmissionDate(
-      //     payload,
-      //     "02",
-      //     tokenData,
-      //     SUBMITTED
-      //   );
-      //   console.log("actual_subminission", actual_subminission);
-      // }
+        const actual_subminission = await setActualSubmissionDate(
+          payload,
+          MID_DRAWING,
+          tokenData,
+          SUBMITTED
+        );
+        console.log(
+          "actual_subminission approved by nodal officer..",
+          actual_subminission
+        );
+      }
 
       handelMail(tokenData, payload);
       // if (payload.status === SUBMITTED && tokenData.user_type === USER_TYPE_VENDOR) {

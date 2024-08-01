@@ -1,5 +1,5 @@
 // const { query } = require("../config/dbConfig");
-const { NEW, FAILED, SENT } = require("../lib/status");
+const { NEW, FAILED, SENT, STATUS_SUCCESS } = require("../lib/status");
 // const mailBody = require("../lib/mailBody");
 const SENDMAIL = require("../lib/mailSend");
 const { EMAIL_TEMPLAE } = require("../templates/mail-template");
@@ -22,7 +22,7 @@ const mailSentCornJob = async () => {
   if (emails.length) {
     for (let i = 0; i < emails.length; i++) {
       const mailDetails = {
-        to: "mainak.dutta16@gmail.com", //emails[i]["email_to"],
+        to: emails[i]["email_to"], // "mainak.dutta16@gmail.com",
         from: process.env.MAIL_SEND_MAIL_ID,
         // cc:  emails[i]["email_cc"],
         // bcc:  emails[i]["email_bcc"],
@@ -36,11 +36,11 @@ const mailSentCornJob = async () => {
           query: `DELETE FROM ${EMAILS} WHERE id = $1`,
           values: [emails[i]["id"]],
         });
-        await archiveEmails({ ...emails[i] });
+        await archiveEmails({ ...emails[i], status: STATUS_SUCCESS, remarks: `${email_response}` });
         console.log(`Email sent successfully ('_') !!${emails[i]["email_to"]}`);
       } catch (error) {
         if (emails[i]["retry_count"] == MAIL_SEND_MAX_RETRY_COUNT) {
-          await archiveEmails({ ...emails[i] });
+          await archiveEmails({ ...emails[i], status: FAILED, remarks: error.message });
           await query({
             query: `DELETE FROM ${EMAILS}  WHERE retry_count = $1 `,
             values: [MAIL_SEND_MAX_RETRY_COUNT],
