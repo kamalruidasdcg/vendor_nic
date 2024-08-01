@@ -655,7 +655,7 @@ const sdbgUpdateByFinance = async (req, res) => {
   let sdgbRollBackId;
   try {
     const client = await poolClient();
-    await client.query("BEGIN");
+
     try {
       if (
         !obj.purchasing_doc_no ||
@@ -678,47 +678,19 @@ const sdbgUpdateByFinance = async (req, res) => {
       if (tokenData.department_id != FINANCE) {
         return resSend(res, false, 200, "please login as finance!", null, null);
       }
-
-      const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
-      let get_sdbg_entry_data = await poolQuery({
-        client,
-        query: get_sdbg_entry_query,
-        values: [obj.purchasing_doc_no, obj.reference_no],
-      });
-      console.log(get_sdbg_entry_data);
-      if (get_sdbg_entry_data[0].status === RETURN_TO_DO) {
-        return resSend(
-          res,
-          false,
-          200,
-          `This BG is ${RETURN_TO_DO}.Befoure take action by DO YOU CAN not do any action!`,
-          null,
-          null
-        );
-      }
-
-      // return;
-      const star = `file_name,file_path,vendor_code,action_type`;
-
-      const get_sdbg_query = `SELECT ${star} FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
-      const action_type_with_vendor_code = await poolQuery({
-        client,
-        query: get_sdbg_query,
-        values: [obj.purchasing_doc_no, obj.reference_no],
-      });
-
       if (
         tokenData.internal_role_id == ASSIGNER &&
         obj.assigned_to &&
         obj.status == ASSIGNED
       ) {
         const insertPayloadForSdbg = {
+          purchasing_doc_no: obj.purchasing_doc_no,
           reference_no: "SDBG ASSIGNED",
           status: obj.status,
-          file_name: action_type_with_vendor_code[0]?.file_name,
-          file_path: action_type_with_vendor_code[0]?.file_path,
-          action_type: action_type_with_vendor_code[0]?.action_type,
-          vendor_code: action_type_with_vendor_code[0]?.vendor_code,
+          file_name: "",
+          file_path: "",
+          action_type: "",
+          vendor_code: "",
           assigned_from: tokenData.vendor_code,
           assigned_to: obj.assigned_to,
           last_assigned: 1,
@@ -736,6 +708,7 @@ const sdbgUpdateByFinance = async (req, res) => {
           query: q,
           values: val,
         });
+        console.log(count_res);
 
         const update_assign_to = `UPDATE ${SDBG} SET last_assigned = 0 WHERE purchasing_doc_no = $1 AND assigned_to != $2`;
         let update_assign_touery = await poolQuery({
@@ -756,6 +729,34 @@ const sdbgUpdateByFinance = async (req, res) => {
           null
         );
       }
+      await client.query("BEGIN");
+      const get_sdbg_entry_query = `SELECT * FROM ${SDBG_ENTRY} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      let get_sdbg_entry_data = await poolQuery({
+        client,
+        query: get_sdbg_entry_query,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
+      console.log(get_sdbg_entry_data);
+      if (get_sdbg_entry_data[0].status === RETURN_TO_DO) {
+        return resSend(
+          res,
+          false,
+          200,
+          `This BG is ${RETURN_TO_DO}.Befoure take action by DO. YOU CAN not do any action!`,
+          null,
+          null
+        );
+      }
+
+      // return;
+      const star = `file_name,file_path,vendor_code,action_type`;
+
+      const get_sdbg_query = `SELECT ${star} FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      const action_type_with_vendor_code = await poolQuery({
+        client,
+        query: get_sdbg_query,
+        values: [obj.purchasing_doc_no, obj.reference_no],
+      });
 
       if (tokenData.internal_role_id == STAFF) {
         const assign = `assigned_to`;
@@ -1131,8 +1132,9 @@ const unlock = async (req, res) => {
                 updated_by_name = "${payload.action_by_name}",
                 updated_by_id = "${payload.action_by_id}",
                 updated_at = ${getEpochTime()},
-                isLocked =  0 WHERE  (purchasing_doc_no = "${payload.purchasing_doc_no
-      }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
+                isLocked =  0 WHERE  (purchasing_doc_no = "${
+                  payload.purchasing_doc_no
+                }" AND status = "${ACKNOWLEDGED}" AND isLocked = 1)`;
     const response = await query({ query: q, values: [] });
 
     if (response.affectedRows) {
@@ -1284,7 +1286,7 @@ async function handelEmail(payload, tokenData) {
 
 async function sendBgToSap(payload, id) {
   let status = false;
-  console.log("send to sap payload" , payload);
+  console.log("send to sap payload", payload);
 
   try {
     const host = `${process.env.SAP_HOST_URL}` || "http://10.181.1.31:8010";
