@@ -61,7 +61,7 @@ const MirRoutes = require("./MirRoutes");
 const shippingDocumentsRoutes = require("./shippingDocumentsRoutes");
 const materialRoutes = require("./materialRouter");
 const deptRoutes = require("./dept/deptRoutes");
-const { createTable } = require("../lib/createTableFromJson");
+// const { createTable } = require("../lib/createTableFromJson");
 
 // FOR CHECHING SERVER IS RUNNING ...
 router.get("/ping", async (req, res) => {
@@ -72,13 +72,13 @@ router.get("/ping", async (req, res) => {
   });
 });
 
-router.get("/userping", veifyAccessToken, async (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: { queryData: req.query, pingId: req.params.id },
-    message: "ping pong",
-  });
-});
+// router.get("/userping", veifyAccessToken, async (req, res) => {
+//   res.status(200).json({
+//     success: true,
+//     data: { queryData: req.query, pingId: req.params.id },
+//     message: "ping pong",
+//   });
+// });
 
 // VENDOR BILL APIS
 
@@ -104,19 +104,19 @@ router.post("/insertTableData", insertTableData);
 // router.post("/certifyBill/:zbtno", [veifyAccessToken, authorizeRoute], certifyBill);
 // router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
 
-router.post("/createTable", async (req, res) => {
-  try {
-    const succ = await createTable(req.body);
-    console.log(succ);
-    res.status(200).json({
-      success: true,
-      data: { queryData: req.query, api: succ },
-      message: "ping pong",
-    });
-  } catch (error) {
-    res.status(500).json({ success: true, data: error, message: "error" });
-  }
-});
+// router.post("/createTable", async (req, res) => {
+//   try {
+//     const succ = await createTable(req.body);
+//     console.log(succ);
+//     res.status(200).json({
+//       success: true,
+//       data: { queryData: req.query, api: succ },
+//       message: "ping pong",
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: true, data: error, message: "error" });
+//   }
+// });
 
 // PO BILL APIS
 router.use("/bill", billRoutes);

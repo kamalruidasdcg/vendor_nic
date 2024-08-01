@@ -17,14 +17,26 @@ exports.getSDBGApprovedFiles = async (po) => {
 
 exports.getPBGApprovedFiles = async (po) => {
   // GET Approved PBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+
+  try {
+    let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+    let result = await getQuery({
+      query: q,
+      values: [po, APPROVED, ACTION_PBG],
+    });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.getSDFiles = async (po, action_type) => {
+  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and action_type = $2`;
   let result = await getQuery({
     query: q,
-    values: [po, APPROVED, ACTION_PBG],
+    values: [po, action_type],
   });
   return result;
 };
-
 // exports.getGateEntry = async (po) => {
 //   let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = $1`;
 //   let result = await getQuery({
@@ -60,11 +72,10 @@ exports.getICGRNs = async (body) => {
   if (!checkTypeArr(gate_entry_v)) {
     return null;
   }
-  const grn_values = gate_entry_v.map((el) => el.grn_no)
+  const grn_values = gate_entry_v.map((el) => el.grn_no);
   const placeholder = grn_values.map((_, index) => `$${index + 1}`).join(",");
 
   gate_entry_v = gate_entry_v[0];
- 
 
   const icgrn_q = `SELECT 
     qals.PRUEFLOS AS icgrn_nos, 
@@ -79,12 +90,12 @@ exports.getICGRNs = async (body) => {
         ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
     WHERE MBLNR IN (${placeholder})`; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
-    console.log("icgrn_q", grn_values, placeholder, icgrn_q);
+  console.log("icgrn_q", grn_values, placeholder, icgrn_q);
 
-    let icgrn_no = await getQuery({
-      query: icgrn_q,
-      values: grn_values,
-    });
+  let icgrn_no = await getQuery({
+    query: icgrn_q,
+    values: grn_values,
+  });
 
   let total_price = 0;
   let total_quantity = 0;
@@ -94,7 +105,6 @@ exports.getICGRNs = async (body) => {
     total_price = totals.totalPrice || 0;
     total_quantity = totals.totalQuantity;
   }
-
 
   // if (checkTypeArr(icgrn_no)) {
   //   await Promise.all(
@@ -124,14 +134,14 @@ function calculateTotals(data) {
   let totalQuantity = 0;
   let totalPrice = 0;
 
-  data.forEach(item => {
+  data.forEach((item) => {
     totalQuantity += parseFloat(item.quantity);
     totalPrice += parseFloat(item.price) * parseFloat(item.quantity);
   });
 
   return {
     totalQuantity,
-    totalPrice
+    totalPrice,
   };
 }
 
