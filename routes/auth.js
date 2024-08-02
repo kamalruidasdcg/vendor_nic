@@ -19,6 +19,10 @@ router.post("/setPassword", [], (req, res) => {
   authController.setPassword(req, res);
 });
 
+router.post("/updatePassword", [], (req, res) => {
+  authController.updatePassword(req, res);
+});
+
 router.get("/getListPendingEmp", [veifyAccessToken], (req, res) => {
   authController.getListPendingEmp(req, res);
 });

@@ -765,6 +765,74 @@ const acceptedPendingEmp = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
   }
 };
+
+const updatePassword = async (req, res) => {
+  try {
+    const client = await poolClient();
+    console.log(req.body);
+    try {
+      if (!req.body.user_code || !req.body.old_pw || !req.body.new_pw) {
+        return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED);
+      }
+
+      const { user_code, old_pw, new_pw } = req.body;
+
+      let login_Q = `SELECT * FROM auth WHERE vendor_code = $1 AND is_active = 1`;
+
+      let result = await poolQuery({
+        client,
+        query: login_Q,
+        values: [user_code],
+      });
+
+      console.log(result);
+
+      if (!result.length) {
+        return resSend(res, false, 200, Message.USER_NOT_FOUND, result);
+      }
+
+      const match = await bcrypt.compare(old_pw, result[0]["password"]);
+
+      if (!match) {
+        return resSend(res, false, 200, "INCORRECT_PASSWORD");
+      }
+
+      const whereCondition = {
+        vendor_code: user_code,
+        password: result[0]["password"],
+      };
+      const salt = bcrypt.genSaltSync();
+      const encrytedPassword = bcrypt.hashSync(new_pw, salt);
+      const updatePayload = {
+        password: encrytedPassword,
+      };
+
+      const updateVerified = generateQuery(
+        UPDATE,
+        AUTH,
+        updatePayload,
+        whereCondition
+      );
+      console.log(updateVerified);
+      const getUpdate = await poolQuery({
+        client,
+        query: updateVerified["q"],
+        values: updateVerified["val"],
+      });
+      console.log(getUpdate);
+
+      return resSend(res, false, 200, getUpdate);
+    } catch (error) {
+      console.log(error.message);
+      resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+  }
+};
+
 // const registration = async (req, res) => {
 
 //     try {
@@ -847,6 +915,7 @@ module.exports = {
   sendOtp,
   otpVefify,
   setPassword,
+  updatePassword,
   getListPendingEmp,
   acceptedPendingEmp,
 };
