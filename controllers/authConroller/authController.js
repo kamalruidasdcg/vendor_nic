@@ -422,6 +422,106 @@ const sendOtp = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
   }
 };
+const forgotPasswordOtp = async (req, res) => {
+  try {
+    const client = await poolClient();
+
+    try {
+      const { ...obj } = req.body;
+      if (!obj.user_code) {
+        return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+      }
+
+      const validUser = await poolQuery({
+        client,
+        query: `SELECT email  FROM ${tableName} where ${fieldName} = '${obj.user_code}'`,
+        values: [],
+      });
+
+      if (
+        validUser.length == 0 ||
+        !validUser[0].email ||
+        validUser[0].email === ""
+      ) {
+        return resSend(
+          res,
+          false,
+          200,
+          "You are not allowed to register!",
+          null,
+          null
+        );
+      }
+
+      const otp = crypto.randomInt(100000, 999999);
+      // SEND MAIL TO USER //
+      let mailOptions = {
+        to: validUser[0].email,
+        from: process.env.MAIL_SEND_MAIL_ID,
+        subject: `OBPS Registration OTP Generated`,
+        html: EMAIL_TEMPLAE(
+          `Your one time PIN for registration in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`
+        ),
+      };
+      try {
+        await SENDMAIL(mailOptions);
+
+        // delete existing record on same user code
+        let delOtp = `DELETE FROM ${REGISTRATION_OTP} WHERE user_code = '${obj.user_code}'`;
+        let delOtpRes = await poolQuery({
+          client,
+          query: delOtp,
+          values: [],
+        });
+        // add otp record
+        const insertRegistrationOtp = {
+          user_type: obj.user_type,
+          functional_area: obj.functional_area ? obj.functional_area : null,
+          role: obj.role ? obj.role : null,
+          sub_dept_id: obj.sub_dept_id ? obj.sub_dept_id : null,
+          user_code: obj.user_code,
+          otp: otp,
+          created_at: getEpochTime(),
+          status: "PENDING",
+        };
+
+        let addOtpQ = generateQuery(
+          INSERT,
+          REGISTRATION_OTP,
+          insertRegistrationOtp
+        );
+        let addOtpRes = await poolQuery({
+          client,
+          query: addOtpQ["q"],
+          values: addOtpQ["val"],
+        });
+        return resSend(
+          res,
+          true,
+          200,
+          `OTP send via mail.Please check Mail inbox.`,
+          null,
+          null
+        );
+      } catch (err) {
+        return resSend(res, false, 200, `You are not authourised.`, null, null);
+      }
+    } catch (error) {
+      return resSend(
+        res,
+        false,
+        500,
+        Message.SERVER_ERROR,
+        JSON.stringify(error)
+      );
+    } finally {
+      console.log("finally block");
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+  }
+};
 
 const otpVefify = async (req, res) => {
   try {
@@ -821,7 +921,7 @@ const updatePassword = async (req, res) => {
       });
       console.log(getUpdate);
 
-      return resSend(res, false, 200, getUpdate);
+      return resSend(res, true, 200, "Password update successfully!");
     } catch (error) {
       console.log(error.message);
       resSend(res, false, 500, Message.SERVER_ERROR, error, null);
