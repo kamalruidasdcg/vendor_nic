@@ -432,10 +432,26 @@ const forgotPasswordOtp = async (req, res) => {
         return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
       }
 
+      let qry = `SELECT 
+                    t1.email,t2.user_type,t2.department_id,t2.internal_role_id
+                    FROM 
+                        pa0002
+                    AS 
+                        t1 
+              LEFT JOIN
+                      auth
+                    AS 
+                        t2
+                    ON
+                      t2.vendor_code = t1.pernr :: character varying
+                  
+                    WHERE
+                        t2.vendor_code = $1 AND t2.is_active = 1`;
+
       const validUser = await poolQuery({
         client,
-        query: `SELECT email  FROM ${tableName} where ${fieldName} = '${obj.user_code}'`,
-        values: [],
+        query: qry,
+        values: [obj.user_code],
       });
 
       if (
@@ -447,7 +463,7 @@ const forgotPasswordOtp = async (req, res) => {
           res,
           false,
           200,
-          "You are not allowed to register!",
+          "You are not allowed to get OTP!",
           null,
           null
         );
@@ -460,7 +476,7 @@ const forgotPasswordOtp = async (req, res) => {
         from: process.env.MAIL_SEND_MAIL_ID,
         subject: `OBPS Registration OTP Generated`,
         html: EMAIL_TEMPLAE(
-          `Your one time PIN for registration in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`
+          `Your one time PIN for forgot password in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`
         ),
       };
       try {
@@ -475,10 +491,10 @@ const forgotPasswordOtp = async (req, res) => {
         });
         // add otp record
         const insertRegistrationOtp = {
-          user_type: obj.user_type,
-          functional_area: obj.functional_area ? obj.functional_area : null,
-          role: obj.role ? obj.role : null,
-          sub_dept_id: obj.sub_dept_id ? obj.sub_dept_id : null,
+          user_type:
+            validUser[0].user_type == USER_TYPE_VENDOR ? "vendor" : "GRSE",
+          functional_area: validUser[0].department_id,
+          role: validUser[0].internal_role_id,
           user_code: obj.user_code,
           otp: otp,
           created_at: getEpochTime(),
@@ -515,7 +531,7 @@ const forgotPasswordOtp = async (req, res) => {
         JSON.stringify(error)
       );
     } finally {
-      console.log("finally block");
+      // console.log("finally block");
       client.release();
     }
   } catch (error) {
@@ -1013,6 +1029,7 @@ const updatePassword = async (req, res) => {
 module.exports = {
   login,
   sendOtp,
+  forgotPasswordOtp,
   otpVefify,
   setPassword,
   updatePassword,

@@ -10,6 +10,9 @@ router.post("/login", [], (req, res) => {
 router.post("/sendOtp", [], (req, res) => {
   authController.sendOtp(req, res);
 });
+router.post("/forgotPasswordOtp", [], (req, res) => {
+  authController.forgotPasswordOtp(req, res);
+});
 
 router.post("/otpVefify", [], (req, res) => {
   authController.otpVefify(req, res);
