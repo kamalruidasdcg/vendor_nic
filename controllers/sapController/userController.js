@@ -16,6 +16,7 @@ const {
 } = require("../../services/sap.user.services");
 const { TRUE, FALSE } = require("../../lib/constant");
 const { poolClient, poolQuery } = require("../../config/pgDbConfig");
+const Message = require("../../utils/messages");
 
 // PAYLOAD //
 
@@ -39,7 +40,7 @@ const reservation = async (req, res) => {
         !Object.keys(obj).length ||
         !obj.RSNUM
       ) {
-        return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+        return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, payload, null);
       }
       // await client.beginTransaction();
 
@@ -58,14 +59,7 @@ const reservation = async (req, res) => {
           values: rkpfTableInsert.val,
         });
       } catch (error) {
-        return responseSend(
-          res,
-          "F",
-          502,
-          "Data insert failed !!",
-          error,
-          null
-        );
+        return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
       }
 
       if (TAB_RESB?.length) {
@@ -88,8 +82,8 @@ const reservation = async (req, res) => {
             res,
             "F",
             502,
-            "Data insert failed !!",
-            error.toString(),
+            Message.DATA_INSERT_FAILED,
+            error.message,
             null
           );
         }
@@ -100,20 +94,19 @@ const reservation = async (req, res) => {
       // const comm = await client.commit(); // Commit the transaction if everything was successful
       transactionSuccessful = true;
     } catch (error) {
-      responseSend(res, "F", 502, "Data insert failed !!", error, null);
+      responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
     } finally {
       if (transactionSuccessful === FALSE) {
         await client.query("ROLLBACK");
       }
-      const connEnd = client.release();
-
+      client.release();
       if (transactionSuccessful === TRUE) {
-        responseSend(res, "S", 200, "data insert succeed", null, null);
+        responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, null, null);
       }
     }
   } catch (error) {
     console.error(error.message);
-    responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    responseSend(res, "F", 400, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 const serviceEntry = async (req, res) => {
@@ -122,7 +115,7 @@ const serviceEntry = async (req, res) => {
   try {
     // const promiseConnection = await connection();
     const client = await poolClient();
-    let transactionSuccessful = false;
+    // let transactionSuccessful = false;
 
     if (Array.isArray(req.body)) {
       payload = req.body;
@@ -135,22 +128,19 @@ const serviceEntry = async (req, res) => {
 
 
       const essrPayload = await serviceEntryPayload(payload);
-      const essrTableInsert = await generateQueryForMultipleData(
-        essrPayload,
-        SERVICE_ENTRY_TABLE_SAP,
-        "lblni"
-      );
-      const results = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
+
+      const essrTableInsert = await generateQueryForMultipleData(essrPayload, SERVICE_ENTRY_TABLE_SAP, ["lblni"]);
+      const response = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
+      responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
       // Commit the transaction if everything was successful
       // transactionSuccessful = true;
     } catch (error) {
-      responseSend(res, "F", 502, "Data insert failed !!", error, null);
+      responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
     } finally {
       client.release();
     }
   } catch (error) {
-    console.error(error.message);
-    responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    responseSend(res, "F", 400, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 
