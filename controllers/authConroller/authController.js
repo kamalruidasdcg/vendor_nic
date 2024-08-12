@@ -657,10 +657,10 @@ const setPassword = async (req, res) => {
       let username;
       if (otpVefifyQueryRes[0].user_type === "vendor") {
         name = validUser[0].name1;
-        username = validUser[0].stcd1;
+        username = validUser[0].lifnr;
       } else {
         name = validUser[0].cname;
-        username = validUser[0].persg;
+        username = validUser[0].pernr;
       }
 
       const salt = bcrypt.genSaltSync();
