@@ -56,7 +56,7 @@ const getFilteredData = async (req, res) => {
     if (result.length > 0) {
       resSend(res, true, 200, "Data fetched successfully", result, null);
     } else {
-      resSend(res, false, 200, "No Record Found", result, null);
+      resSend(res, true, 200, "No Record Found", result, null);
     }
   } catch (error) {
     console.log(error);
