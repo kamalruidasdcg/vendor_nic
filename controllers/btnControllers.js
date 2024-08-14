@@ -1848,7 +1848,7 @@ async function btnCurrentDetailsCheck(client, data) {
       BTN_STATUS_BANK,
       BTN_STATUS_HOLD_TEXT,
       BTN_STATUS_PROCESS,
-      SUBMIT_BY_DO
+      SUBMIT_BY_DO,
     ]);
 
     if (data.status === STATUS_RECEIVED) {
@@ -1950,4 +1950,5 @@ module.exports = {
   timeInHHMMSS,
   assignToFiStaffHandler,
   getFinanceEmpList,
+  addToBTNList,
 };

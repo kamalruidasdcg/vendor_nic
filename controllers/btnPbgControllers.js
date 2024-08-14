@@ -79,6 +79,7 @@ const { convertToEpoch } = require("../utils/dateTime");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { checkTypeArr } = require("../utils/smallFun");
 const Message = require("../utils/messages");
+const { addToBTNList } = require("./btnControllers");
 
 const submitPbg = async (req, res) => {
   //return resSend(res, false, 200, "Basic Value is mandatory.", null, null);
@@ -174,6 +175,18 @@ const submitPbg = async (req, res) => {
     let created_at = getEpochTime();
     payload = { ...payload, created_at };
     console.log(payload);
+    // INSERT Data into btn table
+    let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
+    if (!resBtnList?.status) {
+      return resSend(
+        res,
+        false,
+        200,
+        `Something went wrong. Try again!`,
+        null,
+        null
+      );
+    }
     //return;
     let { q, val } = generateQuery(INSERT, "btn_pbg", payload);
     const result = await getQuery({ query: q, values: val });
