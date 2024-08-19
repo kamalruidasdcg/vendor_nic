@@ -27,7 +27,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
       if (result[0]?.line_item_array) {
         result = JSON.parse(result[0]?.line_item_array);
       }
-      const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS matarial_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
+      const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS service_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
       let get_line_item_ekpo = await poolQuery({
         client,
         query: line_item_ekpo_q,
