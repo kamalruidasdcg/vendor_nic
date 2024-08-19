@@ -22,6 +22,7 @@ const {
   btnmw,
   btnAdvanceBillHybridUploadFile,
   isd,
+  serviceBtnFilesUpload,
 } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const {
@@ -76,7 +77,7 @@ router.get("/getFinanceEmpList", [veifyAccessToken], (req, res) => {
 ///////////////////////////
 router.post(
   "/submitBtnServiceHybrid",
-  [veifyAccessToken, upload],
+  [veifyAccessToken, serviceBtnFilesUpload()],
   (req, res) => {
     submitBtnServiceHybrid(req, res);
   }
@@ -91,7 +92,7 @@ router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
 });
 
 // getWdcInfoServiceHybrid
-router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
+router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
 

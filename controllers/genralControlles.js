@@ -12,6 +12,7 @@ const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
 const { validatePayload } = require("./validatePayload");
+const Message = require("../utils/messages");
 
 const getFilteredData = async (req, res) => {
   console.warn(`Gen get api ${new Date().getTime()}`);
@@ -192,5 +193,71 @@ const insertTableData = async (req, res) => {
 //     resSend(res, false, 400, "Error", error, null);
 //   }
 // };
+
+
+const formDetails = [{
+  formName: "wdc-list",
+  tableName: "wdc",
+  sortBy: [{ id: 1 }],
+  filterBy: [{ id: "" }],
+  searchBy: [{ name: "" }],
+  primaryKey: ["id"],
+  select: ["id"],
+  page: 1,
+  limit: 10,
+}]
+
+
+
+
+const getData = async (payload) => {
+
+  try {
+
+    let result = [];
+
+    if (!payload.formName) {
+      throw new Error("Please mention form name");
+    }
+
+    switch (payload.formName) {
+      case "wdc-list":
+        result = await getWDCdata(payload);
+        break;
+
+      default:
+        result = [];
+        break;
+    }
+
+    resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "");
+
+  } catch (error) {
+    resSend(res, false, 400, Message.DATA_FETCH_ERROR, error.message);
+  }
+
+}
+
+
+async function getWDCdata(payload) {
+
+  try {
+
+
+  } catch (error) {
+
+    throw error
+
+  }
+
+
+
+}
+
+
+
+
+
+
 
 module.exports = { getFilteredData, updatTableData, insertTableData };
