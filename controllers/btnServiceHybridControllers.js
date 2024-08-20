@@ -10,7 +10,7 @@ const { checkTypeArr } = require("../utils/smallFun");
 const { getQuery, query, poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
 const { filesData, payloadObj } = require("../services/btnServiceHybrid.services");
-const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
+const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE } = require("../lib/constant");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -90,6 +90,8 @@ const submitBtnServiceHybrid = async (req, res) => {
         return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Send SDBG details", null);
       }
 
+
+
       /**
        * FILE PAYLOADS AND FILE VALIDATION
        */
@@ -98,6 +100,14 @@ const submitBtnServiceHybrid = async (req, res) => {
 
       if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
         return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
+      }
+
+      // checking no submitted hr compliance by vendor
+      const checkMissingComplience = await checkHrCompliance(client, tempPayload);
+      console.log("checkMissingComplience", checkMissingComplience);
+      
+      if (!checkMissingComplience.success) {
+        return resSend(res, false, 200, checkMissingComplience.msg, "Missing data, Need to be upload by HR", null);
       }
 
 
@@ -228,6 +238,13 @@ const initServiceHybrid = async (req, res) => {
 
 const getHrDetails = async (client, data) => {
   try {
+
+    const actionTypeArr = [
+      HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE,
+      HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE
+    ];
+    const initalDataVal = data.length;
+    const placeholder = actionTypeArr.map((_, index) => `$${index + initalDataVal + 1}`).join(",");
     const q = ` SELECT    hr.cname      AS hr_name,
                           created_by_id AS hr_id,
                           purchasing_doc_no,
@@ -241,12 +258,10 @@ const getHrDetails = async (client, data) => {
                                     hr_activity.created_by_id = hr.pernr :: CHARACTER varying )
                 WHERE     (
                                     hr_activity.purchasing_doc_no = $1
-                          AND       hr_activity.action_type IN ('Bonus Compliance',
-                                                                'Wage Compliance',
-                                                                'ESI Compliance',
-                                                                'PF Compliance'))`;
+                          AND       hr_activity.action_type IN (${placeholder}))`;
+    console.log("[...data, ...actionTypeArr]", q, placeholder, [...data, ...actionTypeArr]);
 
-    const result = await poolQuery({ client, query: q, values: data });
+    const result = await poolQuery({ client, query: q, values: [...data, ...actionTypeArr] });
 
     return result;
   } catch (error) {
@@ -329,6 +344,29 @@ const getContractutalSubminissionDate = async (client, data) => {
   } catch (error) {
     throw error;
   }
+}
+
+
+async function checkHrCompliance(client, data) {
+
+  const hrUploadedData = await getHrDetails(client, [data.purchasing_doc_no]);
+  const hrCompliancUpload = new Set([...hrUploadedData.map((el) => el.action_type)]);
+  const hrCompliances = [
+    HR_ACTION_TYPE_WAGR_COMPLIANCE,
+    HR_ACTION_TYPE_ESI_COMPLIANCE,
+    HR_ACTION_TYPE_PF_COMPLIANCE,
+  ];
+
+  console.log("hrUploadedData", hrUploadedData);
+  
+
+  for (const item of hrCompliances) {
+    if (!hrCompliancUpload.has(item)) {
+      return { success: false, msg: `Please submit ${item} to process BTN !` };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" };
 }
 
 

@@ -77,7 +77,7 @@ router.get("/getFinanceEmpList", [veifyAccessToken], (req, res) => {
  */
 router.post(
   "/submitServiceHybrid",
-  [veifyAccessToken, serviceBtnFilesUpload()],
+  [ veifyAccessToken, serviceBtnFilesUpload()],
   (req, res) => {
     submitBtnServiceHybrid(req, res);
   }
@@ -86,7 +86,7 @@ router.post(
 //   getBTNDataServiceHybrid(req, res);
 // });
 
-router.get("/initServiceHybrid", [veifyAccessToken], (req, res) => {
+router.get("/initServiceHybrid", [], (req, res) => {
   initServiceHybrid(req, res);
 });
 
