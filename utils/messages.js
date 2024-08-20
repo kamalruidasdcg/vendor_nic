@@ -24,5 +24,6 @@ module.exports = {
     SEND_VALID_CONDITION_TEXT:"Please send whereCondition",
     MANDATORY_PARAMETR: "Plese send mandatory parameter.",
     UNEXPECTED_ERROR: "Unexpected error : ",
-    BTN_CREATED: "BTN created successfully !"
+    BTN_CREATED: "BTN created successfully !",
+    MANDATORY_PARAMETR_MISSING: "BTN created successfully !"
 }

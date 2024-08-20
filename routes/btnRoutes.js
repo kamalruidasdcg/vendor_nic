@@ -21,7 +21,6 @@ const {
 const {
   btnmw,
   btnAdvanceBillHybridUploadFile,
-  isd,
   serviceBtnFilesUpload,
 } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
@@ -49,7 +48,7 @@ router.get("/btn_do", [veifyAccessToken], (req, res) => {
 });
 
 const upload = btnmw();
-const invSupportDoc = isd();
+// const invSupportDoc = isd();
 router.post("/BillsMaterialHybrid", [veifyAccessToken, upload], (req, res) => {
   submitBTN(req, res);
 });
@@ -76,7 +75,7 @@ router.get("/getFinanceEmpList", [veifyAccessToken], (req, res) => {
 //// Btn Service Hybrid ////
 ///////////////////////////
 router.post(
-  "/submitBtnServiceHybrid",
+  "/submitServiceHybrid",
   [veifyAccessToken, serviceBtnFilesUpload()],
   (req, res) => {
     submitBtnServiceHybrid(req, res);

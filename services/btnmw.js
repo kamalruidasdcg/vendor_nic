@@ -52,7 +52,7 @@ exports.serviceBtnFilesUpload = () => {
     { name: "debit_credit_filename", maxCount: 1 },
     { name: "hinderance_register_filename", maxCount: 1 },
     { name: "esi_compliance_filename", maxCount: 1 },
-    { name: "pf_compliance__filename", maxCount: 1 },
+    { name: "pf_compliance_filename", maxCount: 1 },
     { name: "demand_raise_filename", maxCount: 1 },
   ]);
 };
