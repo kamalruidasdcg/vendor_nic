@@ -16,7 +16,12 @@ const getWdcInfoServiceHybrid = async (req, res) => {
   try {
     const client = await poolClient();
     try {
-      const { purchasing_doc_no, reference_no } = req.query;
+
+      const { purchasing_doc_no, reference_no, type } = req.query;
+      if (type === "list") {
+        const wdcList = await poolQuery({ client, query: "SELECT reference_no FROM wdc", values: [] });
+        return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
+      }
 
       if (!reference_no) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Reference_no missing", null);
