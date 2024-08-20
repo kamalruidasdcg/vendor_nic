@@ -10,7 +10,7 @@ const { checkTypeArr } = require("../utils/smallFun");
 const { getQuery, query, poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
 const { filesData, payloadObj } = require("../services/btnServiceHybrid.services");
-const { INSERT } = require("../lib/constant");
+const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -94,7 +94,7 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
         return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
       }
-      
+
 
 
       let payload = payloadObj(tempPayload)
@@ -161,8 +161,174 @@ const addToBTNList = async (client, data, status) => {
 };
 
 
+const initServiceHybrid = async (req, res) => {
+
+  try {
+    const client = await poolClient();
+    try {
+      const { poNo } = req.query;
+
+      // const data1 = await getHrDetails(client, [poNo]);
+      // const data2 = await getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]);
+      // const data3 = await getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]);
+      // const data4 = await vendorDetails(client, [poNo]);
+
+      const response = await Promise.all(
+        [
+          getHrDetails(client, [poNo]),
+          getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
+          getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
+          vendorDetails(client, [poNo]),
+          getContractutalSubminissionDate(client, [poNo]),
+          getActualSubminissionDate(client, [poNo])
+        ]);
+
+      let result = {
+        hrDetais: response[0], //  getHrDetails,
+        // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
+        // pbgDetails: response[2], //getPBGApprovedFiles,
+        // vendorDetails: response[3], //vendorDetails
+        // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
+        // actualSubminissionDate: response[5], // getActualSubminissionDate
+      }
+
+      if (response[3][0]) {
+        result = { ...result, ...response[3][0] };
+      } if (response[1][0]) {
+        result = { ...result, ...response[1][0] };
+      } if (response[2][0]) {
+        result = { ...result, ...response[2][0] };
+      }
+
+      if (response[4] && response[4][0]) {
+        const con = response[4].find((el) => el.MID == MID_SDBG);
+        result.c_sdbg_date = con?.PLAN_DATE;
+      }
+      if (response[5] && response[5][0]) {
+        const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
+        result.a_sdbg_date = act?.PLAN_DATE;
+      }
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "")
+
+    } catch (error) {
+      resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+  }
+}
+
+const getHrDetails = async (client, data) => {
+  try {
+    const q = ` SELECT    hr.cname      AS hr_name,
+                          created_by_id AS hr_id,
+                          purchasing_doc_no,
+                          created_by_id,
+                          action_type,
+                          file_name,
+                          file_path
+                FROM      hr     AS hr_activity
+                left join pa0002 AS hr
+                ON       (
+                                    hr_activity.created_by_id = hr.pernr :: CHARACTER varying )
+                WHERE     (
+                                    hr_activity.purchasing_doc_no = $1
+                          AND       hr_activity.action_type IN ('Bonus Compliance',
+                                                                'Wage Compliance',
+                                                                'ESI Compliance',
+                                                                'PF Compliance'))`;
+
+    const result = await poolQuery({ client, query: q, values: data });
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+const getSDBGApprovedFiles = async (client, data) => {
+  // GET Approved SDBG by PO Number
+  let q = `SELECT file_name as sdbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+  let result = await getQuery({
+    query: q,
+    values: data,
+  });
+  return result;
+};
+
+const getPBGApprovedFiles = async (client, data) => {
+  // GET Approved PBG by PO Number
+
+  try {
+    let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+    let result = await getQuery({
+      query: q,
+      values: data,
+    });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const vendorDetails = async (client, data) => {
+  try {
+    let q = `
+            SELECT po.lifnr       AS vendor_code,
+                   vendor_t.name1 AS vendor_name,
+                   vendor_t.email AS vendor_email,
+                   vendor_t.stcd3 AS vendor_gstno
+            FROM   ekko AS po
+                   left join lfa1 AS vendor_t
+                          ON ( po.lifnr = vendor_t.lifnr )
+            WHERE  po.ebeln = $1`;
+    let result = await poolQuery({
+      client,
+      query: q,
+      values: data,
+    });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+
+}
+
+const getActualSubminissionDate = async (client, data) => {
+  try {
+
+    let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+    let a_dates = await poolQuery({
+      client,
+      query: a_sdbg_date_q,
+      values: data,
+    });
+    return a_dates;
+  } catch (error) {
+    throw error;
+  }
+}
+
+const getContractutalSubminissionDate = async (client, data) => {
+  try {
+
+    let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
+    let c_dates = await poolQuery({
+      client,
+      query: c_sdbg_date_q,
+      values: data,
+    });
+    return c_dates;
+  } catch (error) {
+    throw error;
+  }
+}
+
 
 module.exports = {
   submitBtnServiceHybrid,
   getWdcInfoServiceHybrid,
+  initServiceHybrid
 };
