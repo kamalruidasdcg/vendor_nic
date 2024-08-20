@@ -14,7 +14,6 @@ const {
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
-  getBTNDataServiceHybrid,
   getWdcInfoServiceHybrid,
   initServiceHybrid,
 } = require("../controllers/btnServiceHybridControllers");
@@ -87,14 +86,14 @@ router.post(
 //   getBTNDataServiceHybrid(req, res);
 // });
 
-router.get("/initServiceHybrid", [], (req, res) => {
+router.get("/initServiceHybrid", [veifyAccessToken], (req, res) => {
   initServiceHybrid(req, res);
 });
 
 // getWdcInfo
-router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
-  getWdcInfo(req, res);
-});
+// router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
+//   getWdcInfo(req, res);
+// });
 
 // getWdcInfoServiceHybrid
 router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
