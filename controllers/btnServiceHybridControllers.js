@@ -81,12 +81,21 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (check_invoice && check_invoice[0].count > 0) {
         return resSend(res, false, 200, "BTN is already created under the invoice number.", null, null);
       }
+      if (!tempPayload.c_sdbg_filename || !tempPayload.a_sdbg_date || !tempPayload.c_sdbg_date) {
+        return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Send SDBG details", null);
+      }
+
+      /**
+       * FILE PAYLOADS AND FILE VALIDATION
+       */
       const uploadedFiles = filesData(filesPaylaod);
       console.log("uploadedFiles", uploadedFiles);
 
       if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
         return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
       }
+      
+
 
       let payload = payloadObj(tempPayload)
       // BTN NUMBER GENERATE

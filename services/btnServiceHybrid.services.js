@@ -31,12 +31,24 @@ const payloadObj = (payload) => {
         hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
         created_at: getEpochTime(),
         created_by_id: payload.created_by_id,
-        btn_type: 'service-contract-bills'
+        btn_type: "service-contract-bills",
+        c_sdbg_date: payload.c_sdbg_date || "",
+        a_sdbg_date: payload.a_sdbg_date || "",
+        c_sdbg_filename: payload.c_sdbg_filename || "",
+        leave_salary_bonus: payload.leave_salary_bonus || "0",
+        wage_compliance_certyfied_by: payload.wage_compliance_certyfied_by || "",
+        wdc_details: payload.wdc_details || "",
+        bill_certifing_authority: ""
     }
 
     return obj;
 }
 
+/**
+ * FILES HANDLE TO PAYLOAD
+ * @param {*} payloadFiles 
+ * @returns 
+ */
 
 const filesData = (payloadFiles) => {
     // Handle uploaded files
