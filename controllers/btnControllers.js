@@ -1790,8 +1790,10 @@ const updateBtnListTable = async (client, data) => {
         status: REJECTED,
         created_at: getEpochTime(),
       };
+      console.log("%%%%%%%%%%%%%%%%%%%");
       const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
-      await poolQuery({ client, query: q, values: val });
+      const aa = await poolQuery({ client, query: q, values: val });
+      console.log(aa);
       // if (data.fstatus == "5" || data.fstatus == 5) {
       //     await handelMail(btnListTablePaylod, client);
       // }
@@ -1951,4 +1953,7 @@ module.exports = {
   assignToFiStaffHandler,
   getFinanceEmpList,
   addToBTNList,
+  btnCurrentDetailsCheck,
+  btnReject,
+  insertUpdateToBTNList,
 };

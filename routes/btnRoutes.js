@@ -31,7 +31,10 @@ const {
   getAdvBillHybridDataForDO,
   getAdvBillHybridBTN,
 } = require("../controllers/poController/advanceBillBTNController");
-const { submitPbg } = require("../controllers/btnPbgControllers");
+const {
+  submitPbg,
+  btnPbgSubmitByDO,
+} = require("../controllers/btnPbgControllers");
 
 // HYBRID MATERIAL BTN
 router.get("/", [], (req, res) => {
@@ -103,6 +106,9 @@ router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
 ///////////////////////////
 router.post("/submitPbg", [veifyAccessToken, upload], (req, res) => {
   submitPbg(req, res);
+});
+router.post("/btnPbgSubmitByDO", [veifyAccessToken, upload], (req, res) => {
+  btnPbgSubmitByDO(req, res);
 });
 //// Btn pbg ////
 ///////////////////////////
