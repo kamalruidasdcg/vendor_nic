@@ -290,6 +290,14 @@ const btnPbgSubmitByDO = async (req, res) => {
         }
         console.log("Fghjkjb", req.body);
         const response1 = await btnReject(req.body, tokenData, client);
+        if (response1 == false) {
+          console.log(response1);
+          // await client.query("COMMIT");
+          await client.query("ROLLBACK");
+          return resSend(res, false, 200, `SAP not connected.`, null, null);
+        } else if (response1 == true) {
+          await client.query("COMMIT");
+        }
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
       }
 
@@ -614,9 +622,9 @@ async function btnReject(data, tokenData, client) {
 
     await updateBtnListTable(client, obj);
 
-    await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
+    const status = await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
 
-    return { btn_num: data.btn_num };
+    return status; //{ btn_num: data.btn_num };
   } catch (error) {
     throw error;
   }
