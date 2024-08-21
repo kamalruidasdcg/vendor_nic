@@ -33,7 +33,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
       console.log("wdcList", result);
 
       if (!result.length) {
-        return resSend(res, true, 200, Message.NO_RECORD_FOUND, "WDC not approved yet.", null);
+        return resSend(res, false, 200, "WDC not approved yet.", [], null);
       }
       let wdcLineItem = [];
       if (result[0]?.line_item_array) {
