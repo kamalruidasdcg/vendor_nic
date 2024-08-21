@@ -27,7 +27,15 @@ const getWdcInfoServiceHybrid = async (req, res) => {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Reference_no missing", null);
       }
 
-      const q = `SELECT * FROM wdc WHERE (reference_no = $1 AND status = $2) LIMIT 1`;
+      const q = `
+              SELECT wdc.*,
+              	wdc.assigned_to AS certifying_by,
+              	users.cname as certifying_by_name
+              FROM
+              	wdc AS wdc
+              LEFT JOIN pa0002 AS users
+              	ON(users.pernr :: character varying = wdc.assigned_to)
+              WHERE (reference_no = $1 AND status = $2) LIMIT 1`;
 
       let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED] });
       console.log("wdcList", result);
