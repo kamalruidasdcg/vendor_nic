@@ -55,18 +55,18 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 
       console.log("get_line_item_ekpo", get_line_item_ekpo);
       console.log("wdcLineItem", wdcLineItem);
-      
+
       const data = wdcLineItem.map((el2) => {
         const DOObj = get_line_item_ekpo.find(
           (elms) => elms.line_item_no == el2.line_item_no
         );
         console.log("DOObj", DOObj);
-        
+
         return DOObj ? { ...DOObj, ...el2 } : el2;
       });
 
-      let responseData = result;
-      responseData[0].line_item_array = data;
+      let responseData = result[0];
+      responseData.line_item_array = data;
 
       resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, responseData, null);
     } catch (error) {
@@ -253,24 +253,24 @@ const getData = async (req, res) => {
       switch (type) {
         case 'igrn-value':
           if (!icgrnNo) {
-            return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid payload!", null)
+            return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null)
           }
-          const result = await getGrnIcgrnValue(client, req.body);
+          const result = await getGrnIcgrnValue(client, req.query);
           console.log("result", result);
 
           data = result.data;
           message = result.message;
           break;
         case 'sir-value':
-          if (!icgrnNo) {
-            return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid payload!", null)
+          if (!sirNo) {
+            return resSend(res, false, 200, "Please send a valid payload!", Message.MANDATORY_INPUTS_REQUIRED, null)
           }
           break;
 
         default:
           console.log("swithch default");
-          resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
-          break;
+          message = "Please send a valid type!"
+          return resSend(res, false, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
       }
       console.log("swithch no");
 

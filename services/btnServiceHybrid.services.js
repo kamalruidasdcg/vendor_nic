@@ -286,9 +286,10 @@ const getGrnIcgrnValue = async (client, data) => {
                                 ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
                             WHERE qals.MBLNR = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
-        console.log("icgrn_q", grn_nos);
+        const grn_values = data.icgrnNo;
+        console.log("icgrn_q", grn_values);
 
-        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: grn_values });
+        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
         if (icgrn_no.length == 0) {
             return { success: false, message: "Plese do ICGRN to Process BTN", data: { total_price } };
         }
