@@ -82,9 +82,10 @@ const Message = require("../utils/messages");
 const {
   addToBTNList,
   btnCurrentDetailsCheck,
-  btnReject,
+
   insertUpdateToBTNList,
   timeInHHMMSS,
+  updateBtnListTable,
 } = require("./btnControllers");
 
 const submitPbg = async (req, res) => {
@@ -277,6 +278,16 @@ const btnPbgSubmitByDO = async (req, res) => {
       // }
 
       if (status === REJECTED) {
+        if (!req.body.remarks) {
+          return resSend(
+            res,
+            false,
+            200,
+            `please send remarks when ${REJECTED} !!`,
+            null,
+            null
+          );
+        }
         console.log("Fghjkjb", req.body);
         const response1 = await btnReject(req.body, tokenData, client);
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
@@ -588,6 +599,26 @@ async function btnSubmitByDo(btnPayload, tokenData) {
     console.error("Error making the request:", error.message);
   } finally {
     return status;
+  }
+}
+
+async function btnReject(data, tokenData, client) {
+  try {
+    const obj = {
+      btn_num: data.btn_num,
+      remarks: data.remarks,
+    };
+
+    // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
+    // const result = await query({ query: q, values: val });
+
+    await updateBtnListTable(client, obj);
+
+    await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
+
+    return { btn_num: data.btn_num };
+  } catch (error) {
+    throw error;
   }
 }
 

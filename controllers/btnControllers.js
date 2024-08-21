@@ -1739,7 +1739,7 @@ async function btnReject(data, tokenData, client) {
   try {
     const obj = {
       btn_num: data.btn_num,
-      // purchasing_doc_no: purchasing_doc_no.data,
+      remarks: data.remarks,
     };
 
     // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
@@ -1790,6 +1790,9 @@ const updateBtnListTable = async (client, data) => {
         status: REJECTED,
         created_at: getEpochTime(),
       };
+      if (data.remarks) {
+        btnListTablePaylod.remarks = data.remarks;
+      }
       console.log("%%%%%%%%%%%%%%%%%%%");
       const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
       const aa = await poolQuery({ client, query: q, values: val });
@@ -1956,4 +1959,5 @@ module.exports = {
   btnCurrentDetailsCheck,
   btnReject,
   insertUpdateToBTNList,
+  updateBtnListTable,
 };
