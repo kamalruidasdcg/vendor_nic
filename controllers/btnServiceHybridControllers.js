@@ -5,7 +5,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
@@ -244,15 +244,15 @@ const getData = async (req, res) => {
     const client = await poolClient();
     try {
 
-      const { icgrnNo, type } = req.query;
+      const { id, type } = req.query;
       if (!type) {
         return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
       }
       let data;
       let message;
       switch (type) {
-        case 'igrn-value':
-          if (!icgrnNo) {
+        case 'icgrn': {
+          if (!id) {
             return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null)
           }
           const result = await getGrnIcgrnValue(client, req.query);
@@ -260,11 +260,20 @@ const getData = async (req, res) => {
 
           data = result.data;
           message = result.message;
+        }
           break;
-        case 'sir-value':
-          if (!sirNo) {
+        case 'service-entry': {
+          if (!id) {
             return resSend(res, false, 200, "Please send a valid payload!", Message.MANDATORY_INPUTS_REQUIRED, null)
           }
+
+          const result = await getServiceEntryValue(client, req.query);
+          console.log("result", result);
+
+          data = result.data;
+          message = result.message;
+        }
+
           break;
 
         default:

@@ -286,12 +286,12 @@ const getGrnIcgrnValue = async (client, data) => {
                                 ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
                             WHERE qals.MBLNR = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
-        const grn_values = data.icgrnNo;
+        const grn_values = data.id || "";
         console.log("icgrn_q", grn_values);
 
         let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
-        if (icgrn_no.length == 0) {
-            return { success: false, message: "Plese do ICGRN to Process BTN", data: { total_price } };
+        if (!icgrn_no.length) {
+            return { success: false, message: "Plese do ICGRN to process BTN", data: { total_price } };
         }
 
         let total_price = 0;
@@ -328,6 +328,31 @@ function calculateTotals(data) {
 }
 
 
+const getServiceEntryValue = async (client, data) => {
+    try {
+
+        const service_entry_number = data.id || "";
+        const getValQuery = `
+        SELECT     
+            lblni as service_entry_number, 
+            lwert as value_without_gst, 
+            netwr as value_with_gst  
+        FROM essr WHERE lblni = $1 LIMIT 1`;
+
+        const result = await poolQuery({ client, query: getValQuery, values: [service_entry_number] });
+        let total_price = 0;
+        if (!result.length) {
+            return { success: false, message: "Plese do SIR to process BTN", data: { total_price } };
+        }
+        total_price = result[0]?.value_with_gst || "0";
+        return { success: true, message: "Value fetch success", data: { total_price, ...result[0] } };
+    } catch (error) {
+        console.error("Error making the request:", error.message);
+        throw error;
+    }
+}
+
+
 
 module.exports = {
     payloadObj,
@@ -340,5 +365,6 @@ module.exports = {
     vendorDetails,
     getHrDetails,
     addToBTNList,
-    getGrnIcgrnValue
+    getGrnIcgrnValue,
+    getServiceEntryValue
 }
