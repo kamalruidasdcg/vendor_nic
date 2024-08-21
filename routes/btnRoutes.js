@@ -100,8 +100,8 @@ router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
 
-//// Btn Service Hybrid ////
-///////////////////////////
+//// Btn Service Hybrid //////
+//////////// END /////////////
 
 router.post(
   "/submitAdvBillHybrid",

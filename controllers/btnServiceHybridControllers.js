@@ -105,7 +105,7 @@ const submitBtnServiceHybrid = async (req, res) => {
       // checking no submitted hr compliance by vendor
       const checkMissingComplience = await checkHrCompliance(client, tempPayload);
       console.log("checkMissingComplience", checkMissingComplience);
-      
+
       if (!checkMissingComplience.success) {
         return resSend(res, false, 200, checkMissingComplience.msg, "Missing data, Need to be upload by HR", null);
       }
@@ -149,7 +149,13 @@ const submitBtnServiceHybrid = async (req, res) => {
 };
 
 
-
+/**
+ * INSERT DATA IN BTN LIST TABLE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @param {string} status 
+ * @returns { status: boolean data: Object } || Error
+ */
 const addToBTNList = async (client, data, status) => {
   console.log("data", data);
   try {
@@ -175,7 +181,11 @@ const addToBTNList = async (client, data, status) => {
   }
 };
 
-
+/**
+ * BTN CREATE INITIAL DATA SEND
+ * @param {Object} req 
+ * @param {Object} res 
+ */
 const initServiceHybrid = async (req, res) => {
 
   try {
@@ -235,7 +245,12 @@ const initServiceHybrid = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 }
-
+/**
+ * GET HR UPLOADED DATA 
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns Object || Error
+ */
 const getHrDetails = async (client, data) => {
   try {
 
@@ -268,31 +283,46 @@ const getHrDetails = async (client, data) => {
     throw error;
   }
 }
+/**
+ * SDBG APPROVE FILE DATA
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns  Object || Error
+ */
 const getSDBGApprovedFiles = async (client, data) => {
-  // GET Approved SDBG by PO Number
-  let q = `SELECT file_name as sdbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
-  let result = await getQuery({
-    query: q,
-    values: data,
-  });
-  return result;
+  try {
+    let q = `SELECT file_name as sdbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+    let result = await poolQuery({ client, query: q, values: data });
+    return result;
+  } catch (error) {
+    throw error
+  }
 };
 
+/**
+ * 
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
 const getPBGApprovedFiles = async (client, data) => {
-  // GET Approved PBG by PO Number
-
   try {
     let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
-    let result = await getQuery({
-      query: q,
-      values: data,
-    });
+    let result = await poolQuery({ client, query: q, values: data });
     return result;
   } catch (error) {
     throw error;
   }
 };
 
+/**
+ * GET VENDOR DETAILS
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
 const vendorDetails = async (client, data) => {
   try {
     let q = `
@@ -315,7 +345,13 @@ const vendorDetails = async (client, data) => {
   }
 
 }
-
+/**
+ * ACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
 const getActualSubminissionDate = async (client, data) => {
   try {
 
@@ -331,6 +367,13 @@ const getActualSubminissionDate = async (client, data) => {
   }
 }
 
+/**
+ * CONTRACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
 const getContractutalSubminissionDate = async (client, data) => {
   try {
 
@@ -346,27 +389,33 @@ const getContractutalSubminissionDate = async (client, data) => {
   }
 }
 
-
+/**
+ * CONTRACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
 async function checkHrCompliance(client, data) {
+  try {
+    const hrUploadedData = await getHrDetails(client, [data.purchasing_doc_no]);
+    const hrCompliancUpload = new Set([...hrUploadedData.map((el) => el.action_type)]);
+    const hrCompliances = [
+      HR_ACTION_TYPE_WAGR_COMPLIANCE,
+      HR_ACTION_TYPE_ESI_COMPLIANCE,
+      HR_ACTION_TYPE_PF_COMPLIANCE,
+    ];
 
-  const hrUploadedData = await getHrDetails(client, [data.purchasing_doc_no]);
-  const hrCompliancUpload = new Set([...hrUploadedData.map((el) => el.action_type)]);
-  const hrCompliances = [
-    HR_ACTION_TYPE_WAGR_COMPLIANCE,
-    HR_ACTION_TYPE_ESI_COMPLIANCE,
-    HR_ACTION_TYPE_PF_COMPLIANCE,
-  ];
-
-  console.log("hrUploadedData", hrUploadedData);
-  
-
-  for (const item of hrCompliances) {
-    if (!hrCompliancUpload.has(item)) {
-      return { success: false, msg: `Please submit ${item} to process BTN !` };
+    for (const item of hrCompliances) {
+      if (!hrCompliancUpload.has(item)) {
+        return { success: false, msg: `Please submit ${item} to process BTN !` };
+      }
     }
-  }
 
-  return { success: true, msg: "No milestone missing" };
+    return { success: true, msg: "No milestone missing" };
+  } catch (error) {
+    return { success: false, msg: "An error occurred while checking HR compliance. Please try again later."+error.message };
+  }
 }
 
 
