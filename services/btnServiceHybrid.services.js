@@ -1,5 +1,6 @@
 const { poolQuery } = require("../config/pgDbConfig");
-const { A_SDBG_DATE, A_DRAWING_DATE, A_QAP_DATE, A_ILMS_DATE, C_SDBG_DATE } = require("../lib/constant");
+const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT } = require("../lib/constant");
+const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime } = require("../lib/utils")
 
 
@@ -62,77 +63,222 @@ const filesData = (payloadFiles) => {
 };
 
 
-const contractualSubmissionDate = async (purchasing_doc_no, client) => {
-    let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE" , MTEXT as "MTEXT" FROM zpo_milestone WHERE EBELN = $1`;
-    const results = await poolQuery({ client, query: c_sdbg_date_q, values: [purchasing_doc_no] });
-    // let c_dates = await client.execxute(c_sdbg_date_q, [purchasing_doc_no]);
-    let c_dates = results;
-    const contractualDateObj = {};
-    c_dates.forEach((item) => {
-        if (item.PLAN_DATE && item.MTEXT === C_SDBG_DATE) {
-            contractualDateObj.c_sdbg_date = new Date(item.PLAN_DATE).getTime();
-        }
-    });
+/**
+ * INSERT DATA IN BTN LIST TABLE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @param {string} status 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown
+ */
+const addToBTNList = async (client, data, status) => {
+    console.log("data", data);
+    try {
+      let payload = {
+        btn_num: data?.btn_num,
+        purchasing_doc_no: data?.purchasing_doc_no,
+        net_claim_amount: data?.net_claim_amount,
+        net_payable_amount: data?.net_payable_amount,
+        vendor_code: data?.vendor_code,
+        created_at: data?.created_at,
+        btn_type: data?.btn_type,
+        status: status,
+      };
+      console.log("payload", payload);
+  
+      let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
+      let res = await poolQuery({ client, query: q, values: val });
+      if (res.length > 0) {
+        return { status: true, data: res };
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
 
-    return { status: true, data: contractualDateObj, msg: "success" };
+/**
+ * GET HR UPLOADED DATA 
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown
+ */
+const getHrDetails = async (client, data) => {
+    try {
+
+        const actionTypeArr = [
+            HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE,
+            HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE
+        ];
+        const initalDataVal = data.length;
+        const placeholder = actionTypeArr.map((_, index) => `$${index + initalDataVal + 1}`).join(",");
+        const q = ` SELECT    hr.cname      AS hr_name,
+                            created_by_id AS hr_id,
+                            purchasing_doc_no,
+                            created_by_id,
+                            action_type,
+                            file_name,
+                            file_path
+                  FROM      hr     AS hr_activity
+                  left join pa0002 AS hr
+                  ON       (
+                                      hr_activity.created_by_id = hr.pernr :: CHARACTER varying )
+                  WHERE     (
+                                      hr_activity.purchasing_doc_no = $1
+                            AND       hr_activity.action_type IN (${placeholder}))`;
+        console.log("[...data, ...actionTypeArr]", q, placeholder, [...data, ...actionTypeArr]);
+
+        const result = await poolQuery({ client, query: q, values: [...data, ...actionTypeArr] });
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+/**
+ * SDBG APPROVE FILE DATA
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns  Object || Error
+ */
+const getSDBGApprovedFiles = async (client, data) => {
+    try {
+        let q = `SELECT file_name as sdbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+        let result = await poolQuery({ client, query: q, values: data });
+        return result;
+    } catch (error) {
+        throw error
+    }
 };
-const actualSubmissionDate = async (purchasing_doc_no, client) => {
 
+/**
+ * 
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const getPBGApprovedFiles = async (client, data) => {
+    try {
+        let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+        let result = await poolQuery({ client, query: q, values: data });
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
 
-    const actualSubmissionObj = {};
-    let response = {};
-
-    let a_sdbg_date_q = `SELECT actualSubmissionDate AS PLAN_DATE, milestoneText AS MTEXT FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
-
-
-    const results = await poolQuery({ client, query: a_sdbg_date_q, values: [purchasing_doc_no] });
-    let a_dates = results;
-
-    // if(!a_dates.length) throw new Error(`All milestone is missing!`)
-    if (!a_dates.length)
-        return { status: false, data: {}, msg: `All milestone is missing!` };
-    const a_dates_arr = [A_SDBG_DATE];
-
-
-    for (const item of a_dates) {
-        if (item.MTEXT === A_SDBG_DATE) {
-            if (!item.PLAN_DATE) {
-                return { status: false, data: {}, msg: `${A_SDBG_DATE} is missing!` };
-            }
-            actualSubmissionObj.a_sdbg_date = item.PLAN_DATE;
-            // a_sdbg_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_DRAWING_DATE) {
-            if (!item.PLAN_DATE) {
-                // throw new Error(`${A_DRAWING_DATE} is missing!`)
-                return {
-                    status: false,
-                    data: {},
-                    msg: `${A_DRAWING_DATE} is missing!`,
-                };
-            }
-            actualSubmissionObj.a_drawing_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_QAP_DATE) {
-            if (!item.PLAN_DATE) {
-                // throw new Error(`${A_QAP_DATE} is missing!`)
-                return { status: false, data: {}, msg: `${A_QAP_DATE} is missing!` };
-            }
-            actualSubmissionObj.a_qap_date = item.PLAN_DATE;
-        } else if (item.MTEXT === A_ILMS_DATE) {
-            if (!item.PLAN_DATE) {
-                // throw new Error(`${A_ILMS_DATE} is missing!`);
-                return { status: false, data: {}, msg: `${A_ILMS_DATE} is missing!` };
-            }
-            actualSubmissionObj.a_ilms_date = item.PLAN_DATE;
-        }
+/**
+ * GET VENDOR DETAILS
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const vendorDetails = async (client, data) => {
+    try {
+        let q = `
+              SELECT po.lifnr       AS vendor_code,
+                     vendor_t.name1 AS vendor_name,
+                     vendor_t.email AS vendor_email,
+                     vendor_t.stcd3 AS vendor_gstno
+              FROM   ekko AS po
+                     left join lfa1 AS vendor_t
+                            ON ( po.lifnr = vendor_t.lifnr )
+              WHERE  po.ebeln = $1`;
+        let result = await poolQuery({
+            client,
+            query: q,
+            values: data,
+        });
+        return result;
+    } catch (error) {
+        throw error;
     }
 
-    return {
-        status: true,
-        data: actualSubmissionObj,
-        msg: "All milestone passed..",
-    };
-};
+}
+/**
+ * ACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const getActualSubminissionDate = async (client, data) => {
+    try {
 
+        let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
+        let a_dates = await poolQuery({
+            client,
+            query: a_sdbg_date_q,
+            values: data,
+        });
+        return a_dates;
+    } catch (error) {
+        throw error;
+    }
+}
 
+/**
+ * CONTRACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const getContractutalSubminissionDate = async (client, data) => {
+    try {
 
-module.exports = { payloadObj, filesData }
+        let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
+        let c_dates = await poolQuery({
+            client,
+            query: c_sdbg_date_q,
+            values: data,
+        });
+        return c_dates;
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * CONTRACTUAL SUBMISSION DATE
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+async function checkHrCompliance(client, data) {
+    try {
+        const hrUploadedData = await getHrDetails(client, [data.purchasing_doc_no]);
+        const hrCompliancUpload = new Set([...hrUploadedData.map((el) => el.action_type)]);
+        const hrCompliances = [
+            HR_ACTION_TYPE_WAGR_COMPLIANCE,
+            HR_ACTION_TYPE_ESI_COMPLIANCE,
+            HR_ACTION_TYPE_PF_COMPLIANCE,
+        ];
+
+        for (const item of hrCompliances) {
+            if (!hrCompliancUpload.has(item)) {
+                return { success: false, msg: `Please submit ${item} to process BTN !` };
+            }
+        }
+
+        return { success: true, msg: "No milestone missing" };
+    } catch (error) {
+        return { success: false, msg: "An error occurred while checking HR compliance. Please try again later." + error.message };
+    }
+}
+
+module.exports = {
+    payloadObj,
+    filesData,
+    checkHrCompliance,
+    getSDBGApprovedFiles,
+    getPBGApprovedFiles,
+    getContractutalSubminissionDate,
+    getActualSubminissionDate,
+    vendorDetails,
+    getHrDetails,
+    addToBTNList
+}
