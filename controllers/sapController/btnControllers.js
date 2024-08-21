@@ -27,6 +27,19 @@ const zbts_st = async (req, res) => {
                 return responseSend(res, "F", 400, "Invalid payload.", null, null);
             }
 
+            /**
+             * IF THE BTN IS NOT PART OF OBPS 
+             * NOT INSERT IN OBPS DB 
+             * IGNORE THIS BTN WHICH IS SEND FROM SAP
+             */
+            const q = `SELECT count(*) as btn_count from btn_list where btn_num = $1`;
+            const btn_num = payload.zbtno || payload.ZBTNO;
+            const btnCount = await poolQuery({ client, query: q, values: [btn_num] });
+            if (!btnCount[0]?.btn_count) {
+                return responseSend(res, "S", 200, "NO BTN HAVE IN LAN SERVER", null, null);
+            }
+            // END //
+
             const { ZBTSM, zbtsm, ...obj } = payload;
             let payloadObj = {};
 
@@ -126,7 +139,7 @@ const updateBtnListTable = async (client, data) => {
             if (data.hold && data.hold === BTN_STATUS_HOLD_CODE) {
                 currentStatus = BTN_STATUS_HOLD_TEXT;
             }
-            if ( btnListTablePaylod.status === BTN_STATUS_HOLD_CODE && !data.hold) {
+            if (btnListTablePaylod.status === BTN_STATUS_HOLD_CODE && !data.hold) {
                 currentStatus = BTN_STATUS_UNHOLD_TEXT;
             }
             btnListTablePaylod.status = currentStatus;
