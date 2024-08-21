@@ -17,6 +17,7 @@ const {
   getWdcInfoServiceHybrid,
   initServiceHybrid,
   getData,
+  forwordToFinace,
 } = require("../controllers/btnServiceHybridControllers");
 
 const {
@@ -89,6 +90,9 @@ router.post(
 
 router.get("/initServiceHybrid", [], (req, res) => {
   initServiceHybrid(req, res);
+});
+router.post("/forwordToFinance", [veifyAccessToken], (req, res) => {
+  forwordToFinace(req, res);
 });
 
 // getWdcInfo
