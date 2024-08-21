@@ -5,7 +5,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
@@ -15,7 +15,11 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 
       const { purchasing_doc_no, reference_no, type } = req.query;
       if (type === "list") {
-        const wdcList = await poolQuery({ client, query: "SELECT reference_no FROM wdc", values: [] });
+        const val = [];
+        if (purchasing_doc_no) {
+          val.push(purchasing_doc_no);
+        }
+        const wdcList = await poolQuery({ client, query: "SELECT DISTINCT(reference_no) FROM wdc", values: val });
         return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
       }
 
@@ -23,24 +27,48 @@ const getWdcInfoServiceHybrid = async (req, res) => {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Reference_no missing", null);
       }
 
-      const q = `SELECT line_item_array FROM wdc WHERE reference_no = $1 LIMIT 1`;
-      let result = await poolQuery({ client, query: q, values: [reference_no] });
-      if (result[0]?.line_item_array) {
-        result = JSON.parse(result[0]?.line_item_array);
+      const q = `SELECT * FROM wdc WHERE (reference_no = $1 AND status = $2) LIMIT 1`;
+
+      let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED] });
+      console.log("wdcList", result);
+
+      if (!result.length) {
+        return resSend(res, true, 200, Message.NO_RECORD_FOUND, "WDC not approved yet.", null);
       }
+      let wdcLineItem = [];
+      if (result[0]?.line_item_array) {
+        try {
+          wdcLineItem = JSON.parse(result[0]?.line_item_array);
+        } catch (error) {
+          wdcLineItem = [];
+        }
+      }
+
+      const poNo = purchasing_doc_no || result[0]?.purchasing_doc_no;
+
       const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS service_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
       let get_line_item_ekpo = await poolQuery({
         client,
         query: line_item_ekpo_q,
-        values: [purchasing_doc_no],
+        values: [poNo],
       });
-      const data = result.map((el2) => {
+
+      console.log("get_line_item_ekpo", get_line_item_ekpo);
+      console.log("wdcLineItem", wdcLineItem);
+      
+      const data = wdcLineItem.map((el2) => {
         const DOObj = get_line_item_ekpo.find(
           (elms) => elms.line_item_no == el2.line_item_no
         );
+        console.log("DOObj", DOObj);
+        
         return DOObj ? { ...DOObj, ...el2 } : el2;
       });
-      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, data, null);
+
+      let responseData = result;
+      responseData[0].line_item_array = data;
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, responseData, null);
     } catch (error) {
       resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
     } finally {
@@ -208,182 +236,62 @@ const initServiceHybrid = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 }
-// /**
-//  * GET HR UPLOADED DATA 
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns Object || Error
-//  */
-// const getHrDetails = async (client, data) => {
-//   try {
 
-//     const actionTypeArr = [
-//       HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE,
-//       HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE
-//     ];
-//     const initalDataVal = data.length;
-//     const placeholder = actionTypeArr.map((_, index) => `$${index + initalDataVal + 1}`).join(",");
-//     const q = ` SELECT    hr.cname      AS hr_name,
-//                           created_by_id AS hr_id,
-//                           purchasing_doc_no,
-//                           created_by_id,
-//                           action_type,
-//                           file_name,
-//                           file_path
-//                 FROM      hr     AS hr_activity
-//                 left join pa0002 AS hr
-//                 ON       (
-//                                     hr_activity.created_by_id = hr.pernr :: CHARACTER varying )
-//                 WHERE     (
-//                                     hr_activity.purchasing_doc_no = $1
-//                           AND       hr_activity.action_type IN (${placeholder}))`;
-//     console.log("[...data, ...actionTypeArr]", q, placeholder, [...data, ...actionTypeArr]);
 
-//     const result = await poolQuery({ client, query: q, values: [...data, ...actionTypeArr] });
 
-//     return result;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
-// /**
-//  * SDBG APPROVE FILE DATA
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns  Object || Error
-//  */
-// const getSDBGApprovedFiles = async (client, data) => {
-//   try {
-//     let q = `SELECT file_name as sdbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
-//     let result = await poolQuery({ client, query: q, values: data });
-//     return result;
-//   } catch (error) {
-//     throw error
-//   }
-// };
+const getData = async (req, res) => {
+  try {
+    const client = await poolClient();
+    try {
 
-// /**
-//  * 
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns {Promise<Object>}
-//  * @throws {Error} If the query execution fails, an error is thrown.
-//  */
-// const getPBGApprovedFiles = async (client, data) => {
-//   try {
-//     let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
-//     let result = await poolQuery({ client, query: q, values: data });
-//     return result;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+      const { icgrnNo, type } = req.query;
+      if (!type) {
+        return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
+      }
+      let data;
+      let message;
+      switch (type) {
+        case 'igrn-value':
+          if (!icgrnNo) {
+            return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid payload!", null)
+          }
+          const result = await getGrnIcgrnValue(client, req.body);
+          console.log("result", result);
 
-// /**
-//  * GET VENDOR DETAILS
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns {Promise<Object>}
-//  * @throws {Error} If the query execution fails, an error is thrown.
-//  */
-// const vendorDetails = async (client, data) => {
-//   try {
-//     let q = `
-//             SELECT po.lifnr       AS vendor_code,
-//                    vendor_t.name1 AS vendor_name,
-//                    vendor_t.email AS vendor_email,
-//                    vendor_t.stcd3 AS vendor_gstno
-//             FROM   ekko AS po
-//                    left join lfa1 AS vendor_t
-//                           ON ( po.lifnr = vendor_t.lifnr )
-//             WHERE  po.ebeln = $1`;
-//     let result = await poolQuery({
-//       client,
-//       query: q,
-//       values: data,
-//     });
-//     return result;
-//   } catch (error) {
-//     throw error;
-//   }
+          data = result.data;
+          message = result.message;
+          break;
+        case 'sir-value':
+          if (!icgrnNo) {
+            return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid payload!", null)
+          }
+          break;
 
-// }
-// /**
-//  * ACTUAL SUBMISSION DATE
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns {Promise<Object>}
-//  * @throws {Error} If the query execution fails, an error is thrown.
-//  */
-// const getActualSubminissionDate = async (client, data) => {
-//   try {
+        default:
+          console.log("swithch default");
+          resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
+          break;
+      }
+      console.log("swithch no");
 
-//     let a_sdbg_date_q = `SELECT actualSubmissionDate AS "PLAN_DATE", milestoneText AS "MTEXT", milestoneid AS "MID" FROM actualsubmissiondate WHERE purchasing_doc_no = $1`;
-//     let a_dates = await poolQuery({
-//       client,
-//       query: a_sdbg_date_q,
-//       values: data,
-//     });
-//     return a_dates;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
+      resSend(res, true, 200, message, data);
 
-// /**
-//  * CONTRACTUAL SUBMISSION DATE
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns {Promise<Object>}
-//  * @throws {Error} If the query execution fails, an error is thrown.
-//  */
-// const getContractutalSubminissionDate = async (client, data) => {
-//   try {
+    } catch (error) {
+      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
+  }
 
-//     let c_sdbg_date_q = `SELECT PLAN_DATE as "PLAN_DATE", MTEXT as "MTEXT", MID AS "MID" FROM zpo_milestone WHERE EBELN = $1`;
-//     let c_dates = await poolQuery({
-//       client,
-//       query: c_sdbg_date_q,
-//       values: data,
-//     });
-//     return c_dates;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
+}
 
-// /**
-//  * CONTRACTUAL SUBMISSION DATE
-//  * @param {Object} client 
-//  * @param {Object} data 
-//  * @returns {Promise<Object>}
-//  * @throws {Error} If the query execution fails, an error is thrown.
-//  */
-// async function checkHrCompliance(client, data) {
-//   try {
-//     const hrUploadedData = await getHrDetails(client, [data.purchasing_doc_no]);
-//     const hrCompliancUpload = new Set([...hrUploadedData.map((el) => el.action_type)]);
-//     const hrCompliances = [
-//       HR_ACTION_TYPE_WAGR_COMPLIANCE,
-//       HR_ACTION_TYPE_ESI_COMPLIANCE,
-//       HR_ACTION_TYPE_PF_COMPLIANCE,
-//     ];
-
-//     for (const item of hrCompliances) {
-//       if (!hrCompliancUpload.has(item)) {
-//         return { success: false, msg: `Please submit ${item} to process BTN !` };
-//       }
-//     }
-
-//     return { success: true, msg: "No milestone missing" };
-//   } catch (error) {
-//     return { success: false, msg: "An error occurred while checking HR compliance. Please try again later."+error.message };
-//   }
-// }
 
 
 module.exports = {
   submitBtnServiceHybrid,
   getWdcInfoServiceHybrid,
-  initServiceHybrid
+  initServiceHybrid,
+  getData
 };

@@ -1,8 +1,8 @@
 const { poolQuery } = require("../config/pgDbConfig");
 const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT } = require("../lib/constant");
 const { BTN_LIST } = require("../lib/tableName");
-const { getEpochTime } = require("../lib/utils")
-
+const { getEpochTime } = require("../lib/utils");
+const Message = require("../utils/messages");
 
 const payloadObj = (payload) => {
 
@@ -74,27 +74,27 @@ const filesData = (payloadFiles) => {
 const addToBTNList = async (client, data, status) => {
     console.log("data", data);
     try {
-      let payload = {
-        btn_num: data?.btn_num,
-        purchasing_doc_no: data?.purchasing_doc_no,
-        net_claim_amount: data?.net_claim_amount,
-        net_payable_amount: data?.net_payable_amount,
-        vendor_code: data?.vendor_code,
-        created_at: data?.created_at,
-        btn_type: data?.btn_type,
-        status: status,
-      };
-      console.log("payload", payload);
-  
-      let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
-      let res = await poolQuery({ client, query: q, values: val });
-      if (res.length > 0) {
-        return { status: true, data: res };
-      }
+        let payload = {
+            btn_num: data?.btn_num,
+            purchasing_doc_no: data?.purchasing_doc_no,
+            net_claim_amount: data?.net_claim_amount,
+            net_payable_amount: data?.net_payable_amount,
+            vendor_code: data?.vendor_code,
+            created_at: data?.created_at,
+            btn_type: data?.btn_type,
+            status: status,
+        };
+        console.log("payload", payload);
+
+        let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
+        let res = await poolQuery({ client, query: q, values: val });
+        if (res.length > 0) {
+            return { status: true, data: res };
+        }
     } catch (error) {
-      throw error;
+        throw error;
     }
-  };
+};
 
 /**
  * GET HR UPLOADED DATA 
@@ -270,6 +270,64 @@ async function checkHrCompliance(client, data) {
     }
 }
 
+
+const getGrnIcgrnValue = async (client, data) => {
+    try {
+        const icgrn_q = `SELECT 
+                                qals.PRUEFLOS AS icgrn_nos, 
+                                qals.MATNR as mat_no,
+                                qals.MBLNR as grn_no,
+                                qals.LMENGE01 as quantity,
+                                qals.ebeln as purchasing_doc_no,
+                                qals.ebelp as po_lineitem,
+                                ekpo.NETPR as price
+                            FROM qals as qals
+                              left join ekpo as ekpo
+                                ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
+                            WHERE qals.MBLNR = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+
+        console.log("icgrn_q", grn_nos);
+
+        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: grn_values });
+        if (icgrn_no.length == 0) {
+            return { success: false, message: "Plese do ICGRN to Process BTN", data: { total_price } };
+        }
+
+        let total_price = 0;
+        let total_quantity = 0;
+
+        if (icgrn_no.length) {
+            const totals = calculateTotals(icgrn_no);
+            total_price = totals.totalPrice || 0;
+            total_quantity = totals.totalQuantity;
+        }
+
+        total_price = parseFloat(total_price.toFixed(2));
+        return { success: true, message: "Value fetch success", data: { total_price } };
+
+    } catch (error) {
+        console.error("Error making the request:", error.message);
+        throw error;
+    }
+};
+
+function calculateTotals(data) {
+    let totalQuantity = 0;
+    let totalPrice = 0;
+
+    data.forEach((item) => {
+        totalQuantity += parseFloat(item.quantity);
+        totalPrice += parseFloat(item.price) * parseFloat(item.quantity);
+    });
+
+    return {
+        totalQuantity,
+        totalPrice,
+    };
+}
+
+
+
 module.exports = {
     payloadObj,
     filesData,
@@ -280,5 +338,6 @@ module.exports = {
     getActualSubminissionDate,
     vendorDetails,
     getHrDetails,
-    addToBTNList
+    addToBTNList,
+    getGrnIcgrnValue
 }

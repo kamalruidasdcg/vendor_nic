@@ -46,11 +46,8 @@ exports.wdc = async (req, res) => {
     }
 
     //  deper
-    if (
-      tokenData.user_type != USER_TYPE_VENDOR &&
-      tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT
-    ) {
-      return resSend(res, false, 200, "You are not authorised!", null, null);
+    if (obj.status == SUBMITTED && tokenData.user_type != USER_TYPE_VENDOR) {
+      return resSend(res, false, 200, "Vendor only can submit", null, null);
     }
     //console.log(obj);
     if (tokenData.user_type == USER_TYPE_VENDOR) {
@@ -91,7 +88,7 @@ exports.wdc = async (req, res) => {
 
       const check = await checkIsApprovedRejected(WDC, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
       if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
+        return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
       }
 
       const line_item_array_q = `SELECT COUNT(assigned_to) AS assingn from ${WDC} WHERE purchasing_doc_no = $1 AND  assigned_to = $2`;
@@ -252,10 +249,10 @@ exports.wdc = async (req, res) => {
           console.log(payload);
           console.log("payload$%^&*(");
           const submit = await submitToSapServer(payload);
-            //await client.query('COMMIT');
-            if(submit == false) {
-              //await client.query('ROLLBACK');
-            }
+          //await client.query('COMMIT');
+          if (submit == false) {
+            //await client.query('ROLLBACK');
+          }
 
 
         } catch (error) {
@@ -295,14 +292,14 @@ async function handelMail(tokenData, payload, event) {
     let dataObj = payload;
 
 
-    if ( payload.status == SUBMITTED) {
+    if (payload.status == SUBMITTED) {
       // QA NODAL OFFICERS
-      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity',' $1');
+      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity', ' $1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [parseInt(payload.assigned_to)] });
       await sendMail(WDC_UPLOADING, dataObj, { users: emailUserDetails }, WDC_UPLOADING);
     }
 
-    if ( payload.status == REJECTED) {
+    if (payload.status == REJECTED) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
@@ -451,7 +448,7 @@ async function submitToSapServer(data) {
     console.log(wdc_payload);
 
     const postResponse = await makeHttpRequest(postUrl, "POST", wdc_payload);
-    if(postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
+    if (postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
       status = true;
     }
     console.log("POST Response from the server:", postResponse);
