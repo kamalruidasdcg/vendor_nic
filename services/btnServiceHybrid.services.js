@@ -322,16 +322,37 @@ async function checkHrCompliance(client, data) {
             HR_ACTION_TYPE_ESI_COMPLIANCE,
             HR_ACTION_TYPE_PF_COMPLIANCE,
         ];
-
+        const obj = {};
         for (const item of hrCompliances) {
-            if (!hrCompliancUpload.has(item)) {
-                return { success: false, msg: `Please submit ${item} to process BTN !` };
+            if (item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE) {
+                obj.wage_compliance_filename = item.file_name;
+                obj.wage_compliance_filepath = item.file_path;
+                obj.wage_approved_by_name = item.hr_name;
+                obj.wage_approved_by_id = item.hr_id;
+            }
+            if (item.action_type == HR_ACTION_TYPE_ESI_COMPLIANCE) {
+                obj.esi_compliance_filename = item.file_name;
+                obj.esi_compliance_filepath = item.file_path;
+                obj.esi_approved_by_name = item.hr_name;
+                obj.esi_approved_by_id = item.hr_id;
+            }
+            if (item.action_type == HR_ACTION_TYPE_PF_COMPLIANCE) {
+                obj.pf_compliance_filename = item.file_name;
+                obj.pf_compliance_filepath = item.file_path;
+                obj.pf_approved_by_name = item.hr_name;
+                obj.pf_approved_by_id = item.hr_id;
             }
         }
 
-        return { success: true, msg: "No milestone missing" };
+        for (const item of hrCompliances) {
+            if (!hrCompliancUpload.has(item)) {
+                return { success: false, msg: `Please submit ${item} to process BTN !`, data: obj };
+            }
+        }
+
+        return { success: true, msg: "No milestone missing", data: obj };
     } catch (error) {
-        return { success: false, msg: "An error occurred while checking HR compliance. Please try again later." + error.message };
+        return { success: false, msg: "An error occurred while checking HR compliance. Please try again later." + error.message, data: {} };
     }
 }
 

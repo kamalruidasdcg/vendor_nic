@@ -139,8 +139,11 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (!checkMissingComplience.success) {
         return resSend(res, false, 200, checkMissingComplience.msg, "Missing data, Need to be upload by HR", null);
       }
+      tempPayload.esi_compliance_filename = checkMissingComplience.data?.checkMissingComplience;
+      tempPayload.pf_compliance_filename = checkMissingComplience.data?.pf_compliance_filename;
+      tempPayload.wage_compliance_filename = checkMissingComplience.data?.wage_compliance_filename;
 
-      let payload = payloadObj(tempPayload)
+      let payload = payloadObj(tempPayload);
       // BTN NUMBER GENERATE
       const btn_num = await create_btn_no();
       
