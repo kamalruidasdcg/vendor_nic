@@ -1,9 +1,15 @@
+const { getQuery } = require("../config/pgDbConfig");
+const { makeHttpRequest } = require("../config/sapServerConfig");
+const { timeInHHMMSS } = require("../controllers/btnControllers");
+const { REJECTED } = require("../lib/status");
+const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
+
 /**
  * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
  * @param {Object} btnPayload
  * @param {Object} tokenData
  */
-async function btnSubmitByDo(btnPayload, tokenData) {
+async function btnSubmitToSAPF01(btnPayload, tokenData) {
     let status = false;
     console.log("send to sap payload -- >", btnPayload);
     try {
@@ -15,7 +21,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
                   btn_assign
           )
           SELECT 
-            btn.btn_num, 
+              btn.btn_num, 
               btn.purchasing_doc_no,
               btn.cgst, 
               btn.sgst, 
@@ -23,17 +29,15 @@ async function btnSubmitByDo(btnPayload, tokenData) {
               btn.net_claim_amount, 
               btn.invoice_no,
               btn.vendor_code,
-              ged.invno, 
-              ged.inv_date as invoice_date,
+			  btn.invoice_date,
               vendor.stcd3,
               users.pernr as finance_auth_id,
               users.cname as finance_auth_name,
               vendor.name1 as vendor_name,
               assign_users.cname as assign_name,
               ranked_assignments.assign_by as assign_id
-  
           FROM 
-              public.btn AS btn
+              public.btn_service_hybrid AS btn
           LEFT JOIN 
               ranked_assignments
               ON (btn.btn_num = ranked_assignments.btn_num
@@ -53,13 +57,17 @@ async function btnSubmitByDo(btnPayload, tokenData) {
         query: vendorQuery,
         values: [btnPayload.assign_to, btnPayload.btn_num],
       });
+
+
+      console.log("btnDetails", btnDetails);
+      
   
       let btn_payload = {
         EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
         LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
         RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
         STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
-        ZVBNO: btnDetails[0]?.invno, // GATE ENTRY INVOCE NUMBER
+        ZVBNO: btnDetails[0]?.invoice_no, // GATE ENTRY INVOCE NUMBER
         VEN_BILL_DATE: getYyyyMmDd(
           new Date(btnDetails[0]?.invoice_date).getTime()
         ), // GATE ENTRY INVOICE DATE
@@ -121,8 +129,15 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       console.log("POST Response from the server:", postResponse);
     } catch (error) {
       console.error("Error making the request:", error.message);
+      throw error;
     } finally {
       return status;
     }
   }
+
+
+
+  module.exports = { btnSubmitToSAPF01}
+
+  
   
