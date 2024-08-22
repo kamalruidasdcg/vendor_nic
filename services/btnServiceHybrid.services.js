@@ -30,7 +30,7 @@ const payloadObj = (payload) => {
         created_by_id: payload.created_by_id,
         created_at: getEpochTime(),
         btn_type: "service-contract-bills",
-        
+
 
         hinderance_register_filename: payload.hinderance_register_filename || "", // AUTO FETCH
         esi_compliance_filename: payload.esi_compliance_filename || "", // AUTO FETCH
@@ -44,7 +44,7 @@ const payloadObj = (payload) => {
         // vendor_name: payload.vendor_name, // AUTO FETCH
         // vendor_gst_no: payload.vendor_gst_no, // AUTO FETCH
     }
-    
+
     return obj;
 }
 
@@ -502,9 +502,16 @@ async function getServiceBTNDetails(client, data) {
 
         const getBtnQuery =
             `SELECT
-              s_btn.*, 
-              btn_authority.*, 
-              users.cname AS bill_certifing_authority_name 
+                s_btn.*,
+                btn_authority.entry_number,
+                btn_authority.entry_type,
+                btn_authority.other_deductions,
+                btn_authority.deduction_remarks,
+                btn_authority.total_deductions,
+                btn_authority.net_payable_amount,
+                btn_authority.assign_by_fi,
+                btn_authority.assign_to_fi,
+                users.cname AS bill_certifing_authority_name 
             FROM 
               btn_service_hybrid AS s_btn 
               LEFT JOIN pa0002 as users 
