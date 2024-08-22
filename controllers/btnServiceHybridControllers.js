@@ -251,47 +251,56 @@ const getData = async (req, res) => {
   try {
     const client = await poolClient();
     try {
-
       const { id, type } = req.query;
       if (!type) {
         return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
       }
       let data;
       let message;
+      let success = false;
+      let statusCode;
       switch (type) {
         case 'icgrn': {
-          if (!id) {
-            return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null)
-          }
+          // if (!id) {
+          //   return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null)
+          // }
           const result = await getGrnIcgrnValue(client, req.query);
-          console.log("result", result);
-
-          data = result.data;
-          message = result.message;
+          ({ data, message, success, statusCode } = result);
         }
           break;
         case 'service-entry': {
-          if (!id) {
-            return resSend(res, false, 200, "Please send a valid payload!", Message.MANDATORY_INPUTS_REQUIRED, null)
-          }
-
+          // if (!id) {
+          //   return resSend(res, false, 200, "Please send a valid payload!", Message.MANDATORY_INPUTS_REQUIRED, null)
+          // }
           const result = await getServiceEntryValue(client, req.query);
           console.log("result", result);
-
-          data = result.data;
-          message = result.message;
+          ({ data, message, success, statusCode } = result);
+          // data = result.data;
+          // message = result.message;
+          // statusCode = result.statusCode;
+          // success = result.success;
         }
 
+          break;
+        case 'btn-certify-authrity': {
+          const result = await getServiceEntryValue(client, req.query);
+          console.log("result", result);
+          ({ data, message, success, statusCode } = result);
+          // data = result.data;
+          // message = result.message;
+          // statusCode = result.statusCode;
+          // success = result.success;
+        }
           break;
 
         default:
           console.log("swithch default");
           message = "Please send a valid type!"
-          return resSend(res, false, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
+          return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
       }
       console.log("swithch no");
 
-      resSend(res, true, 200, message, data);
+      resSend(res, success, statusCode, message, data);
 
     } catch (error) {
       resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
@@ -326,7 +335,7 @@ const forwordToFinace = async (req, res) => {
       const { q, val } = generateQuery(INSERT, BTN_SERVICE_CERTIFY_AUTHORITY, financePaylad);
       const response = await poolQuery({ client, query: q, values: val });
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-  
+
       if (sendSap == false) {
         console.log(sendSap);
         await client.query("ROLLBACK");

@@ -297,6 +297,11 @@ async function checkHrCompliance(client, data) {
 
 const getGrnIcgrnValue = async (client, data) => {
     try {
+
+        if (!data.id) {
+            // return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null);
+            return { success: false, statusCode: 200, message: "Please send icgrn(id) no", data: Message.MANDATORY_INPUTS_REQUIRED };
+        }
         const icgrn_q = `SELECT 
                                 qals.PRUEFLOS AS icgrn_nos, 
                                 qals.MATNR as mat_no,
@@ -312,14 +317,13 @@ const getGrnIcgrnValue = async (client, data) => {
 
         const grn_values = data.id || "";
         console.log("icgrn_q", grn_values);
-
-        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
-        if (!icgrn_no.length) {
-            return { success: false, message: "Plese do ICGRN to process BTN", data: { total_price } };
-        }
-
         let total_price = 0;
         let total_quantity = 0;
+        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
+        if (!icgrn_no.length) {
+            return { success: false, statusCode: 200, message: "Plese do ICGRN to process BTN", data: { total_price } };
+        }
+
 
         if (icgrn_no.length) {
             const totals = calculateTotals(icgrn_no);
@@ -328,7 +332,7 @@ const getGrnIcgrnValue = async (client, data) => {
         }
 
         total_price = parseFloat(total_price.toFixed(2));
-        return { success: true, message: "Value fetch success", data: { total_price } };
+        return { success: true, statusCode: 200, message: "Value fetch success", data: { total_price } };
 
     } catch (error) {
         console.error("Error making the request:", error.message);
@@ -355,6 +359,10 @@ function calculateTotals(data) {
 const getServiceEntryValue = async (client, data) => {
     try {
 
+        if (!data.id) {
+            return { success: false, statusCode: 200, message: "Please send service entry number", data: Message.MANDATORY_INPUTS_REQUIRED };
+        }
+
         const service_entry_number = data.id || "";
         const getValQuery = `
         SELECT     
@@ -366,10 +374,10 @@ const getServiceEntryValue = async (client, data) => {
         const result = await poolQuery({ client, query: getValQuery, values: [service_entry_number] });
         let total_price = 0;
         if (!result.length) {
-            return { success: false, message: "Plese do SIR to process BTN", data: { total_price } };
+            return { success: false, statusCode: 200, message: "Plese do SIR to process BTN", data: { total_price } };
         }
         total_price = result[0]?.value_with_gst || "0";
-        return { success: true, message: "Value fetch success", data: { total_price, ...result[0] } };
+        return { success: true, statusCode: 200, message: "Value fetch success", data: { total_price, ...result[0] } };
     } catch (error) {
         console.error("Error making the request:", error.message);
         throw error;
@@ -436,6 +444,34 @@ async function btnCurrentDetailsCheck(client, data) {
             currentStatus: BTN_STATUS_NOT_SUBMITTED,
             message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
         };
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+async function getBTNDetails(client, data) {
+    try {
+
+        if (data.btn_num) {
+            return { data: [], messages }
+        }
+
+        const getBtnQuery =
+            `SELECT * FROM btn_service_hybrid WHERE btnSELECT 
+              s_btn.*, 
+              btn_authority.*, 
+              users.cname AS bill_certifing_authority_name 
+            FROM 
+              btn_service_hybrid AS s_btn 
+              LEFT JOIN pa0002 as users 
+              ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
+              LEFT JOIN btn_service_certify_authority as btn_authority 
+              ON(s_btn.btn_num = btn_authority.btn_num)
+            WHERE s_btn.btn_num = '20240821997' AND s_btn.bill_certifing_authority = '600700'`;
+
+        const result = await poolQuery({ client, query: getBtnQuery, values: val });
+
     } catch (error) {
         throw error;
     }
