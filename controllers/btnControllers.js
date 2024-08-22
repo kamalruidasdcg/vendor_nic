@@ -1797,6 +1797,7 @@ const updateBtnListTable = async (client, data) => {
       const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
       const aa = await poolQuery({ client, query: q, values: val });
       console.log(aa);
+      console.log("UPDATED btn list");
       // if (data.fstatus == "5" || data.fstatus == 5) {
       //     await handelMail(btnListTablePaylod, client);
       // }
@@ -1914,7 +1915,7 @@ function calculateTotals(data) {
 
 const getFinanceEmpList = async (req, res) => {
   try {
-    const q = `SELECT t1.pernr as userCode, t1.cname as empName, t3.name as role 
+    let q = `SELECT t1.pernr as userCode, t1.cname as empName, t3.name as role 
 	FROM pa0002 
     	AS t1 
       LEFT JOIN 
@@ -1931,12 +1932,16 @@ const getFinanceEmpList = async (req, res) => {
 	
         WHERE 
         t2.department_id = $1`;
+    if (req.query.$select) {
+      let select = req.query.$select;
+      q = q.concat(` AND t2.internal_role_id = ${select}`);
+    }
 
     const response = await getQuery({
       query: q,
       values: [USER_TYPE_GRSE_FINANCE],
     });
-    resSend(res, true, 200, "oded!", response, null);
+    resSend(res, true, 200, "data fetched!", response, null);
   } catch (err) {
     console.log("data not fetched", err);
   }

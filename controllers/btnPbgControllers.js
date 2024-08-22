@@ -82,8 +82,6 @@ const Message = require("../utils/messages");
 const {
   addToBTNList,
   btnCurrentDetailsCheck,
-
-  insertUpdateToBTNList,
   timeInHHMMSS,
   updateBtnListTable,
 } = require("./btnControllers");
@@ -100,6 +98,7 @@ const submitPbg = async (req, res) => {
     } = req.body;
     let payloadFiles = req.files;
     const tokenData = { ...req.tokenData };
+    console.log(tokenData);
     let payload = {
       ...req.body,
       vendor_code: tokenData?.vendor_code,
@@ -109,13 +108,13 @@ const submitPbg = async (req, res) => {
     };
 
     // Check required fields
-    if (!claim_amount || !claim_amount.trim() === "") {
-      return resSend(res, false, 200, "Claim Value is mandatory.", null, null);
+    if (tokenData?.user_type != USER_TYPE_VENDOR) {
+      return resSend(res, false, 200, "Vendor only can claim.", null, null);
     }
 
     // Check required fields
-    if (!invoice_value || !invoice_value.trim() === "") {
-      return resSend(res, false, 200, "Basic Value is mandatory.", null, null);
+    if (!claim_amount || !claim_amount.trim() === "") {
+      return resSend(res, false, 200, "Claim Value is mandatory.", null, null);
     }
 
     if (!purchasing_doc_no || !invoice_no) {
@@ -156,18 +155,12 @@ const submitPbg = async (req, res) => {
     // GET ICGRN Value by PO Number
     let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
     if (!resICGRN) {
-      return resSend(
-        res,
-        false,
-        200,
-        `Invoice number is not valid!`,
-        null,
-        null
-      );
+      return resSend(res, false, 200, null, null);
     }
 
     payload = {
       ...payload,
+
       icgrn_total: resICGRN.total_icgrn_value,
       icgrn_nos: JSON.stringify(resICGRN.icgrn_nos),
     };
@@ -180,6 +173,8 @@ const submitPbg = async (req, res) => {
     let created_at = getEpochTime();
     payload = { ...payload, created_at };
     console.log(payload);
+    payload.net_claim_amount = claim_amount;
+    payload.net_payable_amount = claim_amount;
     // INSERT Data into btn table
     let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
     if (!resBtnList?.status) {
@@ -193,6 +188,8 @@ const submitPbg = async (req, res) => {
       );
     }
     //return;
+    delete payload.net_claim_amount;
+    delete payload.net_payable_amount;
     let { q, val } = generateQuery(INSERT, "btn_pbg", payload);
     const result = await getQuery({ query: q, values: val });
     console.log(result);
@@ -288,13 +285,13 @@ const btnPbgSubmitByDO = async (req, res) => {
             null
           );
         }
-        console.log("Fghjkjb", req.body);
+        //console.log("Fghjkjb", req.body);
         const response1 = await btnReject(req.body, tokenData, client);
         if (response1 == false) {
           console.log(response1);
           // await client.query("COMMIT");
           await client.query("ROLLBACK");
-          return resSend(res, false, 200, `SAP not connected.`, null, null);
+          return resSend(res, false, 200, `SAP not connected2.`, null, null);
         } else if (response1 == true) {
           await client.query("COMMIT");
         }
@@ -400,6 +397,7 @@ const btnPbgSubmitByDO = async (req, res) => {
       console.log("BTN LIST PAYLOAD", payload);
       payload.vendor_code = tokenData?.vendor_code;
       let resBtnList = await insertUpdateToBTNList(
+        client,
         payload,
         SUBMITTED_BY_DO,
         isInserted
@@ -462,7 +460,7 @@ const btnPbgSubmitByDO = async (req, res) => {
 
         if (sendSap == false) {
           console.log(sendSap);
-          // await client.query("COMMIT");
+          //  await client.query("COMMIT");
           await client.query("ROLLBACK");
           return resSend(res, false, 200, `SAP not connected.`, null, null);
         } else if (sendSap == true) {
@@ -619,9 +617,9 @@ async function btnReject(data, tokenData, client) {
 
     // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
     // const result = await query({ query: q, values: val });
-
+    //console.log(22);
     await updateBtnListTable(client, obj);
-
+    //console.log(44);
     const status = await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
 
     return status; //{ btn_num: data.btn_num };
@@ -629,5 +627,40 @@ async function btnReject(data, tokenData, client) {
     throw error;
   }
 }
+
+const insertUpdateToBTNList = async (client, data, status, isInserted) => {
+  console.log("data", data);
+  let payload = {
+    btn_num: data?.btn_num,
+    purchasing_doc_no: data?.purchasing_doc_no,
+    net_claim_amount: data?.net_claim_amount,
+    net_payable_amount: data?.net_payable_amount,
+    vendor_code: data?.vendor_code,
+    created_at: data?.created_at,
+    btn_type: data?.btn_type,
+    status: status,
+  };
+
+  // if (isInserted == true) {
+  //   // update
+  //   whereCondition = {
+  //     btn_num: payload.btn_num,
+  //     purchasing_doc_no: payload.purchasing_doc_no,
+  //   };
+  //   assign_q = await generateQuery(UPDATE, BTN_LIST, payload, whereCondition);
+  //   console.log("update..");
+  // } else {
+  //   //insert
+  // }
+  let { q, val } = await generateQuery(INSERT, BTN_LIST, payload);
+  console.log("insert2..");
+  const res = await poolQuery({ client, query: q, values: val });
+
+  if (!res.error) {
+    return { status: true, data: res };
+  } else {
+    return { status: false, data: null };
+  }
+};
 
 module.exports = { submitPbg, btnPbgSubmitByDO };
