@@ -19,10 +19,10 @@ exports.getPBGApprovedFiles = async (po) => {
   // GET Approved PBG by PO Number
 
   try {
-    let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+    let q = `SELECT * FROM public.sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = 'PBG SUBMISISON'`;
     let result = await getQuery({
       query: q,
-      values: [po, APPROVED, ACTION_PBG],
+      values: [po, APPROVED],
     });
     return result;
   } catch (error) {

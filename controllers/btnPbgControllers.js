@@ -5,27 +5,7 @@ const {
   poolQuery,
 } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
-const {
-  C_SDBG_DATE,
-  C_DRAWING_DATE,
-  C_QAP_DATE,
-  C_ILMS_DATE,
-  A_SDBG_DATE,
-  A_DRAWING_DATE,
-  A_QAP_DATE,
-  A_ILMS_DATE,
-  INSERT,
-  USER_TYPE_VENDOR,
-  UPDATE,
-  MID_SDBG,
-  MID_ILMS,
-  MID_QAP,
-  MID_DRAWING,
-  USER_TYPE_GRSE_FINANCE,
-  ACTION_DD,
-  ACTION_IB,
-  ACTION_PBG,
-} = require("../lib/constant");
+const { INSERT, USER_TYPE_VENDOR, UPDATE } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
@@ -54,12 +34,7 @@ const {
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
 } = require("../lib/status");
-const {
-  BTN_MATERIAL,
-  BTN_LIST,
-  BTN_MATERIAL_DO,
-  BTN_ASSIGN,
-} = require("../lib/tableName");
+const { BTN_PBG, BTN_LIST, BTN_ASSIGN } = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
@@ -122,7 +97,7 @@ const submitPbg = async (req, res) => {
     }
 
     // check invoice number is already present in DB
-    let check_invoice_q = `SELECT count(*) as count FROM btn_pbg WHERE invoice_no = $1 and vendor_code = $2`;
+    let check_invoice_q = `SELECT count(*) as count FROM ${BTN_PBG} WHERE invoice_no = $1 and vendor_code = $2`;
     let check_invoice = await getQuery({
       query: check_invoice_q,
       values: [invoice_no, tokenData.vendor_code],
@@ -190,7 +165,7 @@ const submitPbg = async (req, res) => {
     //return;
     delete payload.net_claim_amount;
     delete payload.net_payable_amount;
-    let { q, val } = generateQuery(INSERT, "btn_pbg", payload);
+    let { q, val } = generateQuery(INSERT, BTN_PBG, payload);
     const result = await getQuery({ query: q, values: val });
     console.log(result);
     if (result.length > 0) {
@@ -258,21 +233,6 @@ const btnPbgSubmitByDO = async (req, res) => {
           null
         );
       }
-      // const btnRejectCheck = await btnDetailsCheck(client, {
-      //   btn_num,
-      //   status: REJECTED,
-      // });
-
-      // if (parseInt(btnRejectCheck.count)) {
-      //   return resSend(
-      //     res,
-      //     false,
-      //     200,
-      //     `BTN ${btn_num} already rejected`,
-      //     btn_num,
-      //     null
-      //   );
-      // }
 
       if (status === REJECTED) {
         if (!req.body.remarks) {
@@ -332,13 +292,6 @@ const btnPbgSubmitByDO = async (req, res) => {
           net_claim_amount: btn_list_payload?.net_claim_amount,
           btn_type: btn_list_payload?.btn_type,
         };
-        // let list_q = generateQuery(INSERT, BTN_LIST, btn_list_payload);
-        // console.log("list_q", list_q);
-        // const res_list = await getQuery({
-        //   query: list_q.q,
-        //   values: list_q.val,
-        // });
-        // console.log("res_list", res_list);
       } else {
         return resSend(res, false, 200, d?.message, null, null);
       }
@@ -383,17 +336,6 @@ const btnPbgSubmitByDO = async (req, res) => {
 
       console.log("res_assign", res_assign);
 
-      // if (res_assign <= 0) {
-      //   return resSend(
-      //     res,
-      //     false,
-      //     200,
-      //     "Something went wrong. Please restart and try again!",
-      //     null,
-      //     null
-      //   );
-      // }
-      // return false;
       console.log("BTN LIST PAYLOAD", payload);
       payload.vendor_code = tokenData?.vendor_code;
       let resBtnList = await insertUpdateToBTNList(
@@ -413,9 +355,7 @@ const btnPbgSubmitByDO = async (req, res) => {
           null
         );
       }
-      // return false;
-      // INSERT Data into btn_do BTN_MATERIAL_DO table
-      // console.log("payload", payload);
+
       delete payload.assign_to;
       delete payload.p_sdbg_amount;
       delete payload.p_estimate_amount;
@@ -426,31 +366,6 @@ const btnPbgSubmitByDO = async (req, res) => {
       payload.created_at = convertToEpoch(new Date());
       payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
 
-      // let btn_do_q;
-      // if (isInserted == true) {
-      //   // update
-      //   whereCondition = {
-      //     btn_num: payload.btn_num,
-      //     purchasing_doc_no: payload.purchasing_doc_no,
-      //   };
-      //   btn_do_q = await generateQuery(
-      //     UPDATE,
-      //     BTN_MATERIAL_DO,
-      //     payload,
-      //     whereCondition
-      //   );
-      //   console.log("update1..");
-      // } else {
-      //   //insert
-      //   btn_do_q = await generateQuery(INSERT, BTN_MATERIAL_DO, payload);
-      //   console.log("insert1..");
-      // }
-      // //let { q, val } = generateQuery(INSERT, BTN_MATERIAL_DO, payload);
-      // const result = await poolQuery({
-      //   client,
-      //   query: btn_do_q.q,
-      //   values: btn_do_q.val,
-      // });
       assign_to = assign_payload.assign_to;
       try {
         const sendSap = await btnSubmitByDo(
@@ -460,7 +375,7 @@ const btnPbgSubmitByDO = async (req, res) => {
 
         if (sendSap == false) {
           console.log(sendSap);
-          //  await client.query("COMMIT");
+          // await client.query("COMMIT");
           await client.query("ROLLBACK");
           return resSend(res, false, 200, `SAP not connected.`, null, null);
         } else if (sendSap == true) {
@@ -515,7 +430,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
         	ranked_assignments.assign_by as assign_id
 
         FROM 
-            btn_pbg
+            ${BTN_PBG}
         LEFT JOIN 
             ranked_assignments
             ON (btn_pbg.btn_num = ranked_assignments.btn_num
@@ -615,8 +530,6 @@ async function btnReject(data, tokenData, client) {
       remarks: data.remarks,
     };
 
-    // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
-    // const result = await query({ query: q, values: val });
     //console.log(22);
     await updateBtnListTable(client, obj);
     //console.log(44);
@@ -641,17 +554,6 @@ const insertUpdateToBTNList = async (client, data, status, isInserted) => {
     status: status,
   };
 
-  // if (isInserted == true) {
-  //   // update
-  //   whereCondition = {
-  //     btn_num: payload.btn_num,
-  //     purchasing_doc_no: payload.purchasing_doc_no,
-  //   };
-  //   assign_q = await generateQuery(UPDATE, BTN_LIST, payload, whereCondition);
-  //   console.log("update..");
-  // } else {
-  //   //insert
-  // }
   let { q, val } = await generateQuery(INSERT, BTN_LIST, payload);
   console.log("insert2..");
   const res = await poolQuery({ client, query: q, values: val });

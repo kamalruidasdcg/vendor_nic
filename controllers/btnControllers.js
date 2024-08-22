@@ -1544,10 +1544,12 @@ const assignToFiStaffHandler = async (req, res) => {
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
+      console.log(11);
       const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
         btn_num,
         status: STATUS_RECEIVED,
       });
+
       if (btnCurrnetStatus.isInvalid) {
         return resSend(
           res,
@@ -1558,6 +1560,7 @@ const assignToFiStaffHandler = async (req, res) => {
           null
         );
       }
+
       // const btnRejectCheck = await btnDetailsCheck(client, {
       //   btn_num,
       //   status: REJECTED,
@@ -1861,6 +1864,7 @@ async function btnCurrentDetailsCheck(client, data) {
       checkStatus.add(BTN_STATUS_DRETURN);
       checkStatus.add(SUBMITTED_BY_VENDOR);
       checkStatus.delete(STATUS_RECEIVED);
+      checkStatus.delete(SUBMIT_BY_DO);
     }
 
     btnstausCount += " ORDER BY created_at DESC";
