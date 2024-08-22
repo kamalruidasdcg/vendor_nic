@@ -5,7 +5,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
@@ -282,8 +282,8 @@ const getData = async (req, res) => {
         }
 
           break;
-        case 'btn-certify-authrity': {
-          const result = await getServiceEntryValue(client, req.query);
+        case 'shbtn-details': {
+          const result = await getServiceBTNDetails(client, req.query);
           console.log("result", result);
           ({ data, message, success, statusCode } = result);
           // data = result.data;

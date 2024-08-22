@@ -450,15 +450,17 @@ async function btnCurrentDetailsCheck(client, data) {
 }
 
 
-async function getBTNDetails(client, data) {
+async function getServiceBTNDetails(client, data) {
     try {
 
-        if (data.btn_num) {
-            return { data: [], messages }
+        if (!data.btn_num) {
+            return { success: false, statusCode: 200, message: "Please send btn number", data: Message.MANDATORY_INPUTS_REQUIRED };
         }
+        const val = [];
+        val.push(data.btn_num);
 
         const getBtnQuery =
-            `SELECT * FROM btn_service_hybrid WHERE btnSELECT 
+            `SELECT
               s_btn.*, 
               btn_authority.*, 
               users.cname AS bill_certifing_authority_name 
@@ -468,10 +470,11 @@ async function getBTNDetails(client, data) {
               ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
               LEFT JOIN btn_service_certify_authority as btn_authority 
               ON(s_btn.btn_num = btn_authority.btn_num)
-            WHERE s_btn.btn_num = '20240821997' AND s_btn.bill_certifing_authority = '600700'`;
+            WHERE s_btn.btn_num = $1`;
+        // AND s_btn.bill_certifing_authority = '600700'
 
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
-
+        return { success: true, statusCode: 200, message: "Value fetch success", data: result[0] || {} };
     } catch (error) {
         throw error;
     }
@@ -492,7 +495,8 @@ module.exports = {
     getGrnIcgrnValue,
     getServiceEntryValue,
     btnCurrentDetailsCheck,
-    forwordToFinacePaylaod
+    forwordToFinacePaylaod,
+    getServiceBTNDetails
 }
 
 
