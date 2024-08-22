@@ -13,6 +13,7 @@ const payloadObj = (payload) => {
         vendor_code: payload.vendor_code,
         invoice_no: payload.invoice_no,
         invoice_value: payload.invoice_value,
+        yard: payload.yard,
         cgst: payload.cgst || "0",
         igst: payload.igst || "0",
         sgst: payload.sgst || "0",

@@ -9,7 +9,7 @@ const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprove
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
 const { timeInHHMMSS } = require("./btnControllers");
-const { btnSubmitToSAPF01 } = require("../services/sap.btn.services");
+const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -414,7 +414,8 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 
       let result = await addToBTNList(client, data, FORWARDED_TO_FI_STAFF);
 
-      const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+      // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+      const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);
