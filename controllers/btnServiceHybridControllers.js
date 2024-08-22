@@ -170,7 +170,7 @@ const submitBtnServiceHybrid = async (req, res) => {
 
       // console.log(payload, q, val);
       await poolQuery({ client, query: q, values: val });
-      await addToBTNList(client, { ...payload, net_payable_amount }, SUBMITTED_BY_VENDOR);
+      await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
       resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
     } catch (error) {
       resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
@@ -516,7 +516,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_CAUTHORITY] });
 
       console.log("btn_list", btn_list);
-      
+
       if (!btn_list.length) {
         return resSend(res, false, 200, "Vendor have to submit BTN first.", btn_list, null);
       }
