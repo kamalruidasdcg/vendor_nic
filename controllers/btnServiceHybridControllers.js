@@ -1,12 +1,13 @@
-const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
-const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY } = require("../lib/tableName");
+const { getEpochTime, getYyyyMmDd, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
+const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY, BTN_ASSIGN } = require("../lib/tableName");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO, STATUS_RECEIVED, FORWARDED_TO_FI_STAFF } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails } = require("../services/btnServiceHybrid.services");
-const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload } = require("../services/btnServiceHybrid.services");
+const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
+const { checkTypeArr } = require("../utils/smallFun");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -139,18 +140,18 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (!checkMissingComplience.success) {
         return resSend(res, false, 200, checkMissingComplience.msg, "Missing data, Need to be upload by HR", null);
       }
-      tempPayload.esi_compliance_filename = checkMissingComplience.data?.checkMissingComplience;
-      tempPayload.pf_compliance_filename = checkMissingComplience.data?.pf_compliance_filename;
-      tempPayload.wage_compliance_filename = checkMissingComplience.data?.wage_compliance_filename;
+      // tempPayload.esi_compliance_filename = checkMissingComplience.data?.esi_compliance_filename;
+      // tempPayload.pf_compliance_filename = checkMissingComplience.data?.pf_compliance_filename;
+      // tempPayload.wage_compliance_filename = checkMissingComplience.data?.wage_compliance_filename;
 
-      console.log("checkMissingComplience", checkMissingComplience);
-      
-      console.log("tempPayload", tempPayload);
-      
+      // console.log("checkMissingComplience", checkMissingComplience);
+
+      // console.log("tempPayload", tempPayload);
+
       let payload = payloadObj(tempPayload);
       // BTN NUMBER GENERATE
       const btn_num = await create_btn_no();
-      
+
       // MATH Calculation
       net_claim_amount = (
         parseFloat(payload.invoice_value)
@@ -305,7 +306,7 @@ const forwordToFinace = async (req, res) => {
       await client.query("BEGIN");
       let payload = req.body;
       const tokenData = req.tokenData;
-      if (!payload.btn_num || !payload.entry_number || !payload.net_payable_amount || !payload.assign_to_fi) {
+      if (!payload.btn_num || !payload.entry_number || !payload.net_payable_amount || !payload.assign_to) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num or entry_no or net_payable_amount assign_to_fi missing", null);
       }
       const btnChkQuery = `SELECT COUNT(*) from btn_service_hybrid WHERE btn_num = $1 AND bill_certifing_authority = $2`;
@@ -313,11 +314,20 @@ const forwordToFinace = async (req, res) => {
       if (!parseInt(validAuthrityCheck[0]?.count)) {
         return resSend(res, false, 401, Message.YOU_ARE_UN_AUTHORIZED, "You are not authorize!!", null);
       }
+      //  BTN FINANCE AUTHORITY DATA INSERT
       payload.created_by_id = tokenData.vendor_code;
       const financePaylad = forwordToFinacePaylaod(payload);
       const { q, val } = generateQuery(INSERT, BTN_SERVICE_CERTIFY_AUTHORITY, financePaylad);
       const response = await poolQuery({ client, query: q, values: val });
-      await addToBTNList(client, { ...payload, net_payable_amount }, SUBMITTED_BY_VENDOR);
+
+      // BTN ASSIGN BY FINANCE AUTHORITY  
+      const btnAssignPaylaod = btnAssignPayload({ ...payload, assign_by: tokenData.vendor_code });
+      const assingPayload = await generateInsertUpdateQuery(btnAssignPaylaod, BTN_ASSIGN, ['btn_num', 'purchasing_doc_no']);
+      await poolQuery({ client, query: assingPayload.q, values: assingPayload.val });
+
+      // ADDING TO BTN LIST WITH CURRENT STATUS
+      const latesBtnData = await getLatestBTN(client, payload);
+      await addToBTNList(client, { ...payload, ...latesBtnData }, SUBMITTED_BY_CAUTHORITY);
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
 
       if (sendSap == false) {
@@ -470,11 +480,89 @@ async function btnSubmitByDo(btnPayload, tokenData) {
   }
 }
 
+const serviceBtnAssignToFiStaff = async (req, res) => {
+  try {
+    const client = await poolClient();
+    await client.query("BEGIN");
+    try {
+      const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+      const tokenData = { ...req.tokenData };
+
+      if (!btn_num || !purchasing_doc_no || !assign_to_fi) {
+        return resSend(res, false, 200, "Assign To is the mandatory!", Message.MANDATORY_PARAMETR_MISSING, null);
+      }
+
+      const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
+      let assign_fi_staff_v = await poolQuery({ client, query: assign_q, values: [btn_num, true] });
+      if (!checkTypeArr(assign_fi_staff_v)) {
+        return resSend(res, false, 200, "You're not authorized to perform the action!", null, null);
+      }
+
+      const whereCon = { btn_num: btn_num };
+      const payload = {
+        assign_by_fi: tokenData?.vendor_code,
+        assign_to_fi: assign_to_fi,
+        last_assign_fi: true,
+      };
+
+      let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
+      let resp = await poolQuery({ client, query: q, values: val });
+      console.log("resp", resp);
+
+      let btn_list_q = ` SELECT * FROM btn_list WHERE btn_num = $1 
+	                      AND purchasing_doc_no = $2
+	                      AND status = $3
+                        ORDER BY created_at DESC`;
+      let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_CAUTHORITY] });
+
+      console.log("btn_list", btn_list);
+      
+      if (!btn_list.length) {
+        return resSend(res, false, 200, "Vendor have to submit BTN first.", btn_list, null);
+      }
+
+      let data = {
+        btn_num,
+        purchasing_doc_no,
+        net_claim_amount: btn_list[0]?.net_claim_amount,
+        net_payable_amount: btn_list[0]?.net_payable_amount,
+        vendor_code: tokenData.vendor_code,
+        created_at: getEpochTime(),
+        btn_type: btn_list[0]?.btn_type,
+      };
+
+      let result = await addToBTNList(client, data, FORWARDED_TO_FI_STAFF);
+
+      const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+      if (sendSap == false) {
+        await client.query("ROLLBACK");
+        return resSend(res, false, 200, `SAP not connected.`, null, null);
+      } else if (sendSap == true) {
+        await client.query("COMMIT");
+        // TO DO EMAIL
+
+        resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
+      }
+
+    } catch (error) {
+      console.log("data not inserted", error.message);
+      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
+  }
+};
+
+
+
 
 module.exports = {
   submitBtnServiceHybrid,
   getWdcInfoServiceHybrid,
   initServiceHybrid,
   getBtnData,
-  forwordToFinace
+  forwordToFinace,
+  serviceBtnAssignToFiStaff
 };

@@ -61,11 +61,23 @@ const forwordToFinacePaylaod = (payload) => {
         total_deductions: payload.total_deductions || "0",
         net_payable_amount: payload.net_payable_amount || "0",
         created_at: getEpochTime(),
-        created_by_id: payload.created_by_id,
-        assign_by_fi: payload.created_by_id,
-        assign_to_fi: payload.assign_to_fi,
+        created_by_id: payload.created_by_id
     }
     return obj;
+}
+
+const btnAssignPayload = (payload) => {
+
+    return {
+        btn_num : payload.btn_num,
+        purchasing_doc_no: payload.purchasing_doc_no,
+        assign_by: payload.assign_by,
+        assign_to: payload.assign_to,
+        last_assign: true,
+        assign_by_fi: "",
+        assign_to_fi: "",
+        last_assign_fi: false,
+    }
 }
 
 
@@ -323,12 +335,8 @@ async function checkHrCompliance(client, data) {
             HR_ACTION_TYPE_PF_COMPLIANCE,
         ];
         const obj = {};
+        for (const item of hrUploadedData) {
 
-        console.log("hrUploadedData", hrUploadedData);
-        
-        for (const item of hrCompliances) {
-            console.log(item+ "item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE", item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE);
-            
             if (item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE) {
                 obj.wage_compliance_filename = item.file_name;
                 obj.wage_compliance_filepath = item.file_path;
@@ -348,8 +356,6 @@ async function checkHrCompliance(client, data) {
                 obj.pf_approved_by_id = item.hr_id;
             }
         }
-
-        console.log("hrUploadedData objs", obj);
 
         for (const item of hrCompliances) {
             if (!hrCompliancUpload.has(item)) {
@@ -556,6 +562,28 @@ async function getServiceBTNDetails(client, data) {
     }
 }
 
+async function getLatestBTN(client, data) {
+    try {
+        const getLatestDataQuery = `
+        SELECT 
+            btn_num, 
+            purchasing_doc_no, 
+            net_claim_amount, 
+            net_payable_amount, 
+            vendor_code, 
+            status, 
+            btn_type,
+            created_at
+        FROM btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+        const lasBtnDetails = await poolQuery({ client, query: getLatestDataQuery, values: [data.btn_num] });
+
+        return lasBtnDetails[0] || {};
+
+    } catch (error) {
+        throw error
+    }
+}
+
 
 module.exports = {
     payloadObj,
@@ -572,7 +600,9 @@ module.exports = {
     getServiceEntryValue,
     btnCurrentDetailsCheck,
     forwordToFinacePaylaod,
-    getServiceBTNDetails
+    getServiceBTNDetails,
+    getLatestBTN,
+    btnAssignPayload
 }
 
 

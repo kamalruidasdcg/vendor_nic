@@ -18,6 +18,7 @@ const {
   initServiceHybrid,
   getBtnData,
   forwordToFinace,
+  serviceBtnAssignToFiStaff,
 } = require("../controllers/btnServiceHybridControllers");
 
 const {
@@ -88,11 +89,14 @@ router.post(
 //   getBTNDataServiceHybrid(req, res);
 // });
 
-router.get("/initServiceHybrid", [], (req, res) => {
+router.get("/initServiceHybrid", [veifyAccessToken], (req, res) => {
   initServiceHybrid(req, res);
 });
 router.post("/forwordToFinance", [veifyAccessToken], (req, res) => {
   forwordToFinace(req, res);
+});
+router.post("/assignToFiStaffServiceHybrid", [veifyAccessToken], (req, res) => {
+  serviceBtnAssignToFiStaff(req, res);
 });
 
 // getWdcInfo
