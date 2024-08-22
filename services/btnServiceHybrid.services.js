@@ -32,14 +32,14 @@ const payloadObj = (payload) => {
         btn_type: "service-contract-bills",
 
 
-        hinderance_register_filename: payload.hinderance_register_filename || "", // AUTO FETCH
-        esi_compliance_filename: payload.esi_compliance_filename || "", // AUTO FETCH
-        pf_compliance_filename: payload.pf_compliance_filename || "", // AUTO FETCH
-        c_sdbg_date: payload.c_sdbg_date || "", // AUTO FETCH
-        a_sdbg_date: payload.a_sdbg_date || "", // AUTO FETCH
-        c_sdbg_filename: payload.c_sdbg_filename || "", // AUTO FETCH
-        leave_salary_bonus: payload.leave_salary_bonus || "0", // AUTO FETCH
-        wage_compliance_filename: payload.wage_compliance_filename || "",
+        // hinderance_register_filename: payload.hinderance_register_filename || "", // AUTO FETCH
+        // esi_compliance_filename: payload.esi_compliance_filename || "", // AUTO FETCH
+        // pf_compliance_filename: payload.pf_compliance_filename || "", // AUTO FETCH
+        // c_sdbg_date: payload.c_sdbg_date || "", // AUTO FETCH
+        // a_sdbg_date: payload.a_sdbg_date || "", // AUTO FETCH
+        // c_sdbg_filename: payload.c_sdbg_filename || "", // AUTO FETCH
+        // leave_salary_bonus: payload.leave_salary_bonus || "0", // AUTO FETCH
+        // wage_compliance_filename: payload.wage_compliance_filename || "",
         // wdc_details: payload.wdc_details || "",
         // vendor_name: payload.vendor_name, // AUTO FETCH
         // vendor_gst_no: payload.vendor_gst_no, // AUTO FETCH
