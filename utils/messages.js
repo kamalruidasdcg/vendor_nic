@@ -25,5 +25,5 @@ module.exports = {
     MANDATORY_PARAMETR: "Plese send mandatory parameter.",
     UNEXPECTED_ERROR: "Unexpected error : ",
     BTN_CREATED: "BTN created successfully !",
-    MANDATORY_PARAMETR_MISSING: "BTN created successfully !"
+    MANDATORY_PARAMETR_MISSING: "Plese send mandatory parameter."
 }

@@ -35,9 +35,9 @@ const getWdcInfoServiceHybrid = async (req, res) => {
               	wdc AS wdc
               LEFT JOIN pa0002 AS users
               	ON(users.pernr :: character varying = wdc.assigned_to)
-              WHERE (reference_no = $1 AND status = $2) LIMIT 1`;
+              WHERE (reference_no = $1 AND status = $2 AND action_type = $3) LIMIT 1`;
 
-      let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED] });
+      let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED, 'WDC'] });
       console.log("wdcList", result);
 
       if (!result.length) {
@@ -118,11 +118,9 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (check_invoice && check_invoice[0].count > 0) {
         return resSend(res, false, 200, "BTN is already created under the invoice number.", null, null);
       }
-      if (!tempPayload.c_sdbg_filename || !tempPayload.a_sdbg_date || !tempPayload.c_sdbg_date) {
-        return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Send SDBG details", null);
-      }
-
-
+      // if (!tempPayload.c_sdbg_filename || !tempPayload.a_sdbg_date || !tempPayload.c_sdbg_date) {
+      //   return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Send SDBG details", null);
+      // }
 
       /**
        * FILE PAYLOADS AND FILE VALIDATION
@@ -130,9 +128,9 @@ const submitBtnServiceHybrid = async (req, res) => {
       const uploadedFiles = filesData(filesPaylaod);
       console.log("uploadedFiles", uploadedFiles);
 
-      if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
-        return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
-      }
+      // if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
+      //   return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
+      // }
 
       // checking no submitted hr compliance by vendor
       const checkMissingComplience = await checkHrCompliance(client, tempPayload);
@@ -142,15 +140,10 @@ const submitBtnServiceHybrid = async (req, res) => {
         return resSend(res, false, 200, checkMissingComplience.msg, "Missing data, Need to be upload by HR", null);
       }
 
-
-
       let payload = payloadObj(tempPayload)
       // BTN NUMBER GENERATE
       const btn_num = await create_btn_no();
-      // UPLOAD FILES DATA
-
-
-
+      
       // MATH Calculation
       net_claim_amount = (
         parseFloat(payload.invoice_value)
@@ -247,11 +240,11 @@ const initServiceHybrid = async (req, res) => {
 
 
 
-const getData = async (req, res) => {
+const getBtnData = async (req, res) => {
   try {
     const client = await poolClient();
     try {
-      const { id, type } = req.query;
+      const { type } = req.query;
       if (!type) {
         return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
       }
@@ -261,45 +254,27 @@ const getData = async (req, res) => {
       let statusCode;
       switch (type) {
         case 'icgrn': {
-          // if (!id) {
-          //   return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null)
-          // }
           const result = await getGrnIcgrnValue(client, req.query);
           ({ data, message, success, statusCode } = result);
         }
           break;
         case 'service-entry': {
-          // if (!id) {
-          //   return resSend(res, false, 200, "Please send a valid payload!", Message.MANDATORY_INPUTS_REQUIRED, null)
-          // }
           const result = await getServiceEntryValue(client, req.query);
           console.log("result", result);
           ({ data, message, success, statusCode } = result);
-          // data = result.data;
-          // message = result.message;
-          // statusCode = result.statusCode;
-          // success = result.success;
         }
-
           break;
         case 'shbtn-details': {
           const result = await getServiceBTNDetails(client, req.query);
           console.log("result", result);
           ({ data, message, success, statusCode } = result);
-          // data = result.data;
-          // message = result.message;
-          // statusCode = result.statusCode;
-          // success = result.success;
         }
           break;
 
         default:
-          console.log("swithch default");
           message = "Please send a valid type!"
           return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
       }
-      console.log("swithch no");
-
       resSend(res, success, statusCode, message, data);
 
     } catch (error) {
@@ -334,6 +309,7 @@ const forwordToFinace = async (req, res) => {
       const financePaylad = forwordToFinacePaylaod(payload);
       const { q, val } = generateQuery(INSERT, BTN_SERVICE_CERTIFY_AUTHORITY, financePaylad);
       const response = await poolQuery({ client, query: q, values: val });
+      await addToBTNList(client, { ...payload, net_payable_amount }, SUBMITTED_BY_VENDOR);
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
 
       if (sendSap == false) {
@@ -491,6 +467,6 @@ module.exports = {
   submitBtnServiceHybrid,
   getWdcInfoServiceHybrid,
   initServiceHybrid,
-  getData,
+  getBtnData,
   forwordToFinace
 };

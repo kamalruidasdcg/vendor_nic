@@ -4,14 +4,13 @@ const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
 
+
 const payloadObj = (payload) => {
 
     const obj = {
         btn_num: payload.btn_num,
         purchasing_doc_no: payload.purchasing_doc_no,
-        vendor_name: payload.vendor_name,
         vendor_code: payload.vendor_code,
-        vendor_gst_no: payload.vendor_gst_no,
         invoice_no: payload.invoice_no,
         invoice_value: payload.invoice_value,
         cgst: payload.cgst || "0",
@@ -19,29 +18,33 @@ const payloadObj = (payload) => {
         sgst: payload.sgst || "0",
         invoice_filename: payload.invoice_filename || "",
         invoice_type: payload.invoice_type,
+        suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
         debit_note: payload.debit_note || "0",
         credit_note: payload.credit_note || "0",
         debit_credit_filename: payload.debit_credit_filename,
-        hinderance_register_filename: payload.hinderance_register_filename || "",
-        esi_compliance_filename: payload.esi_compliance_filename || "",
-        pf_compliance_filename: payload.pf_compliance__filename || "",
-        demand_raise_filename: payload.demand_raise_filename || "",
+        bill_certifing_authority: payload.bill_certifing_authority,
         net_claim_amount: payload.net_claim_amount || "0",
         net_claim_amt_gst: payload.net_claim_amt_gst || "0",
         wdc_number: payload.wdc_number,
         hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
-        created_at: getEpochTime(),
         created_by_id: payload.created_by_id,
+        created_at: getEpochTime(),
         btn_type: "service-contract-bills",
-        c_sdbg_date: payload.c_sdbg_date || "",
-        a_sdbg_date: payload.a_sdbg_date || "",
-        c_sdbg_filename: payload.c_sdbg_filename || "",
-        leave_salary_bonus: payload.leave_salary_bonus || "0",
-        wage_compliance_certyfied_by: payload.wage_compliance_certyfied_by || "",
-        wdc_details: payload.wdc_details || "",
-        bill_certifing_authority: payload.bill_certifing_authority
-    }
+        
 
+        hinderance_register_filename: payload.hinderance_register_filename || "", // AUTO FETCH
+        esi_compliance_filename: payload.esi_compliance_filename || "", // AUTO FETCH
+        pf_compliance_filename: payload.pf_compliance_filename || "", // AUTO FETCH
+        c_sdbg_date: payload.c_sdbg_date || "", // AUTO FETCH
+        a_sdbg_date: payload.a_sdbg_date || "", // AUTO FETCH
+        c_sdbg_filename: payload.c_sdbg_filename || "", // AUTO FETCH
+        leave_salary_bonus: payload.leave_salary_bonus || "0", // AUTO FETCH
+        wage_compliance_certyfied_by: payload.wage_compliance_certyfied_by || "",
+        // wdc_details: payload.wdc_details || "",
+        // vendor_name: payload.vendor_name, // AUTO FETCH
+        // vendor_gst_no: payload.vendor_gst_no, // AUTO FETCH
+    }
+    
     return obj;
 }
 
@@ -159,6 +162,44 @@ const getHrDetails = async (client, data) => {
         throw error;
     }
 }
+
+
+
+const getHrDetailsDetails = async (client, data) => {
+    try {
+
+        const actionTypeArr = [
+            HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE,
+            HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE
+        ];
+        const initalDataVal = data.length;
+        const placeholder = actionTypeArr.map((_, index) => `$${index + initalDataVal + 1}`).join(",");
+        const q = ` SELECT    hr.cname      AS hr_name,
+                            created_by_id AS hr_id,
+                            purchasing_doc_no,
+                            created_by_id,
+                            action_type,
+                            file_name,
+                            file_path
+                  FROM      hr     AS hr_activity
+                  left join pa0002 AS hr
+                  ON       (
+                                      hr_activity.created_by_id = hr.pernr :: CHARACTER varying )
+                  WHERE     (
+                                      hr_activity.purchasing_doc_no = $1
+                            AND       hr_activity.action_type IN (${placeholder}))`;
+        console.log("[...data, ...actionTypeArr]", q, placeholder, [...data, ...actionTypeArr]);
+
+        const result = await poolQuery({ client, query: q, values: [...data, ...actionTypeArr] });
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+
 /**
  * SDBG APPROVE FILE DATA
  * @param {Object} client 
@@ -367,7 +408,7 @@ const getServiceEntryValue = async (client, data) => {
         const getValQuery = `
         SELECT     
             lblni as service_entry_number, 
-            lwert as value_without_gst, 
+            lwert as unit_price, 
             netwr as value_with_gst  
         FROM essr WHERE lblni = $1 LIMIT 1`;
 

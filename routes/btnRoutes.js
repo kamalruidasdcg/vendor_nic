@@ -16,7 +16,7 @@ const {
   submitBtnServiceHybrid,
   getWdcInfoServiceHybrid,
   initServiceHybrid,
-  getData,
+  getBtnData,
   forwordToFinace,
 } = require("../controllers/btnServiceHybridControllers");
 
@@ -105,7 +105,7 @@ router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
 router.get("/getServiceBtnData", [], (req, res) => {
-  getData(req, res);
+  getBtnData(req, res);
 });
 
 //// Btn Service Hybrid //////
