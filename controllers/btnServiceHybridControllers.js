@@ -267,7 +267,7 @@ const getBtnData = async (req, res) => {
           ({ data, message, success, statusCode } = result);
         }
           break;
-        case 'shbtn-details': {
+        case 'sbtn-details': {
           const result = await getServiceBTNDetails(client, req.query);
           console.log("result", result);
           ({ data, message, success, statusCode } = result);
