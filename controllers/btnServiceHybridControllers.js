@@ -143,6 +143,10 @@ const submitBtnServiceHybrid = async (req, res) => {
       tempPayload.pf_compliance_filename = checkMissingComplience.data?.pf_compliance_filename;
       tempPayload.wage_compliance_filename = checkMissingComplience.data?.wage_compliance_filename;
 
+      console.log("checkMissingComplience", checkMissingComplience);
+      
+      console.log("tempPayload", tempPayload);
+      
       let payload = payloadObj(tempPayload);
       // BTN NUMBER GENERATE
       const btn_num = await create_btn_no();
@@ -157,7 +161,8 @@ const submitBtnServiceHybrid = async (req, res) => {
         ...payload, btn_num,
         ...uploadedFiles,
         net_claim_amount,
-        created_by_id: tokenData.vendor_code
+        created_by_id: tokenData.vendor_code,
+        vendor_code: tokenData.vendor_code,
       }
 
       const { q, val } = generateQuery(INSERT, BTN_SERVICE_HYBRID, payload);

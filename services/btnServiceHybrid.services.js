@@ -39,7 +39,7 @@ const payloadObj = (payload) => {
         a_sdbg_date: payload.a_sdbg_date || "", // AUTO FETCH
         c_sdbg_filename: payload.c_sdbg_filename || "", // AUTO FETCH
         leave_salary_bonus: payload.leave_salary_bonus || "0", // AUTO FETCH
-        wage_compliance_certyfied_by: payload.wage_compliance_certyfied_by || "",
+        wage_compliance_filename: payload.wage_compliance_filename || "",
         // wdc_details: payload.wdc_details || "",
         // vendor_name: payload.vendor_name, // AUTO FETCH
         // vendor_gst_no: payload.vendor_gst_no, // AUTO FETCH
@@ -323,7 +323,12 @@ async function checkHrCompliance(client, data) {
             HR_ACTION_TYPE_PF_COMPLIANCE,
         ];
         const obj = {};
+
+        console.log("hrUploadedData", hrUploadedData);
+        
         for (const item of hrCompliances) {
+            console.log(item+ "item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE", item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE);
+            
             if (item.action_type == HR_ACTION_TYPE_WAGR_COMPLIANCE) {
                 obj.wage_compliance_filename = item.file_name;
                 obj.wage_compliance_filepath = item.file_path;
@@ -343,6 +348,8 @@ async function checkHrCompliance(client, data) {
                 obj.pf_approved_by_id = item.hr_id;
             }
         }
+
+        console.log("hrUploadedData objs", obj);
 
         for (const item of hrCompliances) {
             if (!hrCompliancUpload.has(item)) {
