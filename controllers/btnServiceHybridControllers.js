@@ -345,7 +345,7 @@ const forwordToFinace = async (req, res) => {
 
       // ADDING TO BTN LIST WITH CURRENT STATUS
       const latesBtnData = await getLatestBTN(client, payload);
-      await addToBTNList(client, { ...payload, ...latesBtnData }, SUBMITTED_BY_CAUTHORITY);
+      await addToBTNList(client, {  ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
       // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
