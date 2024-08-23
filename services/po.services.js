@@ -85,6 +85,7 @@ const sdbgPayload = (payload, status) => {
     created_at: payload.created_at || getEpochTime(),
     created_by_name: payload.action_by_name || null,
     created_by_id: payload.created_by_id,
+    bg_no: payload.bg_no || null,
   };
 
   return payloadObj;
