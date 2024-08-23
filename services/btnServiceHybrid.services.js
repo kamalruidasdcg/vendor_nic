@@ -1,5 +1,6 @@
 const { poolQuery } = require("../config/pgDbConfig");
-const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT } = require("../lib/constant");
+const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
+const { APPROVED } = require("../lib/status");
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
@@ -588,6 +589,52 @@ async function getLatestBTN(client, data) {
 }
 
 
+async function supportingDataForServiceBtn(client, poNo) {
+    try {
+      
+      const response = await Promise.all(
+        [
+          getHrDetails(client, [poNo]),
+          getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
+          getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
+          vendorDetails(client, [poNo]),
+          getContractutalSubminissionDate(client, [poNo]),
+          getActualSubminissionDate(client, [poNo])
+        ]);
+  
+      let result = {
+        hrDetais: response[0], //  getHrDetails,
+        // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
+        // pbgDetails: response[2], //getPBGApprovedFiles,
+        // vendorDetails: response[3], //vendorDetails
+        // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
+        // actualSubminissionDate: response[5], // getActualSubminissionDate
+      }
+      if (response[1][0]) {
+        result = { ...result, sdbgFiles: response[1] };
+      } if (response[2][0]) {
+        result = { ...result, pbgFiles: response[2] };
+      }
+      if (response[3][0]) {
+        result = { ...result, ...response[3][0] };
+      }
+  
+      if (response[4] && response[4][0]) {
+        const con = response[4].find((el) => el.MID == MID_SDBG);
+        result.c_sdbg_date = con?.PLAN_DATE;
+      }
+      if (response[5] && response[5][0]) {
+        const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
+        result.a_sdbg_date = act?.PLAN_DATE;
+      }
+  
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
 module.exports = {
     payloadObj,
     filesData,
@@ -605,7 +652,8 @@ module.exports = {
     forwordToFinacePaylaod,
     getServiceBTNDetails,
     getLatestBTN,
-    btnAssignPayload
+    btnAssignPayload,
+    supportingDataForServiceBtn
 }
 
 

@@ -5,7 +5,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO,
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery, getQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
 const { timeInHHMMSS } = require("./btnControllers");
@@ -196,46 +196,48 @@ const initServiceHybrid = async (req, res) => {
     try {
       const { poNo } = req.query;
 
+
       // const data1 = await getHrDetails(client, [poNo]);
       // const data2 = await getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]);
       // const data3 = await getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]);
       // const data4 = await vendorDetails(client, [poNo]);
 
-      const response = await Promise.all(
-        [
-          getHrDetails(client, [poNo]),
-          getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
-          getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
-          vendorDetails(client, [poNo]),
-          getContractutalSubminissionDate(client, [poNo]),
-          getActualSubminissionDate(client, [poNo])
-        ]);
+      // const response = await Promise.all(
+      //   [
+      //     getHrDetails(client, [poNo]),
+      //     getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
+      //     getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
+      //     vendorDetails(client, [poNo]),
+      //     getContractutalSubminissionDate(client, [poNo]),
+      //     getActualSubminissionDate(client, [poNo])
+      //   ]);
 
-      let result = {
-        hrDetais: response[0], //  getHrDetails,
-        // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
-        // pbgDetails: response[2], //getPBGApprovedFiles,
-        // vendorDetails: response[3], //vendorDetails
-        // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
-        // actualSubminissionDate: response[5], // getActualSubminissionDate
-      }
+      // let result = {
+      //   hrDetais: response[0], //  getHrDetails,
+      //   // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
+      //   // pbgDetails: response[2], //getPBGApprovedFiles,
+      //   // vendorDetails: response[3], //vendorDetails
+      //   // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
+      //   // actualSubminissionDate: response[5], // getActualSubminissionDate
+      // }
+      // if (response[1][0]) {
+      //   result = { ...result, sdbgFiles: response[1] };
+      // } if (response[2][0]) {
+      //   result = { ...result, pbgFiles: response[2] };
+      // }
+      // if (response[3][0]) {
+      //   result = { ...result, ...response[3][0] };
+      // }
 
-      if (response[3][0]) {
-        result = { ...result, ...response[3][0] };
-      } if (response[1][0]) {
-        result = { ...result, ...response[1][0] };
-      } if (response[2][0]) {
-        result = { ...result, ...response[2][0] };
-      }
-
-      if (response[4] && response[4][0]) {
-        const con = response[4].find((el) => el.MID == MID_SDBG);
-        result.c_sdbg_date = con?.PLAN_DATE;
-      }
-      if (response[5] && response[5][0]) {
-        const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
-        result.a_sdbg_date = act?.PLAN_DATE;
-      }
+      // if (response[4] && response[4][0]) {
+      //   const con = response[4].find((el) => el.MID == MID_SDBG);
+      //   result.c_sdbg_date = con?.PLAN_DATE;
+      // }
+      // if (response[5] && response[5][0]) {
+      //   const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
+      //   result.a_sdbg_date = act?.PLAN_DATE;
+      // }
+      const result = await supportingDataForServiceBtn(client, poNo);
 
       resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "")
 
@@ -248,7 +250,6 @@ const initServiceHybrid = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 }
-
 
 
 const getBtnData = async (req, res) => {
