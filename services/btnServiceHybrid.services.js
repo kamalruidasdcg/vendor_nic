@@ -71,7 +71,7 @@ const forwordToFinacePaylaod = (payload) => {
 const btnAssignPayload = (payload) => {
 
     return {
-        btn_num : payload.btn_num,
+        btn_num: payload.btn_num,
         purchasing_doc_no: payload.purchasing_doc_no,
         assign_by: payload.assign_by,
         assign_to: payload.assign_to,
@@ -243,6 +243,8 @@ const getPBGApprovedFiles = async (client, data) => {
     try {
         let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
         let result = await poolQuery({ client, query: q, values: data });
+        console.log("resultresultresultresultresult", result, q, data);
+        
         return result;
     } catch (error) {
         throw error;
@@ -560,8 +562,16 @@ async function getServiceBTNDetails(client, data) {
         // AND s_btn.bill_certifing_authority = '600700'
 
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
-        return { success: true, statusCode: 200, message: "Value fetch success", data: result[0] || {} };
+        let response = result[0] || {};
+        const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
+        console.log("supDocs", supDocs);
+        
+        response = { ...response, ...supDocs };
+
+        return { success: true, statusCode: 200, message: "Value fetch success", data: response };
     } catch (error) {
+        console.log("dddddd", error.message);
+
         throw error;
     }
 }
@@ -591,48 +601,51 @@ async function getLatestBTN(client, data) {
 
 async function supportingDataForServiceBtn(client, poNo) {
     try {
-      
-      const response = await Promise.all(
-        [
-          getHrDetails(client, [poNo]),
-          getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
-          getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
-          vendorDetails(client, [poNo]),
-          getContractutalSubminissionDate(client, [poNo]),
-          getActualSubminissionDate(client, [poNo])
-        ]);
-  
-      let result = {
-        hrDetais: response[0], //  getHrDetails,
-        // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
-        // pbgDetails: response[2], //getPBGApprovedFiles,
-        // vendorDetails: response[3], //vendorDetails
-        // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
-        // actualSubminissionDate: response[5], // getActualSubminissionDate
-      }
-      if (response[1][0]) {
-        result = { ...result, sdbgFiles: response[1] };
-      } if (response[2][0]) {
-        result = { ...result, pbgFiles: response[2] };
-      }
-      if (response[3][0]) {
-        result = { ...result, ...response[3][0] };
-      }
-  
-      if (response[4] && response[4][0]) {
-        const con = response[4].find((el) => el.MID == MID_SDBG);
-        result.c_sdbg_date = con?.PLAN_DATE;
-      }
-      if (response[5] && response[5][0]) {
-        const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
-        result.a_sdbg_date = act?.PLAN_DATE;
-      }
-  
-      return result;
+
+        console.log("poNo", poNo);
+        
+
+        const response = await Promise.all(
+            [
+                getHrDetails(client, [poNo]),
+                getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]),
+                getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_PBG]),
+                vendorDetails(client, [poNo]),
+                getContractutalSubminissionDate(client, [poNo]),
+                getActualSubminissionDate(client, [poNo])
+            ]);
+
+        let result = {
+            hrDetais: response[0], //  getHrDetails,
+            // sdbgFileDetais: response[1], // getSDBGApprovedFiles,
+            // pbgDetails: response[2], //getPBGApprovedFiles,
+            // vendorDetails: response[3], //vendorDetails
+            // contractutalSubminissionDate: response[4], // getContractutalSubminissionDate
+            // actualSubminissionDate: response[5], // getActualSubminissionDate
+        }
+        if (response[1][0]) {
+            result = { ...result, sdbgFiles: response[1] };
+        } if (response[2][0]) {
+            result = { ...result, pbgFiles: response[2] };
+        }
+        if (response[3][0]) {
+            result = { ...result, ...response[3][0] };
+        }
+
+        if (response[4] && response[4][0]) {
+            const con = response[4].find((el) => el.MID == MID_SDBG);
+            result.c_sdbg_date = con?.PLAN_DATE;
+        }
+        if (response[5] && response[5][0]) {
+            const act = response[5].find((el) => el.MID == parseInt(MID_SDBG));
+            result.a_sdbg_date = act?.PLAN_DATE;
+        }
+
+        return result;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 
 module.exports = {
