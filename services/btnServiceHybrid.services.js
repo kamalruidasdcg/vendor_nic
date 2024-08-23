@@ -1,9 +1,10 @@
 const { poolQuery } = require("../config/pgDbConfig");
 const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
-const { APPROVED } = require("../lib/status");
+const { APPROVED, REJECTED } = require("../lib/status");
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
+const { btnSubmitToSAPF01 } = require("./sap.btn.services");
 
 
 const payloadObj = (payload) => {
@@ -244,7 +245,7 @@ const getPBGApprovedFiles = async (client, data) => {
         let q = `SELECT file_name as pbg_filename FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
         let result = await poolQuery({ client, query: q, values: data });
         console.log("resultresultresultresultresult", result, q, data);
-        
+
         return result;
     } catch (error) {
         throw error;
@@ -565,7 +566,7 @@ async function getServiceBTNDetails(client, data) {
         let response = result[0] || {};
         const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
         console.log("supDocs", supDocs);
-        
+
         response = { ...response, ...supDocs };
 
         return { success: true, statusCode: 200, message: "Value fetch success", data: response };
@@ -603,7 +604,7 @@ async function supportingDataForServiceBtn(client, poNo) {
     try {
 
         console.log("poNo", poNo);
-        
+
 
         const response = await Promise.all(
             [
@@ -648,6 +649,49 @@ async function supportingDataForServiceBtn(client, poNo) {
 }
 
 
+
+
+const updateServiceBtnListTable = async (client, data) => {
+    try {
+        const getLatestDataQuery = `
+        SELECT 
+            btn_num, 
+            purchasing_doc_no, 
+            net_claim_amount, 
+            net_payable_amount, 
+            vendor_code, 
+            status, 
+            btn_type,
+            created_at
+        FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+        const lasBtnDetails = await poolQuery({
+            client,
+            query: getLatestDataQuery,
+            values: [data.btn_num],
+        });
+        let btnListTablePaylod = { btn_num: data.btn_num };
+
+        if (lasBtnDetails.length) {
+            btnListTablePaylod = {
+                ...lasBtnDetails[0],
+                ...btnListTablePaylod,
+                status: REJECTED,
+                remarks: data.rejectedMessage || "BTN Rejected",
+                created_at: getEpochTime(),
+            };
+            const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
+            console.log("btnListTablePaylod", btnListTablePaylod);
+            
+            await poolQuery({ client, query: q, values: val });
+        } else {
+            console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
+
 module.exports = {
     payloadObj,
     filesData,
@@ -666,21 +710,7 @@ module.exports = {
     getServiceBTNDetails,
     getLatestBTN,
     btnAssignPayload,
-    supportingDataForServiceBtn
+    supportingDataForServiceBtn,
+    updateServiceBtnListTable
 }
-
-
-// btn_num
-// entry_number
-// entry_type
-// wdc_details
-// other_deductions
-// deduction_remarks
-// total_deductions
-// net_payable_amount
-// created_at
-// created_by
-// assign_by_fi
-// assign_to_fi
-// bill_certifing_authority
 

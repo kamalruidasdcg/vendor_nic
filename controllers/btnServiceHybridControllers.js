@@ -1,15 +1,16 @@
 const { getEpochTime, getYyyyMmDd, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
 const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY, BTN_ASSIGN } = require("../lib/tableName");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO, STATUS_RECEIVED, FORWARDED_TO_FI_STAFF } = require("../lib/status");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO, STATUS_RECEIVED, FORWARDED_TO_FI_STAFF, REJECTED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery, getQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
 const { timeInHHMMSS } = require("./btnControllers");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
+const { updateBtnListTable } = require("../services/btn.services");
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -309,6 +310,13 @@ const forwordToFinace = async (req, res) => {
       await client.query("BEGIN");
       let payload = req.body;
       const tokenData = req.tokenData;
+
+      if (payload.status === REJECTED) {
+        const response1 = await btnReject(payload, tokenData, client);
+        await client.query("COMMIT");
+        return resSend(res, true, 200, "Rejected successfully !!", response1, null);
+      }
+
       if (!payload.btn_num || !payload.entry_number || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num or entry_no or net_payable_amount assign_to_fi missing", null);
       }
@@ -317,6 +325,11 @@ const forwordToFinace = async (req, res) => {
       if (!parseInt(validAuthrityCheck[0]?.count)) {
         return resSend(res, false, 401, Message.YOU_ARE_UN_AUTHORIZED, "You are not authorize!!", null);
       }
+
+
+
+
+
       //  BTN FINANCE AUTHORITY DATA INSERT
       payload.created_by_id = tokenData.vendor_code;
       const financePaylad = forwordToFinacePaylaod(payload);
@@ -438,8 +451,23 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
   }
 };
 
+async function btnReject(data, tokenData, client) {
+  try {
+    const obj = { btn_num: data.btn_num };
 
+    await updateServiceBtnListTable(client, data);
 
+    const sapSend = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+
+    if (sapSend === false) {
+      throw new Error("SAP not connected");
+    }
+
+    return { btn_num: data.btn_num };
+  } catch (error) {
+    throw error;
+  }
+}
 
 module.exports = {
   submitBtnServiceHybrid,
