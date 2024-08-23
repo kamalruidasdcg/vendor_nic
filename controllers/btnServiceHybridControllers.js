@@ -325,7 +325,7 @@ const forwordToFinace = async (req, res) => {
       const btnChkQuery = `SELECT COUNT(*) from btn_service_hybrid WHERE btn_num = $1 AND bill_certifing_authority = $2`;
       const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
       if (!parseInt(validAuthrityCheck[0]?.count)) {
-        return resSend(res, false, 401, Message.YOU_ARE_UN_AUTHORIZED, "You are not authorize!!", null);
+        return resSend(res, false, 200, "You are not authorised!", Message.YOU_ARE_UN_AUTHORIZED, null);
       }
 
 
@@ -431,7 +431,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       let result = await addToBTNList(client, data, FORWARDED_TO_FI_STAFF);
 
       // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+      const sendSap = true; // await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);
