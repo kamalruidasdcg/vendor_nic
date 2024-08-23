@@ -59,10 +59,11 @@ const forwordToFinacePaylaod = (payload) => {
         entry_number: payload.entry_number || null,
         entry_type: payload.entry_type || null,
         wdc_details: payload.wdc_details || null,
-        other_deductions: payload.other_deductions,
+        other_deduction: payload.other_deduction,
         deduction_remarks: payload.deduction_remarks || "",
-        total_deductions: payload.total_deductions || "0",
+        total_deduction: payload.total_deduction || "0",
         net_payable_amount: payload.net_payable_amount || "0",
+        estimated_ld: payload.estimated_ld || "0",
         created_at: getEpochTime(),
         created_by_id: payload.created_by_id
     }

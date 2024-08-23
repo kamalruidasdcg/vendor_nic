@@ -19,11 +19,13 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 
       const { purchasing_doc_no, reference_no, type } = req.query;
       if (type === "list") {
-        const val = [];
+        let wdcListQuery = `SELECT DISTINCT(reference_no) FROM wdc WHERE 1 = 1`;
+        const val = ['WDC'];
         if (purchasing_doc_no) {
           val.push(purchasing_doc_no);
         }
-        const wdcList = await poolQuery({ client, query: "SELECT DISTINCT(reference_no) FROM wdc", values: val });
+
+        const wdcList = await poolQuery({ client, query: "SELECT DISTINCT(reference_no) FROM wdc WHERE action_type = $1", values: val });
         return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
       }
 
