@@ -544,22 +544,32 @@ async function getServiceBTNDetails(client, data) {
         const getBtnQuery =
             `SELECT
                 s_btn.*,
+                btn_assign.assign_by,
+                btn_assign.assign_to,
+                btn_assign.assign_by_fi,
+                btn_assign.assign_to_fi,
+                btn_assign.last_assign,
+                btn_assign.last_assign_fi,
                 btn_authority.entry_number,
                 btn_authority.entry_type,
                 btn_authority.other_deduction,
                 btn_authority.deduction_remarks,
                 btn_authority.total_deduction,
                 btn_authority.net_payable_amount,
-                users.cname AS bill_certifing_authority_name 
+                users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
-              LEFT JOIN pa0002 as users 
-              ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
-              LEFT JOIN btn_service_certify_authority as btn_authority 
-              ON(s_btn.btn_num = btn_authority.btn_num)
+            LEFT JOIN pa0002 as users 
+                ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
+            LEFT JOIN btn_service_certify_authority as btn_authority 
+                ON(s_btn.btn_num = btn_authority.btn_num)
+            LEFT JOIN btn_assign AS btn_assign
+                ON(s_btn.btn_num = btn_assign.btn_num)
             WHERE s_btn.btn_num = $1`;
         // AND s_btn.bill_certifing_authority = '600700'
-
+        // btn_assign.*,
+        // LEFT JOIN btn_assign AS btn_assign
+        // ON(s_btn.btn_num = btn_assign.btn_num)
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
         let response = result[0] || {};
         const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
