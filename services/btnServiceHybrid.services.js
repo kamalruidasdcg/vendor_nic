@@ -125,8 +125,7 @@ const addToBTNList = async (client, data, status) => {
             created_at: data?.created_at,
             btn_type: data?.btn_type,
             status: status,
-            remarks: data.remarks || "",
-            certifying_authority: data.certifying_authority || ""
+            remarks: data.remarks || ""
         };
         console.log("payload", payload);
 
