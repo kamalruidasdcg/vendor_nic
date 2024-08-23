@@ -92,10 +92,10 @@ router.post(
 router.get("/initServiceHybrid", [veifyAccessToken], (req, res) => {
   initServiceHybrid(req, res);
 });
-router.post("/forwordToFinance", [veifyAccessToken], (req, res) => {
+router.post("/submitSBtnByCAuthorty", [veifyAccessToken], (req, res) => {
   forwordToFinace(req, res);
 });
-router.post("/assignToFiStaffServiceHybrid", [veifyAccessToken], (req, res) => {
+router.post("/submitSBtnByFAuthorty", [veifyAccessToken], (req, res) => {
   serviceBtnAssignToFiStaff(req, res);
 });
 
