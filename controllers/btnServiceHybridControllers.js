@@ -19,13 +19,19 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 
       const { purchasing_doc_no, reference_no, type } = req.query;
       if (type === "list") {
-        let wdcListQuery = `SELECT DISTINCT(reference_no) FROM wdc WHERE 1 = 1`;
+        let wdcListQuery = `SELECT DISTINCT(reference_no) FROM wdc`;
+        let condQuery = ' WHERE 1 = 1';
+        // TO GET ONLY WDC .. NO JCC OR THERS
         const val = ['WDC'];
+        condQuery += " AND action_type = $1";
         if (purchasing_doc_no) {
           val.push(purchasing_doc_no);
+          condQuery += " AND purchasing_doc_no = $2";
         }
 
-        const wdcList = await poolQuery({ client, query: "SELECT DISTINCT(reference_no) FROM wdc WHERE action_type = $1", values: val });
+        wdcListQuery += condQuery;
+
+        const wdcList = await poolQuery({ client, query: wdcListQuery, values: val });
         return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
       }
 
@@ -345,7 +351,7 @@ const forwordToFinace = async (req, res) => {
 
       // ADDING TO BTN LIST WITH CURRENT STATUS
       const latesBtnData = await getLatestBTN(client, payload);
-      await addToBTNList(client, { ...payload, ...latesBtnData }, SUBMITTED_BY_CAUTHORITY);
+      await addToBTNList(client, {  ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
       // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 

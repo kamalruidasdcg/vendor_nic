@@ -1,21 +1,13 @@
 //const {query} = require("../config/dbConfig");
 // const connection = require("../config/dbConfig");
-const {
-  query,
-  getQuery,
-  asyncPool,
-  poolQuery,
-} = require("../config/pgDbConfig");
-
+const { query, getQuery } = require("../config/pgDbConfig");
 const { UPDATE, INSERT } = require("../lib/constant");
-const SENDMAIL = require("../lib/mailSend");
 const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
 const { validatePayload } = require("./validatePayload");
 const Message = require("../utils/messages");
 
 const getFilteredData = async (req, res) => {
-  console.warn(`Gen get api ${new Date().getTime()}`);
   try {
     const { $tableName } = req.query;
 
@@ -65,199 +57,73 @@ const getFilteredData = async (req, res) => {
   }
 };
 
-const updatTableData = async (req, res) => {
-  console.warn("General update table data [API] . . . . . . . !");
-  try {
-    const { $tableName, $cond } = req.query;
 
-    if (!$tableName || !$cond) {
+
+/**
+ * general update api
+ * PAYLOAD SAMPLE
+ * {
+    "tableName": "essr",
+    "condition": {
+        "lblni": "12324"
+    },
+    "data": {
+        "lblne": "12345"
+    }
+}
+ * @param {*} req 
+ * @param {*} res 
+ */
+const updatTableData = async (req, res) => {
+  try {
+    const { tableName, condition, data } = req.body;
+
+    if (!tableName || !condition) {
       throw new Error("Please send table name and condition.");
     }
-
-    let whereCondition = "";
-
-    if (req.query.$cond) {
-      const flt = JSON.parse(req.query.$cond);
-      const key1 = Object.keys(flt)[0];
-      whereCondition = `${key1} = "${flt[key1]}"`;
+    if (!data || !Object.keys(data).length) {
+      throw new Error("Please send data.");
     }
-
-    const updateObject = req.body;
-
-    // START QUERIES
-    const { q, val } = generateQuery(
-      UPDATE,
-      $tableName,
-      updateObject,
-      whereCondition
-    );
-
-    const result = await query({
-      query: q,
-      values: val,
-    });
-
-    if (result?.affectedRows) {
-      resSend(
-        res,
-        true,
-        200,
-        `value updated in ${$tableName} cond ${$cond}`,
-        result,
-        null
-      );
-    } else {
-      resSend(res, false, 200, "No Record Found", result, null);
-    }
+    const updateObject = data;
+    const { q, val } = generateQuery(UPDATE, tableName, updateObject, condition);
+    const result = await query({ query: q, values: val });
+    resSend(res, true, 200, `Value updated in ${tableName}`, result, null);
   } catch (error) {
-    console.log(error);
-    resSend(res, false, 400, "Error", error, null);
+    resSend(res, false, 500, "Error update record", error.message, null);
   }
 };
-
+/**
+ * general insert api
+ * {
+    "tableName": "essr",
+    "data": {
+        "lblni": "1333",
+        "lblne": "12345"
+    }
+}
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 const insertTableData = async (req, res) => {
-  console.warn("General insert table data [API] . . . . . . . !");
+  
   try {
-    const tableList = ["ekko", "ekpo"];
-    const { tableName } = req.query;
-
+    const { tableName, condition, data } = req.body;
     if (!tableName) {
-      return resSend(res, false, 400, `Please sent table name`, null, null);
+      throw new Error("Please send table name and condition.");
     }
-    if (!tableList.includes(tableName)) {
-      return resSend(
-        res,
-        false,
-        400,
-        `Data insert not allow in this ${tableName} table`,
-        null,
-        null
-      );
+    if (!data || !Object.keys(data).length) {
+      throw new Error("Please send data.");
     }
 
-    const insertObj = req.body;
-
-    const verifyPayload = validatePayload(tableName, insertObj);
-
-    if (!verifyPayload.status) {
-      return resSend(res, false, 400, `${verifyPayload.msg}`, insertObj, null);
-    }
-
-    // START QUERIES
+    const insertObj = data;
     const { q, val } = generateQuery(INSERT, tableName, insertObj);
-
-    const result = await query({
-      query: q,
-      values: val,
-    });
-
-    if (result?.affectedRows) {
-      resSend(res, true, 200, `Insert data in ${tableName}`, result, null);
-    } else {
-      resSend(res, false, 400, "No data inserted", result, null);
-    }
+    const result = await query({ query: q, values: val });
+    resSend(res, true, 200, `Insert data in ${tableName}`, result, null);
   } catch (error) {
-    console.log(error);
-    resSend(res, false, 500, "insertTableData api error", error, null);
+    resSend(res, false, 500, "insertTableData api error", error.message, null);
   }
 };
-
-// const insertManyTableData = async (req, res) => {
-
-//   console.warn("Gneral insertManyTableData [API] . . . . . . . !");
-//   try {
-
-//     const { $tableName } = req.query;
-
-//     if (!$tableName ) {
-//       throw new Error("Please send table name");
-//     };
-
-//     const insertObj = req.body;
-
-//     // START QUERIES
-//     const { q, val } = generateQuery(INSERT, $tableName, insertObj);
-
-//     const result = await query({
-//       query: q,
-//       values: val,
-//     });
-
-//     if (result?.affectedRows) {
-//       resSend(res, true, 200, `insert data in ${ $tableName }`, result, null);
-//     } else {
-//       resSend(res, false, 200, "No Record Found", result, null);
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     resSend(res, false, 400, "Error", error, null);
-//   }
-// };
-
-
-const formDetails = [{
-  formName: "wdc-list",
-  tableName: "wdc",
-  sortBy: [{ id: 1 }],
-  filterBy: [{ id: "" }],
-  searchBy: [{ name: "" }],
-  primaryKey: ["id"],
-  select: ["id"],
-  page: 1,
-  limit: 10,
-}]
-
-
-
-
-const getData = async (payload) => {
-
-  try {
-
-    let result = [];
-
-    if (!payload.formName) {
-      throw new Error("Please mention form name");
-    }
-
-    switch (payload.formName) {
-      case "wdc-list":
-        result = await getWDCdata(payload);
-        break;
-
-      default:
-        result = [];
-        break;
-    }
-
-    resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "");
-
-  } catch (error) {
-    resSend(res, false, 400, Message.DATA_FETCH_ERROR, error.message);
-  }
-
-}
-
-
-async function getWDCdata(payload) {
-
-  try {
-
-
-  } catch (error) {
-
-    throw error
-
-  }
-
-
-
-}
-
-
-
-
-
 
 
 module.exports = { getFilteredData, updatTableData, insertTableData };
