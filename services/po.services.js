@@ -1,6 +1,12 @@
 const { json } = require("express");
 const { query, getQuery } = require("../config/pgDbConfig");
-const { INSERT } = require("../lib/constant");
+const {
+  INSERT,
+  MID_SDBG,
+  MID_DRAWING,
+  MID_QAP,
+  MID_ILMS,
+} = require("../lib/constant");
 const { SUBMITTED, ACCEPTED, REJECTED } = require("../lib/status");
 const {
   ACTUAL_SUBMISSION_DATE,
@@ -91,7 +97,6 @@ const sdbgPayload = (payload, status) => {
  * @returns Object
  */
 const drawingPayload = (payload, status) => {
-  //console.log("((((((((((((((((");
   const payloadObj = {
     reference_no: payload.reference_no,
     purchasing_doc_no: payload.purchasing_doc_no,
@@ -175,7 +180,6 @@ const wdcPayload = (payload, line_item_array) => {
   //     status:REJECTED
   //     }
   // ];
-  // console.log("$%%%%%%%%%%%%%%%%%%%%%%%%%%%$$$$$$$$$$$$$$$");
   let last_data_line_item_array = JSON.parse(line_item_array);
 
   let resData;
@@ -235,6 +239,7 @@ const shippingDocumentsPayload = (payload, status) => {
     purchasing_doc_no: payload.purchasing_doc_no,
     file_name: payload.fileName ? payload.fileName : null,
     file_path: payload.filePath ? payload.filePath : null,
+    file_type_name: payload.file_type_name ? payload.file_type_name : null,
     remarks: payload.remarks ? payload.remarks : null,
     updated_by: payload.updated_by,
     vendor_code: payload.vendor_code ? payload.vendor_code : null,
@@ -358,20 +363,20 @@ const insertActualSubmission = async (data) => {
     const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DATE, payload);
     const result = await query({ query: q, values: val });
   } catch (error) {
-    console.log("insertActualSubmission function errrrrr");
+    console.error("ERROR", error.message);
   }
 };
 
 async function setActualSubmissionDate(payload, mid, tokenData, status) {
   const getTableName = (mid) => {
     switch (mid) {
-      case "01":
+      case MID_SDBG:
         return SDBG;
-      case "02":
+      case MID_DRAWING:
         return DRAWING;
-      case "03":
+      case MID_QAP:
         return QAP_SUBMISSION;
-      case "04":
+      case MID_ILMS:
         return ILMS;
       default:
         return null;
@@ -388,13 +393,12 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
     query: getlatestData,
     values: [payload.purchasing_doc_no, st],
   });
-  console.log(result);
 
   const mtext = {
-    "01": "ACTUAL SDBG SUBMISSION DATE",
-    "02": "ACTUAL DRAWING SUBMISSION DATE",
-    "03": "ACTUAL QAP SUBMISSION DATE",
-    "04": "ACTUAL ILMS SUBMISSION DATE",
+    [MID_SDBG]: "ACTUAL SDBG SUBMISSION DATE",
+    [MID_DRAWING]: "ACTUAL DRAWING SUBMISSION DATE",
+    [MID_QAP]: "ACTUAL QAP SUBMISSION DATE",
+    [MID_ILMS]: "ACTUAL ILMS SUBMISSION DATE",
   };
 
   if (result && result.length) {
@@ -406,10 +410,8 @@ async function setActualSubmissionDate(payload, mid, tokenData, status) {
       created_at: payload.created_at,
       created_by_id: tokenData.vendor_code,
     };
-    console.log("payload");
     const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
     const response = await query({ query: q, values: val });
-    console.log("response", response);
     return true;
   }
   return false;
@@ -440,11 +442,8 @@ const setActualSubmissionDateSdbg = async (payload, tokenData) => {
       created_at: getEpochTime(),
       created_by_id: tokenData.vendor_code,
     };
-    // console.log("payload");
     const { q, val } = generateQuery(INSERT, ACTUAL_SUBMISSION_DB, payloadObj);
     const response = await query({ query: q, values: val });
-    console.log(23456);
-    console.log(response);
     if (response.affectedRows) {
       return true;
     } else {
@@ -458,7 +457,7 @@ const create_reference_no = async (type, vendor_code) => {
     const reference_no = `${type}-${getEpochTime()}-${vendor_code.slice(-4)}`;
     return reference_no;
   } catch (error) {
-    console.log("error into create reference_no :"`${error}`);
+    console.error("error into create reference_no :"`${error.message}`);
   }
 };
 
@@ -472,19 +471,19 @@ const create_btn_no = async () => {
     let today = getEpochTime();
     let { firstEpochTime, lastEpochTime } = getEpochFirstLastToday();
 
-    let btn_num_q = `SELECT count("*") as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
-    let btn_res = await query({
+    // let btn_num_q = `SELECT count(*) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
+    let btn_num_q = `SELECT COUNT(DISTINCT btn_num) as count FROM ${BTN_LIST} WHERE created_at BETWEEN $1 AND $2`;
+    let btn_res = await getQuery({
       query: btn_num_q,
       values: [firstEpochTime, lastEpochTime],
     });
-    btn_res = btn_res?.rows;
-    console.log(btn_res);
+    // btn_res = btn_res?.rows;
     let threeDigit = 999 - parseInt(btn_res[0]?.count);
     // const reference_no = `${type}${dateNeed}${threeDigit}`;
     const reference_no = `${dateNeed}${threeDigit}`;
     return reference_no;
   } catch (error) {
-    console.log(`ERROR_IN_BTN_CREATION: ${error}`);
+    console.error(`ERROR_IN_BTN_CREATION: ${error.message}`);
   }
 };
 
@@ -499,12 +498,9 @@ const get_latest_activity = async (
       query: get_query,
       values: [reference_no, purchasing_doc_no],
     });
-    //console.log("__get_latest_activity__");
-    // console.log(result);
-    // console.log("__get_latest_activity_22_");
     return result.rows[0];
   } catch (error) {
-    console.log("error into get_latest_activity function :"`${error}`);
+    console.error("ERROR:"`${error.message}`);
   }
 };
 

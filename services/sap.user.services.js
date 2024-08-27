@@ -8,7 +8,6 @@ const { formatDate } = require("../lib/utils");
  */
 
 const reservationHeaderPayload = async (obj) => {
-  console.log("obj-obj-obj-objobj", obj);
   if (!obj || typeof obj !== "object") {
     throw new Error("Please send valid payload");
   }
@@ -38,7 +37,6 @@ const reservationHeaderPayload = async (obj) => {
  */
 
 const reservationLineItemPayload = async (payload) => {
-  console.log("payyyyyy", payload);
   if (!payload || !Array.isArray(payload) || !payload.length) {
     throw new Error("Please send valid payload");
   }
@@ -67,7 +65,6 @@ const reservationLineItemPayload = async (payload) => {
   return pl;
 };
 const serviceEntryPayload = async (payload) => {
-  console.log("payyyyyy", payload);
   if (!payload || !Array.isArray(payload) || !payload.length) {
     throw new Error("Please send valid payload");
   }
@@ -88,10 +85,10 @@ const serviceEntryPayload = async (payload) => {
     uwert: obj.uwert || obj.UWERT || "",
     unplv: obj.unplv || obj.UNPLV || "",
     waers: obj.waers || obj.WAERS || "",
-    packno: obj.packno || obj.PACKNO || "",
+    packno: obj.packno || obj.PACKNO || null,
     txz01: obj.txz01 || obj.TXZ01 || "",
     ebeln: obj.ebeln || obj.EBELN || "",
-    ebelp: obj.ebelp || obj.EBELP || "",
+    ebelp: obj.ebelp || obj.EBELP || null,
     loekz: obj.loekz || obj.LOEKZ || "",
     kzabn: obj.kzabn || obj.KZABN || "",
     final: obj.final || obj.FINAL || "",
@@ -111,12 +108,12 @@ const serviceEntryPayload = async (payload) => {
     kzvbr: obj.kzvbr || obj.KZVBR || "",
     netwr: obj.netwr || obj.NETWR || "",
     banfn: obj.banfn || obj.BANFN || "",
-    bnfpo: obj.bnfpo || obj.BNFPO || "",
+    bnfpo: obj.bnfpo || obj.BNFPO || null,
     warpl: obj.warpl || obj.WARPL || "",
     wapos: obj.wapos || obj.WAPOS || "",
-    abnum: obj.abnum || obj.ABNUM || "",
+    abnum: obj.abnum || obj.ABNUM || null,
     fknum: obj.fknum || obj.FKNUM || "",
-    fkpos: obj.fkpos || obj.FKPOS || "",
+    fkpos: obj.fkpos || obj.FKPOS || null,
     user1: obj.user1 || obj.USER1 || "",
     user2: obj.user2 || obj.USER2 || "",
     navnw: obj.navnw || obj.NAVNW || "",

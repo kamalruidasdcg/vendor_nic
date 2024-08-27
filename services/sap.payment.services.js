@@ -48,45 +48,45 @@ const ztfi_bil_defacePayload = async (obj) => {
     ZCERATTNDR_S: obj.ZCERATTNDR_S || null,
     ZBGFILENO_S: obj.ZBGFILENO_S || null,
     ZDDNO_S: obj.ZDDNO_S || null,
-    ZBSCVAL_M_S: obj.ZBSCVAL_M_S || null,
-    ZNTSUPP_S: obj.ZNTSUPP_S || null,
-    ZNETVALUE_S: obj.ZNETVALUE_S || null,
-    ZCST_VAT_S: obj.ZCST_VAT_S || null,
+    ZBSCVAL_M_S: obj.ZBSCVAL_M_S,
+    ZNTSUPP_S: obj.ZNTSUPP_S,
+    ZNETVALUE_S: obj.ZNETVALUE_S,
+    ZCST_VAT_S: obj.ZCST_VAT_S,
     ZCST_VAT_TXT: obj.ZCST_VAT_TXT || null,
-    ZTOTALB_S: obj.ZTOTALB_S || null,
-    ZADD_OTHRCHRG_S: obj.ZADD_OTHRCHRG_S || null,
+    ZTOTALB_S: obj.ZTOTALB_S,
+    ZADD_OTHRCHRG_S: obj.ZADD_OTHRCHRG_S,
     ZADD_OTHRCHRG_TXT: obj.ZADD_OTHRCHRG_TXT || null,
-    ZADD_OTHRCHRG_1_S: obj.ZADD_OTHRCHRG_1_S || null,
+    ZADD_OTHRCHRG_1_S: obj.ZADD_OTHRCHRG_1_S,
     ZADD_OTHRCHRG_1_TXT: obj.ZADD_OTHRCHRG_1_TXT || null,
-    ZTOTALA_S: obj.ZTOTALA_S || null,
-    ZBLNC_PAYMNT_S: obj.ZBLNC_PAYMNT_S || null,
-    ZLES_INCTAX_S: obj.ZLES_INCTAX_S || null,
+    ZTOTALA_S: obj.ZTOTALA_S,
+    ZBLNC_PAYMNT_S: obj.ZBLNC_PAYMNT_S,
+    ZLES_INCTAX_S: obj.ZLES_INCTAX_S,
     ZLES_INCTAX_TXT: obj.ZLES_INCTAX_TXT || null,
-    ZLES_RETNTN_S: obj.ZLES_RETNTN_S || null,
+    ZLES_RETNTN_S: obj.ZLES_RETNTN_S,
     ZLES_RETNTN_TXT: obj.ZLES_RETNTN_TXT || null,
-    ZLES_WRKCONTAX_S: obj.ZLES_WRKCONTAX_S || null,
+    ZLES_WRKCONTAX_S: obj.ZLES_WRKCONTAX_S,
     ZLES_WRKCONTAX_TXT: obj.ZLES_WRKCONTAX_TXT || null,
-    ZLES_LD_S: obj.ZLES_LD_S || null,
+    ZLES_LD_S: obj.ZLES_LD_S,
     ZLES_LD_TXT: obj.ZLES_LD_TXT || null,
-    ZLES_PENALTY_S: obj.ZLES_PENALTY_S || null,
+    ZLES_PENALTY_S: obj.ZLES_PENALTY_S,
     ZLES_PENALTY_TXT: obj.ZLES_PENALTY_TXT || null,
-    ZLES_SD_S: obj.ZLES_SD_S || null,
+    ZLES_SD_S: obj.ZLES_SD_S,
     ZLES_SD_TXT: obj.ZLES_SD_TXT || null,
-    ZLES_OTHR_S: obj.ZLES_OTHR_S || null,
+    ZLES_OTHR_S: obj.ZLES_OTHR_S,
     ZLES_OTHR_TXT: obj.ZLES_OTHR_TXT || null,
-    ZLES_GROSS_RET: obj.ZLES_GROSS_RET || null,
-    ZLES_GROSS_DED: obj.ZLES_GROSS_DED || null,
-    ZLES_INTSD_S: obj.ZLES_INTSD_S || null,
+    ZLES_GROSS_RET: obj.ZLES_GROSS_RET,
+    ZLES_GROSS_DED: obj.ZLES_GROSS_DED,
+    ZLES_INTSD_S: obj.ZLES_INTSD_S,
     ZLES_INTSD_TXT: obj.ZLES_INTSD_TXT || null,
-    ZLES_CSTOFCON_PAINT_S: obj.ZLES_CSTOFCON_PAINT_S || null,
+    ZLES_CSTOFCON_PAINT_S: obj.ZLES_CSTOFCON_PAINT_S,
     ZLES_CSTOFCON_PAINT_TXT: obj.ZLES_CSTOFCON_PAINT_TXT || null,
-    ZNET_PYMNT1_S: obj.ZNET_PYMNT1_S || null,
-    ZNET_BLNCPAY_S: obj.ZNET_BLNCPAY_S || null,
-    ZNET_RETNTN_S: obj.ZNET_RETNTN_S || null,
-    ZNET_LESDEDC_S: obj.ZNET_LESDEDC_S || null,
-    ZNET_PYMNT2_S: obj.ZNET_PYMNT2_S || null,
-    ZLES_OTHRDED_S: obj.ZLES_OTHRDED_S || null,
-    ZLES_OTHRDED_TXT: obj.ZLES_OTHRDED_TXT || null,
+    ZNET_PYMNT1_S: obj.ZNET_PYMNT1_S,
+    ZNET_BLNCPAY_S: obj.ZNET_BLNCPAY_S,
+    ZNET_RETNTN_S: obj.ZNET_RETNTN_S,
+    ZNET_LESDEDC_S: obj.ZNET_LESDEDC_S,
+    ZNET_PYMNT2_S: obj.ZNET_PYMNT2_S,
+    ZLES_OTHRDED_S: obj.ZLES_OTHRDED_S,
+    ZLES_OTHRDED_TXT: obj.ZLES_OTHRDED_TXT || "",
     ZBLNC_CERTBY_S: obj.ZBLNC_CERTBY_S || null,
     ZBLNC_PBGFILENO_S: obj.ZBLNC_PBGFILENO_S || null,
     ZBLNC_OTHRS_S: obj.ZBLNC_OTHRS_S || null,
@@ -124,14 +124,14 @@ const ztfi_bil_defacePayload = async (obj) => {
     REMARKS: obj.REMARKS || null,
     REFERENCE: obj.REFERENCE || null,
     REMARKS_1: obj.REMARKS_1 || null,
-    TEN_PER_AMOUNT: obj.TEN_PER_AMOUNT || null,
+    TEN_PER_AMOUNT: obj.TEN_PER_AMOUNT,
     COMMENTS_1: obj.COMMENTS_1 || null,
     COMMENTS: obj.COMMENTS || null,
-    ZTEN_RETNTN_S: obj.ZTEN_RETNTN_S || null,
-    ZTEN_LESDEDC_S: obj.ZTEN_LESDEDC_S || null,
+    ZTEN_RETNTN_S: obj.ZTEN_RETNTN_S,
+    ZTEN_LESDEDC_S: obj.ZTEN_LESDEDC_S,
     MIRO: obj.MIRO || null,
     MIRO_DATE: formatDate(obj.MIRO_DATE),
-    ZTEN_PROCESSED_PYMT: obj.ZTEN_PROCESSED_PYMT || null,
+    ZTEN_PROCESSED_PYMT: obj.ZTEN_PROCESSED_PYMT,
     ED_EC: obj.ED_EC || null,
   };
   return pl;
@@ -175,7 +175,6 @@ const paymentAviceLineItemsPayload = async (payload) => {
   return pl;
 };
 const zbtsHeaderPayload = async (obj) => {
-  console.log("oooo", obj);
   if (!obj) {
     throw new Error("Please send valid payload");
   }
@@ -189,7 +188,8 @@ const zbtsHeaderPayload = async (obj) => {
     raenam: obj.raenam || obj.RAENAM || "",
     lifnr: obj.lifnr || obj.LIFNR || "",
     zvbno: obj.zvbno || obj.ZVBNO || "",
-    ven_bill_date: formatDate(obj.ven_bill_date) || formatDate(obj.VEN_BILL_DATE),
+    ven_bill_date:
+      formatDate(obj.ven_bill_date) || formatDate(obj.VEN_BILL_DATE),
     ebeln: obj.ebeln || obj.EBELN || "",
     dpernr1: obj.dpernr1 || obj.DPERNR1 || null,
     drerdat1: formatDate(obj.drerdat1) || formatDate(obj.DRERDAT1),
@@ -264,7 +264,12 @@ const zbtsLineItemsPayload = async (payload, zbtsHeaderPayload) => {
     throw new Error("Please send valid payload");
   }
   const pl = payload.map((obj) => ({
-    zbtno: obj.zbtno || obj.ZBTNO || zbtsHeaderPayload.zbtno || zbtsHeaderPayload.ZBTNO || "",
+    zbtno:
+      obj.zbtno ||
+      obj.ZBTNO ||
+      zbtsHeaderPayload.zbtno ||
+      zbtsHeaderPayload.ZBTNO ||
+      "",
     srno: obj.srno || obj.SRNO || "",
     manno: obj.manno || obj.MANNO || null,
     zsection: obj.zsection || obj.ZSECTION || "",
@@ -273,8 +278,8 @@ const zbtsLineItemsPayload = async (payload, zbtsHeaderPayload) => {
     erzet: formatTime(obj.erzet) || formatTime(obj.ERZET),
     ernam: obj.ernam || obj.ERNAM || "",
     dretseq: obj.dretseq || obj.DRETSEQ || "",
-    alert_status: obj.alert_status || obj.ALERT_STATUS || ""
-  }))
+    alert_status: obj.alert_status || obj.ALERT_STATUS || "",
+  }));
   // const pl = {
   //   zbtno: obj.zbtno || obj.ZBTNO || "",
   //   srno: obj.srno || obj.SRNO || "",
@@ -297,5 +302,5 @@ module.exports = {
   paymentAviceHeaderPayload,
   paymentAviceLineItemsPayload,
   zbtsHeaderPayload,
-  zbtsLineItemsPayload
+  zbtsLineItemsPayload,
 };

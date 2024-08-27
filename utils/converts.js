@@ -11,12 +11,26 @@ exports.convertToCSV = async (rows, item) => {
   const dirPath = path.join(parentDir, CSV_DATA_PATH, todayDate, item);
   fs.mkdirSync(dirPath, { recursive: true });
   const filePath = path.join(dirPath, `data.csv`);
-  const ws = fs.createWriteStream(filePath);
-  await fastcsv
-    .write(rows, { headers: true })
-    .on("finish", () => {
-      console.log("Write to CSV successfully!");
-    })
-    .pipe(ws);
-  return filePath;
+  // const ws = fs.createWriteStream(filePath);
+  // await fastcsv
+  //   .write(rows, { headers: true })
+  //   .on("finish", () => {
+  //     console.log(`Write to CSV for ${item}!`);
+  //   })
+  //   .pipe(ws);
+  // return filePath;
+  return new Promise((resolve, reject) => {
+    const ws = fs.createWriteStream(filePath);
+    fastcsv
+      .write(rows, { headers: true })
+      .on("finish", () => {
+        console.log(`Write to CSV for ${item}!`);
+        resolve(filePath);
+      })
+      .on("error", (error) => {
+        console.error(`Error writing CSV for ${item}: ${error}`);
+        reject(error);
+      })
+      .pipe(ws);
+  });
 };

@@ -1,15 +1,11 @@
 // const { query } = require("../../config/dbConfig");
 const { getQuery } = require("../../config/pgDbConfig");
 const { resSend } = require("../../lib/resSend");
-const Message = require('../../utils/messages');
+const Message = require("../../utils/messages");
 
 const serviceEntryReport = async (req, res) => {
-    console.log("serviceEntryReport", "serviceEntryReport");
-
-    try {
-
-        let serviceEntryReportQ =
-            `SELECT
+  try {
+    let serviceEntryReportQ = `SELECT
                 essr.lblni as "serviceEntryNumber",
                 essr.ebeln as "purchising_doc_no",
                 essr.ebelp as "po_lineitem",
@@ -28,38 +24,34 @@ const serviceEntryReport = async (req, res) => {
                 LEFT JOIN lfa1 as vendorDetails
                 	ON( ekko.LIFNR = vendorDetails.LIFNR)`;
 
-        console.log("serviceEntryReportQ", serviceEntryReportQ);
-        const val = []
-        let whereClause = " WHERE 1 = 1";
-        let count = 0;
-        if (req.body.serviceEntryNumber) {
-            whereClause += ` AND essr.lblni = $${++count}`;
-            val.push(req.body.serviceEntryNumber);
-        }
-
-        const finalQuery = serviceEntryReportQ + whereClause;
-        console.log("finalQuery", finalQuery);
-
-        const result = await getQuery({ query: finalQuery, values: val });
-        console.log("result", result);
-
-        if (!result.error) {
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result);
-        } else {
-            resSend(res, false, 400, Message.DATA_FETCH_ERROR, result);
-        }
-
-    } catch (error) {
-        resSend(res, false, 400, Message.DB_CONN_ERROR, error, null);
+    console.log("serviceEntryReportQ", serviceEntryReportQ);
+    const val = [];
+    let whereClause = " WHERE 1 = 1";
+    let count = 0;
+    if (req.body.serviceEntryNumber) {
+      whereClause += ` AND essr.lblni = $${++count}`;
+      val.push(req.body.serviceEntryNumber);
     }
+
+    const finalQuery = serviceEntryReportQ + whereClause;
+    console.log("finalQuery", finalQuery);
+
+    const result = await getQuery({ query: finalQuery, values: val });
+    console.log("result", result);
+
+    if (!result.error) {
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result);
+    } else {
+      resSend(res, false, 400, Message.DATA_FETCH_ERROR, result);
+    }
+  } catch (error) {
+    resSend(res, false, 400, Message.DB_CONN_ERROR, error, null);
+  }
 };
 
-
 const grnReport = async (req, res) => {
-
-    try {
-        let grnQuery =
-            `SELECT 
+  try {
+    let grnQuery = `SELECT 
                 mseg.MBLNR as "matDocNo",
                 mseg.MATNR as "materialNumber",
                 mseg.BWART as "moment",
@@ -83,12 +75,7 @@ const grnReport = async (req, res) => {
                     ON(vendor_details.LIFNR = mseg.LIFNR)
                     WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )`;
 
-
-
-
-        grnQuery =
-
-            `SELECT 
+    grnQuery = `SELECT 
                         mseg.MBLNR as "matDocNo",
                         mseg.ZEILE as "matDocNoLineItem",
                         mseg.MATNR as "materialNumber",
@@ -110,6 +97,7 @@ const grnReport = async (req, res) => {
                         ekpo.TXZ01 as "materialDesc",
                         zmm_gate_entry_d.ENTRY_NO as "gateEntryNo",
                         zmm_gate_entry_d.INVNO as "invoiceNo",
+                        zmm_gate_entry_d.INV_DATE as "invoiceDate",
                         zmm_gate_entry_h.CHALAN_NO as "chalanNo"
                     FROM mseg AS mseg
                         LEFT JOIN mkpf AS mkpf
@@ -123,58 +111,52 @@ const grnReport = async (req, res) => {
                         LEFT JOIN zmm_gate_entry_h as zmm_gate_entry_h 
                         	ON(zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)`;
 
-        if (!req.body.matDocNo) {
-            return resSend(res, false, 200, "plese send matDocNo No", [], null);
-        }
-        let val = [];
+    if (!req.body.matDocNo) {
+      return resSend(res, false, 200, "plese send matDocNo No", [], null);
+    }
+    let val = [];
 
+    let whereClause = " WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )";
 
-        let whereClause = " WHERE 1 = 1 AND  ( mseg.BWART IN ('101') )";
-
-        let count = 0;
-        if (req.body.matDocNo) {
-            whereClause += ` AND mseg.MBLNR = $${++count}`;
-            val.push(req.body.matDocNo);
-        }
-
-        const finalQuery = grnQuery + whereClause;
-
-        const result = await getQuery({ query: finalQuery, values: val });
-        console.log("result", result);
-
-        if (result.length) {
-
-            const responseObj = {
-                matDocNo: result[0].matDocNo,
-                entryDate: result[0].entryDate,
-                invoiceNo: result[0].invoiceNo,
-                gateEntryNo: result[0].gateEntryNo,
-                plant: result[0].plant,
-                vendor_code: result[0].vendor_code,
-                vendor_name: result[0].vendor_name,
-                purchasing_doc_no: result[0].purchasing_doc_no,
-                headerText: result[0].headerText,
-                chalanNo: result[0].chalanNo,
-                lineItem: result
-            }
-
-            resSend(res, true, 200, "Data fetched successfully", responseObj, null);
-        } else {
-            resSend(res, false, 200, "No Record Found", {}, null);
-        }
-    } catch (err) {
-        resSend(res, false, 500, "Internal server errorR", err, null);
+    let count = 0;
+    if (req.body.matDocNo) {
+      whereClause += ` AND mseg.MBLNR = $${++count}`;
+      val.push(req.body.matDocNo);
     }
 
-}
+    const finalQuery = grnQuery + whereClause;
 
+    const result = await getQuery({ query: finalQuery, values: val });
+    console.log("result", result);
 
+    if (result.length) {
+      const responseObj = {
+        matDocNo: result[0].matDocNo,
+        entryDate: result[0].entryDate,
+        invoiceNo: result[0].invoiceNo,
+        invoiceDate: result[0].invoiceDate,
+        gateEntryNo: result[0].gateEntryNo,
+        plant: result[0].plant,
+        vendor_code: result[0].vendor_code,
+        vendor_name: result[0].vendor_name,
+        purchasing_doc_no: result[0].purchasing_doc_no,
+        headerText: result[0].headerText,
+        chalanNo: result[0].chalanNo,
+        lineItem: result,
+      };
+
+      resSend(res, true, 200, "Data fetched successfully", responseObj, null);
+    } else {
+      resSend(res, false, 200, "No Record Found", {}, null);
+    }
+  } catch (err) {
+    resSend(res, false, 500, "Internal server errorR", err, null);
+  }
+};
 
 const materialIssue = async (req, res) => {
-
-    try {
-        let q =
-            `SELECT 
+  try {
+    let q = `SELECT 
                         mseg.MBLNR as "issueNo",
                         mseg.WERKS as "plantName",
                         mseg.MJAHR as "issueYear",
@@ -196,104 +178,96 @@ const materialIssue = async (req, res) => {
                             ON( mseg.MBLNR = mkpf.MBLNR)
                          LEFT JOIN makt AS makt
                             ON( mseg.MATNR = makt.MATNR) 
-                            WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201', '101', '321', '222', '202', '102', '122') )`
+                            WHERE 1 = 1 AND  ( mseg.BWART IN ('221', '281', '201', '101', '321', '222', '202', '102', '122') )`;
 
+    if (!req.body.issueNo) {
+      return resSend(res, false, 200, "plese send Issue No", [], null);
+    }
+    let val = [];
 
-
-        if (!req.body.issueNo) {
-            return resSend(res, false, 200, "plese send Issue No", [], null);
-        }
-        let val = [];
-
-        let count = 0;
-        if (req.body.issueNo) {
-            q = q.concat(` AND mseg.MBLNR = $${++count} `);
-            val.push(req.body.issueNo);
-        }
-        if (req.body.issueYear) {
-            q = q.concat(` AND mseg.MJAHR = $${++count} `);
-            val.push(req.body.issueYear);
-        }
-
-        const result = await query({ query: q, values: val });
-
-        let response = {
-            issueNo: null,
-            issuDate: null,
-            plantName: null,
-            reservationNo: null,
-            lineItem: result
-        }
-
-        if (result.length > 0) {
-            response.issueNo = result[0].issueNo;
-            response.issuDate = result[0].issuDate || null;
-            response.plantName = result[0].plantName;
-            response.reservationNo = result[0].reservationNo || null;
-
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, response, null);
-        } else {
-            resSend(res, false, 200, Message.NO_RECORD_FOUND, response, null);
-        }
-
-
-    } catch (error) {
-        return resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    let count = 0;
+    if (req.body.issueNo) {
+      q = q.concat(` AND mseg.MBLNR = $${++count} `);
+      val.push(req.body.issueNo);
+    }
+    if (req.body.issueYear) {
+      q = q.concat(` AND mseg.MJAHR = $${++count} `);
+      val.push(req.body.issueYear);
     }
 
+    const result = await query({ query: q, values: val });
 
-}
+    let response = {
+      issueNo: null,
+      issuDate: null,
+      plantName: null,
+      reservationNo: null,
+      lineItem: result,
+    };
+
+    if (result.length > 0) {
+      response.issueNo = result[0].issueNo;
+      response.issuDate = result[0].issuDate || null;
+      response.plantName = result[0].plantName;
+      response.reservationNo = result[0].reservationNo || null;
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, response, null);
+    } else {
+      resSend(res, false, 200, Message.NO_RECORD_FOUND, response, null);
+    }
+  } catch (error) {
+    return resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+  }
+};
 
 const icgrnReport = async (req, res) => {
+  try {
+    if (!req.body.docNo) {
+      return resSend(res, false, 200, "plese send docNo", [], null);
+    }
+    let icgrnGetQuery = "";
+    // `SELECT
+    // qals.PRUEFLOS as inspectionLotNumber,
+    // qals.EBELN as purchasing_doc_no,
+    // qals.EBELP as purchasing_doc_no_item,
+    // ekko.AEDAT as purchasing_doc_date,
+    // qals.MBLNR as docNo,
+    // qals.BUDAT as docDate,
+    // qals.LIFNR as suppplier,
+    // vendor_table.LAND1 as vendorCountry,
+    // vendor_table.NAME1 as vendorName,
+    // vendor_table.ORT01 as vendorCity,
+    // vendor_table.ORT02 as vendorDistrict,
+    // vendor_table.PFACH as vendorPinCode,
+    // qals.MATNR AS materialNumber,
+    // makt.MAKTX as materialDesc,
+    // qals.MATNR as material,
+    // qals.PAENDTERM as endDate,
+    // qals.PAENDZEIT as endTime,
+    // qals.PS_PSP_PNR as wbsElement,
+    // qals.BWART as momentType,
+    // ekpo.MEINS as baseUnit,
+    // qals.LMENGE01 as acceptedQty,
+    // qals.LMENGE07 as rejectedQty,
+    // qals.LMENGE01 as unrestrictedUseStock,
+    // qals.LMENGEIST as supplyQuantity,
+    // qals.LTEXTKZ as remarks,
+    // qave.vcode as udCode,
+    // qals.ENSTEHDAT as inspDate
+    // FROM qals as qals
+    // LEFT JOIN lfa1 as vendor_table
+    // 	ON( qals.LIFNR = vendor_table.LIFNR)
+    // LEFT JOIN ekko as ekko
+    // 	ON( qals.EBELN = ekko.EBELN)
+    // LEFT JOIN qave as qave
+    // 	ON( qals.PRUEFLOS = qave.prueflos)
+    // LEFT JOIN makt as makt
+    // 	ON ( makt.MATNR = qals.MATNR)
+    // LEFT JOIN ekpo as ekpo
+    // 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
+    // WHERE 1 = 1`;
 
-    try {
-        if (!req.body.docNo) {
-            return resSend(res, false, 200, "plese send docNo", [], null);
-        }
-        let icgrnGetQuery = "";
-        // `SELECT 
-        // qals.PRUEFLOS as inspectionLotNumber,
-        // qals.EBELN as purchasing_doc_no,
-        // qals.EBELP as purchasing_doc_no_item,
-        // ekko.AEDAT as purchasing_doc_date,
-        // qals.MBLNR as docNo,
-        // qals.BUDAT as docDate,
-        // qals.LIFNR as suppplier,
-        // vendor_table.LAND1 as vendorCountry,
-        // vendor_table.NAME1 as vendorName,
-        // vendor_table.ORT01 as vendorCity,
-        // vendor_table.ORT02 as vendorDistrict,
-        // vendor_table.PFACH as vendorPinCode,
-        // qals.MATNR AS materialNumber,
-        // makt.MAKTX as materialDesc,
-        // qals.MATNR as material,
-        // qals.PAENDTERM as endDate,
-        // qals.PAENDZEIT as endTime,
-        // qals.PS_PSP_PNR as wbsElement,
-        // qals.BWART as momentType,
-        // ekpo.MEINS as baseUnit,
-        // qals.LMENGE01 as acceptedQty,
-        // qals.LMENGE07 as rejectedQty,
-        // qals.LMENGE01 as unrestrictedUseStock,
-        // qals.LMENGEIST as supplyQuantity,
-        // qals.LTEXTKZ as remarks,
-        // qave.vcode as udCode,
-        // qals.ENSTEHDAT as inspDate
-        // FROM qals as qals 
-        // LEFT JOIN lfa1 as vendor_table
-        // 	ON( qals.LIFNR = vendor_table.LIFNR)
-        // LEFT JOIN ekko as ekko
-        // 	ON( qals.EBELN = ekko.EBELN)
-        // LEFT JOIN qave as qave
-        // 	ON( qals.PRUEFLOS = qave.prueflos)
-        // LEFT JOIN makt as makt
-        // 	ON ( makt.MATNR = qals.MATNR)
-        // LEFT JOIN ekpo as ekpo
-        // 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
-        // WHERE 1 = 1`;
-
-
-        icgrnGetQuery = `
+    icgrnGetQuery = `
                 SELECT 
                 qals.PRUEFLOS as "inspectionLotNumber",
                 qals.EBELN as "purchasing_doc_no",
@@ -339,68 +313,61 @@ const icgrnReport = async (req, res) => {
                 LEFT JOIN ekpo as ekpo
                 	ON ( ekpo.EBELN = qals.EBELN AND ekpo.EBELP =  qals.EBELP AND ekpo.MATNR = qals.MATNR)
                 LEFT JOIN  zmm_gate_entry_d as zmm_gate_entry_d
-                	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR)
+                	ON (zmm_gate_entry_d.ZMBLNR = qals.MBLNR AND zmm_gate_entry_d.EBELN = qals.EBELN AND zmm_gate_entry_d.EBELP =  qals.EBELP)
                 LEFT JOIN  zmm_gate_entry_h as zmm_gate_entry_h
                 	ON (zmm_gate_entry_h.ENTRY_NO = zmm_gate_entry_d.ENTRY_NO)`;
 
-        let whereClause = " WHERE 1 = 1";
-        let count = 0;
-        const val = [];
-        if (req.body.inspectionLotNumber) {
-            whereClause += ` AND qals.PRUEFLOS = $${++count}`;
-            val.push(req.body.inspectionLotNumber);
-        }
-        if (req.body.docNo) {
-            whereClause += ` AND qals.MBLNR = $${++count}`;
-            val.push(req.body.docNo);
-        }
-        if (req.body.purchasing_doc_no) {
-            whereClause += ` AND qals.EBELN = $${++count}`;
-            val.push(req.body.purchasing_doc_no);
-        }
-        // const response = await promiseConnection.execute(icgrnGetQuery);
-        const finalQuery = icgrnGetQuery + whereClause;
-        const response = await getQuery({ query: finalQuery, values: val });
-
-        if (response && response.length) {
-            const resp = response[0];
-            const obj = {
-                purchasing_doc_no: resp.purchasing_doc_no,
-                purchasing_doc_no_item: resp.purchasing_doc_no_item,
-                purchasing_doc_date: resp.purchasing_doc_date,
-                docNo: resp.docNo,
-                docdate: resp.docdate,
-                suppplier: resp.suppplier,
-                vendorCountry: resp.vendorCountry,
-                vendorName: resp.vendorName,
-                vendorCity: resp.vendorCity,
-                vendorDistrict: resp.vendorDistrict,
-                vendorPinCode: resp.vendorPinCode,
-                invoiceNo: resp.invoiceNo,
-                invoiceDate: resp.invoiceDate,
-                gateEntryNo: resp.gateEntryNo,
-                gateEntryDate: resp.gateEntryDate,
-                lineItems: response
-
-            }
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
-        } else {
-            resSend(res, false, 200, Message.NO_RECORD_FOUND, response, null);
-        }
-
-    } catch (error) {
-        resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    let whereClause = " WHERE 1 = 1";
+    let count = 0;
+    const val = [];
+    if (req.body.inspectionLotNumber) {
+      whereClause += ` AND qals.PRUEFLOS = $${++count}`;
+      val.push(req.body.inspectionLotNumber);
     }
+    if (req.body.docNo) {
+      whereClause += ` AND qals.MBLNR = $${++count}`;
+      val.push(req.body.docNo);
+    }
+    if (req.body.purchasing_doc_no) {
+      whereClause += ` AND qals.EBELN = $${++count}`;
+      val.push(req.body.purchasing_doc_no);
+    }
+    // const response = await promiseConnection.execute(icgrnGetQuery);
+    const finalQuery = icgrnGetQuery + whereClause;
+    const response = await getQuery({ query: finalQuery, values: val });
 
+    if (response && response.length) {
+      const resp = response[0];
+      const obj = {
+        purchasing_doc_no: resp.purchasing_doc_no,
+        purchasing_doc_no_item: resp.purchasing_doc_no_item,
+        purchasing_doc_date: resp.purchasing_doc_date,
+        docNo: resp.docNo,
+        docdate: resp.docdate,
+        suppplier: resp.suppplier,
+        vendorCountry: resp.vendorCountry,
+        vendorName: resp.vendorName,
+        vendorCity: resp.vendorCity,
+        vendorDistrict: resp.vendorDistrict,
+        vendorPinCode: resp.vendorPinCode,
+        invoiceNo: resp.invoiceNo,
+        invoiceDate: resp.invoiceDate,
+        gateEntryNo: resp.gateEntryNo,
+        gateEntryDate: resp.gateEntryDate,
+        lineItems: response,
+      };
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
+    } else {
+      resSend(res, false, 200, Message.NO_RECORD_FOUND, response, null);
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+  }
 };
 
-
-
-
 const gateEntryReport = async (req, res) => {
-
-    try {
-        let ge_query = `
+  try {
+    let ge_query = `
             SELECT 
                 zmm_gate_entry_h.ENTRY_NO as "gate_entry_no",
                 zmm_gate_entry_h.ENTRY_DATE as "entry_date",
@@ -428,41 +395,45 @@ const gateEntryReport = async (req, res) => {
                     LEFT JOIN makt as material
                         ON(material.MATNR = zmm_gate_entry_d.MATNR)`;
 
-        console.log("ge_query", ge_query);
-        const val = [];
+    console.log("ge_query", ge_query);
+    const val = [];
 
-        let whereClause = " WHERE 1 = 1";
-        let count = 0;
-        if (req.body.gate_entry_no) {
-            whereClause += ` AND zmm_gate_entry_h.ENTRY_NO = $${++count}`;
-            val.push(req.body.gate_entry_no)
-        }
-        const finalQuery = ge_query + whereClause;
-        const result = await getQuery({ query: finalQuery, values: val });
-
-        if (result && result.length) {
-            let obj = {};
-            const sortedResp = result.sort((a, b) => a.po_line_item_no > b.po_line_item_no ? 1 : -1 )
-            obj.gate_entry_no = result[0].gate_entry_no;
-            obj.entry_date = result[0].entry_date;
-            obj.vendor = result[0].vendor;
-            obj.invoice_number = result[0].invoice_number;
-            obj.vehicle_no = result[0].vehicle_no;
-            obj.vendor_name = result[0].vendor_name;
-            obj.vendor_code = result[0].vendor_code;
-            obj.line_items = result;
-
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
-        } else {
-            resSend(res, false, 200, Message.NO_RECORD_FOUND, result, null);
-        }
-
-    } catch (error) {
-        resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    let whereClause = " WHERE 1 = 1";
+    let count = 0;
+    if (req.body.gate_entry_no) {
+      whereClause += ` AND zmm_gate_entry_h.ENTRY_NO = $${++count}`;
+      val.push(req.body.gate_entry_no);
     }
+    const finalQuery = ge_query + whereClause;
+    const result = await getQuery({ query: finalQuery, values: val });
 
+    if (result && result.length) {
+      let obj = {};
+      const sortedResp = result.sort((a, b) =>
+        a.po_line_item_no > b.po_line_item_no ? 1 : -1
+      );
+      obj.gate_entry_no = result[0].gate_entry_no;
+      obj.entry_date = result[0].entry_date;
+      obj.vendor = result[0].vendor;
+      obj.invoice_number = result[0].invoice_number;
+      obj.vehicle_no = result[0].vehicle_no;
+      obj.vendor_name = result[0].vendor_name;
+      obj.vendor_code = result[0].vendor_code;
+      obj.line_items = result;
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, obj, null);
+    } else {
+      resSend(res, false, 200, Message.NO_RECORD_FOUND, result, null);
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+  }
 };
 
-
-
-module.exports = { serviceEntryReport, grnReport, materialIssue, icgrnReport, gateEntryReport }
+module.exports = {
+  serviceEntryReport,
+  grnReport,
+  materialIssue,
+  icgrnReport,
+  gateEntryReport,
+};

@@ -1,8 +1,12 @@
-const { asyncPool, poolQuery, poolClient } = require("../../config/pgDbConfig");
-const { UPDATE } = require("../../lib/constant");
+const { asyncPool, poolQuery, poolClient, getQuery } = require("../../config/pgDbConfig");
+const { UPDATE, INSERT, BTN_STATUS_HOLD_CODE } = require("../../lib/constant");
+const { BTN_RETURN_DO } = require("../../lib/event");
 const { responseSend } = require("../../lib/resSend");
-const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery } = require("../../lib/utils");
+const { BTN_STATUS_HOLD_TEXT, BTN_STATUS_UNHOLD_TEXT } = require("../../lib/status");
+const { generateInsertUpdateQuery, generateQueryForMultipleData, generateQuery, getEpochTime } = require("../../lib/utils");
+const { sendMail } = require("../../services/mail.services");
 const { zbtsLineItemsPayload, zbtsHeaderPayload } = require("../../services/sap.payment.services");
+const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const Message = require("../../utils/messages");
 
 const zbts_st = async (req, res) => {
@@ -22,6 +26,19 @@ const zbts_st = async (req, res) => {
             if (!payload) {
                 return responseSend(res, "F", 400, "Invalid payload.", null, null);
             }
+
+            /**
+             * IF THE BTN IS NOT PART OF OBPS 
+             * NOT INSERT IN OBPS DB 
+             * IGNORE THIS BTN WHICH IS SEND FROM SAP
+             */
+            const q = `SELECT count(*) as btn_count from btn_list where btn_num = $1`;
+            const btn_num = payload.zbtno || payload.ZBTNO;
+            const btnCount = await poolQuery({ client, query: q, values: [btn_num] });
+            if (!btnCount[0]?.btn_count) {
+                return responseSend(res, "S", 200, "NO BTN HAVE IN LAN SERVER", null, null);
+            }
+            // END //
 
             const { ZBTSM, zbtsm, ...obj } = payload;
             let payloadObj = {};
@@ -57,6 +74,7 @@ const zbts_st = async (req, res) => {
                 }
             }
 
+            // UPDATE BTN LIST TABLE WHERE ANY ACTION TAKEN FROM SAP
             await updateBtnListTable(client, payloadObj);
 
             // console.log("transactionSuccessful", transactionSuccessful);
@@ -92,16 +110,78 @@ const updateBtnListTable = async (client, data) => {
             "1": "RECEIVED",
             "2": "REJECTED",
             "3": "APPROVE",
-            "4" :"BANK",
+            "4": "BANK",
             "5": "D-RETURN"
         }
-        const { q, val } = generateQuery(UPDATE, 'btn_list', { status: statusObj[data.fstatus] || "" }, { btn_num: data.zbtno })
-        await poolQuery({ client, query: q, values: val });
+        const getLatestDataQuery = `
+        SELECT 
+            btn_num, 
+            purchasing_doc_no, 
+            net_claim_amount, 
+            net_payable_amount, 
+            vendor_code, 
+            status, 
+            btn_type,
+            created_at
+        FROM public.btn_list where btn_num = $1 ORDER BY created_at DESC LIMIT 1`;
+        const lasBtnDetails = await poolQuery({ client, query: getLatestDataQuery, values: [data.zbtno] });
+        let btnListTablePaylod = { btn_num: data.zbtno };
+
+        if (lasBtnDetails.length) {
+            btnListTablePaylod = { ...lasBtnDetails[0], ...btnListTablePaylod, created_at: getEpochTime() };
+
+            /**
+             * status save in obps server
+             * if status  BTN_STATUS_HOLD_CODE then obps list show BTN_STATUS_HOLD_TEXT
+             * if un hold this, then status show default fstatus
+             */
+            let currentStatus = statusObj[data.fstatus] || "";
+            if (data.hold && data.hold === BTN_STATUS_HOLD_CODE) {
+                currentStatus = BTN_STATUS_HOLD_TEXT;
+            }
+            if (btnListTablePaylod.status === BTN_STATUS_HOLD_CODE && !data.hold) {
+                currentStatus = BTN_STATUS_UNHOLD_TEXT;
+            }
+            btnListTablePaylod.status = currentStatus;
+
+            const { q, val } = generateQuery(INSERT, 'btn_list', btnListTablePaylod);
+            await poolQuery({ client, query: q, values: val });
+            if (data.fstatus == "5" || data.fstatus == 5) {
+                await handelMail(btnListTablePaylod, client);
+            }
+        } else {
+            console.log("NO BTN FOUND IN LIST TO BE UPDATED btn controller");
+        }
+
     } catch (error) {
         throw error;
     }
 }
 
+async function handelMail(payload, client) {
+    try {
+        let emailUserDetailsQuery;
+        let emailUserDetails;
+        let dataObj = payload;
 
+        emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do", "$1");
+        emailUserDetails = await poolQuery({
+            client,
+            query: emailUserDetailsQuery,
+            values: [payload.purchasing_doc_no],
+        });
+        dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+        await sendMail(
+            BTN_RETURN_DO,
+            dataObj,
+            { users: emailUserDetails },
+            BTN_RETURN_DO
+        );
+
+
+    } catch (error) {
+        console.log("handelMail btn ctrl sap", error.toString(), error.stack);
+    }
+}
 
 module.exports = { zbts_st }

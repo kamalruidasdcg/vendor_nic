@@ -3,21 +3,30 @@ const { connection } = require("../../config/dbConfig");
 const { TRUE } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");
-const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
-const { generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
+const {
+  gateEntryHeaderPayload,
+  gateEntryDataPayload,
+} = require("../../services/sap.store.services");
+const {
+  generateInsertUpdateQuery,
+  generateQueryForMultipleData,
+} = require("../../lib/utils");
 const Measage = require("../../utils/messages");
-const { poolClient, poolQuery, getQuery, query } = require("../../config/pgDbConfig");
+const {
+  poolClient,
+  poolQuery,
+  getQuery,
+  query,
+} = require("../../config/pgDbConfig");
 const { sendMail } = require("../../services/mail.services");
 const { GATE_ENTRY_DOC_CREATE } = require("../../lib/event");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
-
 
 const insertGateEntryData = async (req, res) => {
   let insertPayload = {};
   let payload = {};
 
   try {
-
     // const promiseConnection = await connection();
     const client = await poolClient();
     let transactionSuccessful = false;
@@ -28,81 +37,88 @@ const insertGateEntryData = async (req, res) => {
     // }
     payload = req.body;
 
-    console.log("payload", req.body);
-
     // const { ITEM_TAB, ...obj } = payload;
 
     // console.log("GE_LINE_ITEMS", ITEM_TAB);
     // console.log("obj", obj);
     // await client.beginTransaction();
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     async function insertRecurcionFn(payload, index) {
       if (index == payload.length) return;
 
       const { ITEM_TAB, ...obj } = payload[index];
 
-      if (!obj || typeof obj !== 'object' || !Object.keys(obj).length || !obj.ENTRY_NO || !obj.W_YEAR) {
+      if (
+        !obj ||
+        typeof obj !== "object" ||
+        !Object.keys(obj).length ||
+        !obj.ENTRY_NO ||
+        !obj.W_YEAR
+      ) {
         // return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
         throw new Error(Measage.INVALID_PAYLOAD);
       }
 
       // await client.beginTransaction();
 
-
       try {
         insertPayload = await gateEntryHeaderPayload(obj);
-        console.log("insertPayload", insertPayload);
-        const gate_entry_h_Insert = await generateInsertUpdateQuery(insertPayload, GATE_ENTRY_HEADER, ["ENTRY_NO", "W_YEAR"]);
-        const results = await poolQuery({ client, query: gate_entry_h_Insert.q, values: gate_entry_h_Insert.val });
-        console.log("results", results);
+        const gate_entry_h_Insert = await generateInsertUpdateQuery(
+          insertPayload,
+          GATE_ENTRY_HEADER,
+          ["ENTRY_NO", "W_YEAR"]
+        );
+        const results = await poolQuery({
+          client,
+          query: gate_entry_h_Insert.q,
+          values: gate_entry_h_Insert.val,
+        });
       } catch (error) {
         throw new Error(`${Measage.DATA_INSERT_FAILED} ${error.toString()}`);
         // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
       }
 
-
       if (ITEM_TAB && ITEM_TAB?.length) {
-
         try {
           const zmilestonePayload = await gateEntryDataPayload(ITEM_TAB);
-          // console.log('ekpopayload', zmilestonePayload);
           // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
-          const zmm_ge_line_item_q = await generateQueryForMultipleData(zmilestonePayload, GATE_ENTRY_DATA, ["ENTRY_NO", "EBELN", "EBELP", "W_YEAR"]);
-          const response = await poolQuery({ client, query: zmm_ge_line_item_q.q, values: zmm_ge_line_item_q.val })
-
+          const zmm_ge_line_item_q = await generateQueryForMultipleData(
+            zmilestonePayload,
+            GATE_ENTRY_DATA,
+            ["ENTRY_NO", "EBELN", "EBELP", "W_YEAR"]
+          );
+          const response = await poolQuery({
+            client,
+            query: zmm_ge_line_item_q.q,
+            values: zmm_ge_line_item_q.val,
+          });
         } catch (error) {
           // console.log("error, zpo milestone", error);
           // throw new Error(Measage.DATA_INSERT_FAILED + JSON.stringify(error.toString()));
           throw new Error(`${Measage.DATA_INSERT_FAILED} ${error.toString()}`);
-
         }
       }
 
       await handelMail(ITEM_TAB[0]);
-      await insertRecurcionFn(payload, index + 1)
+      await insertRecurcionFn(payload, index + 1);
     }
-
-
 
     try {
-
       await insertRecurcionFn(payload, 0);
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       transactionSuccessful = true;
-
     } catch (error) {
       responseSend(res, "F", 502, error.toString(), error.stack, null);
-    }
-    finally {
+    } finally {
       if (!transactionSuccessful) {
         // console.log("Connection End" + "--->" + "connection release");
-        await client.query('ROLLBACK')
+        await client.query("ROLLBACK");
       }
       if (transactionSuccessful === TRUE) {
-        responseSend(res, "S", 200, "data insert succeed with", [], null)
+        responseSend(res, "S", 200, "data insert succeed with", [], null);
       }
-      client.release()
+      client.release();
       // console.log("Connection End" + "--->" + "");
     }
   } catch (error) {
@@ -111,21 +127,27 @@ const insertGateEntryData = async (req, res) => {
 };
 
 async function handelMail(data) {
-
   try {
-
-
-    console.log(data);
-    let vendorDetails = getUserDetailsQuery('vendor_by_po', '$1');
-    const mail_details = await getQuery({ query: vendorDetails, values: [data.EBELN] });
-    console.log("vendorAndDoDetails", vendorDetails, data.EBELN);
-    const dataObj = { ...data, purchasing_doc_no: data.EBELN, vendor_name: mail_details[0]?.u_name };
-    await sendMail(GATE_ENTRY_DOC_CREATE, dataObj, { users: mail_details }, GATE_ENTRY_DOC_CREATE);
+    let vendorDetails = getUserDetailsQuery("vendor_by_po", "$1");
+    const mail_details = await getQuery({
+      query: vendorDetails,
+      values: [data.EBELN],
+    });
+    const dataObj = {
+      ...data,
+      purchasing_doc_no: data.EBELN,
+      vendor_name: mail_details[0]?.u_name,
+    };
+    await sendMail(
+      GATE_ENTRY_DOC_CREATE,
+      dataObj,
+      { users: mail_details },
+      GATE_ENTRY_DOC_CREATE
+    );
   } catch (error) {
-    console.log('handelMail', error.toString());
+    console.error(error.message);
   }
 }
-
 
 const storeActionList = async (req, res) => {
   try {
@@ -133,19 +155,16 @@ const storeActionList = async (req, res) => {
     // let transactionSuccessful = false;
 
     /**
-* gate entry 
-* grn 
-* icgrn
-* resvertion ( SIR)
-* issue 
-* service enty sheet
-*/
-
+     * gate entry
+     * grn
+     * icgrn
+     * resvertion ( SIR)
+     * issue
+     * service enty sheet
+     */
 
     try {
-
-      let storeActionListQuery =
-        `
+      let storeActionListQuery = `
                 (SELECT NULL         AS docNo,
                     NULL         AS btn,
                     NULL         AS issueNo,
@@ -367,10 +386,6 @@ const storeActionList = async (req, res) => {
                                                                          '202',
                                                                          '122'))) AS store_action_list WHERE 1 = 1`;
 
-
-
-
-
       //     (SELECT NULL              AS docNo,
       //         btn,
       //         NULL              AS issueNo,
@@ -388,11 +403,7 @@ const storeActionList = async (req, res) => {
       //                 LEFT JOIN pa0002 AS USER
       //                        ON ( zb.zcreatedby = USER.pernr )) AS ztfi_bil_deface)
 
-
-
-
-      storeActionListQuery =
-        `
+      storeActionListQuery = `
             SELECT * FROM ((SELECT 
                 
                 NULL         AS "matDocNo",
@@ -560,9 +571,6 @@ const storeActionList = async (req, res) => {
               
               
               ) AS store_action_list WHERE 1 = 1`;
-
-
-
 
       storeActionListQuery = `
               
@@ -768,44 +776,40 @@ FROM
       )
   ) AS store_action_list WHERE 1 = 1`;
 
-
-
       const queryParams = req.query;
       const val = [];
       if (queryParams.poNo) {
-        storeActionListQuery = storeActionListQuery.concat(" AND store_action_list.purchasing_doc_no = $1 ");
+        storeActionListQuery = storeActionListQuery.concat(
+          " AND store_action_list.purchasing_doc_no = $1 "
+        );
         val.push(queryParams.poNo);
       }
-      console.log("storeActionListQuery", storeActionListQuery);
 
       // const [results] = await promiseConnection.execute(storeActionListQuery);
-      const results = await getQuery({ query: storeActionListQuery, values: val });
-
-      console.log(storeActionListQuery, results);
+      const results = await getQuery({
+        query: storeActionListQuery,
+        values: val,
+      });
 
       // transactionSuccessful = true;
 
-      resSend(res, true, 200, "data fetch success", results, null)
+      resSend(res, true, 200, "data fetch success", results, null);
       // if (transactionSuccessful === TRUE && results) {
       // } else {
       //     responseSend(res, false, 200, "no data found", [], null);
       // }
-
     } catch (error) {
       responseSend(res, "F", 502, "data fetch failed !!", error, null);
-    }
-    finally {
+    } finally {
       // const connEnd = await promiseConnection.end();
-      console.log("Connection End" + "--->" + "connection release");
     }
   } catch (error) {
+    console.error(error.message);
     responseSend(res, "F", 400, "Error in database conn!!", error, null);
   }
 };
 const gateEntryReport = async (req, res) => {
-
   try {
-
     let ge_query = `
             SELECT 
                 zmm_gate_entry_h.ENTRY_NO as "gate_entry_no",
@@ -835,53 +839,43 @@ const gateEntryReport = async (req, res) => {
                         ON(material.MATNR = zmm_gate_entry_d.MATNR)
                 WHERE 1 = 1`;
 
-    console.log("ge_query", ge_query);
     if (req.body.gate_entry_no) {
-      ge_query = ge_query.concat(` AND zmm_gate_entry_h.ENTRY_NO = '${req.body.gate_entry_no}'`);
+      ge_query = ge_query.concat(
+        ` AND zmm_gate_entry_h.ENTRY_NO = '${req.body.gate_entry_no}'`
+      );
     }
 
-
-
     await getQuery({ query: ge_query.q, values: ge_query.val });
-    // console.log(results, "jjjj");
     let obj = {
       gate_entry_no: null,
       entry_date: null,
       vendor_code: null,
       vendor_name: null,
       invoice_number: null,
-      vehicle_no: null
-    }
+      vehicle_no: null,
+    };
     if (results && results.length) {
-      obj.gate_entry_no = results[0].gate_entry_no,
-        obj.entry_date = results[0].entry_date,
-        obj.vendor = results[0].vendor,
-        obj.invoice_number = results[0].invoice_number,
-        obj.vehicle_no = results[0].vehicle_no,
-        obj.vendor_name = results[0].vendor_name,
-        obj.vendor_code = results[0].vendor_code,
-        obj.line_items = results
-
+      (obj.gate_entry_no = results[0].gate_entry_no),
+        (obj.entry_date = results[0].entry_date),
+        (obj.vendor = results[0].vendor),
+        (obj.invoice_number = results[0].invoice_number),
+        (obj.vehicle_no = results[0].vehicle_no),
+        (obj.vendor_name = results[0].vendor_name),
+        (obj.vendor_code = results[0].vendor_code),
+        (obj.line_items = results);
     }
 
     // console.log(ge_query, results);
 
-
     if (results.length) {
-      resSend(res, true, 200, "data fetch success", obj, null)
+      resSend(res, true, 200, "data fetch success", obj, null);
     } else {
       resSend(res, false, 200, "no data found", [], null);
     }
-
   } catch (error) {
     resSend(res, false, 502, error.toString(), error.stack, null);
   }
-
-
 };
-
-
-
 
 module.exports = { insertGateEntryData, storeActionList, gateEntryReport };
 //     EBELN: "7777777777",

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon -r dotenv/config server.js dotenv_config_path=./dev.env",
+    "qa": "nodemon -r dotenv/config server.js dotenv_config_path=./qa.env"
   },
   "keywords": [],
   "repository": {
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/kamalruidasdcg/vendor_nic#readme",
   "dependencies": {
+    "adm-zip": "^0.5.15",
     "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

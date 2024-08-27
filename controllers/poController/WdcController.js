@@ -46,12 +46,9 @@ exports.wdc = async (req, res) => {
     }
 
     //  deper
-    // if (
-    //   tokenData.user_type != USER_TYPE_VENDOR &&
-    //   tokenData.department_id != USER_TYPE_PPNC_DEPARTMENT
-    // ) {
-    //   return resSend(res, false, 200, "You are not authorised!", null, null);
-    // }
+    if (obj.status == SUBMITTED && tokenData.user_type != USER_TYPE_VENDOR) {
+      return resSend(res, false, 200, "Vendor only can submit", null, null);
+    }
     //console.log(obj);
     if (tokenData.user_type == USER_TYPE_VENDOR) {
       if (!obj.action_type || obj.action_type == "") {
@@ -91,7 +88,7 @@ exports.wdc = async (req, res) => {
 
       const check = await checkIsApprovedRejected(WDC, obj.purchasing_doc_no, obj.reference_no, APPROVED, REJECTED);
       if (check > 0) {
-          return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
+        return resSend(res, false, 200, `You can't take any action against this reference no.`, null, null);
       }
 
       const line_item_array_q = `SELECT COUNT(assigned_to) AS assingn from ${WDC} WHERE purchasing_doc_no = $1 AND  assigned_to = $2`;
@@ -196,8 +193,8 @@ exports.wdc = async (req, res) => {
       // obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
       let line_item_array = JSON.parse(obj.line_item_array);
       obj.total_amount = 0;
-
-      if (obj.action_type == 'JCC' && obj.line_item_array != "") {
+//obj.action_type == 'JCC' &&  /// CONDITION REMOVED no total issue
+      if ( obj.line_item_array != "") {
 
         const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1`;
         let get_data_result = await getQuery({ query: line_item_array_q, values: [obj.purchasing_doc_no] });
@@ -251,7 +248,13 @@ exports.wdc = async (req, res) => {
           payload = { ...payload, slno: response.id };
           console.log(payload);
           console.log("payload$%^&*(");
-          await submitToSapServer(payload);
+          const submit = await submitToSapServer(payload);
+          //await client.query('COMMIT');
+          if (submit == false) {
+            //await client.query('ROLLBACK');
+          }
+
+
         } catch (error) {
           console.warn(
             "WDC/JCC save in sap faild, please refer to wdcContorller submitToSapServer fn"
@@ -289,14 +292,14 @@ async function handelMail(tokenData, payload, event) {
     let dataObj = payload;
 
 
-    if ( payload.status == SUBMITTED) {
+    if (payload.status == SUBMITTED) {
       // QA NODAL OFFICERS
-      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity',' $1');
+      emailUserDetailsQuery = getUserDetailsQuery('wdc_certifing_authrity', ' $1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [parseInt(payload.assigned_to)] });
       await sendMail(WDC_UPLOADING, dataObj, { users: emailUserDetails }, WDC_UPLOADING);
     }
 
-    if ( payload.status == REJECTED) {
+    if (payload.status == REJECTED) {
       // QA NODAL OFFICERS
       emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
       emailUserDetails = await getQuery({ query: emailUserDetailsQuery, values: [payload.purchasing_doc_no] });
@@ -418,6 +421,7 @@ exports.grseEmpList = async (req, res) => {
 };
 
 async function submitToSapServer(data) {
+  let status = false;
   try {
     const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
     const postUrl = `${sapBaseUrl}/sap/bc/zoBPS_WDC`;
@@ -444,9 +448,14 @@ async function submitToSapServer(data) {
     console.log(wdc_payload);
 
     const postResponse = await makeHttpRequest(postUrl, "POST", wdc_payload);
+    if (postResponse.statusCode && postResponse.statusCode >= 200 && postResponse.statusCode <= 226) {
+      status = true;
+    }
     console.log("POST Response from the server:", postResponse);
   } catch (error) {
     console.error("Error making the request:", error.message);
+  } finally {
+    return status;
   }
 }
 

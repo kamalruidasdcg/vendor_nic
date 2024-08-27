@@ -14,6 +14,7 @@ const Message = require("../../utils/messages");
 const { PAYMENT_ADVICE_DOC_GENERATE } = require("../../lib/event");
 const { sendMail } = require("../../services/mail.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { updateBtnListTable } = require("../../services/btn.services");
 
 
 const addPaymentVoucher = async (req, res) => {
@@ -131,6 +132,8 @@ const ztfi_bil_deface = async (req, res) => {
             const zdefaceInsertQuery = await generateInsertUpdateQuery(payloadObj, "ztfi_bil_deface", ["ZREGNUM", "SEQNO", "ZBILLPER"]);
 
             const response = await query({ query: zdefaceInsertQuery.q, values: zdefaceInsertQuery.val });
+            await updateBtnListTable(payloadObj)
+
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (error) {
             responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, error.toString(), null);
@@ -148,15 +151,14 @@ const newPaymentAdvice = async (req, res) => {
 
         const client = await poolClient();
 
-        console.log("req.body ");
         if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
-            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, "Please send a valid payload.", {}, null);
         }
 
         const payload = req.body;
         console.log('payload payment advice', payload);
         if (!payload) {
-            return responseSend(res, "F", 400, "Invalid payload.", null, null);
+            return responseSend(res, "F", 400, "Invalid payload.", {}, null);
         }
 
         const { ZFI_PYMT_ADVCE_FINAL, ...obj } = payload;
@@ -171,7 +173,7 @@ const newPaymentAdvice = async (req, res) => {
             const lineItemPayloadObj = await paymentAviceLineItemsPayload(ZFI_PYMT_ADVCE_FINAL);
             const paymentAviceLineItemsQuery = await generateQueryForMultipleData(lineItemPayloadObj, "zfi_pymt_advce_final", ["id"]);
             const response2 = await poolQuery({ client, query: paymentAviceLineItemsQuery.q, values: paymentAviceLineItemsQuery.val });
-            handleEmail(obj);
+            handleEmail(payloadObj);
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, { response1, response2 }, null);
         } catch (error) {
             responseSend(res, "F", 400, Message.DATA_INSERT_FAILED, error.message, null);
@@ -189,10 +191,10 @@ const newPaymentAdvice = async (req, res) => {
 
 async function handleEmail(data) {
     try {
-        
+
         const getDoQuery = getUserDetailsQuery('vendor', '$1');
         const venodrDetails = await getQuery({ query: getDoQuery, values: [data.lifnr] });
-        const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0].u_name, };
+        const dataObj = { ...data, vendor_code: venodrDetails[0].u_id, vendor_name: venodrDetails[0]?.u_name, };
         await sendMail(PAYMENT_ADVICE_DOC_GENERATE, dataObj, { users: [] }, PAYMENT_ADVICE_DOC_GENERATE);
     } catch (error) {
         console.log("handleEmail", error.toString(), error.stack)
