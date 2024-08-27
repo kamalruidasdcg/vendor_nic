@@ -220,6 +220,8 @@ function isRouteAllowedForRole(role, targetRoute) {
 }
 
 // Middleware for Basic Authentication
+const sap_username = process.env.SAP_API_AUTH_USERNAME;
+const sap_password = process.env.SAP_API_AUTH_PASSWORD;
 const basicAuthVerification = basicAuth({
   users: {
     [process.env.SAP_API_AUTH_USERNAME]: process.env.SAP_API_AUTH_PASSWORD,

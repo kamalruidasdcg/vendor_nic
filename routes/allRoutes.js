@@ -6,15 +6,11 @@ const express = require("express");
 //   fetchBills,
 // } = require("../controllers/allControllers");
 
-const {
-  getFilteredData,
-  updatTableData,
-  insertTableData,
-} = require("../controllers/genralControlles");
+const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
 // const { auth } = require("../controllers/authConroller/auth");
 // const paymentControllers = require("../controllers/paymentControllers");
 // const poController = require("../controllers/poController");
-const drawingController = require("../controllers/poController/drawingController");
+// const drawingController = require("../controllers/poController/drawingController");
 // const sdbgController = require("../controllers/poController/sdbgController");
 const qapController = require("../controllers/poController/qapController");
 const generalController = require("../controllers/poController/poGeneralController");
@@ -24,16 +20,8 @@ const shippingDocumentsController = require("../controllers/poController/shippin
 const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
 // const downloadController = require("../controllers/poController/poDownloadController");
-const {
-  uploadExcelFile,
-  uploadDrawingFile,
-  uploadSDBGFile,
-  dynamicallyUpload,
-} = require("../lib/fileUpload");
-const {
-  veifyAccessToken,
-  authorizeRoute,
-} = require("../services/jwt.services");
+const { dynamicallyUpload } = require("../lib/fileUpload");
+const { veifyAccessToken, basicAuthVerification } = require("../services/jwt.services");
 // const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 const billRoutes = require("./billRoutes");
@@ -91,9 +79,9 @@ router.get("/ping", async (req, res) => {
 
 // GENERAL GET AND UPDATE ROUTE
 
-router.get("/getFilteredData", getFilteredData);
-router.post("/updatTableData", updatTableData);
-router.post("/insertTableData", insertTableData);
+router.get("/getFilteredData", [], getFilteredData);
+router.post("/updatTableData", [basicAuthVerification], updatTableData);
+router.post("/insertTableData", [basicAuthVerification], insertTableData);
 
 // router.get("/reminder", sendReminderMail);
 
@@ -128,7 +116,6 @@ router.use("/dept", deptRoutes);
 // router.post("/forwardToDepartment/:zbtno", [veifyAccessToken, authorizeRoute], forwardBillToDepartment);
 
 // PAYMENT APIS
-const paymentPrefix = "/payment";
 router.use("/payment", billRoutes);
 const poPrefix = "/po";
 router.use(poPrefix + "/sdbg", sdbgRoutes);
@@ -155,6 +142,7 @@ router.use(poPrefix + "/material", materialRoutes);
 // BTNs
 router.use(poPrefix + "/btn", btnRoutes);
 
+// const paymentPrefix = "/payment";
 // router.post(paymentPrefix + "/add", [], [veifyAccessToken, authorizeRoute], (req, res) => {
 //   paymentControllers.newPayment(req, res);
 // });

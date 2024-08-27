@@ -379,7 +379,10 @@ const fetchBTNList = async (req, res) => {
         null
       );
     }
-    let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    // let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    let btn_list_q = `SELECT list.*, service.bill_certifing_authority FROM btn_list as list
+    LEFT JOIN btn_service_hybrid as service ON list.btn_num = service.btn_num
+    WHERE list.purchasing_doc_no = $1`;
     let btn_list = await getQuery({
       query: btn_list_q,
       values: [id],
@@ -1855,6 +1858,7 @@ async function btnCurrentDetailsCheck(client, data) {
       checkStatus.add(BTN_STATUS_DRETURN);
       checkStatus.add(SUBMITTED_BY_VENDOR);
       checkStatus.delete(STATUS_RECEIVED);
+      checkStatus.delete(SUBMIT_BY_DO);
     }
 
     btnstausCount += " ORDER BY created_at DESC";
