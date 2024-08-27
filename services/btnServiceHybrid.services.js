@@ -64,6 +64,9 @@ const forwordToFinacePaylaod = (payload) => {
         total_deduction: payload.total_deduction || "0",
         net_payable_amount: payload.net_payable_amount || "0",
         estimated_ld: payload.estimated_ld || "0",
+        retension_remarks: payload.retension_remarks || null,
+        retension_amount: payload.retension_amount || "0",
+        retension_rate: payload.retension_rate || "0",
         created_at: getEpochTime(),
         created_by_id: payload.created_by_id
     }
