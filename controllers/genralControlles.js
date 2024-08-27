@@ -57,6 +57,23 @@ const getFilteredData = async (req, res) => {
   }
 };
 
+
+
+/**
+ * general update api
+ * PAYLOAD SAMPLE
+ * {
+    "tableName": "essr",
+    "condition": {
+        "lblni": "12324"
+    },
+    "data": {
+        "lblne": "12345"
+    }
+}
+ * @param {*} req 
+ * @param {*} res 
+ */
 const updatTableData = async (req, res) => {
   try {
     const { tableName, condition, data } = req.body;
@@ -75,7 +92,19 @@ const updatTableData = async (req, res) => {
     resSend(res, false, 500, "Error update record", error.message, null);
   }
 };
-
+/**
+ * general insert api
+ * {
+    "tableName": "essr",
+    "data": {
+        "lblni": "1333",
+        "lblne": "12345"
+    }
+}
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 const insertTableData = async (req, res) => {
   
   try {
