@@ -80,7 +80,7 @@ const insertTableData = async (req, res) => {
   
   try {
     const { tableName, condition, data } = req.body;
-    if (!tableName || !condition) {
+    if (!tableName) {
       throw new Error("Please send table name and condition.");
     }
     if (!data || !Object.keys(data).length) {
