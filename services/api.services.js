@@ -3,27 +3,23 @@ const { INSERT } = require("../lib/constant");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 
 const apiLog = async (req, res, next) => {
-  if (req.method === "POST" || req.method === "PUT") {
-    // console.log('Req Body: ', req.body);
-  }
+  // if (req.method === "POST" || req.method === "PUT") {
+  //   // console.log('Req Body: ', req.body);
+  // }
   const originalSend = res.send;
   res.send = async function (body) {
     // Log response status code
     res.send = originalSend;
     const jsonBody = JSON.parse(body);
-    const msg =
-      res.statusCode >= 200 && res.statusCode < 300
-        ? jsonBody.message
-        : jsonBody.data;
+    let msg = '';
 
-    await saveLogInDb(
-      req.ip,
-      req.originalUrl,
-      req.method,
-      res.statusCode,
-      msg,
-      "apilog"
-    );
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      msg = jsonBody.message;
+    } else {
+      msg = jsonBody.message || "";
+      msg += `{$}${jsonBody.data}`;
+    }
+    await saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, msg, "apilog");
 
     // console.log(
     //     `Request from : ${req.ip},

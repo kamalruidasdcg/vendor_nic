@@ -1,3 +1,4 @@
+const { poolQuery } = require("../config/pgDbConfig");
 const { getEpochTime, getYyyyMmDd, formatDate, formatTime } = require("../lib/utils");
 
 
@@ -337,3 +338,59 @@ exports.zfi_bgm_1_Payload_sap = async (obj) => {
 
     return pl;
 }
+
+
+
+function getData(client, tableName) {
+    return {
+        count: async (condition = '1=1') => {
+            try {
+                const query = `SELECT COUNT(*) FROM ${tableName} WHERE ${condition};`;
+                const result = await poolQuery({ client, query, values: [] });
+                return result[0].count;
+            } catch (err) {
+                console.error('Error executing count query:', err);
+                throw err;
+            }
+        },
+        data: async (condition = '1=1') => {
+            try {
+                const query = `SELECT * FROM ${tableName} WHERE ${condition};`;
+                const result = await poolQuery({ client, query, values: [] });
+                return result;
+            } catch (err) {
+                console.error('Error executing data query:', err);
+                throw err;
+            }
+        },
+    };
+}
+
+function isPresentInObps(client, condition = '1=1', tableName = 'ekko') {
+    // let tableName = 'ekko';
+    return {
+        count: async () => {
+            try {
+                const query = `SELECT COUNT(*) FROM ${tableName} WHERE ${condition};`;
+                const result = await poolQuery({ client, query, values: [] });
+                return parseInt(result[0].count);
+            } catch (err) {
+                console.error('Error executing count query:', err);
+                throw err;
+            }
+        },
+        data: async () => {
+            try {
+                const query = `SELECT * FROM ${tableName} WHERE ${condition};`;
+                const result = await poolQuery({ client, query, values: [] });
+                return result;
+            } catch (err) {
+                console.error('Error executing data query:', err);
+                throw err;
+            }
+        },
+    };
+}
+
+
+module.exports = { getData, isPresentInObps }
