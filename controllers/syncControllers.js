@@ -514,16 +514,17 @@ exports.syncDataUpload = async (req, res) => {
             const updateColumns = keys
               .map((key, i) => `${key} = $${i + 1}`)
               .join(", ");
-            console.log("q", tableName, updateColumns, values);
+            // console.log("q", tableName, updateColumns, values);
             const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${
               keys.length + 1
             }`;
-            console.log("q1", query, item.sync_id);
+            // console.log("q1", tableName, item.sync_id);
             await pool.query(query, [...values, item.sync_id]);
           } else {
             const columns = keys.join(", ");
             const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
-            console.log("q2", tableName, columns, placeholders);
+            // console.log("q2", tableName, columns, placeholders);
+            // console.log("q2", tableName, item.sync_id);
             const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`;
             await pool.query(query, values);
           }
