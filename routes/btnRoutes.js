@@ -91,7 +91,7 @@ router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
 });
 
 // getWdcInfoServiceHybrid
-router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
+router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
 

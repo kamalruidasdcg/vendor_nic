@@ -19,7 +19,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
       values: [reference_no],
     });
     console.log(reference_no);
-    result = JSON.parse(result[0].line_item_array);
+    result = JSON.parse(result[0]?.line_item_array || '[]');
 
     const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS matarial_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
     let get_line_item_ekpo = await getQuery({
@@ -44,7 +44,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
         true,
         200,
         "Succesfully fetched all data!",
-        JSON.parse(result[0].line_item_array),
+        JSON.parse(result[0]?.line_item_array || '[]'),
         null
       );
     } else {
@@ -57,7 +57,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
       false,
       200,
       "Something went wrong when fetching the WDC dates!",
-      null,
+      error.message,
       null
     );
   }
