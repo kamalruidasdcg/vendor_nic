@@ -6,11 +6,13 @@ const {
   syncDataUpload,
   unsyncFileCompressed,
   uploadRecentFilesController,
+  syncDownloadTEST,
 } = require("../controllers/syncControllers");
 const router = express.Router();
 
 // API TO DOWNLOAD ALL UNSYNCED DATA FROM SELECTED TABLES
 router.post("/sync_download", syncDownload);
+router.post("/sync_download_test", syncDownloadTEST);
 
 // API TO DOWNLOAD COMPRESS UNSYNCED DOWNLOADED DATA
 router.post("/sync_zip", syncCompress);

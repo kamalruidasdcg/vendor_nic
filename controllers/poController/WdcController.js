@@ -227,8 +227,8 @@ exports.wdc = async (req, res) => {
       // obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
       let line_item_array = JSON.parse(obj.line_item_array);
       obj.total_amount = 0;
-
-      if (obj.action_type == "JCC" && obj.line_item_array != "") {
+      //obj.action_type == 'JCC' &&  /// CONDITION REMOVED no total issue
+      if (obj.line_item_array != "") {
         const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1`;
         let get_data_result = await getQuery({
           query: line_item_array_q,

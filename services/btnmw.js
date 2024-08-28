@@ -47,6 +47,19 @@ exports.btnmw = () => {
   ]);
 };
 
+
+exports.serviceBtnFilesUpload = () => {
+  return uploadBTNs.fields([
+    { name: "invoice_filename", maxCount: 1 },
+    { name: "suppoting_invoice_filename", maxCount: 1 },
+    { name: "debit_credit_filename", maxCount: 1 },
+    // { name: "hinderance_register_filename", maxCount: 1 },
+    // { name: "esi_compliance_filename", maxCount: 1 },
+    // { name: "pf_compliance_filename", maxCount: 1 },
+  ]);
+};
+
+
 const uploadInvoiceSupportingDoc = multer({
   storage: storageInvoiceSupportingDoc,
   dest: "uploads/invSupporting",
