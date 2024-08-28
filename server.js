@@ -74,7 +74,7 @@ cron.schedule("05 00 * * *", async () => {
   }
 });
 // Call Cron JOB for FILE Syncronization
-
+syncFileCron();
 
 let isCompletedTask = false;
 
@@ -100,7 +100,7 @@ const task = cron.schedule(
   }
 );
 
-// At 11 PM DAILY 
+// At 11 PM DAILY
 const task2 = cron.schedule(
   "0 23 * * *",
   () => {
@@ -112,9 +112,6 @@ const task2 = cron.schedule(
     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
   }
 );
-
-
-syncFileCron();
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);
