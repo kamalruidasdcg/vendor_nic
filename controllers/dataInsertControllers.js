@@ -20,7 +20,7 @@ const {
 } = require("../services/sap.po.services");
 const { poolClient, getQuery } = require("../config/pgDbConfig");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
-const { query } = require("../config/dbConfig");
+// const { query } = require("../config/dbConfig");
 const { sendMail } = require("../services/mail.services");
 
 // require("dotenv").config();

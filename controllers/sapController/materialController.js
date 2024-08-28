@@ -1,5 +1,5 @@
 const { NEW_SDBG, MAKT, MARA, MSEG, MKPF } = require("../../lib/tableName");
-const { connection } = require("../../config/dbConfig");
+// const { connection } = require("../../config/dbConfig");
 const { responseSend, resSend } = require("../../lib/resSend");
 const {
   generateQueryForMultipleData,

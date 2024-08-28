@@ -1,6 +1,6 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS, QAVE_TABLE } = require('../../lib/tableName');
-const { connection } = require("../../config/dbConfig");
+const { QALS, QAVE_TABLE } = require('../../lib/tableName');
+// const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");

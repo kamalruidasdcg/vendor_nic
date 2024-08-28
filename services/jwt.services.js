@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { resSend } = require("../lib/resSend");
-const { query } = require("../config/dbConfig");
+const { query } = require("../config/pgDbConfig");
 require("dotenv").config();
 const { storeRefreshToken } = require("./token.services");
 const apiAccessList = require("../lib/apiList");

@@ -1,4 +1,4 @@
-const { query } = require("../config/dbConfig");
+// const { query } = require("../config/dbConfig");
 const { getQuery } = require("../config/pgDbConfig");
 const { ACTION_SDBG, ACTION_PBG } = require("../lib/constant");
 const { APPROVED } = require("../lib/status");

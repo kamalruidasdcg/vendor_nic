@@ -1,4 +1,4 @@
-const { query } = require("../config/dbConfig");
+const { query } = require("../config/pgDbConfig");
 
 const storeRefreshToken = async (refreshToken, user_id) => {
 
