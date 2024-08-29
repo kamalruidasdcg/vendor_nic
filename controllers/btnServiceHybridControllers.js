@@ -5,7 +5,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO,
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery, getQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck } = require("../services/btnServiceHybrid.services");
 const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
 const { timeInHHMMSS } = require("./btnControllers");
@@ -132,7 +132,7 @@ const submitBtnServiceHybrid = async (req, res) => {
                               AND vendor_code = $1 
                               AND ( invoice_no = $2  OR wdc_number = $3)`;
 
-      let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [ tokenData.vendor_code, tempPayload.invoice_no, tempPayload.wdc_number] });
+      let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [tokenData.vendor_code, tempPayload.invoice_no, tempPayload.wdc_number] });
 
 
       if (check_invoice && check_invoice[0].count > 0) {
@@ -176,7 +176,7 @@ const submitBtnServiceHybrid = async (req, res) => {
         parseFloat(payload.invoice_value)
         + parseFloat(payload.debit_note)
         - parseFloat(payload.credit_note));
-    
+
       let totalGST = parseFloat(payload.cgst) + parseFloat(payload.sgst) + parseFloat(payload.igst);
       let net_with_gst = net_claim_amount;
       if (totalGST > 0) {
@@ -195,7 +195,6 @@ const submitBtnServiceHybrid = async (req, res) => {
 
       const { q, val } = generateQuery(INSERT, BTN_SERVICE_HYBRID, payload);
 
-      // console.log(payload, q, val);
       await poolQuery({ client, query: q, values: val });
       await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
       resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
@@ -335,14 +334,25 @@ const forwordToFinace = async (req, res) => {
       let payload = req.body;
       const tokenData = req.tokenData;
 
+      // BTN VALIDATION
+
+      if (!payload.btn_num) {
+        return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num  missing", null);
+      }
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num: payload.btn_num });
+      if (btnCurrnetStatus.isInvalid) {
+        return resSend(res, false, 200, `BTN ${payload.btn_num} ${btnCurrnetStatus.message}`, payload.btn_num, null
+        );
+      }
+
       if (payload.status === REJECTED) {
         const response1 = await btnReject(payload, tokenData, client);
         await client.query("COMMIT");
         return resSend(res, true, 200, "Rejected successfully !!", response1, null);
       }
 
-      if (!payload.btn_num || !payload.entry_number || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
-        return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num or entry_no or net_payable_amount assign_to_fi missing", null);
+      if (!payload.entry_number || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
+        return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Entry_no or net_payable_amount assign_to_fi missing", null);
       }
       const btnChkQuery = `SELECT COUNT(*) from btn_service_hybrid WHERE btn_num = $1 AND bill_certifing_authority = $2`;
       const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
@@ -409,6 +419,15 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 
       if (!btn_num || !purchasing_doc_no || !assign_to_fi) {
         return resSend(res, false, 200, "Assign To is the mandatory!", Message.MANDATORY_PARAMETR_MISSING, null);
+      }
+
+      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
+        btn_num,
+        status: STATUS_RECEIVED,
+      });
+      if (btnCurrnetStatus.isInvalid) {
+        return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null
+        );
       }
 
       const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
