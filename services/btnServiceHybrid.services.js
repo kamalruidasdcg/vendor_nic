@@ -67,6 +67,7 @@ const forwordToFinacePaylaod = (payload) => {
         retension_remarks: payload.retension_remarks || null,
         retension_amount: payload.retension_amount || "0",
         retension_rate: payload.retension_rate || "0",
+        max_ld: payload.max_ld || "0",
         created_at: getEpochTime(),
         created_by_id: payload.created_by_id
     }
@@ -126,7 +127,7 @@ const addToBTNList = async (client, data, status) => {
             net_claim_amount: data?.net_claim_amount,
             net_payable_amount: data?.net_payable_amount,
             vendor_code: data?.vendor_code,
-            created_at: data?.created_at,
+            created_at: getEpochTime(),
             btn_type: data?.btn_type,
             status: status,
             remarks: data.remarks || ""
@@ -559,6 +560,13 @@ async function getServiceBTNDetails(client, data) {
                 btn_authority.deduction_remarks,
                 btn_authority.total_deduction,
                 btn_authority.net_payable_amount,
+                btn_authority.wdc_details,
+                btn_authority.estimated_ld,
+                btn_authority.retension_remarks,
+                btn_authority.retension_amount,
+                btn_authority.retension_rate,
+                btn_authority.max_ld,
+                btn_authority.retension_remarks,
                 users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
