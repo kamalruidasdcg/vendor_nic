@@ -118,17 +118,25 @@ const submitBtnServiceHybrid = async (req, res) => {
       if (!tempPayload.invoice_value) {
         return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Invoice Value is missing!", null);
       }
-      if (!tempPayload.purchasing_doc_no || !tempPayload.invoice_no) {
-        return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Invoice Number is missing!", null);
+      if (!tempPayload.purchasing_doc_no || !tempPayload.invoice_no || !tempPayload.wdc_number) {
+        return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "WDC No/PO No/Invoice is missing!", null);
       }
 
       // check invoice number is already present in DB
-      let check_invoice_q = `SELECT count(invoice_no) as count FROM ${BTN_SERVICE_HYBRID} WHERE invoice_no = $1 and vendor_code = $2`;
-      let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [tempPayload.invoice_no, tokenData.vendor_code] });
+      let check_invoice_q = `SELECT 
+                              count(invoice_no) AS count 
+                            FROM 
+                              ${BTN_SERVICE_HYBRID} 
+                            WHERE 
+                              1 = 1 
+                              AND vendor_code = $1 
+                              AND ( invoice_no = $2  OR wdc_number = $3)`;
+
+      let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [ tokenData.vendor_code, tempPayload.invoice_no, tempPayload.wdc_number] });
 
 
       if (check_invoice && check_invoice[0].count > 0) {
-        return resSend(res, false, 200, "BTN is already created under the invoice number.", null, null);
+        return resSend(res, false, 200, "BTN is already created under the invoice number/wdc_number.", null, null);
       }
       // if (!tempPayload.c_sdbg_filename || !tempPayload.a_sdbg_date || !tempPayload.c_sdbg_date) {
       //   return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Send SDBG details", null);
@@ -351,7 +359,7 @@ const forwordToFinace = async (req, res) => {
 
       // ADDING TO BTN LIST WITH CURRENT STATUS
       const latesBtnData = await getLatestBTN(client, payload);
-      await addToBTNList(client, {  ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
+      await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
       const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
       // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
