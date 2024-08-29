@@ -159,7 +159,8 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
           btn.cgst, 
           btn.sgst, 
           btn.igst, 
-          btn.yard, 
+          wdc.yard_no AS yard, 
+          btn.wdc_number, 
           btn.net_claim_amount, 
           btn.net_claim_amt_gst, 
           btn.invoice_no,
@@ -184,6 +185,8 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
             ON(users.pernr::character varying = $1)
         LEFT JOIN  pa0002 as assign_users
             ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+        LEFT JOIN  wdc as wdc
+            ON(wdc.reference_no = btn.wdc_number)
         WHERE 
             btn.btn_num = $2`;
   
