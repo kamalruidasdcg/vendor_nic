@@ -378,8 +378,8 @@ const forwordToFinace = async (req, res) => {
       // ADDING TO BTN LIST WITH CURRENT STATUS
       const latesBtnData = await getLatestBTN(client, payload);
       await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
-      const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-      // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
+      // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+      const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
       if (sendSap == false) {
         console.log(sendSap);
@@ -472,7 +472,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       let result = await addToBTNList(client, data, FORWARDED_TO_FI_STAFF);
 
       // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      const sendSap = true; // await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+      const sendSap =  await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);
