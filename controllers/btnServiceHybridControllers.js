@@ -377,7 +377,8 @@ const forwordToFinace = async (req, res) => {
 
       // ADDING TO BTN LIST WITH CURRENT STATUS
       const latesBtnData = await getLatestBTN(client, payload);
-      await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
+      // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
+      await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
       // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
       const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
@@ -423,7 +424,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 
       const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
         btn_num,
-        status: STATUS_RECEIVED,
+        status: SUBMITTED_BY_CAUTHORITY,
       });
       if (btnCurrnetStatus.isInvalid) {
         return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null
@@ -451,7 +452,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 	                      AND purchasing_doc_no = $2
 	                      AND status = $3
                         ORDER BY created_at DESC`;
-      let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, STATUS_RECEIVED] });
+      let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_CAUTHORITY] });
 
       console.log("btn_list", btn_list);
 
@@ -469,7 +470,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
         btn_type: btn_list[0]?.btn_type,
       };
 
-      let result = await addToBTNList(client, data, FORWARDED_TO_FI_STAFF);
+      let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
       // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
       const sendSap =  await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);

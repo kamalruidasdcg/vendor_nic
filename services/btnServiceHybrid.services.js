@@ -734,7 +734,7 @@ async function btnCurrentDetailsCheck(client, data) {
         SUBMITTED_BY_CAUTHORITY
       ]);
   
-      if (data.status === STATUS_RECEIVED) {
+      if (data.status === SUBMITTED_BY_CAUTHORITY) {
         checkStatus.add(BTN_STATUS_DRETURN);
         checkStatus.add(SUBMITTED_BY_VENDOR);
         checkStatus.delete(STATUS_RECEIVED);
