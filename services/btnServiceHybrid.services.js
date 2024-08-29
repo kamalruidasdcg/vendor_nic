@@ -126,7 +126,7 @@ const addToBTNList = async (client, data, status) => {
             net_claim_amount: data?.net_claim_amount,
             net_payable_amount: data?.net_payable_amount,
             vendor_code: data?.vendor_code,
-            created_at: data?.created_at,
+            created_at: getEpochTime(),
             btn_type: data?.btn_type,
             status: status,
             remarks: data.remarks || ""

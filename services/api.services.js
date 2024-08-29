@@ -17,10 +17,12 @@ const apiLog = async (req, res, next) => {
       msg = jsonBody.message;
     } else {
       msg = jsonBody.message || "";
-      if (req.method === "POST" || req.method === "PUT") {
-        msg += `{$} ${req.body}`;
-        console.log('Req Body: ', req.body);
-      }
+      msg = jsonBody.data || "";
+
+      // if (req.method === "POST" || req.method === "PUT") {
+      //   msg += `{$} ${req.body}`;
+      //   console.log('Req Body: ', req.body);
+      // }
     }
     await saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, msg, "apilog");
 
