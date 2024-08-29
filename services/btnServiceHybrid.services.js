@@ -560,6 +560,13 @@ async function getServiceBTNDetails(client, data) {
                 btn_authority.deduction_remarks,
                 btn_authority.total_deduction,
                 btn_authority.net_payable_amount,
+                btn_authority.wdc_details,
+                btn_authority.estimated_ld,
+                btn_authority.retension_remarks,
+                btn_authority.retension_amount,
+                btn_authority.retension_rate,
+                btn_authority.max_ld,
+                btn_authority.retension_remarks,
                 users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
