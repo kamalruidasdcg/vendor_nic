@@ -176,11 +176,19 @@ const submitBtnServiceHybrid = async (req, res) => {
         parseFloat(payload.invoice_value)
         + parseFloat(payload.debit_note)
         - parseFloat(payload.credit_note));
+    
+      let totalGST = parseFloat(payload.cgst) + parseFloat(payload.sgst) + parseFloat(payload.igst);
+      let net_with_gst = net_claim_amount;
+      if (totalGST > 0) {
+        net_with_gst = net_claim_amount * (1 + totalGST / 100);
+        net_with_gst = parseFloat(net_with_gst.toFixed(2));
+      }
 
       payload = {
         ...payload, btn_num,
         ...uploadedFiles,
         net_claim_amount,
+        net_with_gst,
         created_by_id: tokenData.vendor_code,
         vendor_code: tokenData.vendor_code,
       }

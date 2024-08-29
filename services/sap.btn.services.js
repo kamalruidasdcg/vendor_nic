@@ -164,6 +164,7 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
           btn.net_claim_amt_gst, 
           btn.invoice_no,
           btn.vendor_code,
+          btn.net_with_gst,
           vendor.stcd3,
           users.pernr as finance_auth_id,
           users.cname as finance_auth_name,
