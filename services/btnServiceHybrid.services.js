@@ -67,6 +67,7 @@ const forwordToFinacePaylaod = (payload) => {
         retension_remarks: payload.retension_remarks || null,
         retension_amount: payload.retension_amount || "0",
         retension_rate: payload.retension_rate || "0",
+        max_ld: payload.max_ld || "0",
         created_at: getEpochTime(),
         created_by_id: payload.created_by_id
     }
