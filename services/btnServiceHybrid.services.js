@@ -1,6 +1,6 @@
 const { poolQuery } = require("../config/pgDbConfig");
 const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
-const { APPROVED, REJECTED } = require("../lib/status");
+const { APPROVED, REJECTED, STATUS_RECEIVED, BTN_STATUS_BANK, BTN_STATUS_HOLD_TEXT, BTN_STATUS_PROCESS, SUBMITTED_BY_CAUTHORITY, BTN_STATUS_DRETURN, SUBMITTED_BY_VENDOR, BTN_STATUS_NOT_SUBMITTED } = require("../lib/status");
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
@@ -470,69 +470,69 @@ const getServiceEntryValue = async (client, data) => {
 }
 
 
-async function btnCurrentDetailsCheck(client, data) {
-    try {
-        let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
-        const valueArr = [];
-        let count = 0;
-        if (data.btn_num) {
-            btnstausCount += ` AND btn_num = $${++count}`;
-            valueArr.push(data.btn_num);
-        }
-        // if (data.status) {
-        //   btnstausCount += ` AND status = $${++count}`;
-        //   valueArr.push(data.status);
-        // }
+// async function btnCurrentDetailsCheck(client, data) {
+//     try {
+//         let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
+//         const valueArr = [];
+//         let count = 0;
+//         if (data.btn_num) {
+//             btnstausCount += ` AND btn_num = $${++count}`;
+//             valueArr.push(data.btn_num);
+//         }
+//         // if (data.status) {
+//         //   btnstausCount += ` AND status = $${++count}`;
+//         //   valueArr.push(data.status);
+//         // }
 
-        const checkStatus = new Set([
-            STATUS_RECEIVED,
-            REJECTED,
-            BTN_STATUS_BANK,
-            BTN_STATUS_HOLD_TEXT,
-            BTN_STATUS_PROCESS,
-            SUBMIT_BY_DO
-        ]);
+//         const checkStatus = new Set([
+//             STATUS_RECEIVED,
+//             REJECTED,
+//             BTN_STATUS_BANK,
+//             BTN_STATUS_HOLD_TEXT,
+//             BTN_STATUS_PROCESS,
+//             SUBMIT_BY_DO
+//         ]);
 
-        if (data.status === STATUS_RECEIVED) {
-            checkStatus.add(BTN_STATUS_DRETURN);
-            checkStatus.add(SUBMITTED_BY_VENDOR);
-            checkStatus.delete(STATUS_RECEIVED);
-        }
+//         if (data.status === STATUS_RECEIVED) {
+//             checkStatus.add(BTN_STATUS_DRETURN);
+//             checkStatus.add(SUBMITTED_BY_VENDOR);
+//             checkStatus.delete(STATUS_RECEIVED);
+//         }
 
-        btnstausCount += " ORDER BY created_at DESC";
-        btnstausCount += " LIMIT 1";
+//         btnstausCount += " ORDER BY created_at DESC";
+//         btnstausCount += " LIMIT 1";
 
-        const result = await poolQuery({
-            client,
-            query: btnstausCount,
-            values: valueArr,
-        });
-        let isInvalid = false;
+//         const result = await poolQuery({
+//             client,
+//             query: btnstausCount,
+//             values: valueArr,
+//         });
+//         let isInvalid = false;
 
-        // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
-        // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
+//         // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
+//         // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
 
-        if (result.length) {
-            const currentStatus = result.at(-1);
-            if (checkStatus.has(currentStatus.status)) {
-                isInvalid = true;
-            }
-            return {
-                isInvalid,
-                currentStatus: currentStatus.status,
-                message: `already ${currentStatus.status}`,
-            };
-        }
+//         if (result.length) {
+//             const currentStatus = result.at(-1);
+//             if (checkStatus.has(currentStatus.status)) {
+//                 isInvalid = true;
+//             }
+//             return {
+//                 isInvalid,
+//                 currentStatus: currentStatus.status,
+//                 message: `already ${currentStatus.status}`,
+//             };
+//         }
 
-        return {
-            isInvalid: true,
-            currentStatus: BTN_STATUS_NOT_SUBMITTED,
-            message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
-        };
-    } catch (error) {
-        throw error;
-    }
-}
+//         return {
+//             isInvalid: true,
+//             currentStatus: BTN_STATUS_NOT_SUBMITTED,
+//             message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
+//         };
+//     } catch (error) {
+//         throw error;
+//     }
+// }
 
 
 async function getServiceBTNDetails(client, data) {
@@ -701,6 +701,73 @@ const updateServiceBtnListTable = async (client, data) => {
         throw error;
     }
 };
+
+
+async function btnCurrentDetailsCheck(client, data) {
+    try {
+      let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
+      const valueArr = [];
+      let count = 0;
+      if (data.btn_num) {
+        btnstausCount += ` AND btn_num = $${++count}`;
+        valueArr.push(data.btn_num);
+      }
+      if (data.status) {
+        btnstausCount += ` AND status = $${++count}`;
+        valueArr.push(data.status);
+      }
+  
+      const checkStatus = new Set([
+        STATUS_RECEIVED,
+        REJECTED,
+        BTN_STATUS_BANK,
+        BTN_STATUS_HOLD_TEXT,
+        BTN_STATUS_PROCESS,
+        SUBMITTED_BY_CAUTHORITY
+      ]);
+  
+      if (data.status === STATUS_RECEIVED) {
+        checkStatus.add(BTN_STATUS_DRETURN);
+        checkStatus.add(SUBMITTED_BY_VENDOR);
+        checkStatus.delete(STATUS_RECEIVED);
+        checkStatus.delete(SUBMITTED_BY_CAUTHORITY);
+      }
+  
+      btnstausCount += " ORDER BY created_at DESC";
+      btnstausCount += " LIMIT 1";
+  
+      const result = await poolQuery({
+        client,
+        query: btnstausCount,
+        values: valueArr,
+      });
+      let isInvalid = false;
+  
+      // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
+      // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
+  
+      if (result.length) {
+        const currentStatus = result.at(-1);
+        if (checkStatus.has(currentStatus.status)) {
+          isInvalid = true;
+        }
+        return {
+          isInvalid,
+          currentStatus: currentStatus.status,
+          message: `already ${currentStatus.status}`,
+        };
+      }
+  
+      return {
+        isInvalid: true,
+        currentStatus: BTN_STATUS_NOT_SUBMITTED,
+        message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
 
 module.exports = {
