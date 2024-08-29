@@ -739,6 +739,9 @@ exports.uploadRecentFilesController = async (req, res, next) => {
     // GET THE ZIP FILE
     const zipFilePath = path.join(parentDir, OTHER_SERVER_FILE_PATH, todayDate);
 
+    console.log("zipFilePath", zipFilePath, todayDate);
+    
+
     // Check if the today's date folder exists
     if (!fs.existsSync(zipFilePath)) {
       return resSend(
@@ -764,7 +767,7 @@ exports.uploadRecentFilesController = async (req, res, next) => {
       .readdirSync(zipFilePath)
       .filter((item, i) => isZipFile(item));
 
-    console.log(files);
+    console.log("files", files);
 
     // let stats = fs.statSync(zipFilePath);
     // if (!stats.isFile()) {
