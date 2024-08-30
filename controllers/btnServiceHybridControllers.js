@@ -424,7 +424,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 
       const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
         btn_num,
-        status: SUBMITTED_BY_CAUTHORITY,
+        status: STATUS_RECEIVED,
       });
       if (btnCurrnetStatus.isInvalid) {
         return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null
@@ -452,7 +452,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 	                      AND purchasing_doc_no = $2
 	                      AND status = $3
                         ORDER BY created_at DESC`;
-      let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_CAUTHORITY] });
+      let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_VENDOR] });
 
       console.log("btn_list", btn_list);
 

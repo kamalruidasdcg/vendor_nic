@@ -9,7 +9,7 @@ const { getEpochTime, getYyyyMmDd, formatDate, formatTime } = require("../lib/ut
  * @returns Object
  */
 
-exports.zfi_bgm_1_Payload = async (obj) => {
+const zfi_bgm_1_Payload = async (obj) => {
     // if (!obj.data && !obj.length) {
     //     throw new Error("Please send valid payload");
     // }
@@ -393,4 +393,4 @@ function isPresentInObps(client, condition = '1=1', tableName = 'ekko') {
 }
 
 
-module.exports = { getData, isPresentInObps }
+module.exports = { getData, isPresentInObps, zfi_bgm_1_Payload }
