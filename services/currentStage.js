@@ -1,6 +1,5 @@
-const { query, getQuery } = require("../config/pgDbConfig");
-const { USER_TYPE_SUPER_ADMIN } = require("../lib/constant");
-const { resSend } = require("../lib/resSend");
+const { getQuery, poolQuery } = require("../config/pgDbConfig");
+
 const {
   SDBG,
   DRAWING,
@@ -85,4 +84,85 @@ const currentStageHandler = async (id) => {
   return finalStage;
 };
 
-module.exports = { currentStageHandler };
+
+
+const currentStageHandleForAllActivity = async (client, ids) => {
+
+  try {
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(", ");
+    let dbs = [
+      SDBG,
+      DRAWING,
+      QAP_SUBMISSION,
+      ILMS,
+      INSPECTIONCALLLETTER,
+      SHIPPINGDOCUMENTS,
+      QALS, // grn
+      MSEG, // icgrn
+      WDC,
+      BTN_LIST,
+    ];
+    let finalStage = "Not Started";
+    let stage = "Not Started";
+    let obj = {};
+
+    const currStageQuery = dbs.map((item, i) => {
+      let q = "";
+      if (item === QALS || item === MSEG) {
+        q = `(SELECT count(EBELN) as count, EBELN as purchasing_doc_no, '${item}' as flag FROM ${item} WHERE ebeln IN (${placeholders}) GROUP BY purchasing_doc_no)`;
+      } else {
+        q = `(SELECT count(purchasing_doc_no) as count, purchasing_doc_no, '${item}' as flag FROM ${item} WHERE purchasing_doc_no IN (${placeholders}) GROUP BY purchasing_doc_no)`;
+      }
+      return q
+    }).join(" UNION ALL ");
+
+    let response = await poolQuery({ client, query: currStageQuery, values: ids });
+
+    ids.forEach((el) => { obj[el] = stage });
+
+    for (const item of response) {
+      const flag = item.flag;
+      const count = parseInt(item.count);
+      if (count > 0) {
+        if (flag === SDBG) {
+          finalStage = "SDBG";
+        }
+        if (flag === DRAWING) {
+          finalStage = "DRAWING";
+        }
+        if (flag === QAP_SUBMISSION) {
+          finalStage = "QAP";
+        }
+        if (flag === ILMS) {
+          finalStage = "ILMS";
+        }
+        if (flag === INSPECTIONCALLLETTER) {
+          finalStage = "INSPECTION";
+        }
+        if (flag === SHIPPINGDOCUMENTS) {
+          finalStage = "SHIPPING";
+        }
+        if (flag === QALS) {
+          finalStage = "STORE-GRN";
+        }
+        if (flag === MSEG) {
+          finalStage = "STORE-ICGRN";
+        }
+        if (flag === WDC) {
+          finalStage = "WDC";
+        }
+        if (flag === BTN_LIST) {
+          finalStage = "PAYMENT";
+        }
+      }
+
+      obj[item.purchasing_doc_no] = finalStage;
+    }
+
+    return obj;
+  } catch (error) {
+    throw error;
+  }
+};
+
+module.exports = { currentStageHandler, currentStageHandleForAllActivity };

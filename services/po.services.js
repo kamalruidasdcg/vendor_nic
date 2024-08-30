@@ -1,5 +1,5 @@
 const { json } = require("express");
-const { query, getQuery } = require("../config/pgDbConfig");
+const { query, getQuery, poolQuery } = require("../config/pgDbConfig");
 const {
   INSERT,
   MID_SDBG,
@@ -354,6 +354,52 @@ async function poDataModify(data) {
   return obj;
 }
 
+
+function poDataModify2(data) {
+
+  console.log("allPoallPoallPo", data);
+  
+  if (!data || !Array.isArray(data) || !data.length) return [];
+  let obj = {};
+  data.forEach((element) => {
+    let key = element.poNb;
+
+    if (key in obj) {
+      let val = obj[key];
+      let newVal = {
+        poType: element.poType,
+        m_number: element.m_number,
+        MTART: element.MTART,
+        MATNR: element.MATNR,
+        vendor_code: element.vendor_code,
+        vendor_name: element.vendor_name,
+        createdAt: element.createdAt,
+        // wbs_id: element.wbs_id,
+        // project_code: element.project_code,
+      };
+
+      obj[key] = [...val, newVal];
+    } else {
+      obj[key] = [
+        {
+          poType: element.poType,
+          m_number: element.m_number,
+          MTART: element.MTART,
+          MATNR: element.MATNR,
+          vendor_code: element.vendor_code,
+          vendor_name: element.vendor_name,
+          createdAt: element.createdAt,
+          // wbs_id: element.wbs_id,
+          // project_code: element.project_code,
+        },
+      ];
+    }
+  });
+
+  return obj;
+}
+
+
 /**
  * insertActualSubmission funton
  * @param {Object} data
@@ -505,6 +551,179 @@ const get_latest_activity = async (
   }
 };
 
+
+const getActualAndCurrentDetails = async (client, values) => {
+
+  try {
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+    const getActualAndCurrentQuery =
+`SELECT * FROM ((SELECT DISTINCT ON (t_contractula_sub.ebeln)
+		      t_contractula_sub.ebeln as purchasing_doc_no,
+          t_activity.reference_no,
+          t_activity.status,
+          t_activity.created_at,
+      	  t_act_sub.actualsubmissiondate,
+      	  t_contractula_sub.plan_date,
+      	  'sdbg' as flag
+      FROM
+        zpo_milestone as t_contractula_sub
+ LEFT JOIN
+         sdbg as t_activity
+      	ON( t_contractula_sub.ebeln = t_activity.purchasing_doc_no )
+      LEFT JOIN
+      	actualsubmissiondate as t_act_sub
+      	ON( t_act_sub.purchasing_doc_no = t_activity.purchasing_doc_no AND t_act_sub.milestoneid = ${parseInt(MID_SDBG)} )
+      
+      WHERE 
+        t_contractula_sub.mid = '${MID_SDBG}'
+      ORDER BY
+		  t_contractula_sub.ebeln,
+          t_activity.purchasing_doc_no, 
+          t_activity.reference_no, 
+          t_activity.created_at DESC)
+
+      UNION ALL
+
+      (SELECT DISTINCT ON (t_contractula_sub.ebeln)
+          t_contractula_sub.ebeln as purchasing_doc_no,
+          t_activity.reference_no,
+          t_activity.status,
+          t_activity.created_at,
+      	  t_act_sub.actualsubmissiondate,
+      	  t_contractula_sub.plan_date,
+      	  'drawing' as flag
+      FROM
+        zpo_milestone as t_contractula_sub
+ LEFT JOIN
+         drawing as t_activity
+      	ON( t_contractula_sub.ebeln = t_activity.purchasing_doc_no )
+      LEFT JOIN
+      	actualsubmissiondate as t_act_sub
+      	ON( t_act_sub.purchasing_doc_no = t_activity.purchasing_doc_no AND t_act_sub.milestoneid = ${parseInt(MID_DRAWING)} )
+      
+      WHERE 
+        t_contractula_sub.mid = '${MID_DRAWING}'
+      ORDER BY
+          t_contractula_sub.ebeln,
+          t_activity.purchasing_doc_no, 
+          t_activity.reference_no, 
+          t_activity.created_at DESC)
+      UNION ALL
+
+      (SELECT DISTINCT ON (t_contractula_sub.ebeln)
+          t_contractula_sub.ebeln as purchasing_doc_no,
+          t_activity.reference_no,
+          t_activity.status,
+          t_activity.created_at,
+      	  t_act_sub.actualsubmissiondate,
+      	  t_contractula_sub.plan_date,
+      	  'qap' as flag
+      FROM
+        zpo_milestone as t_contractula_sub
+ 	  LEFT JOIN
+         qap_submission as t_activity
+      	ON( t_contractula_sub.ebeln = t_activity.purchasing_doc_no )
+      LEFT JOIN
+      	actualsubmissiondate as t_act_sub
+      	ON( t_act_sub.purchasing_doc_no = t_activity.purchasing_doc_no AND t_act_sub.milestoneid = ${parseInt(MID_QAP)} )
+      
+      WHERE 
+        t_contractula_sub.mid = '${MID_QAP}'
+      ORDER BY
+          t_contractula_sub.ebeln,
+          t_activity.purchasing_doc_no, 
+          t_activity.reference_no, 
+          t_activity.created_at DESC)
+      UNION ALL
+
+      (SELECT DISTINCT ON (t_contractula_sub.ebeln)
+          t_contractula_sub.ebeln as purchasing_doc_no,
+          t_activity.reference_no,
+          t_activity.status,
+          t_activity.created_at,
+      	  t_act_sub.actualsubmissiondate,
+      	  t_contractula_sub.plan_date,
+      	  'ilms' as flag
+      FROM
+        zpo_milestone as t_contractula_sub
+ LEFT JOIN
+         ilms as t_activity
+      	ON( t_contractula_sub.ebeln = t_activity.purchasing_doc_no )
+      LEFT JOIN
+      	actualsubmissiondate as t_act_sub
+      	ON( t_act_sub.purchasing_doc_no = t_activity.purchasing_doc_no AND t_act_sub.milestoneid =  ${parseInt(MID_ILMS)} )
+      
+      WHERE 
+        t_contractula_sub.mid = '${MID_ILMS}'
+      ORDER BY
+          t_contractula_sub.ebeln,
+          t_activity.purchasing_doc_no, 
+          t_activity.reference_no, 
+          t_activity.created_at DESC)) AS result
+        WHERE 
+      	result.purchasing_doc_no IN(${placeholders})`;
+
+
+    const result = await poolQuery({ client, query: getActualAndCurrentQuery, values });
+
+    console.log("result", result);
+    console.log("getActualAndCurrentQuery", getActualAndCurrentQuery);
+    
+
+    return result;
+
+  } catch (error) {
+    throw error;
+  }
+
+}
+const getPoWithLineItems = async (client, values, limit, offSet) => {
+  try {
+
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+    const getPoQuey =
+      `SELECT ekko.lifnr AS "vendor_code",
+              ekko.aedat AS "createdAt",
+              lfa1.name1 AS "vendor_name",
+              ekko.ebeln AS "poNb",
+              ekko.bsart AS "poType",
+              ekpo.matnr AS "m_number",
+              mara.mtart AS "MTART",
+              ekpo.MATNR AS "MATNR",
+              ekko.ernam AS "po_creator",
+              users.cname AS "po_creator_name"
+        FROM ekko AS ekko
+        LEFT JOIN ekpo AS ekpo ON (ekko.ebeln = ekpo.ebeln)
+        LEFT JOIN mara AS mara ON (ekpo.matnr = mara.matnr)
+        LEFT JOIN lfa1 AS lfa1 ON (ekko.lifnr = lfa1.lifnr)
+        LEFT JOIN pa0002 AS users ON(users.pernr :: CHARACTER varying = ekko.ernam) 
+    WHERE 
+      	ekko.ebeln IN(${placeholders}) ORDER BY ekko.aedat, ekko.ebeln LIMIT ${limit} OFFSET ${offSet}`;
+
+
+    const result = poolQuery({ client, query: getPoQuey, values });
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+function setMileStoneActivity(purchasing_doc_no, contractualDates) {
+  const flags = ["sdbg", "drawing", "qap", "ilms"];
+  const finalResult = {};
+  flags.forEach(flag => {
+      const entry = contractualDates.find(
+          el => el.purchasing_doc_no == purchasing_doc_no && el.flag === flag
+      );
+      finalResult[flag] = {
+          ["contractualSubmissionDate"]: entry?.plan_date || null,
+          ["actualSubmissionDate"]: entry?.actualsubmissiondate || null,
+          ["lastStatus"]: entry?.status || null
+      };
+  });
+
+  return finalResult;
+}
 module.exports = {
   sdbgPayload,
   sdbgPayloadVendor,
@@ -523,4 +742,8 @@ module.exports = {
   get_latest_activity,
   hrCompliancePayload,
   create_btn_no,
+  getActualAndCurrentDetails,
+  getPoWithLineItems,
+  poDataModify2,
+  setMileStoneActivity
 };

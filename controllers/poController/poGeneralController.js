@@ -32,8 +32,8 @@ const {
 
 const fileDetails = require("../../lib/filePath");
 const path = require("path");
-const { poDataModify } = require("../../services/po.services");
-const { currentStageHandler } = require("../../services/currentStage");
+const { poDataModify, getActualAndCurrentDetails, getPoWithLineItems, poDataModify2, setMileStoneActivity } = require("../../services/po.services");
+const { currentStageHandler, currentStageHandleForAllActivity } = require("../../services/currentStage");
 const { STORE, RIC, QAP } = require("../../lib/depertmentMaster");
 const { getQuery, poolQuery, poolClient } = require("../../config/pgDbConfig");
 const Message = require("../../utils/messages");
@@ -451,89 +451,86 @@ const download = async (req, res) => {
 };
 
 const poList = async (req, res) => {
-
+  const tokenData = req.tokenData;
   try {
-    const client = await poolClient();
-    const tokenData = req.tokenData;
+    let poQuery = "";
+    let Query = "";
+
+    if (tokenData.user_type === USER_TYPE_VENDOR) {
+      Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+    } else {
+      switch (tokenData.department_id) {
+        case USER_TYPE_GRSE_QAP:
+          if (tokenData.internal_role_id === ASSIGNER) {
+            //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+            Query = poListByEcko();
+          } else if (tokenData.internal_role_id === STAFF) {
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
+          }
+          break;
+        case USER_TYPE_GRSE_FINANCE:
+          if (tokenData.internal_role_id === ASSIGNER) {
+            Query = poListByEcko();
+            // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
+          } else if (tokenData.internal_role_id === STAFF) {
+            Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
+          }
+          break;
+        case USER_TYPE_GRSE_DRAWING:
+          // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+          Query = poListByEcko();
+          break;
+        case USER_TYPE_GRSE_PURCHASE:
+          if (tokenData.internal_role_id === ASSIGNER) {
+            Query = poListByEcko();
+          } else if (tokenData.internal_role_id === STAFF) {
+            Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+          }
+          break;
+        case USER_TYPE_PPNC_DEPARTMENT:
+          Query = poListByEcko(); // poListByPPNC(req.query);
+          break;
+        case STORE:
+          Query = poListByEcko();
+          break;
+        case RIC:
+          Query = poListByEcko();
+          break;
+        default:
+          Query = poListByEcko();
+        // console.log("DEFAULT ALL PO SHOWING . . . . ", Query);
+      }
+    }
+    if (!Query) {
+      return resSend(res, false, 400, "You don't have permission or no data found", null, null);
+    }
+
+    let strVal;
+    let createdArr;
+    // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
+    //new Date().getTime()
     try {
-      let poQuery = "";
-      let Query = "";
+      /**
+       * CHECK---
+       * PO list check
+       */
+      createdArr = await getCreatedArr(Query, tokenData.user_type);
 
-      if (tokenData.user_type === USER_TYPE_VENDOR) {
-        Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
-      } else {
-        switch (tokenData.department_id) {
-          case USER_TYPE_GRSE_QAP:
-            if (tokenData.internal_role_id === ASSIGNER) {
-              //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
-              Query = poListByEcko();
-            } else if (tokenData.internal_role_id === STAFF) {
-              Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
-            }
-            break;
-          case USER_TYPE_GRSE_FINANCE:
-            if (tokenData.internal_role_id === ASSIGNER) {
-              Query = poListByEcko();
-              // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
-            } else if (tokenData.internal_role_id === STAFF) {
-              Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
-            }
-            break;
-          case USER_TYPE_GRSE_DRAWING:
-            // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
-            Query = poListByEcko();
-            break;
-          case USER_TYPE_GRSE_PURCHASE:
-            if (tokenData.internal_role_id === ASSIGNER) {
-              Query = poListByEcko();
-            } else if (tokenData.internal_role_id === STAFF) {
-              Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
-            }
-            break;
-          case USER_TYPE_PPNC_DEPARTMENT:
-            Query = poListByEcko(); // poListByPPNC(req.query);
-            break;
-          case STORE:
-            Query = poListByEcko();
-            break;
-          case RIC:
-            Query = poListByEcko();
-            break;
-          default:
-            Query = poListByEcko();
-          // console.log("DEFAULT ALL PO SHOWING . . . . ", Query);
-        }
-      }
-      if (!Query) {
-        return resSend(res, false, 400, "You don't have permission or no data found", null, null);
-      }
-
-      let strVal;
-      let createdArr;
-      // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
-      //new Date().getTime()
-      try {
-        /**
-         * CHECK---
-         * PO list check
-         */
-        createdArr = await getCreatedArr(client, Query, tokenData.user_type);
-
-        /**
-         * CHECK---
-         * PO LIST ARRY FOR GETTING ['1121', '121121']
-         */
-        strVal = await queryArrayTOString(Query, tokenData.user_type);
+      /**
+       * CHECK---
+       * PO LIST ARRY FOR GETTING ['1121', '121121']
+       */
+      strVal = await queryArrayTOString(Query, tokenData.user_type);
 
 
-      } catch (error) {
-        return resSend(res, false, 400, "Error in db query.", error, null);
-      }
+    } catch (error) {
+      return resSend(res, false, 400, "Error in db query.", error, null);
+    }
 
-      if (!strVal || strVal == "") {
-        return resSend(res, true, 200, "No PO found.", [], null);
-      }
-      poQuery = `SELECT ekko.lifnr AS "vendor_code",
+    if (!strVal || strVal == "") {
+      return resSend(res, true, 200, "No PO found.", [], null);
+    }
+    poQuery = `SELECT ekko.lifnr AS "vendor_code",
                         lfa1.name1 AS "vendor_name",
                         ekko.ebeln AS "poNb",
                         ekko.bsart AS "poType",
@@ -551,32 +548,32 @@ const poList = async (req, res) => {
                                ON ekko.lifnr = lfa1.lifnr
                  WHERE  ekko.ebeln IN (${strVal})`;
 
-      //  REMOVE BECAUSE OF NO RELATION
-      //  wbs.project_code AS project_code,
-      //  wbs.wbs_id AS wbs_id,
-      //  left join wbs
-      //  ON  wbs.purchasing_doc_no = ekko.ebeln
+    //  REMOVE BECAUSE OF NO RELATION
+    //  wbs.project_code AS project_code,
+    //  wbs.wbs_id AS wbs_id,
+    //  left join wbs
+    //  ON  wbs.purchasing_doc_no = ekko.ebeln
 
-      const poArr = await getQuery({ query: poQuery, values: [] });
-      if (!poArr) {
-        return resSend(res, false, 400, "No po found", poArr, null);
-      }
+    const poArr = await getQuery({ query: poQuery, values: [] });
+    if (!poArr) {
+      return resSend(res, false, 400, "No po found", poArr, null);
+    }
 
-      // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
-      //////////////////////////////////////////
-      const resultArr = [];
+    // resSend(res, true, 200, "data fetch scussfully.", poArr, null);
+    //////////////////////////////////////////
+    const resultArr = [];
 
-      let str = "";
-      await Promise.all(
-        poArr.map(async (item) => {
-          str += "'" + item.poNb + "',";
-        })
-      );
-      str = str.slice(0, -1);
+    let str = "";
+    await Promise.all(
+      poArr.map(async (item) => {
+        str += "'" + item.poNb + "',";
+      })
+    );
+    str = str.slice(0, -1);
 
-      // do
+    // do
 
-      let doQry = `SELECT t1.PERNR as "PERNR", t1.CNAME  as "CNAME" ,t2.ERNAM as "ERNAM",t2.EBELN as "EBELN"
+    let doQry = `SELECT t1.PERNR as "PERNR", t1.CNAME  as "CNAME" ,t2.ERNAM as "ERNAM",t2.EBELN as "EBELN"
         FROM 
             pa0002 AS t1 
         LEFT JOIN 
@@ -584,15 +581,15 @@ const poList = async (req, res) => {
         ON 
             (t1.PERNR::character varying= t2.ERNAM)  WHERE t2.EBELN IN(${str})`;
 
-      let doArr = await getQuery({ query: doQry, values: [] });
+    let doArr = await getQuery({ query: doQry, values: [] });
 
-      let SdbgLastStatus = `select purchasing_doc_no,status,created_at from ${SDBG} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
-      let SdgbLastStatusArr = await getQuery({
-        query: SdbgLastStatus,
-        values: [],
-      });
+    let SdbgLastStatus = `select purchasing_doc_no,status,created_at from ${SDBG} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let SdgbLastStatusArr = await getQuery({
+      query: SdbgLastStatus,
+      values: [],
+    });
 
-      let SdbgActualSubmissionDate = `SELECT
+    let SdbgActualSubmissionDate = `SELECT
       purchasing_doc_no,
       milestoneId AS "milestoneId",
       milestoneText AS "milestoneText",
@@ -601,7 +598,7 @@ const poList = async (req, res) => {
        WHERE 
         (purchasing_doc_no IN(${str}) AND milestoneId = '01') group by purchasing_doc_no`;
 
-      SdbgActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
+    SdbgActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
           milestoneId AS "milestoneId",
           milestoneText AS "milestoneText",
@@ -612,29 +609,29 @@ const poList = async (req, res) => {
           AND milestoneId = '01'
       ORDER BY purchasing_doc_no, actualSubmissionDate`;
 
-      let SdbgActualSubmissionDateArr = await getQuery({
-        query: SdbgActualSubmissionDate,
-        values: [],
-      });
+    let SdbgActualSubmissionDateArr = await getQuery({
+      query: SdbgActualSubmissionDate,
+      values: [],
+    });
 
-      // let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
-      let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no, MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '01'  group by EBELN, MTEXT, PLAN_DATE`;
+    // let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = 1  group by EBELN`;
+    let SdbgContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no, MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '01'  group by EBELN, MTEXT, PLAN_DATE`;
 
-      let SdbgContractualSubmissionDateArr = await getQuery({
-        query: SdbgContractualSubmissionDate,
-        values: [],
-      });
-      // SD
+    let SdbgContractualSubmissionDateArr = await getQuery({
+      query: SdbgContractualSubmissionDate,
+      values: [],
+    });
+    // SD
 
-      // DRAWING
-      let DrawingLastStatus = `select purchasing_doc_no,status,created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
-      let DrawingLastStatusArr = await getQuery({
-        query: DrawingLastStatus,
-        values: [],
-      });
+    // DRAWING
+    let DrawingLastStatus = `select purchasing_doc_no,status,created_at from ${DRAWING} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let DrawingLastStatusArr = await getQuery({
+      query: DrawingLastStatus,
+      values: [],
+    });
 
-      let DrawingActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '02' group by purchasing_doc_no`;
-      DrawingActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
+    let DrawingActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '02' group by purchasing_doc_no`;
+    DrawingActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
           milestoneId AS "milestoneId",
           milestoneText AS "milestoneText",
@@ -644,26 +641,26 @@ const poList = async (req, res) => {
           purchasing_doc_no IN (${str})
           AND milestoneId = '02'
       ORDER BY purchasing_doc_no, actualSubmissionDate`;
-      let DrawingActualSubmissionDateArr = await getQuery({
-        query: DrawingActualSubmissionDate,
-        values: [],
-      });
+    let DrawingActualSubmissionDateArr = await getQuery({
+      query: DrawingActualSubmissionDate,
+      values: [],
+    });
 
-      let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '02'  group by EBELN, MTEXT, PLAN_DATE`;
-      let DrawingContractualSubmissionDateArr = await getQuery({
-        query: DrawingContractualSubmissionDate,
-        values: [],
-      });
+    let DrawingContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '02'  group by EBELN, MTEXT, PLAN_DATE`;
+    let DrawingContractualSubmissionDateArr = await getQuery({
+      query: DrawingContractualSubmissionDate,
+      values: [],
+    });
 
-      // DRAWING
+    // DRAWING
 
-      // QAP
-      let qapLastStatus = `select purchasing_doc_no,status,created_at from ${QAP_SUBMISSION} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
-      let qapLastStatusArr = await getQuery({ query: qapLastStatus, values: [] });
+    // QAP
+    let qapLastStatus = `select purchasing_doc_no,status,created_at from ${QAP_SUBMISSION} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let qapLastStatusArr = await getQuery({ query: qapLastStatus, values: [] });
 
-      let qapActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '03' group by purchasing_doc_no`;
+    let qapActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '03' group by purchasing_doc_no`;
 
-      qapActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
+    qapActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
           milestoneId AS "milestoneId",
           milestoneText AS "milestoneText",
@@ -673,28 +670,28 @@ const poList = async (req, res) => {
           purchasing_doc_no IN (${str})
           AND milestoneId = '03'
       ORDER BY purchasing_doc_no, actualSubmissionDate`;
-      let qapActualSubmissionDateArr = await getQuery({
-        query: qapActualSubmissionDate,
-        values: [],
-      });
+    let qapActualSubmissionDateArr = await getQuery({
+      query: qapActualSubmissionDate,
+      values: [],
+    });
 
-      let qapContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '03'  group by EBELN, MTEXT, PLAN_DATE`;
-      let qapContractualSubmissionDateArr = await getQuery({
-        query: qapContractualSubmissionDate,
-        values: [],
-      });
-      // QAP
+    let qapContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '03'  group by EBELN, MTEXT, PLAN_DATE`;
+    let qapContractualSubmissionDateArr = await getQuery({
+      query: qapContractualSubmissionDate,
+      values: [],
+    });
+    // QAP
 
-      // ILMS
-      let ilmsLastStatus = `select purchasing_doc_no,status,created_at from ${ILMS} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
-      let ilmsLastStatusArr = await getQuery({
-        query: ilmsLastStatus,
-        values: [],
-      });
+    // ILMS
+    let ilmsLastStatus = `select purchasing_doc_no,status,created_at from ${ILMS} WHERE purchasing_doc_no IN(${str}) ORDER BY created_at DESC LIMIT 1`;
+    let ilmsLastStatusArr = await getQuery({
+      query: ilmsLastStatus,
+      values: [],
+    });
 
-      let ilmsActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '04' group by purchasing_doc_no`;
+    let ilmsActualSubmissionDate = `select purchasing_doc_no,milestoneId,milestoneText,actualSubmissionDate from actualsubmissiondate WHERE purchasing_doc_no IN(${str}) AND milestoneId = '04' group by purchasing_doc_no`;
 
-      ilmsActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
+    ilmsActualSubmissionDate = `SELECT DISTINCT ON (purchasing_doc_no)
           purchasing_doc_no,
           milestoneId AS "milestoneId",
           milestoneText AS "milestoneText",
@@ -704,176 +701,172 @@ const poList = async (req, res) => {
           purchasing_doc_no IN (${str})
           AND milestoneId = '01'
       ORDER BY purchasing_doc_no, actualSubmissionDate`;
-      let ilmsActualSubmissionDateArr = await getQuery({
-        query: ilmsActualSubmissionDate,
-        values: [],
+    let ilmsActualSubmissionDateArr = await getQuery({
+      query: ilmsActualSubmissionDate,
+      values: [],
+    });
+
+    let ilmsContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '04'  group by EBELN, MTEXT, PLAN_DATE`;
+    let ilmsContractualSubmissionDateArr = await getQuery({
+      query: ilmsContractualSubmissionDate,
+      values: [],
+    });
+    // ILMS
+
+    const modifiedPOData = await poDataModify(poArr);
+    const materialTypeQuery = "SELECT * FROM material_type";
+    const materialType = await getQuery({
+      query: materialTypeQuery,
+      values: [],
+    });
+
+    const result = [];
+    Object.keys(modifiedPOData).forEach((key) => {
+      const isMaterialTypePO = poTypeCheck(modifiedPOData[key], materialType);
+      const poType = isMaterialTypePO;
+
+      result.push({
+        poNb: key,
+        vendor_code: modifiedPOData[key][0].vendor_code,
+        vendor_name: modifiedPOData[key][0].vendor_name,
+        wbs_id: modifiedPOData[key][0].wbs_id,
+        project_code: modifiedPOData[key][0].project_code,
+        poType,
       });
+    });
 
-      let ilmsContractualSubmissionDate = `select distinct(EBELN) AS purchasing_doc_no,MTEXT AS  contractual_submission_remarks,PLAN_DATE AS contractual_submission_date from zpo_milestone WHERE EBELN IN(${str}) AND MID = '04'  group by EBELN, MTEXT, PLAN_DATE`;
-      let ilmsContractualSubmissionDateArr = await getQuery({
-        query: ilmsContractualSubmissionDate,
-        values: [],
-      });
-      // ILMS
+    // ADDING IS isDO ( deling officers of the po);
+    await Promise.all(
+      result.map(async (item) => {
+        let obj = {};
+        const created = createdArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNo || item.poNb
+        ); //created_at
 
-      const modifiedPOData = await poDataModify(poArr);
-      const materialTypeQuery = "SELECT * FROM material_type";
-      const materialType = await getQuery({
-        query: materialTypeQuery,
-        values: [],
-      });
+        let currentStage = {
+          current: await currentStageHandler(item.poNb),
+        };
+        obj.currentStage = currentStage;
+        obj.poNumber = item.poNb;
+        obj.createdAt = created?.created_at;
+        obj.poType = item?.poType;
+        obj.isDo = item.isDo;
+        obj.vendor_code = item.vendor_code;
+        obj.vendor_name = item.vendor_name;
+        obj.project_code = item.project_code;
+        obj.wbs_id = item.wbs_id;
 
-      const result = [];
-      Object.keys(modifiedPOData).forEach((key) => {
-        const isMaterialTypePO = poTypeCheck(modifiedPOData[key], materialType);
-        const poType = isMaterialTypePO;
+        ////////////// SD /////////////////
+        const SDVGObj = {};
+        const SdbgActualSubmission = SdbgActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
 
-        result.push({
-          poNb: key,
-          vendor_code: modifiedPOData[key][0].vendor_code,
-          vendor_name: modifiedPOData[key][0].vendor_name,
-          wbs_id: modifiedPOData[key][0].wbs_id,
-          project_code: modifiedPOData[key][0].project_code,
-          poType,
-        });
-      });
-
-      // ADDING IS isDO ( deling officers of the po);
-      await Promise.all(
-        result.map(async (item) => {
-          let obj = {};
-          const created = createdArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNo || item.poNb
-          ); //created_at
-
-          let currentStage = {
-            current: await currentStageHandler(item.poNb),
-          };
-          obj.currentStage = currentStage;
-          obj.poNumber = item.poNb;
-          obj.createdAt = created?.created_at;
-          obj.poType = item?.poType;
-          obj.isDo = item.isDo;
-          obj.vendor_code = item.vendor_code;
-          obj.vendor_name = item.vendor_name;
-          obj.project_code = item.project_code;
-          obj.wbs_id = item.wbs_id;
-
-          ////////////// SD /////////////////
-          const SDVGObj = {};
-          const SdbgActualSubmission = SdbgActualSubmissionDateArr.find(
+        const SdbgContractualSubmission =
+          await SdbgContractualSubmissionDateArr.find(
             ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
           );
+        const SdgbLast = SdgbLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission
+          ? SdbgContractualSubmission.contractual_submission_date
+          : null;
+        SDVGObj.SdActualSubmissionDate = SdbgActualSubmission
+          ? parseInt(SdbgActualSubmission.actualSubmissionDate)
+          : null;
+        SDVGObj.SdLastStatus = SdgbLast ? SdgbLast.status : null;
+        obj.SD = SDVGObj;
+        ////////////// SD /////////////////
 
-          const SdbgContractualSubmission =
-            await SdbgContractualSubmissionDateArr.find(
-              ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-            );
-          const SdgbLast = SdgbLastStatusArr.find(
+        ////////////// DRAWING /////////////////
+        const DrawingObj = {};
+        const DrawingActualSubmission = DrawingActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const DrawingContractualSubmission =
+          DrawingContractualSubmissionDateArr.find(
             ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
           );
-          SDVGObj.SdContractualSubmissionDate = SdbgContractualSubmission
-            ? SdbgContractualSubmission.contractual_submission_date
+        const DrawingLast = DrawingLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        DrawingObj.DrawingContractualSubmissionDate =
+          DrawingContractualSubmission
+            ? DrawingContractualSubmission.contractual_submission_date
             : null;
-          SDVGObj.SdActualSubmissionDate = SdbgActualSubmission
-            ? parseInt(SdbgActualSubmission.actualSubmissionDate)
-            : null;
-          SDVGObj.SdLastStatus = SdgbLast ? SdgbLast.status : null;
-          obj.SD = SDVGObj;
-          ////////////// SD /////////////////
+        DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission
+          ? parseInt(DrawingActualSubmission.actualSubmissionDate)
+          : null;
+        DrawingObj.DrawingLastStatus = DrawingLast ? DrawingLast.status : null;
+        ////////////// DRAWING /////////////////
+        obj.Drawing = DrawingObj;
 
-          ////////////// DRAWING /////////////////
-          const DrawingObj = {};
-          const DrawingActualSubmission = DrawingActualSubmissionDateArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          const DrawingContractualSubmission =
-            DrawingContractualSubmissionDateArr.find(
-              ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-            );
-          const DrawingLast = DrawingLastStatusArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          DrawingObj.DrawingContractualSubmissionDate =
-            DrawingContractualSubmission
-              ? DrawingContractualSubmission.contractual_submission_date
-              : null;
-          DrawingObj.DrawingActualSubmissionDate = DrawingActualSubmission
-            ? parseInt(DrawingActualSubmission.actualSubmissionDate)
-            : null;
-          DrawingObj.DrawingLastStatus = DrawingLast ? DrawingLast.status : null;
-          ////////////// DRAWING /////////////////
-          obj.Drawing = DrawingObj;
+        ////////////// QAP /////////////////
+        const qapObj = {};
+        const qapActualSubmission = qapActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const qapContractualSubmission = qapContractualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const qapLast = qapLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        qapObj.qapContractualSubmissionDate = qapContractualSubmission
+          ? qapContractualSubmission.contractual_submission_date
+          : null;
+        qapObj.qapActualSubmissionDate = qapActualSubmission
+          ? parseInt(qapActualSubmission.actualSubmissionDate)
+          : null;
+        qapObj.qapLastStatus = qapLast ? qapLast.status : null;
+        ////////////// QAP /////////////////
+        obj.QAP = qapObj;
 
-          ////////////// QAP /////////////////
-          const qapObj = {};
-          const qapActualSubmission = qapActualSubmissionDateArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          const qapContractualSubmission = qapContractualSubmissionDateArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          const qapLast = qapLastStatusArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          qapObj.qapContractualSubmissionDate = qapContractualSubmission
-            ? qapContractualSubmission.contractual_submission_date
-            : null;
-          qapObj.qapActualSubmissionDate = qapActualSubmission
-            ? parseInt(qapActualSubmission.actualSubmissionDate)
-            : null;
-          qapObj.qapLastStatus = qapLast ? qapLast.status : null;
-          ////////////// QAP /////////////////
-          obj.QAP = qapObj;
+        ////////////// ILMS /////////////////
+        const ilmsObj = {};
+        const ilmsActualSubmission = ilmsActualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const ilmsContractualSubmission = ilmsContractualSubmissionDateArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        const ilmsLast = ilmsLastStatusArr.find(
+          ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
+        );
+        ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission
+          ? ilmsContractualSubmission.contractual_submission_date
+          : null;
+        ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission
+          ? parseInt(ilmsActualSubmission.actualSubmissionDate)
+          : null;
+        ilmsObj.ilmsLastStatus = ilmsLast ? ilmsLast.status : null;
+        ////////////// ILMS /////////////////
+        obj.ILMS = ilmsObj;
 
-          ////////////// ILMS /////////////////
-          const ilmsObj = {};
-          const ilmsActualSubmission = ilmsActualSubmissionDateArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          const ilmsContractualSubmission = ilmsContractualSubmissionDateArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          const ilmsLast = ilmsLastStatusArr.find(
-            ({ purchasing_doc_no }) => purchasing_doc_no == item.poNb
-          );
-          ilmsObj.ilmsContractualSubmissionDate = ilmsContractualSubmission
-            ? ilmsContractualSubmission.contractual_submission_date
-            : null;
-          ilmsObj.ilmsActualSubmissionDate = ilmsActualSubmission
-            ? parseInt(ilmsActualSubmission.actualSubmissionDate)
-            : null;
-          ilmsObj.ilmsLastStatus = ilmsLast ? ilmsLast.status : null;
-          ////////////// ILMS /////////////////
-          obj.ILMS = ilmsObj;
+        //// DO
+        // const DOObj = {};
+        const DOObj = doArr.find(({ EBELN }) => EBELN == item.poNb);
+        // DOObj.doData = doInfo ? doInfo : null;
+        obj.DO = DOObj ? DOObj : null;
+        resultArr.push(obj);
+      })
+    );
+    const sortedRes = resultArr.sort((a, b) => {
+      if (a.createdAt > b.createdAt) return -1;
+      if (a.createdAt < b.createdAt) return -1;
 
-          //// DO
-          // const DOObj = {};
-          const DOObj = doArr.find(({ EBELN }) => EBELN == item.poNb);
-          // DOObj.doData = doInfo ? doInfo : null;
-          obj.DO = DOObj ? DOObj : null;
-          resultArr.push(obj);
-        })
-      );
-      const sortedRes = resultArr.sort((a, b) => {
-        if (a.createdAt > b.createdAt) return -1;
-        if (a.createdAt < b.createdAt) return -1;
+      if (parseInt(a.poNumber) > parseInt(b.poNumber)) return -1;
+      if (parseInt(a.poNumber) < parseInt(b.poNumber)) return 1;
 
-        if (parseInt(a.poNumber) > parseInt(b.poNumber)) return -1;
-        if (parseInt(a.poNumber) < parseInt(b.poNumber)) return 1;
+      //a.createdAt < b.createdAt ? 1 : -1
+    });
 
-        //a.createdAt < b.createdAt ? 1 : -1
-      });
-
-      resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
-    } catch (error) {
-      console.error("err", error, error.toString());
-
-      return resSend(res, false, 500, error.toString(), [], null);
-    }
+    resSend(res, true, 200, "data fetch scussfully.", sortedRes, null);
   } catch (error) {
-    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+    console.error("err", error, error.toString());
 
+    return resSend(res, false, 500, error.toString(), [], null);
   }
 };
 
@@ -901,28 +894,28 @@ const poListByEcko = (vendorCode = "") => {
   return qry;
 };
 
-const poListByPPNC = (queryData, tokenData) => {
-  let poListQuery = "";
+// const poListByPPNC = (queryData, tokenData) => {
+//   let poListQuery = "";
 
-  if (queryData.type == PROJECT) {
-    poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
-    if (queryData.id) {
-      poListQuery += ` AND project_code = '${queryData.id}'`;
-    }
-  }
-  if (queryData.type == WBS_ELEMENT) {
-    poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
-    if (queryData.id) {
-      poListQuery += ` AND wbs_id = '${queryData.id}'`;
-    }
-  }
+//   if (queryData.type == PROJECT) {
+//     poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
+//     if (queryData.id) {
+//       poListQuery += ` AND project_code = '${queryData.id}'`;
+//     }
+//   }
+//   if (queryData.type == WBS_ELEMENT) {
+//     poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
+//     if (queryData.id) {
+//       poListQuery += ` AND wbs_id = '${queryData.id}'`;
+//     }
+//   }
 
-  // if (queryData.poNo) {
-  //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
-  // }
+//   // if (queryData.poNo) {
+//   //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
+//   // }
 
-  return poListQuery;
-};
+//   return poListQuery;
+// };
 
 function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
@@ -962,7 +955,6 @@ const poListCopy = async (req, res) => {
     const client = await poolClient();
     const tokenData = req.tokenData;
     try {
-      let poQuery = "";
       let Query = "";
 
       if (tokenData.user_type === USER_TYPE_VENDOR) {
@@ -1014,26 +1006,60 @@ const poListCopy = async (req, res) => {
         return resSend(res, false, 400, "You don't have permission or no data found", null, null);
       }
 
-      let strVal;
-      let createdArr;
-      // createdArr = await getCreatedArr(client, Query, tokenData.user_type);
-      // strVal = await queryArrayTOString(Query, tokenData.user_type);
 
-      let page = 1;
-      let limit = 10;
+      let page_number = parseInt(req.query.page_number) || 1;
+      let page_size = parseInt(req.query.page_size) || 10;
+      let offset = (page_number - 1) * page_size;
 
-      const getAllpo = await poolQuery({client, query: Query, })
+
+      const allPo = await poolQuery({ client, query: Query, values: [] });
+
+      if (!allPo.length) {
+        return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, allPo, null);
+      }
+      const poArr = allPo.map((el) => el.EBELN);
+      const poDetails = await getPoWithLineItems(client, poArr, page_size, offset);
+      const contractualDates = await getActualAndCurrentDetails(client, poArr);
+      const currentActivity = await currentStageHandleForAllActivity(client, poArr);
+      const materialTypeQuery = "SELECT * FROM material_type";
+      const materialType = await poolQuery({ client, query: materialTypeQuery, values: [] });
+      const modifiedPOData = poDataModify2(poDetails);
+
+      console.log("currentActivity", currentActivity);
+
+
+      const result = [];
+      Object.keys(modifiedPOData).forEach((key) => {
+        const mileStoneActivity = setMileStoneActivity(key, contractualDates)
+        const isMatTypePO = poTypeCheck(modifiedPOData[key], materialType);
+        const poType = isMatTypePO;
+
+        result.push({
+          poNumber: key,
+          currentStage: {
+            current: currentActivity[key]
+          },
+          vendor_code: modifiedPOData[key][0]?.vendor_code,
+          vendor_name: modifiedPOData[key][0]?.vendor_name,
+          createdAt: modifiedPOData[key][0]?.createdAt,
+          poType,
+          ...mileStoneActivity
+        });
+      });
+
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "");
 
 
     } catch (error) {
-      return resSend(res, false, 400, "Error in db query.", error, null);
+      resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
     } finally {
       client.release();
     }
   } catch (error) {
-    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+    resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
   }
 }
 
 
-module.exports = { details, download, poList };
+module.exports = { details, download, poList, poListCopy };

@@ -169,6 +169,9 @@ router.use(poPrefix + "/btn", btnRoutes);
 router.get(poPrefix + "/poList", [veifyAccessToken], (req, res) => {
   generalController.poList(req, res);
 });
+router.get(poPrefix + "/poList2", [veifyAccessToken], (req, res) => {
+  generalController.poListCopy(req, res);
+});
 
 router.get(poPrefix + "/details", [veifyAccessToken], (req, res) => {
   generalController.details(req, res);
