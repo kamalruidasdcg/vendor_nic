@@ -40,10 +40,10 @@ const sdbgPaymentAdvice = async (req, res) => {
       const payloadObj = await zfi_bgm_1_Payload_sap(payload);
 
       // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
-      const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj.PO_NUMBER}'`).count();
-      if (!isPresent) {
-        return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
-      }
+      // const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj.PO_NUMBER}'`).count();
+      // if (!isPresent) {
+      //   return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      // }
 
       // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
       const queryText = await generateInsertUpdateQuery(

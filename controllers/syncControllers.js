@@ -622,14 +622,17 @@ const createZipForFiles = async (folderName, files) => {
 };
 
 // Function to get files added in the last 24 hours
-const getRecentFiles = async () => {
+const getRecentFiles = async (sync_date) => {
   const folders = fs
     .readdirSync(UPLOADS_DIR)
     .filter((file) => fs.lstatSync(path.join(UPLOADS_DIR, file)).isDirectory());
   const recentFiles = {};
 
   const now = Date.now();
-  const dayAgo = now - 24 * 60 * 60 * 1000;
+  // const dayAgo = now - 24 * 60 * 60 * 1000;
+  // console.log("dayAgo", dayAgo);
+  const syncDateTimestamp = new Date(sync_date).getTime();
+  console.log("syncDateTimestamp", syncDateTimestamp);
 
   for (const folder of folders) {
     const folderPath = path.join(UPLOADS_DIR, folder);
@@ -640,9 +643,20 @@ const getRecentFiles = async () => {
 
       for (const file of files) {
         const filePath = path.join(folderPath, file);
-        const fileStats = await fs.statSync(filePath);
+        let fileStats = await fs.statSync(filePath);
 
-        if (fileStats.mtimeMs >= dayAgo) {
+        const uploadTime = Number(file.split("-")[0]);
+
+        if (
+          fileStats.mtimeMs >= syncDateTimestamp ||
+          uploadTime >= syncDateTimestamp
+        ) {
+          console.log(
+            "uTime",
+            uploadTime,
+            fileStats.mtimeMs,
+            syncDateTimestamp
+          );
           if (!recentFiles[folder]) {
             recentFiles[folder] = [];
           }
@@ -656,8 +670,8 @@ const getRecentFiles = async () => {
 };
 
 // Function to get unsynced files and compressed to ZIP
-const getAndZipFileHandler = async () => {
-  const recentFiles = await getRecentFiles();
+const getAndZipFileHandler = async (sync_date) => {
+  const recentFiles = await getRecentFiles(sync_date);
   for (const folderName in recentFiles) {
     if (recentFiles[folderName].length > 0) {
       await createZipForFiles(folderName, recentFiles[folderName]);
@@ -668,7 +682,14 @@ const getAndZipFileHandler = async () => {
 
 // API CONTROLLER TO COMPRESS ZIP FILE FOR FILES THAT ARE UPLOADED IN LAST 24 MINUTES
 exports.unsyncFileCompressed = async (req, res, next) => {
-  await getAndZipFileHandler();
+  const { sync_date } = req.body;
+
+  if (!sync_date || sync_date === "") {
+    return resSend(res, 200, false, null, "Sync Date is mandadory!", null);
+  }
+  let s_date = Number(sync_date);
+  console.log("sync_date", s_date);
+  await getAndZipFileHandler(s_date);
   resSend(res, 200, true, null, "Unsyncd File Compressed successfully!", null);
 };
 
@@ -740,7 +761,6 @@ exports.uploadRecentFilesController = async (req, res, next) => {
     const zipFilePath = path.join(parentDir, OTHER_SERVER_FILE_PATH, todayDate);
 
     console.log("zipFilePath", zipFilePath, todayDate);
-    
 
     // Check if the today's date folder exists
     if (!fs.existsSync(zipFilePath)) {
