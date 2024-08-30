@@ -3,11 +3,11 @@ const {
   zfi_bgm_1_Payload,
   ztfi_bil_defacePayload,
   zfi_bgm_1_Payload_sap,
+  isPresentInObps,
 } = require("../../services/sap.services");
 const {
   SDBG_PAYMENT_ADVICE,
-  PAYMENTADVICE,
-  PAYMENT_ADVICE2,
+
 } = require("../../lib/tableName");
 const {
   generateQueryArray,
@@ -15,7 +15,7 @@ const {
   generateQueryForMultipleData,
 } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
-const { query, getQuery } = require("../../config/pgDbConfig");
+const { query, getQuery, poolQuery } = require("../../config/pgDbConfig");
 const Message = require("../../utils/messages");
 const {
   update_in_all_obps_sdbgs_table,
@@ -27,36 +27,43 @@ const { BG_EXTENSION_RELEASE } = require("../../lib/event");
 const sdbgPaymentAdvice = async (req, res) => {
   //    http://10.13.1.38:4001/api/v1/po/qap
   // const client = await poolClient();
+
   try {
-    if (!req.body) {
-      return responseSend(
-        res,
-        "F",
-        400,
-        "Please send a valid payload.",
-        null,
-        null
+
+    const client = await poolClient();
+    try {
+      if (!req.body) {
+        return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+      }
+      const payload = { ...req.body };
+      await update_in_all_obps_sdbgs_table(payload);
+      const payloadObj = await zfi_bgm_1_Payload_sap(payload);
+
+      // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+      // const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj.PO_NUMBER}'`).count();
+      // if (!isPresent) {
+      //   return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      // }
+
+      // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
+      const queryText = await generateInsertUpdateQuery(
+        payloadObj,
+        SDBG_PAYMENT_ADVICE,
+        ["FILE_NO", "REF_NO"]
       );
+
+      const response = await poolQuery({ client, query: queryText.q, values: queryText.val });
+      handelMail(payloadObj);
+      responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
+    } catch (err) {
+      console.error(err.message);
+      responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, err.message, null);
+    } finally {
+      client.release();
     }
-    const payload = { ...req.body };
-    await update_in_all_obps_sdbgs_table(payload);
-    const payloadObj = await zfi_bgm_1_Payload_sap(payload);
+  } catch (error) {
+    responseSend(res, "F", 500, Message.DB_CONN_ERROR, error.message, null);
 
-    // const { q, val } = await generateQueryArray(INSERT, SDBG_PAYMENT_ADVICE, payloadObj);
-    const queryText = await generateInsertUpdateQuery(
-      payloadObj,
-      SDBG_PAYMENT_ADVICE,
-      ["FILE_NO", "REF_NO"]
-    );
-
-    const response = await query({ query: queryText.q, values: queryText.val });
-    handelMail(payloadObj);
-    responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
-  } catch (err) {
-    console.error(err.message);
-    responseSend(res, "F", 500, Message.DATA_INSERT_FAILED, null, null);
-  } finally {
-    // client.release();
   }
 };
 

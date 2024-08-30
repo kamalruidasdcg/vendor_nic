@@ -1,4 +1,4 @@
-const { query, connection } = require("../../config/dbConfig");
+// const { query, connection } = require("../../config/dbConfig");
 const { poolQuery, poolClient } = require("../../config/pgDbConfig");
 const { makeHttpRequest } = require("../../config/sapServerConfig");
 const { INSERT } = require("../../lib/constant");
@@ -163,7 +163,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
 };
 
 const getAdvBillHybridData = async (req, res) => {
-  const client = await connection();
+  const client = await poolClient();
   try {
     const payload = req.body;
 
@@ -196,7 +196,7 @@ const getAdvBillHybridData = async (req, res) => {
 
     const advBillReqDataQuery = baseQuery + conditionQuery;
     // let results = await query({ query: advBillReqDataQuery, values: valueArr });
-    let [results] = await client.execute(advBillReqDataQuery, valueArr);
+    let [results] = await client.query(advBillReqDataQuery, valueArr);
 
     console.log("results", results);
 
@@ -232,13 +232,13 @@ const getAdvBillHybridData = async (req, res) => {
       null
     );
   } finally {
-    client.end();
+    client.release();
   }
 };
 
 const submitAdvBillBTNByDO = async (req, res) => {
   try {
-    const client = await connection();
+    const client = await poolClient();
     try {
       let payload = req.body;
       const tokenData = req.tokenData;
@@ -281,7 +281,7 @@ const submitAdvBillBTNByDO = async (req, res) => {
         btnPayload
       );
       console.log("btnQuery", btnQuery);
-      const [results] = await client.execute(btnQuery.q, btnQuery.val);
+      const [results] = await client.query(btnQuery.q, btnQuery.val);
       console.log("resultsresultsresults", results);
       let btnInfo = await getBTNInfo(
         payload.btn_num,
@@ -323,7 +323,7 @@ const submitAdvBillBTNByDO = async (req, res) => {
         null
       );
     } finally {
-      await client.end();
+      await client.release();
     }
   } catch (error) {
     resSend(res, false, 500, Message.DB_CONN_ERROR, null, null);
@@ -332,7 +332,7 @@ const submitAdvBillBTNByDO = async (req, res) => {
 
 const getAdvBillHybridDataForDO = async (req, res) => {
   try {
-    const client = await connection();
+    const client = await poolClient();
 
     try {
       const payload = req.body;
@@ -359,19 +359,19 @@ const getAdvBillHybridDataForDO = async (req, res) => {
       let contractualDates = `SELECT plan_date as c_milestone_date, mtext as c_milestone_text, mid as m_id FROM zpo_milestone WHERE EBELN = ?`;
       let actualDates = `SELECT actualsubmissiondate AS a_submisson_date, milestoneText AS a_submisson_text, milestoneid as m_id FROM actualsubmissiondate WHERE purchasing_doc_no = ?`;
 
-      // let [results] = await client.execute(advBillReqDataQuery, valueArr);
-      // let [results] = await client.execute(contractualDates, [payload.poNo]);
-      // let [results] = await client.execute(actualDates, [payload.poNo]);
+      // let [results] = await client.query(advBillReqDataQuery, valueArr);
+      // let [results] = await client.query(contractualDates, [payload.poNo]);
+      // let [results] = await client.query(actualDates, [payload.poNo]);
 
       let result = {};
 
       // await Promise.all(
-      //     [client.execute(advBillReqDataQuery, valueArr),
-      //     client.execute(contractualDates, [payload.poNo]),
-      //     client.execute(actualDates, [payload.poNo])
+      //     [client.query(advBillReqDataQuery, valueArr),
+      //     client.query(contractualDates, [payload.poNo]),
+      //     client.query(actualDates, [payload.poNo])
       //     ])
 
-      const [results] = await client.execute(advBillReqDataQuery, valueArr);
+      const [results] = await client.query(advBillReqDataQuery, valueArr);
 
       console.log("results", results);
 
@@ -410,7 +410,7 @@ const getAdvBillHybridDataForDO = async (req, res) => {
         null
       );
     } finally {
-      client.end();
+      client.release();
     }
   } catch (error) {
     resSend(
@@ -425,7 +425,7 @@ const getAdvBillHybridDataForDO = async (req, res) => {
 };
 
 const getAdvBillHybridBTN = async (req, res) => {
-  const client = await connection();
+  const client = await poolClient();
   try {
     const payload = req.body;
 
@@ -445,7 +445,7 @@ const getAdvBillHybridBTN = async (req, res) => {
 
     const advBillReqDataQuery = baseQuery + conditionQuery;
     // let results = await query({ query: advBillReqDataQuery, values: valueArr });
-    let [results] = await client.execute(advBillReqDataQuery, valueArr);
+    let [results] = await client.query(advBillReqDataQuery, valueArr);
 
     console.log("results", results);
 
@@ -460,7 +460,7 @@ const getAdvBillHybridBTN = async (req, res) => {
       null
     );
   } finally {
-    client.end();
+    client.release();
   }
 };
 

@@ -3,27 +3,26 @@ const { INSERT } = require("../lib/constant");
 const { generateQuery, getEpochTime } = require("../lib/utils");
 
 const apiLog = async (req, res, next) => {
-  if (req.method === "POST" || req.method === "PUT") {
-    // console.log('Req Body: ', req.body);
-  }
+  // if (req.method === "POST" || req.method === "PUT") {
+  //   // console.log('Req Body: ', req.body);
+  // }
   const originalSend = res.send;
   res.send = async function (body) {
     // Log response status code
     res.send = originalSend;
     const jsonBody = JSON.parse(body);
-    const msg =
-      res.statusCode >= 200 && res.statusCode < 300
-        ? jsonBody.message
-        : jsonBody.data;
+    const contentType = req.headers['content-type'];
+    let msg = '';
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      msg = jsonBody.message;
+    } else {
+      msg = jsonBody.message || "";
 
-    await saveLogInDb(
-      req.ip,
-      req.originalUrl,
-      req.method,
-      res.statusCode,
-      msg,
-      "apilog"
-    );
+      if (req.method === "POST" && contentType === 'application/json') {
+        msg += ` {payload} ${JSON.stringify(req.body)}`;
+      }
+    }
+    saveLogInDb(req.ip, req.originalUrl, req.method, res.statusCode, msg, "apilog");
 
     // console.log(
     //     `Request from : ${req.ip},
@@ -38,28 +37,13 @@ const apiLog = async (req, res, next) => {
   next();
 };
 
-async function saveLogInDb(
-  source = "",
-  req_url = "",
-  req_method = "",
-  status_code = "",
-  msg = "",
-  stack = ""
-) {
-  const logPaylaod = {
-    source,
-    req_url,
-    req_method,
-    status_code,
-    msg,
-    stack,
-    created_at: getEpochTime(),
-  };
+async function saveLogInDb(source = "", req_url = "", req_method = "", status_code = "", msg = "", stack = "") {
+  const logPaylaod = { source, req_url, req_method, status_code, msg, stack, created_at: getEpochTime() };
   try {
     const { q, val } = generateQuery(INSERT, "generic_log", logPaylaod);
     await query({ query: q, values: val });
   } catch (error) {
-    console.error(error.message);
+    console.error("API LOG ERROR", error.message, error.stack);
   }
 }
 

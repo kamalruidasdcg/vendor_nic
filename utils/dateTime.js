@@ -68,3 +68,26 @@ exports.formatDashedDate = (epochTime) => {
 
   return year + "-" + month + "-" + day;
 };
+
+
+
+function getdates(daysCount = 1) {
+  const dates = [];
+  const today = new Date();
+
+  for (let i = 0; i < daysCount; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i); // Subtract 'i' days from today's date
+    const formattedDate = formatDate(date);
+    dates.push(formattedDate);
+  }
+
+  return dates;
+}
+
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, '0'); // Ensures two-digit day
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensures two-digit month
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}

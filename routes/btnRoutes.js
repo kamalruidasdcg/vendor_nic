@@ -14,14 +14,17 @@ const {
 } = require("../controllers/btnControllers");
 const {
   submitBtnServiceHybrid,
-  getBTNDataServiceHybrid,
   getWdcInfoServiceHybrid,
+  initServiceHybrid,
+  getBtnData,
+  forwordToFinace,
+  serviceBtnAssignToFiStaff,
 } = require("../controllers/btnServiceHybridControllers");
 
 const {
   btnmw,
   btnAdvanceBillHybridUploadFile,
-  isd,
+  serviceBtnFilesUpload,
 } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const {
@@ -31,6 +34,10 @@ const {
   getAdvBillHybridDataForDO,
   getAdvBillHybridBTN,
 } = require("../controllers/poController/advanceBillBTNController");
+const {
+  submitPbg,
+  btnPbgSubmitByDO,
+} = require("../controllers/btnPbgControllers");
 
 // HYBRID MATERIAL BTN
 router.get("/", [], (req, res) => {
@@ -48,7 +55,7 @@ router.get("/btn_do", [veifyAccessToken], (req, res) => {
 });
 
 const upload = btnmw();
-const invSupportDoc = isd();
+// const invSupportDoc = isd();
 router.post("/BillsMaterialHybrid", [veifyAccessToken, upload], (req, res) => {
   submitBTN(req, res);
 });
@@ -72,30 +79,55 @@ router.get("/getFinanceEmpList", [veifyAccessToken], (req, res) => {
   getFinanceEmpList(req, res);
 });
 
-//// Btn Service Hybrid ////
-///////////////////////////
+/**
+ * Btn Service Hybrid
+ */
 router.post(
-  "/submitBtnServiceHybrid",
-  [veifyAccessToken, upload],
+  "/submitServiceHybrid",
+  [veifyAccessToken, serviceBtnFilesUpload()],
   (req, res) => {
     submitBtnServiceHybrid(req, res);
   }
 );
-router.get("/getBTNDataServiceHybrid", [veifyAccessToken], (req, res) => {
-  getBTNDataServiceHybrid(req, res);
+// router.get("/getBTNDataServiceHybrid", [], (req, res) => {
+//   getBTNDataServiceHybrid(req, res);
+// });
+
+router.get("/initServiceHybrid", [veifyAccessToken], (req, res) => {
+  initServiceHybrid(req, res);
+});
+router.post("/submitSBtnByCAuthorty", [veifyAccessToken], (req, res) => {
+  forwordToFinace(req, res);
+});
+router.post("/submitSBtnByFAuthorty", [veifyAccessToken], (req, res) => {
+  serviceBtnAssignToFiStaff(req, res);
 });
 
 // getWdcInfo
-router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
-  getWdcInfo(req, res);
-});
+// router.get("/getWdcInfo", [veifyAccessToken], (req, res) => {
+//   getWdcInfo(req, res);
+// });
 
 // getWdcInfoServiceHybrid
-router.get("/getWdcInfoServiceHybrid", [veifyAccessToken], (req, res) => {
+router.get("/getWdcInfoServiceHybrid", [], (req, res) => {
   getWdcInfoServiceHybrid(req, res);
 });
+router.get("/getServiceBtnData", [], (req, res) => {
+  getBtnData(req, res);
+});
 
-//// Btn Service Hybrid ////
+//// Btn Service Hybrid //////
+//////////// END /////////////
+
+//// Btn pbg ////
+///////////////////////////
+router.post("/submitPbg", [veifyAccessToken, upload], (req, res) => {
+  submitPbg(req, res);
+});
+router.post("/btnPbgSubmitByDO", [veifyAccessToken, upload], (req, res) => {
+  btnPbgSubmitByDO(req, res);
+});
+//// Btn pbg ////
 ///////////////////////////
 
 router.post(
