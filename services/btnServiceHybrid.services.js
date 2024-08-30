@@ -388,18 +388,12 @@ const getGrnIcgrnValue = async (client, data) => {
             // return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null);
             return { success: false, statusCode: 200, message: "Please send icgrn(id) no", data: Message.MANDATORY_INPUTS_REQUIRED };
         }
-        const icgrn_q = `SELECT 
-                                qals.PRUEFLOS AS icgrn_nos, 
-                                qals.MATNR as mat_no,
-                                qals.MBLNR as grn_no,
-                                qals.LMENGE01 as quantity,
-                                qals.ebeln as purchasing_doc_no,
-                                qals.ebelp as po_lineitem,
-                                ekpo.NETPR as price
-                            FROM qals as qals
-                              left join ekpo as ekpo
-                                ON (ekpo.ebeln = qals.ebeln AND ekpo.ebelp = qals.ebelp AND ekpo.matnr = qals.matnr)
-                            WHERE qals.MBLNR = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+        const icgrn_q = `select  
+        mseg.mblnr , mseg.ebeln , mseg.ebelp , mseg.bpmng , ekpo.netpr  
+        from  mseg as mseg
+        left join ekpo as ekpo
+            on( ekpo.ebeln = mseg.ebeln and  ekpo.ebelp = mseg.ebelp)
+        where mseg.mblnr  = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
         const grn_values = data.id || "";
         console.log("icgrn_q", grn_values);
@@ -431,8 +425,10 @@ function calculateTotals(data) {
     let totalPrice = 0;
 
     data.forEach((item) => {
-        totalQuantity += parseFloat(item.quantity);
-        totalPrice += parseFloat(item.price) * parseFloat(item.quantity);
+        if (item.bpmng && item.netpr) {
+            totalQuantity += parseFloat(item.bpmng);
+            totalPrice += parseFloat(item.netpr) * parseFloat(item.bpmng);
+        }
     });
 
     return {
@@ -700,7 +696,6 @@ const updateServiceBtnListTable = async (client, data) => {
             };
             const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
             console.log("btnListTablePaylod", btnListTablePaylod);
-            
             await poolQuery({ client, query: q, values: val });
         } else {
             console.log("NO BTN FOUND IN LIST TO BE UPDATED");
@@ -713,68 +708,73 @@ const updateServiceBtnListTable = async (client, data) => {
 
 async function btnCurrentDetailsCheck(client, data) {
     try {
-      let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
-      const valueArr = [];
-      let count = 0;
-      if (data.btn_num) {
-        btnstausCount += ` AND btn_num = $${++count}`;
-        valueArr.push(data.btn_num);
-      }
-      if (data.status) {
-        btnstausCount += ` AND status = $${++count}`;
-        valueArr.push(data.status);
-      }
-  
-      const checkStatus = new Set([
-        STATUS_RECEIVED,
-        REJECTED,
-        BTN_STATUS_BANK,
-        BTN_STATUS_HOLD_TEXT,
-        BTN_STATUS_PROCESS,
-        SUBMITTED_BY_CAUTHORITY
-      ]);
-  
-      if (data.status === STATUS_RECEIVED) {
-        checkStatus.add(BTN_STATUS_DRETURN);
-        checkStatus.add(SUBMITTED_BY_VENDOR);
-        checkStatus.delete(STATUS_RECEIVED);
-        checkStatus.delete(SUBMITTED_BY_CAUTHORITY);
-      }
-  
-      btnstausCount += " ORDER BY created_at DESC";
-      btnstausCount += " LIMIT 1";
-  
-      const result = await poolQuery({
-        client,
-        query: btnstausCount,
-        values: valueArr,
-      });
-      let isInvalid = false;
-  
-      // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
-      // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
-  
-      if (result.length) {
-        const currentStatus = result.at(-1);
-        if (checkStatus.has(currentStatus.status)) {
-          isInvalid = true;
+        let btnstausCount = `SELECT btn_num, status  FROM btn_list WHERE 1 = 1`;
+        const valueArr = [];
+        let count = 0;
+        if (data.btn_num) {
+            btnstausCount += ` AND btn_num = $${++count}`;
+            valueArr.push(data.btn_num);
         }
+        // if (data.status) {
+        //     btnstausCount += ` AND status = $${++count}`;
+        //     valueArr.push(data.status);
+        // }
+
+        const checkStatus = new Set([
+            STATUS_RECEIVED,
+            REJECTED,
+            BTN_STATUS_BANK,
+            BTN_STATUS_HOLD_TEXT,
+            BTN_STATUS_PROCESS,
+            SUBMITTED_BY_CAUTHORITY
+        ]);
+
+        if (data.status === SUBMITTED_BY_CAUTHORITY) {
+            checkStatus.add(BTN_STATUS_DRETURN);
+            checkStatus.add(SUBMITTED_BY_VENDOR);
+            checkStatus.delete(STATUS_RECEIVED);
+            checkStatus.delete(SUBMITTED_BY_CAUTHORITY);
+        }
+        if (data.status === STATUS_RECEIVED) {
+            checkStatus.add(BTN_STATUS_DRETURN);
+            checkStatus.add(SUBMITTED_BY_VENDOR);
+            checkStatus.delete(SUBMITTED_BY_CAUTHORITY);
+        }
+
+        btnstausCount += " ORDER BY created_at DESC";
+        btnstausCount += " LIMIT 1";
+
+        const result = await poolQuery({
+            client,
+            query: btnstausCount,
+            values: valueArr,
+        });
+        let isInvalid = false;
+
+        // const result = [{ btn_num: 20240725999, date: 10, status: "BANK" },]
+        // const checkStatus = new Set(["RECEIVED", "REJECTED", "BANK", "HOLD", "UNHOLD", "PROCESS"]);
+
+        if (result.length) {
+            const currentStatus = result.at(-1);
+            if (checkStatus.has(currentStatus.status)) {
+                isInvalid = true;
+            }
+            return {
+                isInvalid,
+                currentStatus: currentStatus.status,
+                message: `already ${currentStatus.status}`,
+            };
+        }
+
         return {
-          isInvalid,
-          currentStatus: currentStatus.status,
-          message: `already ${currentStatus.status}`,
+            isInvalid: true,
+            currentStatus: BTN_STATUS_NOT_SUBMITTED,
+            message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
         };
-      }
-  
-      return {
-        isInvalid: true,
-        currentStatus: BTN_STATUS_NOT_SUBMITTED,
-        message: `Current status ${BTN_STATUS_NOT_SUBMITTED}`,
-      };
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 
 
@@ -799,4 +799,3 @@ module.exports = {
     supportingDataForServiceBtn,
     updateServiceBtnListTable
 }
-
