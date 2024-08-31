@@ -11,6 +11,7 @@ const {
   BTN_LIST,
   QALS,
   MSEG,
+  SERVICE_ENTRY_TABLE_SAP,
 } = require("../lib/tableName");
 
 const currentStageHandler = async (id) => {
@@ -99,6 +100,7 @@ const currentStageHandleForAllActivity = async (client, ids) => {
       SHIPPINGDOCUMENTS,
       QALS, // grn
       MSEG, // icgrn
+      SERVICE_ENTRY_TABLE_SAP,
       WDC,
       BTN_LIST,
     ];
@@ -108,7 +110,7 @@ const currentStageHandleForAllActivity = async (client, ids) => {
 
     const currStageQuery = dbs.map((item, i) => {
       let q = "";
-      if (item === QALS || item === MSEG) {
+      if (item === QALS || item === MSEG || item == SERVICE_ENTRY_TABLE_SAP) {
         q = `(SELECT count(EBELN) as count, EBELN as purchasing_doc_no, '${item}' as flag FROM ${item} WHERE ebeln IN (${placeholders}) GROUP BY purchasing_doc_no)`;
       } else {
         q = `(SELECT count(purchasing_doc_no) as count, purchasing_doc_no, '${item}' as flag FROM ${item} WHERE purchasing_doc_no IN (${placeholders}) GROUP BY purchasing_doc_no)`;
@@ -142,11 +144,14 @@ const currentStageHandleForAllActivity = async (client, ids) => {
         if (flag === SHIPPINGDOCUMENTS) {
           finalStage = "SHIPPING";
         }
+        if (flag === MSEG) {
+          finalStage = "STORE-ICGRN";
+        }
         if (flag === QALS) {
           finalStage = "STORE-GRN";
         }
-        if (flag === MSEG) {
-          finalStage = "STORE-ICGRN";
+        if (flag === SERVICE_ENTRY_TABLE_SAP) {
+          finalStage = "SIR";
         }
         if (flag === WDC) {
           finalStage = "WDC";
