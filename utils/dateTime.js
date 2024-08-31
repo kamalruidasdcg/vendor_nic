@@ -10,7 +10,7 @@ exports.formatDateSync = (date = new Date()) => {
     month = "0" + month;
   }
 
-  return day + "-" + month + "-" + year;
+  return year + "-" + month + "-" + day;
 };
 
 exports.convertToEpoch = (date) => {
@@ -69,8 +69,6 @@ exports.formatDashedDate = (epochTime) => {
   return year + "-" + month + "-" + day;
 };
 
-
-
 function getdates(daysCount = 1) {
   const dates = [];
   const today = new Date();
@@ -86,8 +84,8 @@ function getdates(daysCount = 1) {
 }
 
 function formatDate(date) {
-  const day = String(date.getDate()).padStart(2, '0'); // Ensures two-digit day
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensures two-digit month
+  const day = String(date.getDate()).padStart(2, "0"); // Ensures two-digit day
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensures two-digit month
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 }

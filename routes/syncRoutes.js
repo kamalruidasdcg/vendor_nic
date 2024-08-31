@@ -16,10 +16,10 @@ router.post("/sync_download", syncDownload);
 router.post("/sync_download_test", syncDownloadTEST);
 
 // API TO DOWNLOAD COMPRESS UNSYNCED DOWNLOADED DATA
-router.post("/sync_zip", [uploadUnsyncedData.single("file")], syncCompress);
+router.post("/sync_zip", syncCompress);
 
 // API TO Unzip the ZIP FILE FOR DATA
-router.post("/sync_unzip", syncUnzip);
+router.post("/sync_unzip", [uploadUnsyncedData.single("file")], syncUnzip);
 
 // API TO UPDATE SELECTED TABLES
 router.post("/sync_upload", syncDataUpload);

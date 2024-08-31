@@ -359,16 +359,17 @@ exports.syncUnzip = async (req, res) => {
     const zipDataPath = path.join(parentDir, OTHER_SERVER_DATA_PATH, todayDate);
 
     // Check if today's date folder exists
-    if (!fs.existsSync(zipDataPath)) {
-      return resSend(
-        res,
-        200,
-        false,
-        zipDataPath,
-        "No zip file found for today's date",
-        null
-      );
-    }
+    // if (!fs.existsSync(zipDataPath)) {
+    //   fs.mkdirSync(zipDataPath, { recursive: true });
+    //   return resSend(
+    //     res,
+    //     200,
+    //     false,
+    //     zipDataPath,
+    //     "No zip file found for today's date",
+    //     null
+    //   );
+    // }
 
     // Check if the zip file exists inside the today's date folder
     const filePath = path.join(zipDataPath, "sync_data.zip");
