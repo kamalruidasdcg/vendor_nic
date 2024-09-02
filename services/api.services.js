@@ -39,8 +39,7 @@ const apiLog = async (req, res, next) => {
          Request path : ${req.path},
          Request url : ${req.originalUrl},
          Request method : ${req.method},
-         Response status code : ${res.statusCode},
-         Response obj : ${body}`,
+         Response status code : ${res.statusCode}`,
         JSON.stringify(result)
       );
     }
