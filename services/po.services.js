@@ -700,6 +700,7 @@ const getPoWithLineItems = async (client, values, limit, offSet) => {
     WHERE 
       	ekko.ebeln IN(${placeholders}) ORDER BY ekko.aedat, ekko.ebeln LIMIT ${limit} OFFSET ${offSet}`;
 
+console.log("getPoQuey", getPoQuey);
 
     const result = poolQuery({ client, query: getPoQuey, values });
 

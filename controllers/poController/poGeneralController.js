@@ -1025,9 +1025,6 @@ const poListCopy = async (req, res) => {
       const materialType = await poolQuery({ client, query: materialTypeQuery, values: [] });
       const modifiedPOData = poDataModify2(poDetails);
 
-      console.log("currentActivity", currentActivity);
-
-
       const result = [];
       Object.keys(modifiedPOData).forEach((key) => {
         const mileStoneActivity = setMileStoneActivity(key, contractualDates)

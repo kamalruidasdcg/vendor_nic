@@ -87,8 +87,8 @@ const task = cron.schedule(
     }
     isCompletedTask = true;
     try {
-      await mailSentCornJob();
       // console.log("running a task every two minutes");
+      await mailSentCornJob();
     } catch (error) {
       console.error("Job failed:", error.message);
     } finally {
