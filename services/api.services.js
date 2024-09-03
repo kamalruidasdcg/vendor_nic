@@ -32,8 +32,7 @@ const apiLog = async (req, res, next) => {
           (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') AS max_connections,
           ROUND((COUNT(*)::numeric / (SELECT setting::int FROM pg_settings WHERE name = 'max_connections')) * 100, 2) AS used_percentage
       FROM 
-    pg_stat_activity;`, values: []
-        });
+    pg_stat_activity;`, values: []});
       console.log(
         `Request from : ${req.ip},
          Request path : ${req.path},
