@@ -21,6 +21,7 @@ const payloadObj = (payload) => {
         sgst: payload.sgst || "0",
         invoice_filename: payload.invoice_filename || "",
         invoice_type: payload.invoice_type,
+        invoice_date: payload.invoice_date || null,
         suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
         debit_note: payload.debit_note || "0",
         credit_note: payload.credit_note || "0",
@@ -586,8 +587,6 @@ async function getServiceBTNDetails(client, data) {
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
         let response = result[0] || {};
         const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
-        console.log("supDocs", supDocs);
-
         response = { ...response, ...supDocs };
 
         return { success: true, statusCode: 200, message: "Value fetch success", data: response };
