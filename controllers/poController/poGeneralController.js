@@ -1008,7 +1008,7 @@ const poListCopy = async (req, res) => {
 
 
       let page_number = parseInt(req.query.page_number) || 1;
-      let page_size = parseInt(req.query.page_size) || 10;
+      let page_size = parseInt(req.query.page_size) || 500;
       let offset = (page_number - 1) * page_size;
 
 
