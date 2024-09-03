@@ -1,6 +1,3 @@
-const cors = require('cors');
-
-// Function to get CORS options based on the environment
 function getCorsOptions() {
     const env = process.env.NODE_ENV || 'dev';
 
