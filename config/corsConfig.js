@@ -7,7 +7,7 @@ function getCorsOptions() {
     const corsConfigs = {
         dev: {
             origin: ['http://10.18.1.242:3000', 'http://localhost:3000'],
-            methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
             credentials: true,
         },
         qa: {
