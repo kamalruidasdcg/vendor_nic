@@ -546,6 +546,8 @@ async function getServiceBTNDetails(client, data) {
                 s_btn.*,
                 btn_assign.assign_by,
                 btn_assign.assign_to,
+                users_btn_assign_to.cname AS assign_to_name,
+                users_assign_to_fi.cname AS assign_by_fi_name,
                 btn_assign.assign_by_fi,
                 btn_assign.assign_to_fi,
                 btn_assign.last_assign,
@@ -566,12 +568,16 @@ async function getServiceBTNDetails(client, data) {
                 users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
-            LEFT JOIN pa0002 as users 
-                ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
-            LEFT JOIN btn_service_certify_authority as btn_authority 
-                ON(s_btn.btn_num = btn_authority.btn_num)
             LEFT JOIN btn_assign AS btn_assign
                 ON(s_btn.btn_num = btn_assign.btn_num)
+            LEFT JOIN pa0002 as users 
+                ON(users.pernr :: character varying = s_btn.bill_certifing_authority)
+            LEFT JOIN pa0002 as users_btn_assign_to
+                ON(users_btn_assign_to.pernr :: character varying = btn_assign.assign_to) 
+            LEFT JOIN pa0002 as users_assign_to_fi
+                ON(users_assign_to_fi.pernr :: character varying = btn_assign.assign_to_fi) 
+            LEFT JOIN btn_service_certify_authority as btn_authority 
+                ON(s_btn.btn_num = btn_authority.btn_num)
             WHERE s_btn.btn_num = $1`;
         // AND s_btn.bill_certifing_authority = '600700'
         // btn_assign.*,
