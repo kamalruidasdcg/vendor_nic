@@ -7,17 +7,17 @@ require("dotenv").config();
 const PORT = process.env.PORT || 4001;
 // Settings
 app.use(express.json());
-app.use(cors("*"));
+app.use(cors(getCorsOptions()));
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // // app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
 // // const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
 // // /home/obps/archieve'
 // const poDirPath = path.resolve();
 // app.use("/sapuploads/po", express.static(poDirPath));
-// const errorHandler = require("./middleware/errorHandler");
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const errorHandler = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
 const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
@@ -31,6 +31,7 @@ const {
   sendBGReminderMail,
   sendPOMilestoneEXPReminderMail,
 } = require("./controllers/sapController/remaiderMailSendController");
+const getCorsOptions = require("./config/corsConfig");
 
 // API LOGS
 app.use(apiLog);
@@ -50,7 +51,7 @@ app.use("/api/v1/sap", sapRoutes);
 app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/stat", statRoutes);
 
-// app.use(errorHandler);
+app.use(errorHandler);
 
 app.use((req, res, next) => {
   res.status(200).json({
@@ -87,8 +88,8 @@ const task = cron.schedule(
     }
     isCompletedTask = true;
     try {
-      // console.log("running a task every two minutes");
       await mailSentCornJob();
+      // console.log("running a task every two minutes");
     } catch (error) {
       console.error("Job failed:", error.message);
     } finally {
