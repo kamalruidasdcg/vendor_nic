@@ -1,16 +1,15 @@
-const { getEpochTime, getYyyyMmDd, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
+const { getEpochTime, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
 const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY, BTN_ASSIGN } = require("../lib/tableName");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO, STATUS_RECEIVED, FORWARDED_TO_FI_STAFF, REJECTED } = require("../lib/status");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
-const { poolClient, poolQuery, getQuery } = require("../config/pgDbConfig");
+const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck } = require("../services/btnServiceHybrid.services");
-const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
+const { filesData, payloadObj, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck } = require("../services/btnServiceHybrid.services");
+const { INSERT, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
-const { timeInHHMMSS } = require("./btnControllers");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
-const { updateBtnListTable } = require("../services/btn.services");
+
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -474,7 +473,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
       // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      const sendSap =  await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+      const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);

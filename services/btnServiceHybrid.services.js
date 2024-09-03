@@ -4,7 +4,6 @@ const { APPROVED, REJECTED, STATUS_RECEIVED, BTN_STATUS_BANK, BTN_STATUS_HOLD_TE
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
-const { btnSubmitToSAPF01 } = require("./sap.btn.services");
 
 
 const payloadObj = (payload) => {
