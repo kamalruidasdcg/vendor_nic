@@ -1,5 +1,5 @@
 const { NEW_SDBG, MAKT, MARA, MSEG, MKPF } = require("../../lib/tableName");
-const { connection } = require("../../config/dbConfig");
+// const { connection } = require("../../config/dbConfig");
 const { responseSend, resSend } = require("../../lib/resSend");
 const {
   generateQueryForMultipleData,
@@ -15,6 +15,7 @@ const Message = require("../../utils/messages");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const { sendMail } = require("../../services/mail.services");
 const { GRN_DOC_GENERATE_LAN } = require("../../lib/event");
+const { isPresentInObps } = require("../../services/sap.services");
 
 const makt = async (req, res) => {
   try {
@@ -122,10 +123,17 @@ const mseg = async (req, res) => {
     const client = await poolClient();
     try {
       if (!req.body) {
-        responseSend(res, "F", 400, Message.INVALID_PAYLOAD, null, null);
+        responseSend(res, "F", 400, Message.INVALID_PAYLOAD, req.body, null);
       }
       const payload = req.body;
       const payloadObj = await msegPayload(payload);
+
+      // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+      // const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj[0]?.EBELN}'`).count();
+      // if (!isPresent) {
+      //   return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      // }
+
       const ekkoTableInsert = await generateQueryForMultipleData(
         payloadObj,
         "mseg",
@@ -201,6 +209,12 @@ const mkpf = async (req, res) => {
       }
       const payloadObj = await makfPayload(payload);
       console.log("payloadObj mkpf", payloadObj);
+
+       // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+      //  const isPresent = await isPresentInObps(client, `mblnr = '${payloadObj.MKPF}'`, MKPF).count();
+      //  if (!isPresent) {
+      //    return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      //  }
 
       const mkpfInsertQuery = await generateQueryForMultipleData(
         payloadObj,

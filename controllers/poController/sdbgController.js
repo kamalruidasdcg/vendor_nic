@@ -602,7 +602,7 @@ const sdbgSubmitByDealingOfficer = async (req, res) => {
         handelEmail(obj, tokenData);
       }
 
-      const Q = `SELECT file_name,file_path,action_type,vendor_code FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
+      const Q = `SELECT file_name,file_path,action_type,vendor_code,bg_no FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
       let sdbgResult = await poolQuery({
         client,
         query: Q,
@@ -749,7 +749,7 @@ const sdbgUpdateByFinance = async (req, res) => {
       }
 
       // return;
-      const star = `file_name,file_path,vendor_code,action_type`;
+      const star = `file_name,file_path,vendor_code,action_type,bg_no`;
 
       const get_sdbg_query = `SELECT ${star} FROM ${SDBG} WHERE purchasing_doc_no = $1 AND reference_no = $2`;
       const action_type_with_vendor_code = await poolQuery({
@@ -891,6 +891,7 @@ const sdbgUpdateByFinance = async (req, res) => {
         created_by_name: "finance dept",
         created_by_id: tokenData.vendor_code,
         updated_by: "GRSE",
+        bg_no: action_type_with_vendor_code[0]?.bg_no,
       };
       console.log(insertPayloadForSdbg);
       const insertsdbg_q = generateQuery(INSERT, SDBG, insertPayloadForSdbg);

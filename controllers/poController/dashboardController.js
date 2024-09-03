@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query } = require("../../config/pgDbConfig");
 const { SDBG, DRAWING, QAP_SUBMISSION } = require("../../lib/tableName");
 const { QAP_ASSIGNER } = require("../../lib/constant");
 

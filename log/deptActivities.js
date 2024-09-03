@@ -1,6 +1,6 @@
 // // get the client
 // const mysql = require("mysql2/promise");
-const { query } = require("../config/dbConfig");
+const { query } = require("../config/pgDbConfig");
 const { DEPERTMENT_LOG } = require("../lib/tableName");
 
 // require("dotenv").config();

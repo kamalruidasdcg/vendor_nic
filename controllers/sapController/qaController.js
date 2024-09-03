@@ -1,6 +1,6 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS, QAVE_TABLE } = require('../../lib/tableName');
-const { connection } = require("../../config/dbConfig");
+const { QALS, QAVE_TABLE } = require('../../lib/tableName');
+// const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
@@ -10,6 +10,7 @@ const Message = require("../../utils/messages");
 const { ICGRN_DOC_FROM_SAP } = require('../../lib/event');
 const { sendMail } = require('../../services/mail.services');
 const { getUserDetailsQuery } = require('../../utils/mailFunc');
+const { isPresentInObps } = require('../../services/sap.services');
 
 const qals = async (req, res) => {
     console.log("qalssss");
@@ -29,10 +30,14 @@ const qals = async (req, res) => {
             if (!payload || !payload.PRUEFLOS) {
                 return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, 'Invalid payload', null);
             }
-
-
-
             const payloadObj = await qalsPayload(payload);
+            
+            // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+            // const isPresent = await isPresentInObps(client, `ebeln = '${payload.EBELN}'`).count();
+            // if (!isPresent) {
+            //     return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+            // }
+
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, ["PRUEFLOS"]);
             const response = await poolQuery({ client, query: qalsInsertQuery.q, values: qalsInsertQuery.val });
             let mailPayload = { ...payloadObj };

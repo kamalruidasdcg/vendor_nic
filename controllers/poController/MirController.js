@@ -1,5 +1,5 @@
 const { resSend } = require("../../lib/resSend");
-const { query } = require("../../config/dbConfig");
+const { query } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
 const { INSERT } = require("../../lib/constant");
 const { MIR } = require("../../lib/tableName");
