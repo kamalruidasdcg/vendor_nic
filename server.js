@@ -30,7 +30,9 @@ const {
   sendPOMilestoneEXPReminderMail,
 } = require("./controllers/sapController/remaiderMailSendController");
 const getCorsOptions = require("./config/corsConfig");
-const createRateLimiter = require("./config/rateLimiter.JS");
+const createRateLimiter = require("./config/rateLimit");
+
+
 
 
 
@@ -42,7 +44,7 @@ const corsOptions = getCorsOptions();
 app.use(cors(corsOptions));
 
 // LIMITER
-const limiter = createRateLimiter();
+const limiter = createRateLimiter ();
 app.use(limiter);
 
 // API LOGS
