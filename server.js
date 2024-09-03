@@ -5,9 +5,7 @@ const app = express();
 const cron = require("node-cron");
 require("dotenv").config();
 const PORT = process.env.PORT || 4001;
-// Settings
-app.use(express.json());
-app.use(cors(getCorsOptions()));
+
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // // app.use("/sapuploads", express.static(path.join(__dirname, "sapuploads")));
 // // const poDirPath = path.join(__dirname, "..", "..", "..", "..", "ftpgrse");
@@ -32,6 +30,20 @@ const {
   sendPOMilestoneEXPReminderMail,
 } = require("./controllers/sapController/remaiderMailSendController");
 const getCorsOptions = require("./config/corsConfig");
+const createRateLimiter = require("./config/rateLimiter.JS");
+
+
+
+// Settings
+app.use(express.json());
+
+// CORS
+const corsOptions = getCorsOptions();
+app.use(cors(corsOptions));
+
+// LIMITER
+const limiter = createRateLimiter();
+app.use(limiter);
 
 // API LOGS
 app.use(apiLog);
