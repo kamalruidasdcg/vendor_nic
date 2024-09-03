@@ -91,6 +91,27 @@ const mailSentCornJob = async () => {
           //     }
           // });
         }
+
+        // await SENDMAIL(mailDetails, async function (err, data) {
+        //     if (!err) {
+        //         // await Promise.all([
+        //         // ])
+
+        //         if (emails[i]["retry_count"] == MAIL_SEND_MAX_RETRY_COUNT) {
+        //             await archiveEmails({ ...emails[i] });
+        //             await query({ query: `DELETE FROM ${EMAILS}  WHERE retry_count = $1 `, values: [MAIL_SEND_MAX_RETRY_COUNT] });
+        //         } else {
+        //             const { q, val } = generateQuery(UPDATE, ARCHIVE_EMAILS, { retry_count: ++emails[i]["retry_count"] }, { id: emails[i]["id"] });
+        //             await query({ query: q, values: val }),
+        //                 console.log("qqqqq", q, val);
+        //             console.log("Error Occurs ('_') !");
+        //         }
+        //     } else {
+        //         await query({ query: `DELETE FROM ${EMAILS} WHERE id = $1`, values: [emails[i]["id"]] }),
+        //             await archiveEmails({ ...emails[i] })
+        //         console.log(`Email sent successfully ('_') !!${emails[i]["email_to"]}`);
+        //     }
+        // });
       }
     } catch (error) {
       throw error;
