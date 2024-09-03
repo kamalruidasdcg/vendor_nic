@@ -73,8 +73,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
         values: [poNo],
       });
 
-      console.log("get_line_item_ekpo", get_line_item_ekpo);
-      console.log("wdcLineItem", wdcLineItem);
+      wdcLineItem = wdcLineItem.filter((el) => el?.status === APPROVED);
 
       const data = wdcLineItem.map((el2) => {
         const DOObj = get_line_item_ekpo.find(

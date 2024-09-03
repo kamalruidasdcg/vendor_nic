@@ -14,10 +14,10 @@ app.use(cors("*"));
 // // /home/obps/archieve'
 // const poDirPath = path.resolve();
 // app.use("/sapuploads/po", express.static(poDirPath));
+// const errorHandler = require("./middleware/errorHandler");
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
-const errorHandler = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
 const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
@@ -50,7 +50,7 @@ app.use("/api/v1/sap", sapRoutes);
 app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/stat", statRoutes);
 
-app.use(errorHandler);
+// app.use(errorHandler);
 
 app.use((req, res, next) => {
   res.status(200).json({
@@ -87,8 +87,8 @@ const task = cron.schedule(
     }
     isCompletedTask = true;
     try {
-      await mailSentCornJob();
       // console.log("running a task every two minutes");
+      await mailSentCornJob();
     } catch (error) {
       console.error("Job failed:", error.message);
     } finally {
