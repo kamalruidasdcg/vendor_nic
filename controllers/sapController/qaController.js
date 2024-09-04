@@ -33,10 +33,10 @@ const qals = async (req, res) => {
             const payloadObj = await qalsPayload(payload);
             
             // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
-            const isPresent = await isPresentInObps(client, `ebeln = '${payload.EBELN}'`).count();
-            if (!isPresent) {
-                return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
-            }
+            // const isPresent = await isPresentInObps(client, `ebeln = '${payload.EBELN}'`).count();
+            // if (!isPresent) {
+            //     return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+            // }
 
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, ["PRUEFLOS"]);
             const response = await poolQuery({ client, query: qalsInsertQuery.q, values: qalsInsertQuery.val });
