@@ -1,9 +1,9 @@
 const express = require("express");
+const { uploadUnsyncedData } = require("../lib/fileUpload");
 const {
   syncDownload,
   syncCompress,
   syncUnzip,
-  syncDataUpload,
   unsyncFileCompressed,
   uploadRecentFilesController,
   syncDownloadTEST,
@@ -15,13 +15,13 @@ router.post("/sync_download", syncDownload);
 router.post("/sync_download_test", syncDownloadTEST);
 
 // API TO DOWNLOAD COMPRESS UNSYNCED DOWNLOADED DATA
-router.post("/sync_zip", syncCompress);
+router.post("/sync_zip", [uploadUnsyncedData.single("file")], syncCompress);
 
 // API TO Unzip the ZIP FILE FOR DATA
 router.post("/sync_unzip", syncUnzip);
 
 // API TO UPDATE SELECTED TABLES
-router.post("/sync_upload", syncDataUpload);
+// router.post("/sync_upload", syncDataUpload);
 
 // API TO COMPRESS ZIP FILE FOR FILES THAT ARE UPLOADED IN LAST 24 MINUTES
 router.post("/sync_file_zip", unsyncFileCompressed);
