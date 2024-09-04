@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 });
 
 // Call Cron JOB for DATA Syncronization
-cron.schedule("05 00 * * *", async () => {
+cron.schedule("00 23 * * *", async () => {
   console.log("Cron job started at 00:05");
   try {
     await syncCron();
