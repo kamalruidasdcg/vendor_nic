@@ -4,7 +4,6 @@ const { APPROVED, REJECTED, STATUS_RECEIVED, BTN_STATUS_BANK, BTN_STATUS_HOLD_TE
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const Message = require("../utils/messages");
-const { btnSubmitToSAPF01 } = require("./sap.btn.services");
 
 
 const payloadObj = (payload) => {
@@ -21,6 +20,7 @@ const payloadObj = (payload) => {
         sgst: payload.sgst || "0",
         invoice_filename: payload.invoice_filename || "",
         invoice_type: payload.invoice_type,
+        invoice_date: payload.invoice_date || null,
         suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
         debit_note: payload.debit_note || "0",
         credit_note: payload.credit_note || "0",
@@ -546,6 +546,8 @@ async function getServiceBTNDetails(client, data) {
                 s_btn.*,
                 btn_assign.assign_by,
                 btn_assign.assign_to,
+                users_btn_assign_to.cname AS assign_to_name,
+                users_assign_to_fi.cname AS assign_by_fi_name,
                 btn_assign.assign_by_fi,
                 btn_assign.assign_to_fi,
                 btn_assign.last_assign,
@@ -566,12 +568,16 @@ async function getServiceBTNDetails(client, data) {
                 users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
-            LEFT JOIN pa0002 as users 
-                ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
-            LEFT JOIN btn_service_certify_authority as btn_authority 
-                ON(s_btn.btn_num = btn_authority.btn_num)
             LEFT JOIN btn_assign AS btn_assign
                 ON(s_btn.btn_num = btn_assign.btn_num)
+            LEFT JOIN pa0002 as users 
+                ON(users.pernr :: character varying = s_btn.bill_certifing_authority)
+            LEFT JOIN pa0002 as users_btn_assign_to
+                ON(users_btn_assign_to.pernr :: character varying = btn_assign.assign_to) 
+            LEFT JOIN pa0002 as users_assign_to_fi
+                ON(users_assign_to_fi.pernr :: character varying = btn_assign.assign_to_fi) 
+            LEFT JOIN btn_service_certify_authority as btn_authority 
+                ON(s_btn.btn_num = btn_authority.btn_num)
             WHERE s_btn.btn_num = $1`;
         // AND s_btn.bill_certifing_authority = '600700'
         // btn_assign.*,
@@ -580,8 +586,6 @@ async function getServiceBTNDetails(client, data) {
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
         let response = result[0] || {};
         const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
-        console.log("supDocs", supDocs);
-
         response = { ...response, ...supDocs };
 
         return { success: true, statusCode: 200, message: "Value fetch success", data: response };
