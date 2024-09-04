@@ -15,6 +15,8 @@ const {
   formatDateSync,
   convertToEpoch,
   formatDashedDate,
+  getDates,
+  getDatesFromEpoch,
 } = require("../utils/dateTime");
 const { resSend } = require("../utils/resSend");
 const unzipper = require("unzipper");
@@ -25,6 +27,8 @@ const {
   UNZIP_DATA_PATH,
   UNSYNCED_FILES,
   OTHER_SERVER_FILE_PATH,
+  FOLDER_NAME_PO,
+  FOLDER_NAME_PYMT_ADVICE,
 } = require("../lib/constant");
 const { getColumnDataType } = require("../utils/syncUtils");
 const todayDate = formatDateSync(new Date());
@@ -515,9 +519,8 @@ exports.syncDataUpload = async (req, res) => {
               .map((key, i) => `${key} = $${i + 1}`)
               .join(", ");
             // console.log("q", tableName, updateColumns, values);
-            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${
-              keys.length + 1
-            }`;
+            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${keys.length + 1
+              }`;
             // console.log("q1", tableName, item.sync_id);
             await pool.query(query, [...values, item.sync_id]);
           } else {
@@ -597,6 +600,8 @@ const createZipForFiles = async (folderName, files) => {
   }
 
   const zipFilePath = path.join(syncFolderPath, `${folderName}.zip`);
+  console.log("zipFilePath", zipFilePath);
+
   const output = fs.createWriteStream(zipFilePath);
   const archive = archiver("zip", { zlib: { level: 9 } });
 
@@ -632,27 +637,39 @@ const getRecentFiles = async (sync_date) => {
   // const dayAgo = now - 24 * 60 * 60 * 1000;
   // console.log("dayAgo", dayAgo);
   const syncDateTimestamp = new Date(sync_date).getTime();
-  console.log("syncDateTimestamp", syncDateTimestamp);
+  console.log("syncDateTimestamp", sync_date, syncDateTimestamp);
 
   for (const folder of folders) {
     const folderPath = path.join(UPLOADS_DIR, folder);
     const stats = await fs.lstatSync(folderPath);
-
     if (stats.isDirectory()) {
-      const files = await fs.readdirSync(folderPath);
+      let files = await fs.readdirSync(folderPath);
 
       for (const file of files) {
         const filePath = path.join(folderPath, file);
         let fileStats = await fs.statSync(filePath);
-
         const uploadTime = Number(file.split("-")[0]);
 
-        if (
+        /**
+         * SAP FILE FILTER
+         * for only po and paymentadvice
+         */
+
+        if (folder == FOLDER_NAME_PO || folder == FOLDER_NAME_PYMT_ADVICE) {
+          // 1725340829000
+          const sapFtpUpladedFiles = sapDataFilterForSync(file, sync_date);  
+          if (sapFtpUpladedFiles && recentFiles[folder]) {
+            recentFiles[folder].push(file);
+          } else if(sapFtpUpladedFiles && !recentFiles[folder]) {
+            recentFiles[folder] = [file];
+          }
+
+        } else if (
           fileStats.mtimeMs >= syncDateTimestamp ||
           uploadTime >= syncDateTimestamp
         ) {
           console.log(
-            "uTime",
+            "uTime", FOLDER_NAME_PO, folder,
             uploadTime,
             fileStats.mtimeMs,
             syncDateTimestamp
@@ -665,13 +682,44 @@ const getRecentFiles = async (sync_date) => {
       }
     }
   }
-
   return recentFiles;
 };
+
+
+/**
+ * sap data filter
+ * @param {*} filesData 
+ * @param {*} sync_date 
+ * @returns boolen
+ */
+const sapDataFilterForSync = (filesData, sync_date) => {
+
+  if (typeof filesData === 'string') {
+    const todayDate = getDatesFromEpoch(sync_date);
+    filesData.split('_')[1] == todayDate;
+    return filesData.split('_')[1] == todayDate;
+  }
+  return false;
+
+
+
+  // console.log("sapFtpUpladedFiles", filesData);
+  // let files = [];
+  // if (filesData.length) {
+  //   const todayDate = getDatesFromEpoch(sync_date);
+  //   // filesData.split('_')[1] == todayDate;
+  //   console.log("todayDate", todayDate);
+  //   files = filesData.filter((f) => f.split('_')[1] == todayDate)
+  // }
+  // return files;
+}
+
 
 // Function to get unsynced files and compressed to ZIP
 const getAndZipFileHandler = async (sync_date) => {
   const recentFiles = await getRecentFiles(sync_date);
+  console.log("recentFiles", recentFiles);
+
   for (const folderName in recentFiles) {
     if (recentFiles[folderName].length > 0) {
       await createZipForFiles(folderName, recentFiles[folderName]);
@@ -695,7 +743,7 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
-  cron.schedule("12 14 * * *", async () => {
+  cron.schedule("30 23 * * *", async () => {
     console.log("Running the scheduled task 00:20");
 
     try {
@@ -749,7 +797,8 @@ const unzipAndMove = async (zipFilePath, uploadsFolderPath, file) => {
 
     console.log("Files have been successfully unzipped and moved.");
   } catch (err) {
-    console.error("An error occurred:", err);
+    console.error("An error occurred:", err.message);
+    throw err;
   }
 };
 
@@ -837,5 +886,78 @@ exports.syncDownloadTEST = async (req, res) => {
   } catch (error) {
     console.error(`Error in ekpo data sync csv download`);
     console.error(error.message);
+  }
+};
+
+
+exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
+  try {
+
+
+    const { fromDate, toDate } = req.body;
+
+    const dateArr = getDates(fromDate, toDate);
+
+    for (const syncDate of dateArr) {
+      const parentDir = path.resolve(__dirname, "..");
+
+      // GET THE ZIP FILE
+      const zipFilePath = path.join(parentDir, OTHER_SERVER_FILE_PATH, syncDate);
+
+      console.log("zipFilePath", zipFilePath, syncDate);
+
+      // Check if the today's date folder exists
+      if (!fs.existsSync(zipFilePath)) {
+        return resSend(res, 200, false, zipFilePath, `No zip file found for ${syncDate} date`, null);
+      }
+
+      // UPLOAD FILE PATH
+      const uploadsFolderPath = path.join(parentDir, "uploads");
+
+      // Ensure the uploads folder exists
+      if (!fs.existsSync(uploadsFolderPath)) {
+        fs.mkdirSync(uploadsFolderPath, { recursive: true });
+      }
+
+      // GET ALL FILES FROM A FOLDER
+      let files = fs
+        .readdirSync(zipFilePath)
+        .filter((item, i) => isZipFile(item));
+
+      console.log("files", files);
+
+      // let stats = fs.statSync(zipFilePath);
+      // if (!stats.isFile()) {
+      //   return resSend(
+      //     res,
+      //     200,
+      //     false,
+      //     zipFilePath,
+      //     `Provided path is not a file: ${zipFilePath}`,
+      //     null
+      //   );
+      // }
+      // files.forEach(async (file) => {
+      //   let zipFilePath = path.join(
+      //     parentDir,
+      //     OTHER_SERVER_FILE_PATH,
+      //     todayDate,
+      //     file
+      //   );
+      //   console.log(zipFilePath);
+      //   await unzipAndMove(zipFilePath, uploadsFolderPath, file);
+
+      for (const file of files) {
+        let zipFilePath = path.join(parentDir, OTHER_SERVER_FILE_PATH, syncDate, file);
+        console.log(zipFilePath);
+        await unzipAndMove(zipFilePath, uploadsFolderPath, file);
+
+      }
+
+    }
+
+    resSend(res, 201, true, [], "File transferred successfully.", null);
+  } catch (error) {
+    console.log("An error occurred in uploadRecentFilesController:", error.message);
   }
 };
