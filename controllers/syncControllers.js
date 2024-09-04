@@ -907,9 +907,9 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
       console.log("zipFilePath", zipFilePath, syncDate);
 
       // Check if the today's date folder exists
-      if (!fs.existsSync(zipFilePath)) {
-        return resSend(res, 200, false, zipFilePath, `No zip file found for ${syncDate} date`, null);
-      }
+      // if (!fs.existsSync(zipFilePath)) {
+      //   return resSend(res, 200, false, zipFilePath, `No zip file found for ${syncDate} date`, null);
+      // }
 
       // UPLOAD FILE PATH
       const uploadsFolderPath = path.join(parentDir, "uploads");
