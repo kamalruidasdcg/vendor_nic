@@ -412,9 +412,15 @@ exports.list = async (req, res) => {
           line_item_array2.push({ ...els, rest_amount: rest_amount });
         })
       );
-
+      // SELECT * FROM ${WDC} WHERE purchasing_doc_no = $1
       //return;
-      const get_data_query = `SELECT * FROM ${WDC} WHERE purchasing_doc_no = $1`;
+      const get_data_query = `SELECT t1.*,t2.cname
+        FROM 
+            wdc AS t1 
+        LEFT JOIN 
+            pa0002 AS t2 
+        ON 
+            t1.assigned_to = t2.pernr :: character varying WHERE t1.purchasing_doc_no = $1`;
       let get_data_result = await poolQuery({
         client,
         query: get_data_query,
