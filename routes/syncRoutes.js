@@ -7,6 +7,7 @@ const {
   unsyncFileCompressed,
   uploadRecentFilesController,
   syncDownloadTEST,
+  uploadRecentFilesControllerByDate,
 } = require("../controllers/syncControllers");
 const router = express.Router();
 
@@ -27,6 +28,6 @@ router.post("/sync_unzip", syncUnzip);
 router.post("/sync_file_zip", unsyncFileCompressed);
 
 // API TO UPDATE FILES THAT ARE UPLOADED IN LAST 24 MINUTES
-router.post("/sync_file_upload", uploadRecentFilesController);
+router.post("/sync_file_upload", uploadRecentFilesControllerByDate);
 
 module.exports = router;

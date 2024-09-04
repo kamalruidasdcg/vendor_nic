@@ -893,10 +893,15 @@ const insertToErrLog = async (tableName, sync_id, msg, stack) => {
 
 exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
   try {
-    const { fromDate, toDate } = req.body;
+    const { from_date } = req.body;
+    if (!from_date || from_date === "") {
+      return resSend(res, 200, false, null, "Date field is required.", null);
+    }
+    const startDate = new Date(from_date);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    const dateArr = getDates(fromDate, toDate);
-
+    const dateArr = getDates(startDate, yesterday);
     for (const syncDate of dateArr) {
       const parentDir = path.resolve(__dirname, "..");
 
