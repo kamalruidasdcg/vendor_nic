@@ -384,24 +384,24 @@ async function checkHrCompliance(client, data) {
 const getGrnIcgrnValue = async (client, data) => {
     try {
 
-        if (!data.id) {
+        if (!data.grn || !data.po) {
             // return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null);
-            return { success: false, statusCode: 200, message: "Please send icgrn(id) no", data: Message.MANDATORY_INPUTS_REQUIRED };
+            return { success: false, statusCode: 200, message: "Please send GRN and PO", data: Message.MANDATORY_INPUTS_REQUIRED };
         }
         const icgrn_q = `select  
         mseg.mblnr , mseg.ebeln , mseg.ebelp , mseg.bpmng , ekpo.netpr  
         from  mseg as mseg
         left join ekpo as ekpo
             on( ekpo.ebeln = mseg.ebeln and  ekpo.ebelp = mseg.ebelp)
-        where mseg.mblnr  = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+        where mseg.mblnr  = $1 AND mseg.ebeln = $2 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
-        const grn_values = data.id || "";
+        const grn_values = data.grn || "";
         console.log("icgrn_q", grn_values);
         let total_price = 0;
         let total_quantity = 0;
-        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
+        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values, data.po] });
         if (!icgrn_no.length) {
-            return { success: false, statusCode: 200, message: "Plese do ICGRN to process BTN", data: { total_price } };
+            return { success: false, statusCode: 200, message: "Plese do GRN to process BTN", data: { total_price } };
         }
 
 
