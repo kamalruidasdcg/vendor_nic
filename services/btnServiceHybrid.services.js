@@ -1,10 +1,12 @@
-const { poolQuery } = require("../config/pgDbConfig");
-const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG } = require("../lib/constant");
-const { APPROVED, REJECTED, STATUS_RECEIVED, BTN_STATUS_BANK, BTN_STATUS_HOLD_TEXT, BTN_STATUS_PROCESS, SUBMITTED_BY_CAUTHORITY, BTN_STATUS_DRETURN, SUBMITTED_BY_VENDOR, BTN_STATUS_NOT_SUBMITTED } = require("../lib/status");
+const { poolQuery, getQuery } = require("../config/pgDbConfig");
+const { HR_ACTION_TYPE_WAGR_COMPLIANCE, HR_ACTION_TYPE_BONUS_COMPLIANCE, HR_ACTION_TYPE_ESI_COMPLIANCE, HR_ACTION_TYPE_PF_COMPLIANCE, HR_ACTION_TYPE_LEAVE_SALARY_COMPLIANCE, INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, USER_TYPE_VENDOR } = require("../lib/constant");
+const { BTN_UPLOAD_CHECKLIST, BTN_REJECT, BTN_ASSIGN_TO_STAFF, BTN_FORWORD_FINANCE } = require("../lib/event");
+const { APPROVED, REJECTED, STATUS_RECEIVED, BTN_STATUS_BANK, BTN_STATUS_HOLD_TEXT, BTN_STATUS_PROCESS, SUBMITTED_BY_CAUTHORITY, BTN_STATUS_DRETURN, SUBMITTED_BY_VENDOR, BTN_STATUS_NOT_SUBMITTED, ASSIGNED, SUBMITTED, FORWARD_TO_FINANCE } = require("../lib/status");
 const { BTN_LIST } = require("../lib/tableName");
 const { getEpochTime, generateQuery } = require("../lib/utils");
+const { getUserDetailsQuery } = require("../utils/mailFunc");
 const Message = require("../utils/messages");
-const { btnSubmitToSAPF01 } = require("./sap.btn.services");
+const { sendMail } = require("./mail.services");
 
 
 const payloadObj = (payload) => {
@@ -21,6 +23,7 @@ const payloadObj = (payload) => {
         sgst: payload.sgst || "0",
         invoice_filename: payload.invoice_filename || "",
         invoice_type: payload.invoice_type,
+        invoice_date: payload.invoice_date || null,
         suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
         debit_note: payload.debit_note || "0",
         credit_note: payload.credit_note || "0",
@@ -384,24 +387,24 @@ async function checkHrCompliance(client, data) {
 const getGrnIcgrnValue = async (client, data) => {
     try {
 
-        if (!data.id) {
+        if (!data.grn || !data.po) {
             // return resSend(res, true, 200, "Please send icgrn no", Message.MANDATORY_INPUTS_REQUIRED, null);
-            return { success: false, statusCode: 200, message: "Please send icgrn(id) no", data: Message.MANDATORY_INPUTS_REQUIRED };
+            return { success: false, statusCode: 200, message: "Please send GRN and PO", data: Message.MANDATORY_INPUTS_REQUIRED };
         }
         const icgrn_q = `select  
         mseg.mblnr , mseg.ebeln , mseg.ebelp , mseg.bpmng , ekpo.netpr  
         from  mseg as mseg
         left join ekpo as ekpo
             on( ekpo.ebeln = mseg.ebeln and  ekpo.ebelp = mseg.ebelp)
-        where mseg.mblnr  = $1 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
+        where mseg.mblnr  = $1 AND mseg.ebeln = $2 `; //   MBLNR (GRN No) PRUEFLOS (Lot Number)
 
-        const grn_values = data.id || "";
+        const grn_values = data.grn || "";
         console.log("icgrn_q", grn_values);
         let total_price = 0;
         let total_quantity = 0;
-        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values] });
+        let icgrn_no = await poolQuery({ client, query: icgrn_q, values: [grn_values, data.po] });
         if (!icgrn_no.length) {
-            return { success: false, statusCode: 200, message: "Plese do ICGRN to process BTN", data: { total_price } };
+            return { success: false, statusCode: 200, message: "Plese do GRN to process BTN", data: { total_price } };
         }
 
 
@@ -441,19 +444,19 @@ function calculateTotals(data) {
 const getServiceEntryValue = async (client, data) => {
     try {
 
-        if (!data.id) {
-            return { success: false, statusCode: 200, message: "Please send service entry number", data: Message.MANDATORY_INPUTS_REQUIRED };
+        if (!data.grn || !data.po) {
+            return { success: false, statusCode: 200, message: "Please send service entry number & po", data: Message.MANDATORY_INPUTS_REQUIRED };
         }
 
-        const service_entry_number = data.id || "";
+        const service_entry_number = data.grn || "";
         const getValQuery = `
         SELECT     
             lblni as service_entry_number, 
             lwert as unit_price, 
             netwr as value_with_gst  
-        FROM essr WHERE lblni = $1 LIMIT 1`;
+        FROM essr WHERE lblni = $1 AND ebeln = $2 LIMIT 1`;
 
-        const result = await poolQuery({ client, query: getValQuery, values: [service_entry_number] });
+        const result = await poolQuery({ client, query: getValQuery, values: [service_entry_number, data.po] });
         let total_price = 0;
         if (!result.length) {
             return { success: false, statusCode: 200, message: "Plese do SIR to process BTN", data: { total_price } };
@@ -546,6 +549,8 @@ async function getServiceBTNDetails(client, data) {
                 s_btn.*,
                 btn_assign.assign_by,
                 btn_assign.assign_to,
+                users_btn_assign_to.cname AS assign_to_name,
+                users_assign_to_fi.cname AS assign_by_fi_name,
                 btn_assign.assign_by_fi,
                 btn_assign.assign_to_fi,
                 btn_assign.last_assign,
@@ -566,12 +571,16 @@ async function getServiceBTNDetails(client, data) {
                 users.cname AS bill_certifing_authority_name
             FROM 
               btn_service_hybrid AS s_btn 
-            LEFT JOIN pa0002 as users 
-                ON(users.pernr :: character varying = s_btn.bill_certifing_authority) 
-            LEFT JOIN btn_service_certify_authority as btn_authority 
-                ON(s_btn.btn_num = btn_authority.btn_num)
             LEFT JOIN btn_assign AS btn_assign
                 ON(s_btn.btn_num = btn_assign.btn_num)
+            LEFT JOIN pa0002 as users 
+                ON(users.pernr :: character varying = s_btn.bill_certifing_authority)
+            LEFT JOIN pa0002 as users_btn_assign_to
+                ON(users_btn_assign_to.pernr :: character varying = btn_assign.assign_to) 
+            LEFT JOIN pa0002 as users_assign_to_fi
+                ON(users_assign_to_fi.pernr :: character varying = btn_assign.assign_to_fi) 
+            LEFT JOIN btn_service_certify_authority as btn_authority 
+                ON(s_btn.btn_num = btn_authority.btn_num)
             WHERE s_btn.btn_num = $1`;
         // AND s_btn.bill_certifing_authority = '600700'
         // btn_assign.*,
@@ -580,8 +589,6 @@ async function getServiceBTNDetails(client, data) {
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
         let response = result[0] || {};
         const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
-        console.log("supDocs", supDocs);
-
         response = { ...response, ...supDocs };
 
         return { success: true, statusCode: 200, message: "Value fetch success", data: response };
@@ -777,6 +784,114 @@ async function btnCurrentDetailsCheck(client, data) {
 }
 
 
+async function serviceBtnMailSend(tokenData, payload, event) {
+    try {
+        let emailUserDetailsQuery;
+        let emailUserDetails;
+        let dataObj = payload;
+
+        console.log("876567890987656789", tokenData, payload);
+        // email done
+        if (tokenData.user_type == USER_TYPE_VENDOR && payload.status == SUBMITTED) {
+            emailUserDetailsQuery = getUserDetailsQuery("vendor_and_do", "$1");
+            emailUserDetails = await getQuery({
+                query: emailUserDetailsQuery,
+                values: [payload.purchasing_doc_no],
+            });
+            await sendMail(BTN_UPLOAD_CHECKLIST, dataObj, { users: emailUserDetails }, BTN_UPLOAD_CHECKLIST);
+        }
+
+        if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == FORWARD_TO_FINANCE) {
+            emailUserDetailsQuery = getUserDetailsQuery("venode_by_po");
+            emailUserDetails = await getQuery({
+                query: emailUserDetailsQuery,
+                values: [payload.purchasing_doc_no],
+            });
+            await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
+        }
+
+        // email done
+        if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == STATUS_RECEIVED) {
+            emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
+            emailUserDetails = await getQuery({
+                query: emailUserDetailsQuery,
+                values: [payload.assign_to_fi],
+            });
+
+            await sendMail(BTN_ASSIGN_TO_STAFF, dataObj, { users: emailUserDetails }, BTN_ASSIGN_TO_STAFF);
+        }
+        // email done
+        if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
+
+            console.log(tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED, "00000000");
+
+            // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+            emailUserDetailsQuery = getUserDetailsQuery("vendor_by_sbtn", "$1");
+
+            emailUserDetails = await getQuery({
+                query: emailUserDetailsQuery,
+                values: [payload.btn_num],
+            });
+            console.log(emailUserDetails, "emailUserDetails");
+
+            dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+            await sendMail(BTN_REJECT, dataObj, { users: emailUserDetails }, BTN_REJECT);
+
+        }
+        
+        // if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
+        //     // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+        //     emailUserDetailsQuery = "SELECT * FROM (";
+        //     buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
+        //     buildQuery += "UNION";
+        //     buildQuery += getUserDetailsQuery("assingee", "$2");
+        //     buildQuery += ") AS mail_info";
+
+        //     emailUserDetails = await getQuery({
+        //         query: emailUserDetailsQuery,
+        //         values: [payload.purchasing_doc_no],
+        //     });
+        //     dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+        //     await sendMail(
+        //         BTN_RETURN_DO,
+        //         dataObj,
+        //         { users: emailUserDetails },
+        //         BTN_RETURN_DO
+        //     );
+        // }
+
+        // WORKING -- ONLY SUBJECT ISSUE , SUBJECT MAY TO CHANGE
+        if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMITTED_BY_CAUTHORITY) {
+            // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+            let buildQuery = "";
+            emailUserDetailsQuery = "SELECT * FROM (";
+            buildQuery += emailUserDetailsQuery;
+            buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
+            buildQuery += "UNION";
+            buildQuery += getUserDetailsQuery("finance_authority", "$2");
+            buildQuery += ") AS mail_info";
+
+            console.log(
+                "payload.purchasing_doc_no, payload.assign_to",
+                payload,
+                payload.assign_to,
+                buildQuery
+            );
+            console.log("emailUserDetailsQuery", emailUserDetailsQuery, payload.purchasing_doc_no, parseInt(payload.assign_to));
+
+            emailUserDetails = await getQuery({
+                query: buildQuery,
+                values: [payload.purchasing_doc_no, parseInt(payload.assign_to)],
+            });
+            dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+            await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
+        }
+    } catch (error) {
+        console.log("handelMail service btn", error.toString(), error.stack);
+    }
+}
+
+
 
 module.exports = {
     payloadObj,
@@ -797,5 +912,6 @@ module.exports = {
     getLatestBTN,
     btnAssignPayload,
     supportingDataForServiceBtn,
-    updateServiceBtnListTable
+    updateServiceBtnListTable,
+    serviceBtnMailSend
 }

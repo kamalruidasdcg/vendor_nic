@@ -70,19 +70,25 @@ exports.formatDashedDate = (epochTime) => {
 };
 
 
+/**
+ * take from date and to date as epoch time
+ * and return date array like
+ * ['04-09-2024', '05-09-2024']
+ * @param {Number} start 
+ * @param {Number} end 
+ * @returns String Array
+ */
+exports.getDates = (start, end) => {
 
-function getdates(daysCount = 1) {
   const dates = [];
-  const today = new Date();
-
-  for (let i = 0; i < daysCount; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i); // Subtract 'i' days from today's date
-    const formattedDate = formatDate(date);
-    dates.push(formattedDate);
+  const currentDate = new Date(start);
+  while (currentDate <= end) {
+    dates.push(formatDate(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return dates;
+
 }
 
 function formatDate(date) {
@@ -90,4 +96,21 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensures two-digit month
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
+}
+
+
+
+exports.getDatesFromEpoch = (epochTimeValue) => {
+
+
+  const currentDate = new Date(epochTimeValue);
+  const date = formatDateYYDDMM(currentDate)
+  return date;
+}
+
+function formatDateYYDDMM(date) {
+  const day = String(date.getDate()).padStart(2, '0'); // Ensures two-digit day
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensures two-digit month
+  const year = date.getFullYear();
+  return `${year}${month}${day}`;
 }
