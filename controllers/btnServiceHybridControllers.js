@@ -1,14 +1,15 @@
 const { getEpochTime, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
 const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY, BTN_ASSIGN } = require("../lib/tableName");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED } = require("../lib/status");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED, SUBMITTED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck } = require("../services/btnServiceHybrid.services");
+const { filesData, payloadObj, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck, serviceBtnMailSend } = require("../services/btnServiceHybrid.services");
 const { INSERT, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
+const { BTN_REJECT } = require("../lib/event");
 
 
 const getWdcInfoServiceHybrid = async (req, res) => {
@@ -197,6 +198,7 @@ const submitBtnServiceHybrid = async (req, res) => {
 
       await poolQuery({ client, query: q, values: val });
       await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
+      serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
       resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
     } catch (error) {
       resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
@@ -334,8 +336,10 @@ const forwordToFinace = async (req, res) => {
       let payload = req.body;
       const tokenData = req.tokenData;
 
-      // BTN VALIDATION
+      console.log("payload", payload);
 
+
+      // BTN VALIDATION
       if (!payload.btn_num) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num  missing", null);
       }
@@ -379,8 +383,8 @@ const forwordToFinace = async (req, res) => {
       const latesBtnData = await getLatestBTN(client, payload);
       // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
       await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
-      // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-      const sendSap = await btnSubmitToSAPF01(payload, tokenData);
+      const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+      // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
       if (sendSap == false) {
         console.log(sendSap);
@@ -389,7 +393,8 @@ const forwordToFinace = async (req, res) => {
       } else if (sendSap == true) {
         await client.query("COMMIT");
         resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, response, "")
-        // handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+        serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED_BY_CAUTHORITY });
+
       }
 
     } catch (error) {
@@ -472,15 +477,15 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
 
       let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
-      // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+      const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+      // const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);
       } else if (sendSap == true) {
         await client.query("COMMIT");
         // TO DO EMAIL
-
+        serviceBtnMailSend(tokenData, { ...req.body, ...payload , status: STATUS_RECEIVED});
         resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
       }
 
@@ -502,7 +507,12 @@ async function btnReject(data, tokenData, client) {
     await updateServiceBtnListTable(client, data);
 
     const sapSend = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+    // try {
 
+    // } catch (error) {
+
+    // }
+    serviceBtnMailSend(tokenData, data, BTN_REJECT)
     if (sapSend === false) {
       throw new Error("SAP not connected");
     }
