@@ -809,17 +809,18 @@ async function serviceBtnMailSend(tokenData, payload, event) {
             });
             await sendMail(BTN_FORWORD_FINANCE, dataObj, { users: emailUserDetails }, BTN_FORWORD_FINANCE);
         }
+
+        // email done
         if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == STATUS_RECEIVED) {
             emailUserDetailsQuery = getUserDetailsQuery("finance_staff", "$1");
             emailUserDetails = await getQuery({
                 query: emailUserDetailsQuery,
                 values: [payload.assign_to_fi],
             });
-            console.log("emailUserDetails", emailUserDetails);
 
             await sendMail(BTN_ASSIGN_TO_STAFF, dataObj, { users: emailUserDetails }, BTN_ASSIGN_TO_STAFF);
         }
-
+        // email done
         if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED) {
 
             console.log(tokenData.user_type != USER_TYPE_VENDOR && payload.status == REJECTED, "00000000");
@@ -837,26 +838,27 @@ async function serviceBtnMailSend(tokenData, payload, event) {
             await sendMail(BTN_REJECT, dataObj, { users: emailUserDetails }, BTN_REJECT);
 
         }
-        if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
-            // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
-            emailUserDetailsQuery = "SELECT * FROM (";
-            buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
-            buildQuery += "UNION";
-            buildQuery += getUserDetailsQuery("assingee", "$2");
-            buildQuery += ") AS mail_info";
+        
+        // if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == ASSIGNED) {
+        //     // emailUserDetailsQuery = getUserDetailsQuery('vendor_by_po', '$1');
+        //     emailUserDetailsQuery = "SELECT * FROM (";
+        //     buildQuery += getUserDetailsQuery("vendor_by_po", "$1");
+        //     buildQuery += "UNION";
+        //     buildQuery += getUserDetailsQuery("assingee", "$2");
+        //     buildQuery += ") AS mail_info";
 
-            emailUserDetails = await getQuery({
-                query: emailUserDetailsQuery,
-                values: [payload.purchasing_doc_no],
-            });
-            dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
-            await sendMail(
-                BTN_RETURN_DO,
-                dataObj,
-                { users: emailUserDetails },
-                BTN_RETURN_DO
-            );
-        }
+        //     emailUserDetails = await getQuery({
+        //         query: emailUserDetailsQuery,
+        //         values: [payload.purchasing_doc_no],
+        //     });
+        //     dataObj = { ...dataObj, vendor_name: emailUserDetails[0]?.u_name };
+        //     await sendMail(
+        //         BTN_RETURN_DO,
+        //         dataObj,
+        //         { users: emailUserDetails },
+        //         BTN_RETURN_DO
+        //     );
+        // }
 
         // WORKING -- ONLY SUBJECT ISSUE , SUBJECT MAY TO CHANGE
         if (tokenData.user_type != USER_TYPE_VENDOR && payload.status == SUBMITTED_BY_CAUTHORITY) {
