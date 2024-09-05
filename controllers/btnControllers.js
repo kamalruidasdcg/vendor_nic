@@ -489,10 +489,10 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET SD by PO Number
@@ -520,17 +520,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -790,6 +790,7 @@ const submitBTNByDO = async (req, res) => {
 
       if (status === REJECTED) {
         const response1 = await btnReject(req.body, tokenData, client);
+        handelMail(tokenData, { btn_num, status: REJECTED }, BTN_REJECT);
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
       }
 
