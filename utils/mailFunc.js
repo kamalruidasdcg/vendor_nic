@@ -151,6 +151,22 @@ const getUserDetailsQuery = (type, valueParameter) => {
             WHERE btn_num = ${valueParameter}
             )`;
       break;
+      case 'vendor_by_sbtn':
+
+      getDeatilsQuery = `
+            (
+
+            SELECT 
+	            btn.vendor_code as u_id,
+	            vendor.name1 as u_name,
+	            vendor.email as u_email,
+	            'vendor' as u_type
+            FROM btn_service_hybrid as btn 
+	            left join lfa1 as vendor
+	              ON(vendor.lifnr = btn.vendor_code)
+            WHERE btn_num = ${valueParameter}
+            )`;
+      break;
 
     case 'nodal_officers':
       getDeatilsQuery = `(select 
