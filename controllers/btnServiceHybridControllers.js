@@ -400,7 +400,7 @@ const forwordToFinace = async (req, res) => {
     } catch (error) {
       console.log("error", error.message);
       await client.query("ROLLBACK");
-      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+      resSend(res, false, 500, Message.SOMTHING_WENT_WRONG, error.message, null);
     } finally {
       client.release();
     }
@@ -485,7 +485,7 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       } else if (sendSap == true) {
         await client.query("COMMIT");
         // TO DO EMAIL
-        serviceBtnMailSend(tokenData, { ...req.body, ...payload , status: STATUS_RECEIVED});
+        serviceBtnMailSend(tokenData, { ...req.body, ...payload, status: STATUS_RECEIVED });
         resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
       }
 
@@ -506,17 +506,15 @@ async function btnReject(data, tokenData, client) {
 
     await updateServiceBtnListTable(client, data);
 
-    const sapSend = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
-    // try {
+    // const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+    const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
 
-    // } catch (error) {
-
-    // }
-    serviceBtnMailSend(tokenData, data, BTN_REJECT)
-    if (sapSend === false) {
-      throw new Error("SAP not connected");
+    if (sendSap == false) {
+      throw new Error("SAP not connected.");
+    } else if (sendSap == true) {
+      serviceBtnMailSend(tokenData, data, BTN_REJECT);
+      // resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
     }
-
     return { btn_num: data.btn_num };
   } catch (error) {
     throw error;
