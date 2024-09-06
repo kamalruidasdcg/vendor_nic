@@ -11,6 +11,7 @@ const {
   BTN_STATUS_HOLD_TEXT,
   BTN_STATUS_UNHOLD_TEXT,
 } = require("../../lib/status");
+const { BTN_LIST } = require("../../lib/tableName");
 const {
   generateInsertUpdateQuery,
   generateQueryForMultipleData,
@@ -22,6 +23,7 @@ const {
   zbtsLineItemsPayload,
   zbtsHeaderPayload,
 } = require("../../services/sap.payment.services");
+const { isPresentInObps } = require("../../services/sap.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
 const Message = require("../../utils/messages");
 
@@ -50,18 +52,15 @@ const zbts_st = async (req, res) => {
        * NOT INSERT IN OBPS DB
        * IGNORE THIS BTN WHICH IS SEND FROM SAP
        */
-      const q = `SELECT count(*) as btn_count from btn_list where btn_num = $1`;
+      // const q = `SELECT count(*) as btn_count from btn_list where btn_num = $1`;
+      // const btn_num = payload.zbtno || payload.ZBTNO;
+      // const btnCount = await poolQuery({ client, query: q, values: [btn_num] });
+      
+      // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
       const btn_num = payload.zbtno || payload.ZBTNO;
-      const btnCount = await poolQuery({ client, query: q, values: [btn_num] });
-      if (!btnCount[0]?.btn_count) {
-        return responseSend(
-          res,
-          "S",
-          200,
-          "NO BTN HAVE IN LAN SERVER",
-          null,
-          null
-        );
+      const isPresent = await isPresentInObps(client, `btn_num = '${btn_num}'`, BTN_LIST).count();
+      if (!isPresent) {
+        return responseSend(res, "S", 200, Message.NON_OBPS_DATA, `THE BTN NO: ${btn_num} NOT IN OBPS SERVER`, null);
       }
       // END //
 

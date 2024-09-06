@@ -51,10 +51,10 @@ const reservation = async (req, res) => {
         const rkpfPayload = await reservationHeaderPayload(obj);
 
         // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
-        // const isPresent = await isPresentInObps(client, `ebeln = '${rkpfPayload.EBELN}'`).count();
-        // if (!isPresent) {
-        //   return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
-        // }
+        const isPresent = await isPresentInObps(client, `ebeln = '${rkpfPayload.EBELN}'`).count();
+        if (!isPresent) {
+          return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+        }
 
         const rkpfTableInsert = await generateInsertUpdateQuery(
           rkpfPayload,
@@ -138,10 +138,10 @@ const serviceEntry = async (req, res) => {
       const essrPayload = await serviceEntryPayload(payload);
 
       // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
-      // const isPresent = await isPresentInObps(client, `ebeln = '${essrPayload[0]?.ebeln}'`).count();
-      // if (!isPresent) {
-      //   return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
-      // }
+      const isPresent = await isPresentInObps(client, `ebeln = '${essrPayload[0]?.ebeln}'`).count();
+      if (!isPresent) {
+        return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      }
 
       const essrTableInsert = await generateQueryForMultipleData(essrPayload, SERVICE_ENTRY_TABLE_SAP, ["lblni"]);
       const response = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
