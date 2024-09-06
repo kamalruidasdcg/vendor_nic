@@ -333,8 +333,8 @@ const getRestAmount = async (req, res) => {
       } else {
         // console.log(1111);
         // console.log(wdc_claim_amount_result);
-        let aa = 0;
-        strArr = [];
+
+        let strArr = [];
         wdc_claim_amount_result.map((item) => {
           let datas = JSON.parse(item.line_item_array);
           //console.log(datas[0].claim_qty);
@@ -345,7 +345,6 @@ const getRestAmount = async (req, res) => {
             strArr.push(find_line_item_no.claim_qty);
           }
         });
-        //strArr.push("1.321");
         // console.log("strArr--" + strArr);
         let sum = strArr.reduce(
           (accumulator, currentValue) => accumulator + parseFloat(currentValue),
@@ -355,10 +354,9 @@ const getRestAmount = async (req, res) => {
         // console.log("sum--" + sum);
         rest_amount_wdc = target_amount_result - sum;
         //console.log(rest_amount_wdc);
-
-        // rest_amount_wdc =
-        //   target_amount_result - parseFloat(rest_amount_wdc).toFixed(3);
-        //console.log(rest_amount_wdc);
+      }
+      if (rest_amount_wdc < 0) {
+        rest_amount_wdc = 0;
       }
       resData.rest_amount_wdc = parseFloat(rest_amount_wdc).toFixed(3);
 
