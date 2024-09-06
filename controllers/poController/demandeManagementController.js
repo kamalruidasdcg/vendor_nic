@@ -11,7 +11,7 @@ const {
   UPDATE,
   USER_TYPE_PPNC_DEPARTMENT,
 } = require("../../lib/constant");
-const { DEMAND_MANAGEMENT, EKPO, EKKO } = require("../../lib/tableName");
+const { DEMAND_MANAGEMENT, EKPO, EKKO, WDC } = require("../../lib/tableName");
 const {
   PENDING,
   REJECTED,
@@ -38,6 +38,7 @@ const { Console } = require("console");
 const { DEMAND_UPLOAD_BY_BEARTH } = require("../../lib/event");
 const { sendMail } = require("../../services/mail.services");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { wdc } = require("./WdcController");
 
 const insert = async (req, res) => {
   // return resSend(res, true, 200, "inserted!", req.body, null);
@@ -314,6 +315,52 @@ const getRestAmount = async (req, res) => {
       // if (rest_amount) {
       const resData = get_data_result[0];
       resData.rest_amount = rest_amount;
+
+      let rest_amount_wdc = parseFloat(0).toFixed(3);
+
+      const wdc_claim_amount_query = `SELECT line_item_array from ${WDC} WHERE purchasing_doc_no = $1 AND status = $2`;
+      let wdc_claim_amount_result = await poolQuery({
+        client,
+        query: wdc_claim_amount_query,
+        values: [req.query.po_no, APPROVED],
+      });
+
+      if (
+        wdc_claim_amount_result.length &&
+        wdc_claim_amount_result.length === 0
+      ) {
+        rest_amount_wdc = target_amount_result;
+      } else {
+        // console.log(1111);
+        // console.log(wdc_claim_amount_result);
+        let aa = 0;
+        strArr = [];
+        wdc_claim_amount_result.map((item) => {
+          let datas = JSON.parse(item.line_item_array);
+          //console.log(datas[0].claim_qty);
+          const find_line_item_no = datas.find(
+            ({ line_item_no }) => line_item_no == req.query.line_item_no
+          );
+          if (find_line_item_no) {
+            strArr.push(find_line_item_no.claim_qty);
+          }
+        });
+        //strArr.push("1.321");
+        // console.log("strArr--" + strArr);
+        let sum = strArr.reduce(
+          (accumulator, currentValue) => accumulator + parseFloat(currentValue),
+          0
+        );
+        // console.log("target_amount_result--" + target_amount_result);
+        // console.log("sum--" + sum);
+        rest_amount_wdc = target_amount_result - sum;
+        //console.log(rest_amount_wdc);
+
+        // rest_amount_wdc =
+        //   target_amount_result - parseFloat(rest_amount_wdc).toFixed(3);
+        //console.log(rest_amount_wdc);
+      }
+      resData.rest_amount_wdc = parseFloat(rest_amount_wdc).toFixed(3);
 
       resSend(
         res,
