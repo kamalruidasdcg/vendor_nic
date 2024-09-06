@@ -129,7 +129,7 @@ const mseg = async (req, res) => {
       const payloadObj = await msegPayload(payload);
 
       // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
-      const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj.EBELN}'`).count();
+      const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj[0]?.EBELN}'`).count();
       if (!isPresent) {
         return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
       }
