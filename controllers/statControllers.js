@@ -41,7 +41,8 @@ exports.statsForBG = async (req, res) => {
         // For grse_FINANCE_ASSIGNER
         if (
           result[0].internal_role_id === 1 &&
-          result[0].department_id === 15
+          result[0].department_id === 15 &&
+          result[0].department_id === 1
         ) {
           const Q = `SELECT se.* FROM ${SDBG_ENTRY} se ORDER BY se.created_at DESC`;
           const result = await poolQuery({
@@ -159,7 +160,8 @@ exports.statsForBTN = async (req, res) => {
         // For grse_FINANCE_ASSIGNER
         if (
           tokenData.internal_role_id === 1 &&
-          tokenData.department_id === 15
+          tokenData.department_id === 15 &&
+          result[0].department_id === 1
         ) {
           // const Q = `SELECT * FROM ${BTN_LIST} WHERE created_at IN(${str}) ORDER BY created_at DESC`;
 
@@ -298,7 +300,10 @@ exports.statsForQA = async (req, res) => {
       const tokenData = { ...req.tokenData };
 
       // check user from QA
-      if (tokenData.department_id != USER_TYPE_GRSE_QAP) {
+      if (
+        tokenData.department_id != USER_TYPE_GRSE_QAP ||
+        tokenData.department_id != 1
+      ) {
         return resSend(
           res,
           false,
