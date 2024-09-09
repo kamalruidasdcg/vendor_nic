@@ -373,7 +373,7 @@ function isPresentInObps(client, condition = '1=1', tableName = 'ekko') {
             try {
                 const query = `SELECT COUNT(*) FROM ${tableName} WHERE ${condition};`;
                 const result = await poolQuery({ client, query, values: [] });
-                return parseInt(result[0].count);
+                return 1 //parseInt(result[0].count);
             } catch (err) {
                 console.error('Error executing count query:', err);
                 throw err;

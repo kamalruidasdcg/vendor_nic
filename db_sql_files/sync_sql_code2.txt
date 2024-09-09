@@ -1,0 +1,47 @@
+SELECT * FROM public.actualsubmissiondate
+ORDER BY id ASC LIMIT 100
+
+-- Create the trigger
+CREATE TRIGGER before_update_trigger
+BEFORE UPDATE ON public.hr
+FOR EACH ROW
+EXECUTE FUNCTION update_sync_fields();
+
+SELECT 
+    tg.tgname AS trigger_name,
+    tbl.relname AS table_name,
+    ns.nspname AS schema_name
+FROM 
+    pg_trigger tg
+JOIN 
+    pg_class tbl ON tg.tgrelid = tbl.oid
+JOIN 
+    pg_namespace ns ON tbl.relnamespace = ns.oid
+WHERE 
+    NOT tg.tgisinternal;
+
+DROP TRIGGER IF EXISTS before_update_trigger ON public.actualsubmissiondate;
+
+DROP FUNCTION IF EXISTS update_sync_fields();
+
+
+CREATE OR REPLACE FUNCTION update_sync_fields()
+RETURNS TRIGGER AS $$
+DECLARE
+    new_jsonb JSONB;
+    old_jsonb JSONB;
+BEGIN
+    -- Convert the NEW and OLD records to JSONB
+    new_jsonb := to_jsonb(NEW) - 'sync' - 'sync_updated_at';
+    old_jsonb := to_jsonb(OLD) - 'sync' - 'sync_updated_at';
+
+    -- Check if the resulting JSONB objects are distinct
+    IF new_jsonb IS DISTINCT FROM old_jsonb THEN
+        NEW.sync := FALSE;
+        NEW.sync_updated_at := now();
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+

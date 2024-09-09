@@ -1017,7 +1017,7 @@ const poListCopy = async (req, res) => {
       if (!allPo.length) {
         return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, allPo, null);
       }
-      const poArr = allPo.map((el) => el.EBELN);
+      const poArr = allPo.map((el) => el?.EBELN || el?.ebeln || el?.purchasing_doc_no );
       const poDetails = await getPoWithLineItems(client, poArr, page_size, offset);
       const contractualDates = await getActualAndCurrentDetails(client, poArr);
       const currentActivity = await currentStageHandleForAllActivity(client, poArr);
