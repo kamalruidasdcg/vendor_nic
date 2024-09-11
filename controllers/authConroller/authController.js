@@ -422,6 +422,122 @@ const sendOtp = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
   }
 };
+const forgotPasswordOtp = async (req, res) => {
+  try {
+    const client = await poolClient();
+
+    try {
+      const { ...obj } = req.body;
+      if (!obj.user_code) {
+        return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+      }
+
+      let qry = `SELECT 
+                    t1.email,t2.user_type,t2.department_id,t2.internal_role_id
+                    FROM 
+                        pa0002
+                    AS 
+                        t1 
+              LEFT JOIN
+                      auth
+                    AS 
+                        t2
+                    ON
+                      t2.vendor_code = t1.pernr :: character varying
+                  
+                    WHERE
+                        t2.vendor_code = $1 AND t2.is_active = 1`;
+
+      const validUser = await poolQuery({
+        client,
+        query: qry,
+        values: [obj.user_code],
+      });
+
+      if (
+        validUser.length == 0 ||
+        !validUser[0].email ||
+        validUser[0].email === ""
+      ) {
+        return resSend(
+          res,
+          false,
+          200,
+          "You are not allowed to get OTP!",
+          null,
+          null
+        );
+      }
+
+      const otp = crypto.randomInt(100000, 999999);
+      // SEND MAIL TO USER //
+      let mailOptions = {
+        to: validUser[0].email,
+        from: process.env.MAIL_SEND_MAIL_ID,
+        subject: `OBPS Registration OTP Generated`,
+        html: EMAIL_TEMPLAE(
+          `Your one time PIN for forgot password in OBPS is : ${otp}. Valid for 30 minutes, Do not shere it with anyone.`
+        ),
+      };
+      try {
+        await SENDMAIL(mailOptions);
+
+        // delete existing record on same user code
+        let delOtp = `DELETE FROM ${REGISTRATION_OTP} WHERE user_code = '${obj.user_code}'`;
+        let delOtpRes = await poolQuery({
+          client,
+          query: delOtp,
+          values: [],
+        });
+        // add otp record
+        const insertRegistrationOtp = {
+          user_type:
+            validUser[0].user_type == USER_TYPE_VENDOR ? "vendor" : "GRSE",
+          functional_area: validUser[0].department_id,
+          role: validUser[0].internal_role_id,
+          user_code: obj.user_code,
+          otp: otp,
+          created_at: getEpochTime(),
+          status: "PENDING",
+        };
+
+        let addOtpQ = generateQuery(
+          INSERT,
+          REGISTRATION_OTP,
+          insertRegistrationOtp
+        );
+        let addOtpRes = await poolQuery({
+          client,
+          query: addOtpQ["q"],
+          values: addOtpQ["val"],
+        });
+        return resSend(
+          res,
+          true,
+          200,
+          `OTP send via mail.Please check Mail inbox.`,
+          null,
+          null
+        );
+      } catch (err) {
+        return resSend(res, false, 200, `You are not authourised.`, null, null);
+      }
+    } catch (error) {
+      return resSend(
+        res,
+        false,
+        500,
+        Message.SERVER_ERROR,
+        JSON.stringify(error)
+      );
+    } finally {
+      // console.log("finally block");
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+  }
+};
 
 const otpVefify = async (req, res) => {
   try {
@@ -500,8 +616,18 @@ const setPassword = async (req, res) => {
     const client = await poolClient();
     try {
       const { ...obj } = req.body;
-      if (!obj.password || !obj.user_code || !obj.otp) {
+      if (!obj.password || !obj.user_code || !obj.otp || !obj.status) {
         return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+      }
+      if (obj.status != "CREATE" && obj.status != "UPDATE") {
+        return resSend(
+          res,
+          false,
+          200,
+          "Please send valid status.",
+          null,
+          null
+        );
       }
 
       const vefifyQuery = `SELECT * FROM ${REGISTRATION_OTP} where user_code = '${obj.user_code}' AND status = 'VERIFIED' AND otp = '${obj.otp}'`;
@@ -541,10 +667,10 @@ const setPassword = async (req, res) => {
       let username;
       if (otpVefifyQueryRes[0].user_type === "vendor") {
         name = validUser[0].name1;
-        username = validUser[0].stcd1;
+        username = validUser[0].lifnr;
       } else {
         name = validUser[0].cname;
-        username = validUser[0].persg;
+        username = validUser[0].pernr;
       }
 
       const salt = bcrypt.genSaltSync();
@@ -565,7 +691,8 @@ const setPassword = async (req, res) => {
       let resMsg;
       if (
         otpVefifyQueryRes[0].user_type === "vendor" ||
-        otpVefifyQueryRes[0].role == 2
+        otpVefifyQueryRes[0].role == 2 ||
+        obj.status === "UPDATE"
       ) {
         regData.is_active = 1;
         resMsg = "You are authorised! Please login to get access.";
@@ -765,6 +892,74 @@ const acceptedPendingEmp = async (req, res) => {
     resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
   }
 };
+
+const updatePassword = async (req, res) => {
+  try {
+    const client = await poolClient();
+    console.log(req.body);
+    try {
+      if (!req.body.user_code || !req.body.old_pw || !req.body.new_pw) {
+        return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED);
+      }
+
+      const { user_code, old_pw, new_pw } = req.body;
+
+      let login_Q = `SELECT * FROM auth WHERE vendor_code = $1 AND is_active = 1`;
+
+      let result = await poolQuery({
+        client,
+        query: login_Q,
+        values: [user_code],
+      });
+
+      console.log(result);
+
+      if (!result.length) {
+        return resSend(res, false, 200, Message.USER_NOT_FOUND, result);
+      }
+
+      const match = await bcrypt.compare(old_pw, result[0]["password"]);
+
+      if (!match) {
+        return resSend(res, false, 200, "INCORRECT_PASSWORD");
+      }
+
+      const whereCondition = {
+        vendor_code: user_code,
+        password: result[0]["password"],
+      };
+      const salt = bcrypt.genSaltSync();
+      const encrytedPassword = bcrypt.hashSync(new_pw, salt);
+      const updatePayload = {
+        password: encrytedPassword,
+      };
+
+      const updateVerified = generateQuery(
+        UPDATE,
+        AUTH,
+        updatePayload,
+        whereCondition
+      );
+      console.log(updateVerified);
+      const getUpdate = await poolQuery({
+        client,
+        query: updateVerified["q"],
+        values: updateVerified["val"],
+      });
+      console.log(getUpdate);
+
+      return resSend(res, true, 200, "Password update successfully!");
+    } catch (error) {
+      console.log(error.message);
+      resSend(res, false, 500, Message.SERVER_ERROR, error, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 500, Message.DB_CONN_ERROR, error.message);
+  }
+};
+
 // const registration = async (req, res) => {
 
 //     try {
@@ -845,8 +1040,10 @@ const acceptedPendingEmp = async (req, res) => {
 module.exports = {
   login,
   sendOtp,
+  forgotPasswordOtp,
   otpVefify,
   setPassword,
+  updatePassword,
   getListPendingEmp,
   acceptedPendingEmp,
 };

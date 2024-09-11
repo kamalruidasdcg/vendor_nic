@@ -16,6 +16,8 @@ const {
 } = require("../../services/sap.user.services");
 const { TRUE, FALSE } = require("../../lib/constant");
 const { poolClient, poolQuery } = require("../../config/pgDbConfig");
+const Message = require("../../utils/messages");
+const { isPresentInObps } = require("../../services/sap.services");
 
 // PAYLOAD //
 
@@ -39,7 +41,7 @@ const reservation = async (req, res) => {
         !Object.keys(obj).length ||
         !obj.RSNUM
       ) {
-        return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
+        return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, payload, null);
       }
       // await client.beginTransaction();
 
@@ -47,6 +49,13 @@ const reservation = async (req, res) => {
 
       try {
         const rkpfPayload = await reservationHeaderPayload(obj);
+
+        // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+        const isPresent = await isPresentInObps(client, `ebeln = '${rkpfPayload.EBELN}'`).count();
+        if (!isPresent) {
+          return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+        }
+
         const rkpfTableInsert = await generateInsertUpdateQuery(
           rkpfPayload,
           RESERVATION_RKPF_TABLE,
@@ -58,14 +67,7 @@ const reservation = async (req, res) => {
           values: rkpfTableInsert.val,
         });
       } catch (error) {
-        return responseSend(
-          res,
-          "F",
-          502,
-          "Data insert failed !!",
-          error,
-          null
-        );
+        return responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
       }
 
       if (TAB_RESB?.length) {
@@ -88,8 +90,8 @@ const reservation = async (req, res) => {
             res,
             "F",
             502,
-            "Data insert failed !!",
-            error.toString(),
+            Message.DATA_INSERT_FAILED,
+            error.message,
             null
           );
         }
@@ -100,20 +102,19 @@ const reservation = async (req, res) => {
       // const comm = await client.commit(); // Commit the transaction if everything was successful
       transactionSuccessful = true;
     } catch (error) {
-      responseSend(res, "F", 502, "Data insert failed !!", error, null);
+      responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
     } finally {
       if (transactionSuccessful === FALSE) {
         await client.query("ROLLBACK");
       }
-      const connEnd = client.release();
-
+      client.release();
       if (transactionSuccessful === TRUE) {
-        responseSend(res, "S", 200, "data insert succeed", null, null);
+        responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, null, null);
       }
     }
   } catch (error) {
     console.error(error.message);
-    responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    responseSend(res, "F", 400, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 const serviceEntry = async (req, res) => {
@@ -122,7 +123,7 @@ const serviceEntry = async (req, res) => {
   try {
     // const promiseConnection = await connection();
     const client = await poolClient();
-    let transactionSuccessful = false;
+    // let transactionSuccessful = false;
 
     if (Array.isArray(req.body)) {
       payload = req.body;
@@ -135,22 +136,25 @@ const serviceEntry = async (req, res) => {
 
 
       const essrPayload = await serviceEntryPayload(payload);
-      const essrTableInsert = await generateQueryForMultipleData(
-        essrPayload,
-        SERVICE_ENTRY_TABLE_SAP,
-        "lblni"
-      );
-      const results = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
+
+      // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+      const isPresent = await isPresentInObps(client, `ebeln = '${essrPayload[0]?.ebeln}'`).count();
+      if (!isPresent) {
+        return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      }
+
+      const essrTableInsert = await generateQueryForMultipleData(essrPayload, SERVICE_ENTRY_TABLE_SAP, ["lblni"]);
+      const response = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });
+      responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
       // Commit the transaction if everything was successful
       // transactionSuccessful = true;
     } catch (error) {
-      responseSend(res, "F", 502, "Data insert failed !!", error, null);
+      responseSend(res, "F", 502, Message.DATA_INSERT_FAILED, error.message, null);
     } finally {
       client.release();
     }
   } catch (error) {
-    console.error(error.message);
-    responseSend(res, "F", 400, "Error in database conn!!", error, null);
+    responseSend(res, "F", 400, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 

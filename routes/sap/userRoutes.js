@@ -1,7 +1,7 @@
 
 const router = require("express").Router();
 const controller = require("../../controllers/sapController/userController");
-const { basicAuthVerification } = require("../../services/jwt.services");
+// const { basicAuthVerification } = require("../../services/jwt.services");
 
 router.post("/reservation", [], (req, res) => {
     controller.reservation(req, res);

@@ -379,7 +379,10 @@ const fetchBTNList = async (req, res) => {
         null
       );
     }
-    let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    // let btn_list_q = `SELECT * FROM btn_list WHERE purchasing_doc_no = $1`;
+    let btn_list_q = `SELECT list.*, service.bill_certifing_authority FROM btn_list as list
+    LEFT JOIN btn_service_hybrid as service ON list.btn_num = service.btn_num
+    WHERE list.purchasing_doc_no = $1`;
     let btn_list = await getQuery({
       query: btn_list_q,
       values: [id],
@@ -486,10 +489,10 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-        ...payload,
-        debit_credit_filename:
-          payloadFiles["debit_credit_filename"][0]?.filename,
-      })
+      ...payload,
+      debit_credit_filename:
+        payloadFiles["debit_credit_filename"][0]?.filename,
+    })
     : null;
 
   // GET SD by PO Number
@@ -517,17 +520,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-        ...payload,
-        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-      })
+      ...payload,
+      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+    })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-        ...payload,
-        demand_raise_filename:
-          payloadFiles["demand_raise_filename"][0]?.filename,
-      })
+      ...payload,
+      demand_raise_filename:
+        payloadFiles["demand_raise_filename"][0]?.filename,
+    })
     : null;
 
   // generate btn num
@@ -787,6 +790,7 @@ const submitBTNByDO = async (req, res) => {
 
       if (status === REJECTED) {
         const response1 = await btnReject(req.body, tokenData, client);
+        handelMail(tokenData, { btn_num, status: REJECTED }, BTN_REJECT);
         return resSend(res, true, 200, "Rejected successfully !!", null, null);
       }
 
@@ -1544,10 +1548,12 @@ const assignToFiStaffHandler = async (req, res) => {
     try {
       const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
       const tokenData = { ...req.tokenData };
+      console.log(11);
       const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
         btn_num,
         status: STATUS_RECEIVED,
       });
+
       if (btnCurrnetStatus.isInvalid) {
         return resSend(
           res,
@@ -1558,6 +1564,7 @@ const assignToFiStaffHandler = async (req, res) => {
           null
         );
       }
+
       // const btnRejectCheck = await btnDetailsCheck(client, {
       //   btn_num,
       //   status: REJECTED,
@@ -1739,7 +1746,7 @@ async function btnReject(data, tokenData, client) {
   try {
     const obj = {
       btn_num: data.btn_num,
-      // purchasing_doc_no: purchasing_doc_no.data,
+      remarks: data.remarks,
     };
 
     // const { q, val } = generateQuery(UPDATE, BTN_MATERIAL, { status: REJECTED }, obj);
@@ -1790,8 +1797,14 @@ const updateBtnListTable = async (client, data) => {
         status: REJECTED,
         created_at: getEpochTime(),
       };
+      if (data.remarks) {
+        btnListTablePaylod.remarks = data.remarks;
+      }
+      console.log("%%%%%%%%%%%%%%%%%%%");
       const { q, val } = generateQuery(INSERT, "btn_list", btnListTablePaylod);
-      await poolQuery({ client, query: q, values: val });
+      const aa = await poolQuery({ client, query: q, values: val });
+      console.log(aa);
+      console.log("UPDATED btn list");
       // if (data.fstatus == "5" || data.fstatus == 5) {
       //     await handelMail(btnListTablePaylod, client);
       // }
@@ -1848,13 +1861,14 @@ async function btnCurrentDetailsCheck(client, data) {
       BTN_STATUS_BANK,
       BTN_STATUS_HOLD_TEXT,
       BTN_STATUS_PROCESS,
-      SUBMIT_BY_DO
+      SUBMIT_BY_DO,
     ]);
 
     if (data.status === STATUS_RECEIVED) {
       checkStatus.add(BTN_STATUS_DRETURN);
       checkStatus.add(SUBMITTED_BY_VENDOR);
       checkStatus.delete(STATUS_RECEIVED);
+      checkStatus.delete(SUBMIT_BY_DO);
     }
 
     btnstausCount += " ORDER BY created_at DESC";
@@ -1909,7 +1923,7 @@ function calculateTotals(data) {
 
 const getFinanceEmpList = async (req, res) => {
   try {
-    const q = `SELECT t1.pernr as userCode, t1.cname as empName, t3.name as role 
+    let q = `SELECT t1.pernr as userCode, t1.cname as empName, t3.name as role 
 	FROM pa0002 
     	AS t1 
       LEFT JOIN 
@@ -1926,12 +1940,16 @@ const getFinanceEmpList = async (req, res) => {
 	
         WHERE 
         t2.department_id = $1`;
+    if (req.query.$select) {
+      let select = req.query.$select;
+      q = q.concat(` AND t2.internal_role_id = ${select}`);
+    }
 
     const response = await getQuery({
       query: q,
       values: [USER_TYPE_GRSE_FINANCE],
     });
-    resSend(res, true, 200, "oded!", response, null);
+    resSend(res, true, 200, "data fetched!", response, null);
   } catch (err) {
     console.log("data not fetched", err);
   }
@@ -1950,4 +1968,9 @@ module.exports = {
   timeInHHMMSS,
   assignToFiStaffHandler,
   getFinanceEmpList,
+  addToBTNList,
+  btnCurrentDetailsCheck,
+  btnReject,
+  insertUpdateToBTNList,
+  updateBtnListTable,
 };

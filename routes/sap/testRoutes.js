@@ -8,7 +8,6 @@ const path = require("path");
 const { resSend } = require("../../lib/resSend");
 
 
-
 ////////////// STRAT TESTING APIS //////////////
 
 // router.post("/", [], async (req, res) => {
@@ -314,22 +313,28 @@ router.post("/datainsert", async (req, res) => {
     .pipe(csv())
     .on('data', async (row) => {
       dataBuffer.push(row);
-      if (dataBuffer.length >= batchSize) {
-        // try {
-        //   const res1 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
-        //   result = [...result, ...res1];
+      // if (dataBuffer.length >= batchSize) {
+      // try {
+      //   const res1 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
+      //   result = [...result, ...res1];
 
-        // } catch (error) {
-        //   console.log();
-        // }
-      }
+      // } catch (error) {
+      //   console.log();
+      // }
+      // }
     }).on('end', async () => {
       if (dataBuffer.length > 0) {
-        const res2 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
-        result = [...result, ...res2];
+        try {
+
+          const res2 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
+          result = [...result, ...res2];
+          resSend(res, true, 201, "Data inserted successfull", result);
+        } catch (error) {
+          console.log("error", error.message);
+          resSend(res, false, 400, "Data inserted failed", result);
+        }
       }
       // res.status(200).send({ status: true, data: result, message: "Data inserted successfull" });
-      resSend(res, true, 201, "Data inserted successfull", result);
     }).on('error', (error) => {
       console.error('Error reading CSV file', error.message);
       resSend(res, false, 400, error.message, error.message);
@@ -344,35 +349,66 @@ async function insertData(data, tableName, pk) {
   // console.log("dataBuffer", JSON.stringify(data));
   try {
     const client = await poolClient();
+    let allq = "";
+    console.log("djjjjjjjjjjjjjj", tableName, pk, data);
+
     const failedData = [];
     try {
-      let insertQuery = {};
+      let insertQuery = "";
 
       for (let row of data) {
         try {
-          insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
-          console.log("insertQuery", insertQuery);
-          await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+          const result = await getEmpdetails(client, [row.vendor_code]);
+          if (result) {
+            throw new Error('Already exist in auth table');
+          }
+          // insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
+
+          let valuesArray = Object.values(row);
+          insertQuery = `INSERT INTO auth (user_type, vendor_code, username, name, department_id, internal_role_id, is_active, password)  
+          VALUES ( ${row.user_type}, '${row.vendor_code}',  '${row.username}', '${row.name}',  ${row.department_id}, ${row.internal_role_id}, ${row.is_active}, '${row.password}');`
+
+          // console.log("insertQuery", insertQuery);
+          allq += insertQuery;
+          await poolQuery({ client, query: insertQuery, values: [] });
+
+          // await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
           // await query({ query: insertQuery.q, values: insertQuery.val })
-          console.log("success");
+          // console.log("success");
         } catch (error) {
           failedData.push({ ...row, error: error.message })
         }
       }
+
+
+
     } catch (err) {
 
       console.log("errerrerrerrerrerrerr", err.message);
       throw err;
     } finally {
       client.release();
+      console.log("let allq ", allq);
 
-      console.log("failedData", JSON.stringify(failedData));
+      // console.log("failedData", JSON.stringify(failedData));
       return failedData;
     }
 
   } catch (error) {
     console.log("error.mess", error.message);
     throw error;
+  }
+}
+
+
+const getEmpdetails = async (client, val) => {
+  try {
+    console.log("val", val);
+
+    const result = await poolQuery({ client, query: "select count(*) from auth where vendor_code = $1", values: val });
+    return parseInt(result[0]?.count);
+  } catch (error) {
+    throw error
   }
 }
 

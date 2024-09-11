@@ -151,15 +151,14 @@ const newPaymentAdvice = async (req, res) => {
 
         const client = await poolClient();
 
-        console.log("req.body ");
         if (!req.body || typeof req.body != 'object' || !Object.keys(req.body)?.length) {
-            return responseSend(res, "F", 400, "Please send a valid payload.", null, null);
+            return responseSend(res, "F", 400, "Please send a valid payload.", {}, null);
         }
 
         const payload = req.body;
         console.log('payload payment advice', payload);
         if (!payload) {
-            return responseSend(res, "F", 400, "Invalid payload.", null, null);
+            return responseSend(res, "F", 400, "Invalid payload.", {}, null);
         }
 
         const { ZFI_PYMT_ADVCE_FINAL, ...obj } = payload;

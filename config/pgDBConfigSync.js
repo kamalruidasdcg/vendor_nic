@@ -9,9 +9,9 @@ const pool = new Pool({
   port: process.env.PG_DB_PORT,
 });
 
-pool.on("connect", () => {
-  console.log("Connected to the database");
-});
+// pool.on("connect", () => {
+//   console.log("Connected to the database");
+// });
 
 pool.on("error", (err) => {
   console.error("Unexpected error on idle client", err);

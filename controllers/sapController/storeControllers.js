@@ -1,5 +1,5 @@
 // const { query,  } = require("../config/dbConfig");
-const { connection } = require("../../config/dbConfig");
+// const { connection } = require("../../config/dbConfig");
 const { TRUE } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { GATE_ENTRY_DATA, GATE_ENTRY_HEADER } = require("../../lib/tableName");

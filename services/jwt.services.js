@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { resSend } = require("../lib/resSend");
-const { query } = require("../config/dbConfig");
+const { query } = require("../config/pgDbConfig");
 require("dotenv").config();
 const { storeRefreshToken } = require("./token.services");
 const apiAccessList = require("../lib/apiList");
@@ -220,6 +220,8 @@ function isRouteAllowedForRole(role, targetRoute) {
 }
 
 // Middleware for Basic Authentication
+const sap_username = process.env.SAP_API_AUTH_USERNAME;
+const sap_password = process.env.SAP_API_AUTH_PASSWORD;
 const basicAuthVerification = basicAuth({
   users: {
     [process.env.SAP_API_AUTH_USERNAME]: process.env.SAP_API_AUTH_PASSWORD,
