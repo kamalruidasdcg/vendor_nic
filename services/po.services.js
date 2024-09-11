@@ -681,7 +681,7 @@ const getPoWithLineItems = async (client, values, limit, offSet) => {
   try {
 
     const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
-    const getPoQuey =
+    let getPoQuey =
       `SELECT ekko.lifnr AS "vendor_code",
               ekko.aedat AS "createdAt",
               lfa1.name1 AS "vendor_name",
@@ -699,6 +699,35 @@ const getPoWithLineItems = async (client, values, limit, offSet) => {
         LEFT JOIN pa0002 AS users ON(users.pernr :: CHARACTER varying = ekko.ernam) 
     WHERE 
       	ekko.ebeln IN(${placeholders}) ORDER BY ekko.aedat, ekko.ebeln LIMIT ${limit} OFFSET ${offSet}`;
+
+getPoQuey = `
+    WITH ekko_limited_result AS (
+    SELECT * 
+    FROM ekko 
+    WHERE 
+      	ekko.ebeln IN(${placeholders}) 
+    ORDER BY ekko.aedat, ekko.ebeln 
+    LIMIT ${limit} OFFSET ${offSet}
+)
+SELECT 
+    ekko_limited_result.lifnr AS "vendor_code",
+    ekko_limited_result.aedat AS "createdAt",
+    lfa1.name1 AS "vendor_name",
+    ekko_limited_result.ebeln AS "poNb",
+    ekko_limited_result.bsart AS "poType",
+    ekpo.matnr AS "m_number",
+    mara.mtart AS "MTART",
+    ekpo.MATNR AS "MATNR",
+    ekko_limited_result.ernam AS "po_creator",
+    users.cname AS "po_creator_name"
+FROM 
+    ekko_limited_result
+LEFT JOIN ekpo ON ekko_limited_result.ebeln = ekpo.ebeln
+LEFT JOIN mara ON ekpo.matnr = mara.matnr
+LEFT JOIN lfa1 ON ekko_limited_result.lifnr = lfa1.lifnr
+LEFT JOIN pa0002 AS users ON users.pernr::CHARACTER VARYING = ekko_limited_result.ernam
+ORDER BY 
+    ekko_limited_result.aedat, ekko_limited_result.ebeln`;
 
 console.log("getPoQuey", getPoQuey);
 
