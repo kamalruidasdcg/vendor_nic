@@ -644,32 +644,34 @@ exports.stats = async (req, res) => {
 
       const getAsfromAstoQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,${ASSIGNED_FROM},${ASSIGNED_TO} 
               FROM ${TABLE} WHERE purchasing_doc_no IN(${str})
-                AND ${ASSIGNED} = 1`;
+          AND status = $1`;
 
       const getAsfromAstoData = await poolQuery({
         client,
         query: getAsfromAstoQ,
-        values: [],
+        values: [STATUS],
       });
 
-      const getStatusAccepctedQ = `SELECT DISTINCT ON (status) purchasing_doc_no,created_at 
-        FROM ${TABLE} WHERE purchasing_doc_no IN(${str})
-          AND status = $1`;
+      const getStatusAccepctedQ = `SELECT 
+        MAX(created_at) AS created_at, reference_no 
+        FROM ${TABLE} WHERE reference_no IN (${refNum})
+          AND status = $1  GROUP BY reference_no`;
 
       const getStatusAccepctedData = await poolQuery({
         client,
         query: getStatusAccepctedQ,
         values: [STATUS],
       });
-
+      // console.log(getStatusAccepctedData);
+      // return;
       // get created_at difference
 
       const created_at_difference_query = `SELECT 
-    
+       MIN(created_at) AS created_at,
         (MAX(created_at) - MIN(created_at)) AS created_at_difference,
           reference_no
         FROM 
-            public.drawing
+             ${TABLE}
         WHERE 
             reference_no IN (${refNum}) GROUP BY reference_no`;
 
@@ -678,12 +680,15 @@ exports.stats = async (req, res) => {
         query: created_at_difference_query,
         values: [],
       });
-
+      // console.log("^^^^^^^^^^^");
+      // console.log(created_at_difference_data);
+      // console.log("^^$$^^^^^^^^^");
+      // return;
       let results = [];
       if (result && Array.isArray(result)) {
         results = result.map((el2) => {
           let staAcc = getStatusAccepctedData.find(
-            (ele) => ele.purchasing_doc_no == el2.purchasing_doc_no
+            (ele) => ele.reference_no == el2.reference_no
           );
           staAcc
             ? (el2.accepted_on = staAcc.created_at)
@@ -712,11 +717,13 @@ exports.stats = async (req, res) => {
             const time_taken = Math.floor(
               parseInt(timeTaken.created_at_difference) / millisecondsInOneDay
             );
-            // console.log("^^^^^^^^^^^");
-            // console.log(el2.reference_no);
-            // console.log("^^$$^^^^^^^^^");
+
             console.log(time_taken);
-            return { ...DOObj, time_taken: time_taken };
+            return {
+              ...DOObj,
+              time_taken: time_taken,
+              created_at: timeTaken.created_at,
+            };
           } else {
             return {
               ...DOObj,
