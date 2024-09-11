@@ -738,6 +738,30 @@ ORDER BY
     throw error;
   }
 }
+const getCount = async (client, values, whereCondQuery) => {
+  try {
+
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+    let getPoQuey = getPoQuey = `
+    SELECT count(*) 
+      FROM ekko 
+    WHERE 
+      	${whereCondQuery} AND ekko.ebeln IN(${placeholders})`;
+
+    console.log("getPoQuey", getPoQuey);
+
+    const result = poolQuery({ client, query: getPoQuey, values });
+
+    return parseInt(result[0]?.count);
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
+
 function setMileStoneActivity(purchasing_doc_no, contractualDates) {
   const flags = ["sdbg", "drawing", "qap", "ilms"];
   const finalResult = {};
