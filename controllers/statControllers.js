@@ -488,12 +488,10 @@ exports.stats = async (req, res) => {
   try {
     const client = await poolClient();
     try {
-      //req.query.reference_no
       const tokenData = { ...req.tokenData };
 
       // check type
       const type = req.query.type;
-      //
 
       if (!type || (type != QAP_SUBMISSION && type != DRAWING)) {
         return resSend(res, false, 200, "please send a type.", null, null);
@@ -522,13 +520,13 @@ exports.stats = async (req, res) => {
           null
         );
       }
-      // console.log(111111111111);
-      // return;
 
       let str = "";
       let q;
       let result;
-      // For grse_QA_ASSIGNER
+      let refNum = "";
+
+      // For grse_ASSIGNER
       if (tokenData.internal_role_id === ASSIGNER) {
         q = `SELECT DISTINCT ON (t1.reference_no)
             t1.reference_no,
@@ -558,11 +556,18 @@ exports.stats = async (req, res) => {
             strArr.push(item.purchasing_doc_no);
           });
         }
+        let refNumArr = [];
+        if (result.length) {
+          result.forEach((item) => {
+            refNumArr.push(item.reference_no);
+          });
+        }
 
         function removeDuplicates(strArr) {
           return [...new Set(strArr)];
         }
         strArr = removeDuplicates(strArr);
+        refNumArr = removeDuplicates(refNumArr);
         console.log("************");
 
         if (strArr.length) {
@@ -571,8 +576,19 @@ exports.stats = async (req, res) => {
             str = str.concat("'").concat(`${item}`).concat("'").concat(",");
           });
         }
-
         str = str.slice(0, -1);
+        console.log(refNumArr);
+        if (refNumArr.length) {
+          refNumArr.forEach((item) => {
+            console.log(item);
+            refNum = refNum
+              .concat("'")
+              .concat(`${item}`)
+              .concat("'")
+              .concat(",");
+          });
+        }
+        refNum = refNum.slice(0, -1);
       }
 
       // For grse_QA_STAFF
@@ -591,10 +607,17 @@ exports.stats = async (req, res) => {
           getStrArrData.forEach((item) => {
             const no = item.purchasing_doc_no;
             str = str.concat("'").concat(`${no}`).concat("'").concat(",");
+            const refNo = item.reference_no;
+            refNum = refNum
+              .concat("'")
+              .concat(`${refNo}`)
+              .concat("'")
+              .concat(",");
           });
         }
-
         str = str.slice(0, -1);
+
+        refNum = refNum.slice(0, -1);
 
         let q = `SELECT DISTINCT ON (t1.reference_no)
             t1.reference_no,
@@ -618,9 +641,7 @@ exports.stats = async (req, res) => {
           values: [],
         });
       }
-      // console.log(str);
-      // console.log(result);
-      // return;
+
       const getAsfromAstoQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,${ASSIGNED_FROM},${ASSIGNED_TO} 
               FROM ${TABLE} WHERE purchasing_doc_no IN(${str})
                 AND ${ASSIGNED} = 1`;
@@ -641,6 +662,23 @@ exports.stats = async (req, res) => {
         values: [STATUS],
       });
 
+      // get created_at difference
+
+      const created_at_difference_query = `SELECT 
+    
+        (MAX(created_at) - MIN(created_at)) AS created_at_difference,
+          reference_no
+        FROM 
+            public.drawing
+        WHERE 
+            reference_no IN (${refNum}) GROUP BY reference_no`;
+
+      const created_at_difference_data = await poolQuery({
+        client,
+        query: created_at_difference_query,
+        values: [],
+      });
+
       let results = [];
       if (result && Array.isArray(result)) {
         results = result.map((el2) => {
@@ -655,12 +693,33 @@ exports.stats = async (req, res) => {
             (elms) => elms.purchasing_doc_no == el2.purchasing_doc_no
           );
           if (DOObj) {
-            return { ...DOObj, ...el2, time_taken: "N/A" };
+            DOObj = { ...DOObj, ...el2 };
           } else {
-            return {
+            DOObj = {
               ...el2,
               assigned_from: "N/A",
               assigned_to: "N/A",
+            };
+          }
+
+          let timeTaken = created_at_difference_data.find(
+            (elms) => elms.reference_no == el2.reference_no
+          );
+          console.log("^^^^^^^^^^^");
+          console.log(timeTaken);
+          if (timeTaken) {
+            const millisecondsInOneDay = 1000 * 60 * 60 * 24;
+            const time_taken = Math.floor(
+              parseInt(timeTaken.created_at_difference) / millisecondsInOneDay
+            );
+            // console.log("^^^^^^^^^^^");
+            // console.log(el2.reference_no);
+            // console.log("^^$$^^^^^^^^^");
+            console.log(time_taken);
+            return { ...DOObj, time_taken: time_taken };
+          } else {
+            return {
+              ...DOObj,
               time_taken: "N/A",
             };
           }
