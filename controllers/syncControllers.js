@@ -30,7 +30,11 @@ const {
   FOLDER_NAME_PO,
   FOLDER_NAME_PYMT_ADVICE,
 } = require("../lib/constant");
-const { getColumnDataType } = require("../utils/syncUtils");
+const {
+  getColumnDataType,
+  getColumnPrimaryKey,
+  adjustSequences,
+} = require("../utils/syncUtils");
 const { resSend } = require("../lib/resSend");
 const todayDate = formatDateSync(new Date());
 
@@ -254,6 +258,7 @@ exports.syncUnzip = async (req, res) => {
         // UPLOAD DATA
         try {
           let d = await syncDataUpload(currentDate);
+          console.log("syncDataUpload", d);
           if (!d?.sta) {
             hasError = true;
             errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
@@ -317,6 +322,13 @@ const syncDataUpload = async (currentDate) => {
       const tableName = folder;
       const csvDataPath = path.join(folderPath, folder, "data.csv");
 
+      try {
+        // Adjust sequences before processing
+        await adjustSequences(tableName);
+      } catch (error) {
+        return { sta: false, msg: `${err.message} in ${tableName}` };
+      }
+
       // Check if the CSV file exists
       if (!fs.existsSync(csvDataPath)) {
         console.error(`CSV file not found for table ${tableName}`);
@@ -348,12 +360,17 @@ const syncDataUpload = async (currentDate) => {
           const { rowCount } = await pool.query(check_q, []);
           // console.log("res_check", rowCount);
           const keys = Object.keys(item);
-          // console.log("item", item);
-          // console.log("keys:", keys);
+          const primaryKeys = await getColumnPrimaryKey("public", tableName);
+          const nonPrimaryKeys = keys.filter(
+            (key) => !primaryKeys.includes(key)
+          );
+          console.log("keys", keys);
+          console.log("primaryKeys", primaryKeys);
+          console.log("nonPrimaryKeys", nonPrimaryKeys);
           let values = [];
 
-          for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
+          for (let i = 0; i < nonPrimaryKeys.length; i++) {
+            const key = nonPrimaryKeys[i];
             const d_type = await getColumnDataType("public", tableName, key);
             if (key === "sync") {
               item[key] = true;
@@ -383,19 +400,28 @@ const syncDataUpload = async (currentDate) => {
           }
 
           if (rowCount > 0) {
-            const updateColumns = keys
+            const updateColumns = nonPrimaryKeys
               .map((key, i) => `${key} = $${i + 1}`)
               .join(", ");
             // console.log("q", tableName, updateColumns, values);
-            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${keys.length + 1
-              }`;
-            console.log("q1", tableName, item.sync_id);
+            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${
+              nonPrimaryKeys.length + 1
+            }`;
             await pool.query(query, [...values, item.sync_id]);
+            // if (tableName == "auth") {
+            //   console.log("updateColumns", updateColumns);
+            //   console.log("values", values, item.sync_id);
+            // }
           } else {
-            const columns = keys.join(", ");
-            const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
-            console.log("q2", tableName, columns, placeholders, item?.sync_id);
+            const columns = nonPrimaryKeys.join(", ");
+            const placeholders = nonPrimaryKeys
+              .map((_, i) => `$${i + 1}`)
+              .join(", ");
             const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`;
+            if (tableName == "auth") {
+              console.log("query", query);
+              console.log("q2", values);
+            }
             await pool.query(query, values);
           }
         } catch (queryError) {
@@ -822,7 +848,7 @@ exports.uploadRecentFilesController = async (req, res, next) => {
       .readdirSync(zipFilePath)
       .filter((item, i) => isZipFile(item));
 
-    console.log("files", files);
+    // console.log("files", files);
 
     // let stats = fs.statSync(zipFilePath);
     // if (!stats.isFile()) {
@@ -842,11 +868,11 @@ exports.uploadRecentFilesController = async (req, res, next) => {
         todayDate,
         file
       );
-      console.log(zipFilePath);
+      // console.log(zipFilePath);
       await unzipAndMove(zipFilePath, uploadsFolderPath, file);
     });
 
-    resSend(res, true, 200, null, "File transferred successfully.", null);
+    resSend(res, true, 200, "File transferred successfully.", null, null);
   } catch (error) {
     console.log("An error occurred in uploadRecentFilesController:", error);
   }
@@ -868,7 +894,7 @@ exports.syncDownloadTEST = async (req, res) => {
     };
 
     resData = { ...resData, ekpo: resRow };
-    resSend(res, true, 200, rows, "File transferred successfully.", null);
+    resSend(res, true, 200, "File transferred successfully.", rows, null);
   } catch (error) {
     console.error(`Error in ekpo data sync csv download`);
     console.error(error.message);
@@ -969,7 +995,7 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
       }
     }
 
-    resSend(res, true, 201, [], "File transferred successfully.", null);
+    resSend(res, true, 201, "File transferred successfully.", [], null);
   } catch (error) {
     console.log(
       "An error occurred in uploadRecentFilesController:",
