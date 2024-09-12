@@ -32,7 +32,8 @@ exports.getColumnPrimaryKey = async (schemaName, tableName) => {
       AND tc.table_schema = kcu.table_schema
       WHERE tc.constraint_type = 'PRIMARY KEY'
       AND tc.table_name = $1
-      AND tc.table_schema = $2;
+      AND tc.table_schema = $2 
+	    AND kcu.column_name = 'id';
     `;
 
     const { rows } = await pool.query(query, [tableName, schemaName]);
@@ -79,9 +80,9 @@ exports.adjustSequences = async (tableName) => {
         `;
         await pool.query(setvalQuery, [sequence.sequence_name, maxId + 1]);
 
-        console.log(
-          `Sequence ${sequence.sequence_name} adjusted successfully.`
-        );
+        // console.log(
+        //   `Sequence ${sequence.sequence_name} adjusted successfully.`
+        // );
       } else {
         console.log(`No rows found in the ${tableName} table.`);
       }
