@@ -525,6 +525,10 @@ const syncDataUpload = async (currentDate) => {
             // console.log("query", query);
             // console.log("values", values, item.sync_id);
             await pool.query(query, [...values, item.sync_id]);
+            // if (tableName == "auth") {
+            //   console.log("updateColumns", updateColumns);
+            //   console.log("values", values, item.sync_id);
+            // }
           } else {
             const columns = nonPrimaryKeys.join(", ");
             const placeholders = nonPrimaryKeys
