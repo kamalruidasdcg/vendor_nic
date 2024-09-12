@@ -1,23 +1,15 @@
 const { resSend } = require("../../lib/resSend");
 const { query, getQuery } = require("../../config/pgDbConfig");
 const { generateQuery, getEpochTime } = require("../../lib/utils");
-const { INSERT, USER_TYPE_GRSE_HR } = require("../../lib/constant");
+const { INSERT, USER_TYPE_GRSE_HR, USER_TYPE_VENDOR } = require("../../lib/constant");
 const { HR } = require("../../lib/tableName");
-const { SUBMITTED } = require("../../lib/status");
-const fileDetails = require("../../lib/filePath");
-const path = require('path');
-const { inspectionCallLetterPayload } = require("../../services/po.services");
-const { handleFileDeletion } = require("../../lib/deleteFile");
-const { getFilteredData, updatTableData, insertTableData } = require("../genralControlles");
+const Message = require("../../utils/messages");
 
 
 
 const hrComplianceUpload = async (req, res) => {
 
-  // return  resSend(res, true, 200, "file hrupleeoaded!", `req`, null);
     try {
-
-        // const lastParam = req.path.split("/").pop();
         // Handle Image Upload
         let fileData = {};
         if (req.file) {
@@ -27,56 +19,50 @@ const hrComplianceUpload = async (req, res) => {
                 // fileType: req.file.mimetype,
                 // fileSize: req.file.size,
             };
-        }
-        const tokenData = { ...req.tokenData };
 
-        const by = tokenData.user_type === 1 ? "VENDOR" : "GRSE";
+            const tokenData = { ...req.tokenData };
 
-        const payload = {
-            ...req.body,
-            created_at: getEpochTime(),
-            created_by_id: tokenData.vendor_code,
-            updated_by: "GRSE HR",
-            ...fileData,
-        };
-        console.log("payload", payload);
-        if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
+            const payload = {
+                ...req.body,
+                created_at: getEpochTime(),
+                created_by_id: tokenData.vendor_code,
+                updated_by: "GRSE HR",
+                ...fileData,
+            };
 
-            // const directory = path.join(__dirname, '..', 'uploads', lastParam);
-            // const isDel = handleFileDeletion(directory, req.file.filename);
-            return resSend(res, false, 400, "Please send valid payload", null, null);
+            const hrComplianceDate = payload.compliance_date;
 
-        }
+            console.log("payload", payload);
+            if (!payload.purchasing_doc_no || !payload.remarks || !payload.status) {
 
-        if(tokenData.department_id != USER_TYPE_GRSE_HR) {
-            return resSend(res, false, 200, "Only HR can upload!", null, null);
-        }
+                // const directory = path.join(__dirname, '..', 'uploads', lastParam);
+                // const isDel = handleFileDeletion(directory, req.file.filename);
+                return resSend(res, false, 400, "Please send valid payload", Message.MANDATORY_INPUTS_REQUIRED, null);
 
-        let insertObj = payload; //inspectionCallLetterPayload(payload);
+            }
 
-        //console.log("insertObj", insertObj);
-        const { q, val } = generateQuery(INSERT, HR, insertObj);
-        const response = await query({ query: q, values: val });
+            const compliance_date = hrComplianceDate ? new Date(hrComplianceDate) : new Date();
+            const year = compliance_date.getFullYear();
+            const month = compliance_date.getMonth() + 1;
 
-        if (response.rowCount) {
+            if (tokenData.department_id != USER_TYPE_GRSE_HR) {
+                return resSend(res, false, 200, "Only HR can upload!", Message.YOU_ARE_UN_AUTHORIZED, null);
+            }
 
-            // await handleEmail();
+            let insertObj = { ...payload, compliance_date, year, month };
+            console.log('insertObj', insertObj);
+            
 
+            const { q, val } = generateQuery(INSERT, HR, insertObj);
+            const response = await query({ query: q, values: val });
             resSend(res, true, 200, "HR Compliance Uploaded successfully !", response, null);
-        } else {
-            resSend(res, false, 400, "No data inserted", null, null);
         }
-
-
-        // }
-        // else {
-        //     resSend(res, false, 400, "Please upload a valid File", fileData, null);
-        // }
+        else {
+            resSend(res, false, 400, "Please upload a valid File", fileData, null);
+        }
 
     } catch (error) {
-        console.log("po add api", error)
-
-        return resSend(res, false, 500, "internal server error", [], null);
+        resSend(res, false, 500, "internal server error", error.message, null);
     }
 }
 
@@ -102,7 +88,7 @@ const complianceUploadedList = async (req, res) => {
         console.log("data not fetched", err);
         resSend(res, false, 500, "Internal server error", null, "");
     }
-   // return resSend(res, true, 200, "oded!", `req.hrquery.dd`, null);
+    // return resSend(res, true, 200, "oded!", `req.hrquery.dd`, null);
 
 }
 
