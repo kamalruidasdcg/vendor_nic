@@ -505,7 +505,8 @@ exports.stats = async (req, res) => {
       const ASSIGNED_FROM =
         type === QAP_SUBMISSION ? "assigned_from" : "assign_from";
       const ASSIGNED_TO = type === QAP_SUBMISSION ? "assigned_to" : "assign_to";
-      const ASSIGNED = type === QAP_SUBMISSION ? "is_assign" : "last_assigned";
+      const ASSIGN_STATUS =
+        type === QAP_SUBMISSION ? "is_assign" : "last_assigned";
 
       if (
         tokenData.department_id != USER_DEPT_ID &&
@@ -533,7 +534,6 @@ exports.stats = async (req, res) => {
             t1.purchasing_doc_no,
             t1.vendor_code,
             t1.status,
-            t1.created_at,
             t2.name1 as vendor_name
             FROM ${TABLE} AS t1
                           LEFT JOIN
@@ -591,10 +591,10 @@ exports.stats = async (req, res) => {
         refNum = refNum.slice(0, -1);
       }
 
-      // For grse_QA_STAFF
+      // For grse_STAFF
       if (tokenData.internal_role_id === STAFF) {
-        const getStrArrQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,assigned_to 
-              FROM ${TABLE} WHERE assigned_to = $1`;
+        const getStrArrQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,${ASSIGNED_TO} 
+              FROM ${TABLE} WHERE ${ASSIGNED_TO} = $1`;
 
         const getStrArrData = await poolQuery({
           client,
@@ -624,7 +624,6 @@ exports.stats = async (req, res) => {
             t1.purchasing_doc_no,
             t1.vendor_code,
             t1.status,
-            t1.created_at,
             t2.name1 as vendor_name
             FROM ${TABLE} AS t1
                           LEFT JOIN
@@ -644,17 +643,22 @@ exports.stats = async (req, res) => {
 
       const getAsfromAstoQ = `SELECT DISTINCT ON (purchasing_doc_no) purchasing_doc_no,${ASSIGNED_FROM},${ASSIGNED_TO} 
               FROM ${TABLE} WHERE purchasing_doc_no IN(${str})
-          AND status = $1`;
+          AND status = $1 AND ${ASSIGN_STATUS} = $2`;
 
       const getAsfromAstoData = await poolQuery({
         client,
         query: getAsfromAstoQ,
-        values: [STATUS],
+        values: [ASSIGNED, 1],
       });
+
+      // console.log("^^^^^^^^^^^");
+      // console.log(getAsfromAstoData);
+      // console.log("^^$$^^^^^^^^^");
+      // return;
 
       const getStatusAccepctedQ = `SELECT 
         MAX(created_at) AS created_at, reference_no 
-        FROM ${TABLE} WHERE reference_no IN (${refNum})
+        FROM ${TABLE} WHERE purchasing_doc_no IN(${str})
           AND status = $1  GROUP BY reference_no`;
 
       const getStatusAccepctedData = await poolQuery({
@@ -662,6 +666,7 @@ exports.stats = async (req, res) => {
         query: getStatusAccepctedQ,
         values: [STATUS],
       });
+      // console.log("^^$$^^^^^^^^^");
       // console.log(getStatusAccepctedData);
       // return;
       // get created_at difference
@@ -673,16 +678,15 @@ exports.stats = async (req, res) => {
         FROM 
              ${TABLE}
         WHERE 
-            reference_no IN (${refNum}) GROUP BY reference_no`;
+            purchasing_doc_no IN(${str}) GROUP BY reference_no`;
 
       const created_at_difference_data = await poolQuery({
         client,
         query: created_at_difference_query,
         values: [],
       });
-      // console.log("^^^^^^^^^^^");
-      // console.log(created_at_difference_data);
-      // console.log("^^$$^^^^^^^^^");
+      // console.log("&&&&&&&");
+      // console.log(result);
       // return;
       let results = [];
       if (result && Array.isArray(result)) {
@@ -710,15 +714,15 @@ exports.stats = async (req, res) => {
           let timeTaken = created_at_difference_data.find(
             (elms) => elms.reference_no == el2.reference_no
           );
-          console.log("^^^^^^^^^^^");
-          console.log(timeTaken);
+          // console.log("^^^^^^^^^^^");
+          // console.log(timeTaken);
           if (timeTaken) {
             const millisecondsInOneDay = 1000 * 60 * 60 * 24;
             const time_taken = Math.floor(
               parseInt(timeTaken.created_at_difference) / millisecondsInOneDay
             );
-
-            console.log(time_taken);
+            // console.log("^^^^^^^^^^^");
+            // console.log(time_taken);
             return {
               ...DOObj,
               time_taken: time_taken,
