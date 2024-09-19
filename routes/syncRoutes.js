@@ -10,6 +10,7 @@ const {
   uploadRecentFilesControllerByDate,
   syncUnzipNowAPI,
 } = require("../controllers/syncControllers");
+const { veifyAccessToken } = require("../services/jwt.services");
 const router = express.Router();
 
 // API TO DOWNLOAD ALL UNSYNCED DATA FROM SELECTED TABLES
@@ -29,6 +30,7 @@ router.post("/sync_upload", syncUnzipNowAPI);
 router.post("/sync_file_zip", unsyncFileCompressed);
 
 // API TO UPDATE FILES THAT ARE UPLOADED IN LAST 24 MINUTES
+// ,[veifyAccessToken]
 router.post("/sync_file_upload", uploadRecentFilesControllerByDate);
 
 module.exports = router;

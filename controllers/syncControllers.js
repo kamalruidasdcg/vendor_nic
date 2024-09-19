@@ -29,6 +29,7 @@ const {
   OTHER_SERVER_FILE_PATH,
   FOLDER_NAME_PO,
   FOLDER_NAME_PYMT_ADVICE,
+  INSERT,
 } = require("../lib/constant");
 const {
   getColumnDataType,
@@ -36,6 +37,9 @@ const {
   adjustSequences,
 } = require("../utils/syncUtils");
 const { resSend } = require("../lib/resSend");
+const { generateQuery } = require("../lib/utils");
+const { SYNC_UPDATE } = require("../lib/tableName");
+const { query } = require("../config/pgDbConfig");
 const todayDate = formatDateSync(new Date());
 
 // SYNCRONISATION OF DATA
@@ -871,13 +875,18 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
-  cron.schedule("30 23 * * *", async () => {
+  cron.schedule("33 11 * * *", async () => {
     console.log("Running the scheduled task 00:20");
 
     try {
       // to day first epoch time 00:00:00 , 12 am
       const todayDateTime = new Date().setHours(0, 0, 0, 0);
       await getAndZipFileHandler(todayDateTime);
+      const paylod = { sync_type: "file", sync_datetime: new Date(todayDateTime), sync_status: "BACKUP_SUCCESSFULL", created_by: "" };
+      const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
+      console.log(q, val);
+      
+      const result = await query({ query: q, values: val });
       console.log("File Dump Completed successfully.");
     } catch (error) {
       console.error("Error during file dump:", error);
@@ -1062,7 +1071,7 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
     );
 
     console.log("zipFilePath", zipFilePath, syncDate);
-    
+
     // Check if the today's date folder exists
     if (!fs.existsSync(zipFilePath)) {
       return resSend(res, false, 200, `No backup on this date ${syncDate}`, zipFilePath, null);
@@ -1099,7 +1108,13 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
     }
     // }
 
-    resSend(res, true, 201, "File transferred successfully.", [], null);
+    const paylod = { sync_type: "file", sync_datetime: new Date(), sync_status: "SUCCESSFULL", created_by: "99999" };
+    const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
+    console.log(q, val);
+    
+    const result = await query({ query: q, values: val });
+
+    resSend(res, true, 201, "File transferred successfully.", result, null);
   } catch (error) {
 
     console.log(
