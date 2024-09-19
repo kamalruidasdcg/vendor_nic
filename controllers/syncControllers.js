@@ -519,9 +519,8 @@ const syncDataUpload = async (currentDate) => {
             const updateColumns = nonPrimaryKeys
               .map((key, i) => `${key} = $${i + 1}`)
               .join(", ");
-            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${
-              nonPrimaryKeys.length + 1
-            }`;
+            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${nonPrimaryKeys.length + 1
+              }`;
             // console.log("query", query);
             // console.log("values", values, item.sync_id);
             await pool.query(query, [...values, item.sync_id]);
@@ -1044,81 +1043,70 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
     if (!from_date || from_date === "") {
       return resSend(res, false, 200, null, "Date field is required.", null);
     }
-    const startDate = new Date(from_date);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    const syncDate = formatDateSync(new Date(from_date));
+    // const yesterday = new Date();
+    // yesterday.setDate(yesterday.getDate() - 1);
 
-    const dateArr = getDates(startDate, yesterday);
-    for (const syncDate of dateArr) {
-      const parentDir = path.resolve(__dirname, "..");
+    // const dateArr = getDates(startDate, yesterday);
+    // for (const syncDate of dateArr) {
+    const parentDir = path.resolve(__dirname, "..");
 
-      // GET THE ZIP FILE
-      const zipFilePath = path.join(
+    console.log("parentDir", parentDir, from_date, syncDate);
+
+
+    // GET THE ZIP FILE
+    const zipFilePath = path.join(
+      parentDir,
+      OTHER_SERVER_FILE_PATH,
+      syncDate
+    );
+
+    console.log("zipFilePath", zipFilePath, syncDate);
+    
+    // Check if the today's date folder exists
+    if (!fs.existsSync(zipFilePath)) {
+      return resSend(res, false, 200, `No backup on this date ${syncDate}`, zipFilePath, null);
+    }
+
+    // if (!fs.existsSync(zipFilePath)) {
+    //   return resSend(res, false, 200,  `No zip file found for ${syncDate} date`, zipFilePath, null);
+    // }
+
+    // UPLOAD FILE PATH
+    const uploadsFolderPath = path.join(parentDir, "uploads");
+
+    // Ensure the uploads folder exists
+    if (!fs.existsSync(uploadsFolderPath)) {
+      fs.mkdirSync(uploadsFolderPath, { recursive: true });
+    }
+
+    // GET ALL FILES FROM A FOLDER
+    let files = fs
+      .readdirSync(zipFilePath)
+      .filter((item, i) => isZipFile(item));
+
+    console.log("files", files);
+
+    for (const file of files) {
+      let zipFilePath = path.join(
         parentDir,
         OTHER_SERVER_FILE_PATH,
-        syncDate
+        syncDate,
+        file
       );
-
-      console.log("zipFilePath", zipFilePath, syncDate);
-
-      // Check if the today's date folder exists
-      // if (!fs.existsSync(zipFilePath)) {
-      //   return resSend(res, 200, false, zipFilePath, `No zip file found for ${syncDate} date`, null);
-      // }
-
-      // UPLOAD FILE PATH
-      const uploadsFolderPath = path.join(parentDir, "uploads");
-
-      // Ensure the uploads folder exists
-      if (!fs.existsSync(uploadsFolderPath)) {
-        fs.mkdirSync(uploadsFolderPath, { recursive: true });
-      }
-
-      // GET ALL FILES FROM A FOLDER
-      let files = fs
-        .readdirSync(zipFilePath)
-        .filter((item, i) => isZipFile(item));
-
-      console.log("files", files);
-
-      // let stats = fs.statSync(zipFilePath);
-      // if (!stats.isFile()) {
-      //   return resSend(
-      //     res,
-      //     200,
-      //     false,
-      //     zipFilePath,
-      //     `Provided path is not a file: ${zipFilePath}`,
-      //     null
-      //   );
-      // }
-      // files.forEach(async (file) => {
-      //   let zipFilePath = path.join(
-      //     parentDir,
-      //     OTHER_SERVER_FILE_PATH,
-      //     todayDate,
-      //     file
-      //   );
-      //   console.log(zipFilePath);
-      //   await unzipAndMove(zipFilePath, uploadsFolderPath, file);
-
-      for (const file of files) {
-        let zipFilePath = path.join(
-          parentDir,
-          OTHER_SERVER_FILE_PATH,
-          syncDate,
-          file
-        );
-        console.log(zipFilePath);
-        await unzipAndMove(zipFilePath, uploadsFolderPath, file);
-      }
+      console.log(zipFilePath);
+      await unzipAndMove(zipFilePath, uploadsFolderPath, file);
     }
+    // }
 
     resSend(res, true, 201, "File transferred successfully.", [], null);
   } catch (error) {
+
     console.log(
       "An error occurred in uploadRecentFilesController:",
-      error.message
+      error.message, error.stack
     );
+    resSend(res, false, 200, "An error occurred in uploadRecentFilesController", error.message, null);
+
   }
 };
