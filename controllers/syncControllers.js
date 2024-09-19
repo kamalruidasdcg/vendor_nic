@@ -231,8 +231,8 @@ exports.syncUnzip = async (req, res) => {
         res,
         false,
         200,
-        zipDataPath,
         `No zip file found on ${currentDate}`,
+        zipDataPath,
         null
       );
     }
