@@ -1014,13 +1014,13 @@ const poListCopy = async (req, res) => {
       const { vCode, yardNo, empCode, poNo } = req.query;
       let conditionQuery = "1 = 1";
       if (vCode) {
-        conditionQuery = + `OR lifnr LIKE '%${vCode}%'`;
+        conditionQuery += ` OR lifnr LIKE '%${vCode}%'`;
       }
       if (empCode) {
-        conditionQuery = + `OR ernam LIKE '%${empCode}%'`;
+        conditionQuery += ` OR ernam LIKE '%${empCode}%'`;
       }
       if (yardNo) {
-        conditionQuery = + `OR yard LIKE '${yardNo}'`;
+        conditionQuery += ` OR yard LIKE '${yardNo}'`;
       }
 
 

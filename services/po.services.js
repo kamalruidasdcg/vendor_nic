@@ -729,9 +729,9 @@ LEFT JOIN pa0002 AS users ON users.pernr::CHARACTER VARYING = ekko_limited_resul
 ORDER BY 
     ekko_limited_result.aedat, ekko_limited_result.ebeln`;
 
-    console.log("getPoQuey", getPoQuey);
+    console.log("getPoQuey", getPoQuey, values);
 
-    const result = poolQuery({ client, query: getPoQuey, values });
+    const result = poolQuery({ client, query: getPoQuey, values: values });
 
     return result;
   } catch (error) {
