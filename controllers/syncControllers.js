@@ -197,86 +197,86 @@ exports.syncUnzip = async (req, res) => {
     }
     const startDate = new Date(from_date);
     console.log("startdate: ", startDate);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    // const yesterday = new Date();
+    // yesterday.setDate(yesterday.getDate() - 1);
 
     let hasError = false;
     let errorMsg = "";
 
-    for (
-      let date = new Date(startDate);
-      date <= yesterday;
-      date.setDate(date.getDate() + 1)
-    ) {
-      let currentDate = formatDateSync(date);
+    // for (
+    //   let date = new Date(startDate);
+    //   date <= yesterday;
+    //   date.setDate(date.getDate() + 1)
+    // ) {
+    let currentDate = formatDateSync(startDate);
 
-      // Ensure the "unzipcsvfiles" directory exists
-      const parentDir = path.resolve(__dirname, "..");
-      const outputDir = path.join(parentDir, UNZIP_DATA_PATH, currentDate);
+    // Ensure the "unzipcsvfiles" directory exists
+    const parentDir = path.resolve(__dirname, "..");
+    const outputDir = path.join(parentDir, UNZIP_DATA_PATH, currentDate);
 
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-
-      // Define the path for today's ZIP file
-      const zipDataPath = path.join(
-        parentDir,
-        OTHER_SERVER_DATA_PATH,
-        currentDate
-      );
-
-      // Check if today's date folder exists
-      if (!fs.existsSync(zipDataPath)) {
-        return resSend(
-          res,
-          false,
-          200,
-          zipDataPath,
-          `No zip file found on ${currentDate}`,
-          null
-        );
-      }
-
-      // Check if the zip file exists inside the today's date folder
-      const filePath = path.join(zipDataPath, "sync_data.zip");
-      try {
-        await fs.promises.access(filePath, fs.constants.F_OK);
-        // console.log(`sync_data.zip exists in ${filePath}.`);
-      } catch (err) {
-        console.log(`sync_data.zip does not exist in ${filePath}.`);
-
-        // return resSend(
-        //   res,
-        //   200,
-        //   false,
-        //   zipDataPath,
-        //   `sync_data.zip does not exist in  ${filePath}.`,
-        //   null
-        // );
-      }
-
-      // Unzip the file using adm-zip
-      try {
-        const zip = new AdmZip(filePath);
-        zip.extractAllTo(outputDir, true);
-        // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
-        // UPLOAD DATA
-        try {
-          let d = await syncDataUpload(currentDate);
-          console.log("syncDataUpload", d);
-          if (!d?.sta) {
-            hasError = true;
-            errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
-          }
-        } catch (error) {
-          hasError = true;
-          errorMsg += `Error during data upload for ${currentDate}: ${error.message}\n`;
-        }
-      } catch (err) {
-        hasError = true;
-        errorMsg += `Error during unzipping process for ${currentDate}: ${err.message}\n`;
-      }
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
     }
+
+    // Define the path for today's ZIP file
+    const zipDataPath = path.join(
+      parentDir,
+      OTHER_SERVER_DATA_PATH,
+      currentDate
+    );
+
+    // Check if today's date folder exists
+    if (!fs.existsSync(zipDataPath)) {
+      return resSend(
+        res,
+        false,
+        200,
+        zipDataPath,
+        `No zip file found on ${currentDate}`,
+        null
+      );
+    }
+
+    // Check if the zip file exists inside the today's date folder
+    const filePath = path.join(zipDataPath, "sync_data.zip");
+    try {
+      await fs.promises.access(filePath, fs.constants.F_OK);
+      // console.log(`sync_data.zip exists in ${filePath}.`);
+    } catch (err) {
+      console.log(`sync_data.zip does not exist in ${filePath}.`);
+
+      // return resSend(
+      //   res,
+      //   200,
+      //   false,
+      //   zipDataPath,
+      //   `sync_data.zip does not exist in  ${filePath}.`,
+      //   null
+      // );
+    }
+
+    // Unzip the file using adm-zip
+    try {
+      const zip = new AdmZip(filePath);
+      zip.extractAllTo(outputDir, true);
+      // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
+      // UPLOAD DATA
+      try {
+        let d = await syncDataUpload(currentDate);
+        console.log("syncDataUpload", d);
+        if (!d?.sta) {
+          hasError = true;
+          errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
+        }
+      } catch (error) {
+        hasError = true;
+        errorMsg += `Error during data upload for ${currentDate}: ${error.message}\n`;
+      }
+    } catch (err) {
+      hasError = true;
+      errorMsg += `Error during unzipping process for ${currentDate}: ${err.message}\n`;
+    }
+    // }
 
     if (hasError) {
       return resSend(
@@ -302,6 +302,119 @@ exports.syncUnzip = async (req, res) => {
     );
   }
 };
+// exports.syncUnzip = async (req, res) => {
+//   try {
+//     const { from_date } = req.body;
+//     if (!from_date || from_date === "") {
+//       return resSend(res, false, 200, null, "Date field is required.", null);
+//     }
+//     const startDate = new Date(from_date);
+//     console.log("startdate: ", startDate);
+//     const yesterday = new Date();
+//     yesterday.setDate(yesterday.getDate() - 1);
+
+//     let hasError = false;
+//     let errorMsg = "";
+
+//     for (
+//       let date = new Date(startDate);
+//       date <= yesterday;
+//       date.setDate(date.getDate() + 1)
+//     ) {
+//       let currentDate = formatDateSync(date);
+
+//       // Ensure the "unzipcsvfiles" directory exists
+//       const parentDir = path.resolve(__dirname, "..");
+//       const outputDir = path.join(parentDir, UNZIP_DATA_PATH, currentDate);
+
+//       if (!fs.existsSync(outputDir)) {
+//         fs.mkdirSync(outputDir, { recursive: true });
+//       }
+
+//       // Define the path for today's ZIP file
+//       const zipDataPath = path.join(
+//         parentDir,
+//         OTHER_SERVER_DATA_PATH,
+//         currentDate
+//       );
+
+//       // Check if today's date folder exists
+//       if (!fs.existsSync(zipDataPath)) {
+//         return resSend(
+//           res,
+//           false,
+//           200,
+//           zipDataPath,
+//           `No zip file found on ${currentDate}`,
+//           null
+//         );
+//       }
+
+//       // Check if the zip file exists inside the today's date folder
+//       const filePath = path.join(zipDataPath, "sync_data.zip");
+//       try {
+//         await fs.promises.access(filePath, fs.constants.F_OK);
+//         // console.log(`sync_data.zip exists in ${filePath}.`);
+//       } catch (err) {
+//         console.log(`sync_data.zip does not exist in ${filePath}.`);
+
+//         // return resSend(
+//         //   res,
+//         //   200,
+//         //   false,
+//         //   zipDataPath,
+//         //   `sync_data.zip does not exist in  ${filePath}.`,
+//         //   null
+//         // );
+//       }
+
+//       // Unzip the file using adm-zip
+//       try {
+//         const zip = new AdmZip(filePath);
+//         zip.extractAllTo(outputDir, true);
+//         // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
+//         // UPLOAD DATA
+//         try {
+//           let d = await syncDataUpload(currentDate);
+//           console.log("syncDataUpload", d);
+//           if (!d?.sta) {
+//             hasError = true;
+//             errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
+//           }
+//         } catch (error) {
+//           hasError = true;
+//           errorMsg += `Error during data upload for ${currentDate}: ${error.message}\n`;
+//         }
+//       } catch (err) {
+//         hasError = true;
+//         errorMsg += `Error during unzipping process for ${currentDate}: ${err.message}\n`;
+//       }
+//     }
+
+//     if (hasError) {
+//       return resSend(
+//         res,
+//         false,
+//         200,
+//         errorMsg,
+//         "One or more errors occurred during the process.",
+//         null
+//       );
+//     } else {
+//       return resSend(res, true, 200, null, "Data synced successfully!", null);
+//     }
+//   } catch (err) {
+//     console.error("Unexpected error:", err.message);
+//     return resSend(
+//       res,
+//       false,
+//       500,
+//       err.message,
+//       "An unexpected error occurred while processing your request",
+//       null
+//     );
+//   }
+// };
 
 exports.syncUnzipNowAPI = async (req, res) => {
   try {
@@ -885,7 +998,7 @@ exports.syncFileCron = async () => {
       const paylod = { sync_type: "file", sync_datetime: new Date(todayDateTime), sync_status: "BACKUP_SUCCESSFULL", created_by: "" };
       const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
       console.log(q, val);
-      
+
       const result = await query({ query: q, values: val });
       console.log("File Dump Completed successfully.");
     } catch (error) {
@@ -1111,7 +1224,7 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
     const paylod = { sync_type: "file", sync_datetime: new Date(), sync_status: "SUCCESSFULL", created_by: "99999" };
     const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
     console.log(q, val);
-    
+
     const result = await query({ query: q, values: val });
 
     resSend(res, true, 201, "File transferred successfully.", result, null);
