@@ -875,7 +875,7 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
-  cron.schedule("33 11 * * *", async () => {
+  cron.schedule("30 23 * * *", async () => {
     console.log("Running the scheduled task 00:20");
 
     try {
