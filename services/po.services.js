@@ -729,9 +729,8 @@ LEFT JOIN pa0002 AS users ON users.pernr::CHARACTER VARYING = ekko_limited_resul
 ORDER BY 
     ekko_limited_result.aedat, ekko_limited_result.ebeln`;
 
-    console.log("getPoQuey", getPoQuey);
 
-    const result = poolQuery({ client, query: getPoQuey, values });
+    const result = poolQuery({ client, query: getPoQuey, values: values });
 
     return result;
   } catch (error) {
@@ -742,15 +741,14 @@ const getCount = async (client, values, whereCondQuery) => {
   try {
 
     const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
-    let getPoQuey = getPoQuey = `
+    let getPoQuey = `
     SELECT count(*) 
       FROM ekko 
     WHERE 
       	${whereCondQuery} AND ekko.ebeln IN(${placeholders})`;
 
-    console.log("getPoQuey", getPoQuey);
 
-    const result = poolQuery({ client, query: getPoQuey, values });
+    const result = await poolQuery({ client, query: getPoQuey, values: values });
 
     return parseInt(result[0]?.count);
   } catch (error) {
@@ -799,5 +797,6 @@ module.exports = {
   getActualAndCurrentDetails,
   getPoWithLineItems,
   poDataModify2,
-  setMileStoneActivity
+  setMileStoneActivity,
+  getCount
 };
