@@ -374,6 +374,9 @@ function poDataModify2(data) {
         vendor_code: element.vendor_code,
         vendor_name: element.vendor_name,
         createdAt: element.createdAt,
+        po_creator: element.po_creator,
+        po_creator_name: element.po_creator_name
+
         // wbs_id: element.wbs_id,
         // project_code: element.project_code,
       };
@@ -389,6 +392,8 @@ function poDataModify2(data) {
           vendor_code: element.vendor_code,
           vendor_name: element.vendor_name,
           createdAt: element.createdAt,
+          po_creator: element.po_creator,
+          po_creator_name: element.po_creator_name
           // wbs_id: element.wbs_id,
           // project_code: element.project_code,
         },
