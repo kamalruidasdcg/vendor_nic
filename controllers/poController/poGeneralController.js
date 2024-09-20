@@ -1060,6 +1060,8 @@ const poListCopy = async (req, res) => {
           vendor_code: modifiedPOData[key][0]?.vendor_code,
           vendor_name: modifiedPOData[key][0]?.vendor_name,
           createdAt: modifiedPOData[key][0]?.createdAt,
+          po_creator: modifiedPOData[key][0]?.po_creator,
+          po_creator_name: modifiedPOData[key][0]?.po_creator_name,
           poType,
           ...mileStoneActivity
         });
