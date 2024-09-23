@@ -25,7 +25,7 @@ const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES, TRUE, LAN_SERVER_PO_PATH } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
-const { syncCron, syncFileCron } = require("./controllers/syncControllers");
+const { syncDataCorn, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
 const {
   sendBGReminderMail,
@@ -60,19 +60,22 @@ app.use((req, res, next) => {
 });
 
 // Call Cron JOB for DATA Syncronization
-cron.schedule("00 23 * * *", async () => {
-  console.log("Cron job started at 00:05");
-  try {
-    await syncCron();
-    console.log("Cron job completed successfully");
-  } catch (error) {
-    console.error("Error during cron job:", error);
-    fs.appendFileSync(
-      "error.log",
-      `${new Date().toISOString()} - Error: ${error.message}\n`
-    );
-  }
-});
+// cron.schedule("00 23 * * *", async () => {
+//   console.log("Cron job started at 00:05");
+//   try {
+//     await syncCron();
+//     console.log("Cron job completed successfully");
+//   } catch (error) {
+//     console.error("Error during cron job:", error);
+//     fs.appendFileSync(
+//       "error.log",
+//       `${new Date().toISOString()} - Error: ${error.message}\n`
+//     );
+//   }
+// });
+
+// Call Cron JOB for DATA Syncronization
+syncDataCorn();
 // Call Cron JOB for FILE Syncronization
 syncFileCron();
 

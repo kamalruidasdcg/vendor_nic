@@ -40,6 +40,7 @@ const { resSend } = require("../lib/resSend");
 const { generateQuery } = require("../lib/utils");
 const { SYNC_UPDATE } = require("../lib/tableName");
 const { query } = require("../config/pgDbConfig");
+const { BACKUP_START, BACKUP_SUCCESSFULL, BACKUP_ERROR, RESTORE_ERROR, RESTORE_SUCCESSFULL, RESTORE_START } = require("../lib/status");
 const todayDate = formatDateSync(new Date());
 
 // SYNCRONISATION OF DATA
@@ -191,6 +192,8 @@ exports.syncCompress = async (req, res) => {
 
 exports.syncUnzip = async (req, res) => {
   try {
+
+
     const { from_date } = req.body;
     if (!from_date || from_date === "") {
       return resSend(res, false, 200, null, "Date field is required.", null);
@@ -236,6 +239,7 @@ exports.syncUnzip = async (req, res) => {
         null
       );
     }
+    await syncLog('data', new Date(), RESTORE_START, "Data restore started", null, null);
 
     // Check if the zip file exists inside the today's date folder
     const filePath = path.join(zipDataPath, "sync_data.zip");
@@ -279,6 +283,7 @@ exports.syncUnzip = async (req, res) => {
     // }
 
     if (hasError) {
+      syncLog('data', new Date(), RESTORE_ERROR, errorMsg, "", null);
       return resSend(
         res,
         false,
@@ -288,18 +293,14 @@ exports.syncUnzip = async (req, res) => {
         null
       );
     } else {
+
+      syncLog('file', new Date(), RESTORE_SUCCESSFULL, "Data restore successfull", null, null);
       return resSend(res, true, 200, null, "Data synced successfully!", null);
     }
   } catch (err) {
+    syncLog('data', new Date(), RESTORE_ERROR, err.message, err.stack, null);
     console.error("Unexpected error:", err.message);
-    return resSend(
-      res,
-      false,
-      500,
-      err.message,
-      "An unexpected error occurred while processing your request",
-      null
-    );
+    return resSend(res, false, 500, err.message, "An unexpected error occurred while processing your request", null);
   }
 };
 // exports.syncUnzip = async (req, res) => {
@@ -989,23 +990,54 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
   cron.schedule("30 23 * * *", async () => {
-    console.log("Running the scheduled task 00:20");
-
+    console.log("Running the scheduled task 23:30");
+    const todayDateTime = new Date().setHours(0, 0, 0, 0);
     try {
       // to day first epoch time 00:00:00 , 12 am
-      const todayDateTime = new Date().setHours(0, 0, 0, 0);
+      await syncLog('file', new Date(), BACKUP_START, "backup started at 11:30 pm", null, null);
       await getAndZipFileHandler(todayDateTime);
-      const paylod = { sync_type: "file", sync_datetime: new Date(todayDateTime), sync_status: "BACKUP_SUCCESSFULL", created_by: "" };
-      const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
-      console.log(q, val);
-
-      const result = await query({ query: q, values: val });
-      console.log("File Dump Completed successfully.");
+      syncLog('file', new Date(), BACKUP_SUCCESSFULL, "backup completed", null, null);
     } catch (error) {
-      console.error("Error during file dump:", error);
+      console.error("Error during file dump:", error.message, error.stack);
+      syncLog('file', new Date(), BACKUP_ERROR, error.message, error.stack, null);
     }
   });
 };
+
+
+const dataSync = async () => {
+  try {
+    let downloadRes = await syncDownloadMain();
+    let compresedRes;
+    if (downloadRes) {
+      compresedRes = await syncCompressMain();
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+exports.syncDataCorn = async () => {
+
+  cron.schedule("00 23 * * *", async () => {
+    console.log("Cron job started at 00:05");
+    try {
+      await syncLog('data', new Date(), BACKUP_START, "backup started at 11:30 pm", null, null);
+      await dataSync();
+      syncLog('data', new Date(), BACKUP_SUCCESSFULL, "backup completed", null, null);
+      console.log("Cron job completed successfully");
+    } catch (error) {
+      console.error("Error during cron job:", error.message);
+      syncLog('data', new Date(), BACKUP_ERROR, error.message, error.stack, null);
+      fs.appendFileSync(
+        "error.log",
+        `${new Date().toISOString()} - Error: ${error.message}\n`
+      );
+    }
+  });
+
+
+}
 
 const unzipAndMove = async (zipFilePath, uploadsFolderPath, file) => {
   try {
@@ -1161,6 +1193,8 @@ const insertToErrLog = async (tableName, sync_id, msg, stack) => {
 
 exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
   try {
+    await syncLog('file', new Date(), RESTORE_START, "File restore started", null, null);
+
     const { from_date } = req.body;
     if (!from_date || from_date === "") {
       return resSend(res, false, 200, null, "Date field is required.", null);
@@ -1221,11 +1255,8 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
     }
     // }
 
-    const paylod = { sync_type: "file", sync_datetime: new Date(), sync_status: "SUCCESSFULL", created_by: "99999" };
-    const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
-    console.log(q, val);
 
-    const result = await query({ query: q, values: val });
+    syncLog('file', new Date(), RESTORE_SUCCESSFULL, "File restore successfully", null, null);
 
     resSend(res, true, 201, "File transferred successfully.", result, null);
   } catch (error) {
@@ -1234,7 +1265,21 @@ exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
       "An error occurred in uploadRecentFilesController:",
       error.message, error.stack
     );
+    syncLog('file', new Date(), RESTORE_ERROR, error.message, error.stack, null);
     resSend(res, false, 200, "An error occurred in uploadRecentFilesController", error.message, null);
 
   }
 };
+
+
+const syncLog = async (sync_type, syncDateTime, sync_status, remarks, error = null, created_by = null) => {
+
+  try {
+    const paylod = { sync_type, sync_datetime: new Date(syncDateTime), sync_status, created_by, remarks, error };
+    const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
+    await query({ query: q, values: val });
+  } catch (error) {
+    console.log("sync log error", error.message);
+
+  }
+}
