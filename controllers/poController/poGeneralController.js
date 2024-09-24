@@ -32,7 +32,7 @@ const {
 
 const fileDetails = require("../../lib/filePath");
 const path = require("path");
-const { poDataModify, getActualAndCurrentDetails, getPoWithLineItems, poDataModify2, setMileStoneActivity } = require("../../services/po.services");
+const { poDataModify, getActualAndCurrentDetails, getPoWithLineItems, poDataModify2, setMileStoneActivity, getCount } = require("../../services/po.services");
 const { currentStageHandler, currentStageHandleForAllActivity } = require("../../services/currentStage");
 const { STORE, RIC, QAP } = require("../../lib/depertmentMaster");
 const { getQuery, poolQuery, poolClient } = require("../../config/pgDbConfig");
@@ -1007,9 +1007,21 @@ const poListCopy = async (req, res) => {
       }
 
 
-      let page_number = parseInt(req.query.page_number) || 1;
-      let page_size = parseInt(req.query.page_size) || 500;
-      let offset = (page_number - 1) * page_size;
+      let pageNo = parseInt(req.query.pageNo) || 1;
+      let pageSize = parseInt(req.query.pageSize) || 2000;
+      let offset = (pageNo - 1) * pageSize;
+
+      const { vCode, yardNo, empCode, poNo } = req.query;
+      let conditionQuery = "1 = 1";
+      if (vCode) {
+        conditionQuery += ` AND lifnr LIKE '%${vCode}%'`;
+      }
+      if (empCode) {
+        conditionQuery += ` AND ernam LIKE '%${empCode}%'`;
+      }
+      if (yardNo) {
+        conditionQuery += ` AND yard LIKE '${yardNo}'`;
+      }
 
 
       const allPo = await poolQuery({ client, query: Query, values: [] });
@@ -1017,8 +1029,17 @@ const poListCopy = async (req, res) => {
       if (!allPo.length) {
         return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, allPo, null);
       }
-      const poArr = allPo.map((el) => el?.EBELN || el?.ebeln || el?.purchasing_doc_no );
-      const poDetails = await getPoWithLineItems(client, poArr, page_size, offset);
+
+      let poArr = allPo.map((el) => el?.EBELN || el?.ebeln || el?.purchasing_doc_no);
+
+      if (poNo) {
+        // if po number send from client, then po is filter from allPos
+        // becaus of the user has all acces o
+        // poArr = [poNo];
+        poArr = poArr?.filter((poItems) => typeof poItems == 'string' && poItems.includes(poNo));
+      }
+      const poDetails = await getPoWithLineItems(client, poArr, pageSize, offset, conditionQuery);
+      const poCount = await getCount(client, poArr, conditionQuery);
       const contractualDates = await getActualAndCurrentDetails(client, poArr);
       const currentActivity = await currentStageHandleForAllActivity(client, poArr);
       const materialTypeQuery = "SELECT * FROM material_type";
@@ -1039,13 +1060,15 @@ const poListCopy = async (req, res) => {
           vendor_code: modifiedPOData[key][0]?.vendor_code,
           vendor_name: modifiedPOData[key][0]?.vendor_name,
           createdAt: modifiedPOData[key][0]?.createdAt,
+          po_creator: modifiedPOData[key][0]?.po_creator,
+          po_creator_name: modifiedPOData[key][0]?.po_creator_name,
           poType,
           ...mileStoneActivity
         });
       });
 
 
-      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "");
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "", poCount, pageNo);
 
 
     } catch (error) {

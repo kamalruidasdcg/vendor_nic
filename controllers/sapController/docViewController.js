@@ -24,7 +24,6 @@ const serviceEntryReport = async (req, res) => {
                 LEFT JOIN lfa1 as vendorDetails
                 	ON( ekko.LIFNR = vendorDetails.LIFNR)`;
 
-    console.log("serviceEntryReportQ", serviceEntryReportQ);
     const val = [];
     let whereClause = " WHERE 1 = 1";
     let count = 0;
@@ -34,10 +33,8 @@ const serviceEntryReport = async (req, res) => {
     }
 
     const finalQuery = serviceEntryReportQ + whereClause;
-    console.log("finalQuery", finalQuery);
 
     const result = await getQuery({ query: finalQuery, values: val });
-    console.log("result", result);
 
     if (!result.error) {
       resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result);
@@ -127,7 +124,6 @@ const grnReport = async (req, res) => {
     const finalQuery = grnQuery + whereClause;
 
     const result = await getQuery({ query: finalQuery, values: val });
-    console.log("result", result);
 
     if (result.length) {
       const responseObj = {
@@ -395,7 +391,6 @@ const gateEntryReport = async (req, res) => {
                     LEFT JOIN makt as material
                         ON(material.MATNR = zmm_gate_entry_d.MATNR)`;
 
-    console.log("ge_query", ge_query);
     const val = [];
 
     let whereClause = " WHERE 1 = 1";

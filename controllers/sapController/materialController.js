@@ -177,10 +177,8 @@ async function handelMail(data) {
       query: vendorAndDoDetails,
       values: [data.LIFNR],
     });
-    console.log("mail_details", mail_details);
     const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
 
-    console.log("dataObj", dataObj, mail_details);
     await sendMail(
       GRN_DOC_GENERATE_LAN,
       dataObj,
@@ -208,7 +206,6 @@ const mkpf = async (req, res) => {
         payload.push(req.body);
       }
       const payloadObj = await makfPayload(payload);
-      console.log("payloadObj mkpf", payloadObj);
 
        // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
        const isPresent = await isPresentInObps(client, `mblnr = '${payloadObj.MKPF}'`, MKPF).count();
@@ -251,7 +248,6 @@ const list = async (req, res) => {
   try {
     getFilteredData(req, res);
   } catch (err) {
-    console.log("data not fetched", err);
     resSend(res, false, 500, "Internal server error", null, null);
   }
 };

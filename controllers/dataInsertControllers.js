@@ -321,13 +321,11 @@ const archivePo = async (req, res) => {
       responseSend(res, "F", 502, "Data insert failed !!", error, null);
     } finally {
       if (!transactionSuccessful) {
-        console.log("Connection End" + "--->" + "connection release");
         // await promiseConnection.rollback();
         await client.query("ROLLBACK");
       }
       // const connEnd = await promiseConnection.end();
       const connEnd = client.release();
-      console.log("Connection End" + "--->" + "connection release archive po");
     }
   } catch (error) {
     responseSend(res, "F", 400, "Error in database conn!!", error, null);
