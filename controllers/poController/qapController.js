@@ -1120,7 +1120,7 @@ async function insertQapSave(req, res) {
         null
       );
     }
-    if (tokenData.user_type === USER_TYPE_VENDOR) {
+    if (tokenData.department_id != USER_TYPE_GRSE_QAP) {
       return resSend(
         res,
         false,
@@ -1130,13 +1130,34 @@ async function insertQapSave(req, res) {
         null
       );
     }
+    let fileName =
+      req.files.file && req.files.file[0].filename
+        ? req.files.file[0].filename
+        : "";
+    let filePath =
+      req.files.file && req.files.file[0].path ? req.files.file[0].path : "";
+    let supporting_doc;
+    //console.log(req.files.supporting_doc.length);
+    if (req.files.supporting_doc && req.files.supporting_doc.length > 0) {
+      supporting_doc = req.files.supporting_doc.map((elem) => {
+        let value = {};
+        value.file_name = elem.filename;
+        value.file_path = elem.path;
+        return value;
+      });
+    }
+    supporting_doc = supporting_doc ? JSON.stringify(supporting_doc) : "";
 
+    payload.file_name = fileName;
+    payload.file_path = filePath;
+    payload.supporting_doc = supporting_doc;
     payload.created_by_id = tokenData.vendor_code;
     payload.man_no = tokenData.vendor_code;
+
     const { q, val } = generateQuery(INSERT, QAP_SAVE, payload);
     const response = await getQuery({ query: q, values: val });
 
-    return resSend(res, true, 200, "Data inserted.", response, null);
+    return resSend(res, true, 200, "Data Save.", response, null);
   } catch (error) {
     console.error(error);
     return resSend(res, false, 400, "error.", error, null);
