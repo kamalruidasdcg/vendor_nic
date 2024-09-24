@@ -202,7 +202,7 @@ const mailInsert = async (client, data, event, activity_name, heading = "") => {
         : "Mail from GRSE",
     }));
 
-    console.log("mailArr", mailArr);
+
 
     const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, [
       "id",

@@ -43,7 +43,6 @@ const mailSentCornJob = async () => {
               //   values: [emails[i]["id"]],
               // });
               // await archiveEmails({ ...emails[i], status: STATUS_SUCCESS, remarks: JSON.stringify(email_response) });
-              console.log(`Email sent successfully ('_') !!${emails[i]["email_to"]}`);
             } catch (error) {
               if (emails[i]["retry_count"] == MAIL_SEND_MAX_RETRY_COUNT) {
                 await Promise.allSettled([archiveEmails(client, { ...emails[i], status: FAILED, remarks: error.message }),
@@ -61,7 +60,7 @@ const mailSentCornJob = async () => {
                 const { q, val } = generateQuery(UPDATE, EMAILS, { retry_count: ++emails[i]["retry_count"] }, { id: emails[i]["id"] }
                 );
                 await poolQuery({ client, query: q, values: val });
-                console.log("Error Occurs to mail send ('_') !", error.message);
+                console.log("Error Occurs to mail send -> ", error.message);
               }
             }
           } else {
