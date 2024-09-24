@@ -357,8 +357,6 @@ async function poDataModify(data) {
 
 function poDataModify2(data) {
 
-  console.log("allPoallPoallPo", data);
-
   if (!data || !Array.isArray(data) || !data.length) return [];
   let obj = {};
   data.forEach((element) => {
@@ -670,10 +668,6 @@ const getActualAndCurrentDetails = async (client, values) => {
 
 
     const result = await poolQuery({ client, query: getActualAndCurrentQuery, values });
-
-    console.log("result", result);
-    console.log("getActualAndCurrentQuery", getActualAndCurrentQuery);
-
 
     return result;
 
