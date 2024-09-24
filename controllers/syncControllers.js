@@ -294,7 +294,7 @@ exports.syncUnzip = async (req, res) => {
       );
     } else {
 
-      syncLog('file', new Date(), RESTORE_SUCCESSFULL, "Data restore successfull", null, null);
+      syncLog('data', new Date(), RESTORE_SUCCESSFULL, "Data restore successfull", null, null);
       return resSend(res, true, 200, null, "Data synced successfully!", null);
     }
   } catch (err) {
