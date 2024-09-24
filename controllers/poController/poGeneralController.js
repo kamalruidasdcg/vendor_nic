@@ -27,30 +27,16 @@ const {
   USER_TYPE_PPNC_DEPARTMENT,
   WBS_ELEMENT,
   PROJECT,
-  USER_TYPE_GRSE_DRAWING,
-  SERVICE_TYPE,
-  MATERIAL_TYPE,
+  USER_TYPE_GRSE_DRAWING
 } = require("../../lib/constant");
-const {
-  PENDING,
-  ASSIGNED,
-  ACCEPTED,
-  RE_SUBMITTED,
-  REJECTED,
-  FORWARD_TO_FINANCE,
-  RETURN_TO_DEALING_OFFICER,
-} = require("../../lib/status");
+
 const fileDetails = require("../../lib/filePath");
 const path = require("path");
-const {
-  sdbgPayload,
-  drawingPayload,
-  poModifyData,
-  poDataModify,
-} = require("../../services/po.services");
-const { currentStageHandler } = require("../../services/currentStage");
+const { poDataModify, getActualAndCurrentDetails, getPoWithLineItems, poDataModify2, setMileStoneActivity, getCount } = require("../../services/po.services");
+const { currentStageHandler, currentStageHandleForAllActivity } = require("../../services/currentStage");
 const { STORE, RIC, QAP } = require("../../lib/depertmentMaster");
-const { getQuery } = require("../../config/pgDbConfig");
+const { getQuery, poolQuery, poolClient } = require("../../config/pgDbConfig");
+const Message = require("../../utils/messages");
 
 /** APIS START ----->  */
 const details = async (req, res) => {
@@ -516,14 +502,7 @@ const poList = async (req, res) => {
       }
     }
     if (!Query) {
-      return resSend(
-        res,
-        false,
-        400,
-        "You don't have permission or no data found",
-        null,
-        null
-      );
+      return resSend(res, false, 400, "You don't have permission or no data found", null, null);
     }
 
     let strVal;
@@ -531,8 +510,19 @@ const poList = async (req, res) => {
     // Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko`;
     //new Date().getTime()
     try {
+      /**
+       * CHECK---
+       * PO list check
+       */
       createdArr = await getCreatedArr(Query, tokenData.user_type);
+
+      /**
+       * CHECK---
+       * PO LIST ARRY FOR GETTING ['1121', '121121']
+       */
       strVal = await queryArrayTOString(Query, tokenData.user_type);
+
+
     } catch (error) {
       return resSend(res, false, 400, "Error in db query.", error, null);
     }
@@ -904,28 +894,28 @@ const poListByEcko = (vendorCode = "") => {
   return qry;
 };
 
-const poListByPPNC = (queryData, tokenData) => {
-  let poListQuery = "";
+// const poListByPPNC = (queryData, tokenData) => {
+//   let poListQuery = "";
 
-  if (queryData.type == PROJECT) {
-    poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
-    if (queryData.id) {
-      poListQuery += ` AND project_code = '${queryData.id}'`;
-    }
-  }
-  if (queryData.type == WBS_ELEMENT) {
-    poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
-    if (queryData.id) {
-      poListQuery += ` AND wbs_id = '${queryData.id}'`;
-    }
-  }
+//   if (queryData.type == PROJECT) {
+//     poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
+//     if (queryData.id) {
+//       poListQuery += ` AND project_code = '${queryData.id}'`;
+//     }
+//   }
+//   if (queryData.type == WBS_ELEMENT) {
+//     poListQuery = `SELECT * FROM wbs WHERE 1 = 1`;
+//     if (queryData.id) {
+//       poListQuery += ` AND wbs_id = '${queryData.id}'`;
+//     }
+//   }
 
-  // if (queryData.poNo) {
-  //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
-  // }
+//   // if (queryData.poNo) {
+//   //     poListQuery += ` AND purchasing_doc_no = "${queryData.poNo}"`;
+//   // }
 
-  return poListQuery;
-};
+//   return poListQuery;
+// };
 
 function joinArrays(arr1, arr2) {
   return arr1.map((item1) => {
@@ -958,4 +948,138 @@ function mergeData(timelineData, currentData) {
 
 // EBELN(VARCAT10),EBELP(VARCAT5),SLNO(INT3),WDC(CAHAR25)
 
-module.exports = { details, download, poList };
+
+const poListCopy = async (req, res) => {
+
+  try {
+    const client = await poolClient();
+    const tokenData = req.tokenData;
+    try {
+      let Query = "";
+
+      if (tokenData.user_type === USER_TYPE_VENDOR) {
+        Query = `SELECT DISTINCT(EBELN) as "EBELN",aedat as created_at from ekko WHERE LIFNR = '${tokenData.vendor_code}'`;
+      } else {
+        switch (tokenData.department_id) {
+          case USER_TYPE_GRSE_QAP:
+            if (tokenData.internal_role_id === ASSIGNER) {
+              //  Query = `SELECT DISTINCT(purchasing_doc_no) from qap_submission`;
+              Query = poListByEcko();
+            } else if (tokenData.internal_role_id === STAFF) {
+              Query = `SELECT DISTINCT(purchasing_doc_no),created_at from qap_submission WHERE assigned_to = '${tokenData.vendor_code}' AND is_assign = 1`;
+            }
+            break;
+          case USER_TYPE_GRSE_FINANCE:
+            if (tokenData.internal_role_id === ASSIGNER) {
+              Query = poListByEcko();
+              // Query = `SELECT DISTINCT(purchasing_doc_no) from ${SDBG} WHERE status = '${FORWARD_TO_FINANCE}'`;
+            } else if (tokenData.internal_role_id === STAFF) {
+              Query = `SELECT DISTINCT(purchasing_doc_no),created_at from ${SDBG} WHERE assigned_to = '${tokenData.vendor_code}'`;
+            }
+            break;
+          case USER_TYPE_GRSE_DRAWING:
+            // Query = `SELECT DISTINCT(purchasing_doc_no) as purchasing_doc_no from ${DRAWING}`;
+            Query = poListByEcko();
+            break;
+          case USER_TYPE_GRSE_PURCHASE:
+            if (tokenData.internal_role_id === ASSIGNER) {
+              Query = poListByEcko();
+            } else if (tokenData.internal_role_id === STAFF) {
+              Query = `SELECT DISTINCT(EBELN) as purchasing_doc_no,aedat as created_at from ekko WHERE ERNAM = '${tokenData.vendor_code}'`;
+            }
+            break;
+          case USER_TYPE_PPNC_DEPARTMENT:
+            Query = poListByEcko(); // poListByPPNC(req.query);
+            break;
+          case STORE:
+            Query = poListByEcko();
+            break;
+          case RIC:
+            Query = poListByEcko();
+            break;
+          default:
+            Query = poListByEcko();
+          // console.log("DEFAULT ALL PO SHOWING . . . . ", Query);
+        }
+      }
+      if (!Query) {
+        return resSend(res, false, 400, "You don't have permission or no data found", null, null);
+      }
+
+
+      let pageNo = parseInt(req.query.pageNo) || 1;
+      let pageSize = parseInt(req.query.pageSize) || 2000;
+      let offset = (pageNo - 1) * pageSize;
+
+      const { vCode, yardNo, empCode, poNo } = req.query;
+      let conditionQuery = "1 = 1";
+      if (vCode) {
+        conditionQuery += ` AND lifnr LIKE '%${vCode}%'`;
+      }
+      if (empCode) {
+        conditionQuery += ` AND ernam LIKE '%${empCode}%'`;
+      }
+      if (yardNo) {
+        conditionQuery += ` AND yard LIKE '${yardNo}'`;
+      }
+
+
+      const allPo = await poolQuery({ client, query: Query, values: [] });
+
+      if (!allPo.length) {
+        return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, allPo, null);
+      }
+
+      let poArr = allPo.map((el) => el?.EBELN || el?.ebeln || el?.purchasing_doc_no);
+
+      if (poNo) {
+        // if po number send from client, then po is filter from allPos
+        // becaus of the user has all acces o
+        // poArr = [poNo];
+        poArr = poArr?.filter((poItems) => typeof poItems == 'string' && poItems.includes(poNo));
+      }
+      const poDetails = await getPoWithLineItems(client, poArr, pageSize, offset, conditionQuery);
+      const poCount = await getCount(client, poArr, conditionQuery);
+      const contractualDates = await getActualAndCurrentDetails(client, poArr);
+      const currentActivity = await currentStageHandleForAllActivity(client, poArr);
+      const materialTypeQuery = "SELECT * FROM material_type";
+      const materialType = await poolQuery({ client, query: materialTypeQuery, values: [] });
+      const modifiedPOData = poDataModify2(poDetails);
+
+      const result = [];
+      Object.keys(modifiedPOData).forEach((key) => {
+        const mileStoneActivity = setMileStoneActivity(key, contractualDates)
+        const isMatTypePO = poTypeCheck(modifiedPOData[key], materialType);
+        const poType = isMatTypePO;
+
+        result.push({
+          poNumber: key,
+          currentStage: {
+            current: currentActivity[key]
+          },
+          vendor_code: modifiedPOData[key][0]?.vendor_code,
+          vendor_name: modifiedPOData[key][0]?.vendor_name,
+          createdAt: modifiedPOData[key][0]?.createdAt,
+          po_creator: modifiedPOData[key][0]?.po_creator,
+          po_creator_name: modifiedPOData[key][0]?.po_creator_name,
+          poType,
+          ...mileStoneActivity
+        });
+      });
+
+
+      resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, "", poCount, pageNo);
+
+
+    } catch (error) {
+      resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
+  }
+}
+
+
+module.exports = { details, download, poList, poListCopy };
