@@ -42,7 +42,6 @@ const zbts_st = async (req, res) => {
       }
 
       const payload = req.body;
-      // console.log('zbts st payload', payload);
       if (!payload) {
         return responseSend(res, "F", 400, "Invalid payload.", null, null);
       }
@@ -81,7 +80,6 @@ const zbts_st = async (req, res) => {
           query: btnPaymentHeaderQuery.q,
           values: btnPaymentHeaderQuery.val,
         });
-        console.log("results 1", results);
       } catch (error) {
         console.log("Data insert failed, zbts_st api");
         return responseSend(
@@ -114,7 +112,6 @@ const zbts_st = async (req, res) => {
             query: btnPaymentLineItemQuery.q,
             values: btnPaymentLineItemQuery.val,
           });
-          console.log("results 2", results);
         } catch (error) {
           // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
           console.log("Data insert failed, zbts_st api");
@@ -132,18 +129,8 @@ const zbts_st = async (req, res) => {
       // UPDATE BTN LIST TABLE WHERE ANY ACTION TAKEN FROM SAP
       await updateBtnListTable(client, payloadObj);
 
-      // console.log("transactionSuccessful", transactionSuccessful);
-
-      // const comm = await client.query('COMMIT'); // Commit the transaction if everything was successful
-      // transactionSuccessful = true;
-
-      // console.log("transactionSuccessful", transactionSuccessful);
-
-      // console.log("response", response1, response1);
-
       responseSend(res, "S", 200, "Data inserted successfully", {}, null);
     } catch (error) {
-      console.log("errorerrorerrorerror", error.message);
       responseSend(res, "F", 502, Message.SERVER_ERROR, error.toString(), null);
     } finally {
       client.release();

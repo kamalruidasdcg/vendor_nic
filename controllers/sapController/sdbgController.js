@@ -90,7 +90,7 @@ const ztfi_bil_deface = async (req, res) => {
     );
     // responseSend(res, "1", 200, "Data inserted successfully", response, null);
   } catch (err) {
-    console.log("data not fetched", err);
+    // console.log("data not fetched", err);
     responseSend(res, "F", 500, Message.SERVER_ERROR, null, null);
   } finally {
     // client.release();
@@ -191,7 +191,6 @@ async function handelMail(data) {
     };
 
     const extension_date = findLatestExtensionDate(obj);
-    console.log("extension_date", extension_date);
     if (extension_date) {
       let vendorAndDoDetails = getUserDetailsQuery("vendor_and_do", "$1");
       const mail_details = await getQuery({
@@ -204,7 +203,6 @@ async function handelMail(data) {
         date: extension_date,
         purchasing_doc_no: data.PO_NUMBER,
       };
-      console.log("dataObj", dataObj, mail_details);
       await sendMail(
         BG_EXTENSION_RELEASE,
         dataObj,
