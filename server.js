@@ -27,10 +27,7 @@ const { YES, TRUE, LAN_SERVER_PO_PATH } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
 const { syncDataCorn, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
-const {
-  sendBGReminderMail,
-  sendPOMilestoneEXPReminderMail,
-} = require("./controllers/sapController/remaiderMailSendController");
+const { vendorReminderMail } = require("./controllers/sapController/remaiderMailSendController");
 
 // API LOGS
 app.use(apiLog);
@@ -103,18 +100,10 @@ const task = cron.schedule(
   }
 );
 
+// vendor reminder emails
 // At 11 PM DAILY
-const task2 = cron.schedule(
-  "0 23 * * *",
-  () => {
-    console.log("Run at night 11 PM");
-    sendBGReminderMail();
-    sendPOMilestoneEXPReminderMail();
-  },
-  {
-    scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
-  }
-);
+vendorReminderMail();
+
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);
