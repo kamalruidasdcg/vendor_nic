@@ -120,7 +120,6 @@ const ztfi_bil_deface = async (req, res) => {
         }
 
         const payload = req.body;
-        console.log('payload zdeface', payload);
         if (!payload || !payload.ZREGNUM || !payload.SEQNO || !payload.ZBILLPER) {
 
             return responseSend(res, "F", 400, "Invalid payload.", null, null);

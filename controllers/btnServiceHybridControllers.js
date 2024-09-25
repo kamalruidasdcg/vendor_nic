@@ -1,16 +1,16 @@
-const { getEpochTime, getYyyyMmDd, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
+const { getEpochTime, generateQuery, generateInsertUpdateQuery } = require("../lib/utils");
 const { EKPO, BTN_SERVICE_HYBRID, BTN_SERVICE_CERTIFY_AUTHORITY, BTN_ASSIGN } = require("../lib/tableName");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, SUBMITTED_BY_DO, STATUS_RECEIVED, FORWARDED_TO_FI_STAFF, REJECTED } = require("../lib/status");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED, SUBMITTED } = require("../lib/status");
 const { create_btn_no } = require("../services/po.services");
-const { poolClient, poolQuery, getQuery } = require("../config/pgDbConfig");
+const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const Message = require("../utils/messages");
-const { filesData, payloadObj, getHrDetails, getSDBGApprovedFiles, getPBGApprovedFiles, vendorDetails, getContractutalSubminissionDate, getActualSubminissionDate, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck } = require("../services/btnServiceHybrid.services");
-const { INSERT, ACTION_SDBG, ACTION_PBG, MID_SDBG, UPDATE } = require("../lib/constant");
+const { filesData, payloadObj, checkHrCompliance, addToBTNList, getGrnIcgrnValue, getServiceEntryValue, forwordToFinacePaylaod, getServiceBTNDetails, getLatestBTN, btnAssignPayload, supportingDataForServiceBtn, updateServiceBtnListTable, btnCurrentDetailsCheck, serviceBtnMailSend } = require("../services/btnServiceHybrid.services");
+const { INSERT, UPDATE } = require("../lib/constant");
 const { checkTypeArr } = require("../utils/smallFun");
-const { timeInHHMMSS } = require("./btnControllers");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
-const { updateBtnListTable } = require("../services/btn.services");
+const { BTN_REJECT } = require("../lib/event");
+
 
 const getWdcInfoServiceHybrid = async (req, res) => {
   try {
@@ -73,7 +73,7 @@ const getWdcInfoServiceHybrid = async (req, res) => {
         values: [poNo],
       });
 
-      wdcLineItem = wdcLineItem.filter((el) => el?.status === APPROVED);
+      // wdcLineItem = wdcLineItem.filter((el) => el?.status === APPROVED);
 
       const data = wdcLineItem.map((el2) => {
         const DOObj = get_line_item_ekpo.find(
@@ -183,6 +183,8 @@ const submitBtnServiceHybrid = async (req, res) => {
         net_with_gst = parseFloat(net_with_gst.toFixed(2));
       }
 
+      // FINAL PAYLOAD FOR SERVICE BTN //
+
       payload = {
         ...payload, btn_num,
         ...uploadedFiles,
@@ -196,6 +198,7 @@ const submitBtnServiceHybrid = async (req, res) => {
 
       await poolQuery({ client, query: q, values: val });
       await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
+      serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
       resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
     } catch (error) {
       resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
@@ -333,8 +336,10 @@ const forwordToFinace = async (req, res) => {
       let payload = req.body;
       const tokenData = req.tokenData;
 
-      // BTN VALIDATION
+      console.log("payload", payload);
 
+
+      // BTN VALIDATION
       if (!payload.btn_num) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num  missing", null);
       }
@@ -388,13 +393,14 @@ const forwordToFinace = async (req, res) => {
       } else if (sendSap == true) {
         await client.query("COMMIT");
         resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, response, "")
-        // handelMail(tokenData, { ...payload, assign_to, status: SUBMIT_BY_DO });
+        serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED_BY_CAUTHORITY });
+
       }
 
     } catch (error) {
       console.log("error", error.message);
       await client.query("ROLLBACK");
-      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+      resSend(res, false, 500, Message.SOMTHING_WENT_WRONG, error.message, null);
     } finally {
       client.release();
     }
@@ -472,14 +478,14 @@ const serviceBtnAssignToFiStaff = async (req, res) => {
       let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
       // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-      const sendSap =  await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+      const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
       if (sendSap == false) {
         await client.query("ROLLBACK");
         return resSend(res, false, 200, `SAP not connected.`, null, null);
       } else if (sendSap == true) {
         await client.query("COMMIT");
         // TO DO EMAIL
-
+        serviceBtnMailSend(tokenData, { ...req.body, ...payload, status: STATUS_RECEIVED });
         resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
       }
 
@@ -500,12 +506,15 @@ async function btnReject(data, tokenData, client) {
 
     await updateServiceBtnListTable(client, data);
 
-    const sapSend = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+    // const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+    const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
 
-    if (sapSend === false) {
-      throw new Error("SAP not connected");
+    if (sendSap == false) {
+      throw new Error("SAP not connected.");
+    } else if (sendSap == true) {
+      serviceBtnMailSend(tokenData, data, BTN_REJECT);
+      // resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
     }
-
     return { btn_num: data.btn_num };
   } catch (error) {
     throw error;

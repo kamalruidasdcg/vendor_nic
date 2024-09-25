@@ -23,18 +23,11 @@ const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES, TRUE, LAN_SERVER_PO_PATH } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
-const { syncCron, syncFileCron } = require("./controllers/syncControllers");
+const { syncDataCorn, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
-const {
-  sendBGReminderMail,
-  sendPOMilestoneEXPReminderMail,
-} = require("./controllers/sapController/remaiderMailSendController");
 const getCorsOptions = require("./config/corsConfig");
 const createRateLimiter = require("./config/rateLimit");
-
-
-
-
+const { vendorReminderMail } = require("./controllers/sapController/remaiderMailSendController");
 
 // Settings
 app.use(express.json());
@@ -44,7 +37,7 @@ const corsOptions = getCorsOptions();
 app.use(cors(corsOptions));
 
 // LIMITER
-const limiter = createRateLimiter ();
+const limiter = createRateLimiter();
 app.use(limiter);
 
 // API LOGS
@@ -65,7 +58,7 @@ app.use("/api/v1/sap", sapRoutes);
 app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/stat", statRoutes);
 
-app.use(errorHandler);
+// app.use(errorHandler);
 
 app.use((req, res, next) => {
   res.status(200).json({
@@ -74,20 +67,10 @@ app.use((req, res, next) => {
   });
 });
 
+
+
 // Call Cron JOB for DATA Syncronization
-cron.schedule("05 00 * * *", async () => {
-  console.log("Cron job started at 00:05");
-  try {
-    await syncCron();
-    console.log("Cron job completed successfully");
-  } catch (error) {
-    console.error("Error during cron job:", error);
-    fs.appendFileSync(
-      "error.log",
-      `${new Date().toISOString()} - Error: ${error.message}\n`
-    );
-  }
-});
+syncDataCorn();
 // Call Cron JOB for FILE Syncronization
 syncFileCron();
 
@@ -115,18 +98,10 @@ const task = cron.schedule(
   }
 );
 
+// vendor reminder emails
 // At 11 PM DAILY
-const task2 = cron.schedule(
-  "0 23 * * *",
-  () => {
-    console.log("Run at night 11 PM");
-    sendBGReminderMail();
-    sendPOMilestoneEXPReminderMail();
-  },
-  {
-    scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
-  }
-);
+vendorReminderMail();
+
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);

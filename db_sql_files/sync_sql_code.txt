@@ -1,0 +1,25 @@
+SELECT * FROM public.hr
+ORDER BY id ASC LIMIT 100
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+ALTER TABLE public.hr
+ADD COLUMN sync_id UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
+ADD COLUMN sync BOOLEAN DEFAULT FALSE NOT NULL,
+ADD COLUMN sync_updated_at TIMESTAMPTZ DEFAULT now() NOT NULL;
+
+-- Create the trigger
+CREATE TRIGGER before_update_trigger
+BEFORE UPDATE ON public.hr
+FOR EACH ROW
+EXECUTE FUNCTION update_sync_fields();
+
+-- Create the trigger function
+CREATE OR REPLACE FUNCTION update_sync_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.sync := FALSE;
+    NEW.sync_updated_at := now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;

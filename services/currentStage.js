@@ -100,8 +100,8 @@ const currentStageHandleForAllActivity = async (client, ids) => {
       SHIPPINGDOCUMENTS,
       QALS, // grn
       MSEG, // icgrn
-      SERVICE_ENTRY_TABLE_SAP,
       WDC,
+      SERVICE_ENTRY_TABLE_SAP,
       BTN_LIST,
     ];
     let finalStage = "Not Started";
@@ -150,11 +150,11 @@ const currentStageHandleForAllActivity = async (client, ids) => {
         if (flag === QALS) {
           finalStage = "STORE-GRN";
         }
-        if (flag === SERVICE_ENTRY_TABLE_SAP) {
-          finalStage = "SIR";
-        }
         if (flag === WDC) {
           finalStage = "WDC";
+        }
+        if (flag === SERVICE_ENTRY_TABLE_SAP) {
+          finalStage = "SIR";
         }
         if (flag === BTN_LIST) {
           finalStage = "PAYMENT";

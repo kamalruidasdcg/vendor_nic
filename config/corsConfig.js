@@ -13,13 +13,11 @@ function getCorsOptions() {
             credentials: false,
         },
         prod: {
-            origin: ['http://10.18.1.242:3000', 'https://obps.grse.co.in', 'https://obps.grse.in'], // Multiple origins for production
-            methods: ['GET', 'POST'],
+            origin: ['http://10.18.1.242:3000', 'https://obps.grse.co.in', 'https://obps.grse.in', 'http://obps.grse.co.in'],
             credentials: false,
         },
     };
 
-    // Return the CORS configuration for the provided environment
     return corsConfigs[env] || corsConfigs['dev']; // Default to development if env is not matched
 }
 
