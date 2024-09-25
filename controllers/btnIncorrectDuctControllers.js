@@ -5,7 +5,13 @@ const {
   poolQuery,
 } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
-const { INSERT, USER_TYPE_VENDOR, UPDATE } = require("../lib/constant");
+const {
+  INSERT,
+  USER_TYPE_VENDOR,
+  UPDATE,
+  BILL_INCORRECT_DEDUCTIONS,
+  LD_PENALTY_REFUND,
+} = require("../lib/constant");
 const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
@@ -34,7 +40,11 @@ const {
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
 } = require("../lib/status");
-const { BTN_PBG, BTN_LIST, BTN_ASSIGN } = require("../lib/tableName");
+const {
+  BTN_ANY_OTHER_CLAIM,
+  BTN_LIST,
+  BTN_ASSIGN,
+} = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
@@ -66,22 +76,26 @@ const submitIncorrectDuct = async (req, res) => {
   try {
     let {
       purchasing_doc_no,
-      ref_invoice_no1,
+      ref_invoice1_no,
       ref_invoice1_amount,
       ref_invoice1_remarks,
+      ref_invoice2_no,
+      ref_invoice2_amount,
+      ref_invoice2_remarks,
+      ref_invoice3_no,
+      ref_invoice3_amount,
+      ref_invoice3_remarks,
+      ref_invoice4_no,
+      ref_invoice4_amount,
+      ref_invoice4_remarks,
       balance_claim_invoice,
       total_claim_amount,
+      btn_type,
     } = req.body;
-    let payloadFiles = req.files;
+
+    // let payloadFiles = req.files;
     const tokenData = { ...req.tokenData };
     console.log(tokenData);
-    let payload = {
-      ...req.body,
-      vendor_code: tokenData?.vendor_code,
-      created_by_id: tokenData?.vendor_code,
-      btn_type: "claim-against-pbg",
-      updated_by: "VENDOR",
-    };
 
     // Check required fields
     if (tokenData?.user_type != USER_TYPE_VENDOR) {
@@ -89,57 +103,60 @@ const submitIncorrectDuct = async (req, res) => {
     }
 
     // Check required fields
-    if (!claim_amount || !claim_amount.trim() === "") {
+    if (!total_claim_amount || !total_claim_amount.trim() === "") {
       return resSend(res, false, 200, "Claim Value is mandatory.", null, null);
     }
 
-    if (!purchasing_doc_no || !invoice_no) {
-      return resSend(res, false, 200, "Invoice Number is missing!", null, null);
-    }
-
-    // check invoice number is already present in DB
-    let check_invoice_q = `SELECT count(*) as count FROM ${BTN_PBG} WHERE invoice_no = $1 and vendor_code = $2`;
-    let check_invoice = await getQuery({
-      query: check_invoice_q,
-      values: [invoice_no, tokenData.vendor_code],
-    });
-
-    if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
+    if (!purchasing_doc_no) {
       return resSend(
         res,
         false,
         200,
-        "BTN is already created under the invoice number.",
+        "purchasing_doc_no is missing!",
         null,
         null
       );
     }
 
-    // Handle uploaded files
-    let invoice_filename;
-    if (payloadFiles["invoice_filename"]) {
-      invoice_filename = payloadFiles["invoice_filename"][0]?.filename;
-      payload = { ...payload, invoice_filename };
-    }
-    let balance_claim_invoice_filename;
-    if (payloadFiles["balance_claim_invoice_filename"]) {
-      balance_claim_invoice_filename =
-        payloadFiles["balance_claim_invoice_filename"][0]?.filename;
-      payload = { ...payload, balance_claim_invoice_filename };
-    }
+    // if (!btn_type && (btn_type != BILL_INCORRECT_DEDUCTIONS || btn_type != LD_PENALTY_REFUND)) {
+    //   return resSend(res, false, 200, "btn_type is missing!", null, null);
+    // }
 
-    // GET ICGRN Value by PO Number
-    let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
-    if (!resICGRN) {
-      return resSend(res, false, 200, null, null);
-    }
-
-    payload = {
-      ...payload,
-
-      icgrn_total: resICGRN.total_icgrn_value,
-      icgrn_nos: JSON.stringify(resICGRN.icgrn_nos),
+    let payload = {
+      ...req.body,
+      vendor_code: tokenData?.vendor_code,
+      created_by_id: tokenData?.vendor_code,
+      //btn_type: "claim-against-pbg",
+      updated_by: "VENDOR",
     };
+
+    // Handle uploaded files
+    let ref_invoice1_file =
+      req.files.ref_invoice1_file && req.files.ref_invoice1_file[0].filename
+        ? req.files.ref_invoice1_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice1_file };
+
+    // console.log(req.files);
+    // return;
+
+    // check invoice number is already present in DB
+    // let check_invoice_q = `SELECT count(*) as count FROM ${BTN_ANY_OTHER_CLAIM} WHERE invoice_no = $1 and vendor_code = $2`;
+    // let check_invoice = await getQuery({
+    //   query: check_invoice_q,
+    //   values: [invoice_no, tokenData.vendor_code],
+    // });
+
+    // if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "BTN is already created under the invoice number.",
+    //     null,
+    //     null
+    //   );
+    // }
 
     // generate btn num
     const btn_num = await create_btn_no("BTN");
@@ -149,8 +166,8 @@ const submitIncorrectDuct = async (req, res) => {
     let created_at = getEpochTime();
     payload = { ...payload, created_at };
     console.log(payload);
-    payload.net_claim_amount = claim_amount;
-    payload.net_payable_amount = claim_amount;
+    payload.net_claim_amount = total_claim_amount;
+    payload.net_payable_amount = total_claim_amount;
     // INSERT Data into btn table
     let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
     if (!resBtnList?.status) {
@@ -163,10 +180,10 @@ const submitIncorrectDuct = async (req, res) => {
         null
       );
     }
-    //return;
+    // return;
     delete payload.net_claim_amount;
     delete payload.net_payable_amount;
-    let { q, val } = generateQuery(INSERT, BTN_PBG, payload);
+    let { q, val } = generateQuery(INSERT, BTN_ANY_OTHER_CLAIM, payload);
     const result = await getQuery({ query: q, values: val });
     console.log(result);
     if (result.length > 0) {
@@ -566,4 +583,4 @@ const insertUpdateToBTNList = async (client, data, status, isInserted) => {
   }
 };
 
-module.exports = { submitPbg, btnPbgSubmitByDO };
+module.exports = { submitIncorrectDuct, btnPbgSubmitByDO };
