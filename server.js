@@ -31,10 +31,16 @@ const { vendorReminderMail } = require("./controllers/sapController/remaiderMail
 
 // Settings
 app.use(express.json());
+// Use the express.urlencoded middleware
+app.use(express.urlencoded({ extended: true }));
 
 // CORS
 const corsOptions = getCorsOptions();
-app.use(cors(corsOptions));
+// Enable preflight requests for all routes
+app.options('*', cors(corsOptions));
+// Use the CORS middleware with options
+app.use(cors(corsOptions))
+
 
 // LIMITER
 const limiter = createRateLimiter();

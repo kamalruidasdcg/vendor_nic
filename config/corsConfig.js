@@ -3,17 +3,18 @@ function getCorsOptions() {
 
     const corsConfigs = {
         dev: {
-            origin: ['http://10.18.1.242:3000', 'http://localhost:3000'],
-            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            origin: ['http://10.18.1.242:3000', 'http://10.18.7.123:3000', 'http://localhost:3000'],
+            methods: ['OPTIONS','GET', 'POST', 'PUT', 'DELETE'],
             credentials: true,
         },
         qa: {
-            origin: ['http://10.18.7.123:3000', 'http://10.18.1.242:3000', ],
-            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            origin: ['http://10.18.7.123:3000', 'http://10.18.1.242:3000', 'localhost:3000'],
+            methods: ['OPTIONS','GET', 'POST', 'PUT', 'DELETE'],
             credentials: false,
         },
         prod: {
             origin: ['http://10.18.1.242:3000', 'https://obps.grse.co.in', 'https://obps.grse.in', 'http://obps.grse.co.in'],
+            methods: ['OPTIONS','GET', 'POST'],
             credentials: false,
         },
     };
