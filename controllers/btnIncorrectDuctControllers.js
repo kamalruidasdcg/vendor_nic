@@ -44,6 +44,9 @@ const {
   BTN_ANY_OTHER_CLAIM,
   BTN_LIST,
   BTN_ASSIGN,
+  BTN_PBG,
+  BTN_MATERIAL,
+  BTN_SERVICE_HYBRID,
 } = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { sendMail } = require("../services/mail.services");
@@ -91,6 +94,7 @@ const submitIncorrectDuct = async (req, res) => {
       balance_claim_invoice,
       total_claim_amount,
       btn_type,
+      letter_reference_no,
     } = req.body;
 
     // let payloadFiles = req.files;
@@ -136,6 +140,24 @@ const submitIncorrectDuct = async (req, res) => {
         ? req.files.ref_invoice1_file[0].filename
         : "";
     payload = { ...payload, ref_invoice1_file };
+
+    let ref_invoice2_file =
+      req.files.ref_invoice2_file && req.files.ref_invoice2_file[0].filename
+        ? req.files.ref_invoice2_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice2_file };
+
+    let ref_invoice3_file =
+      req.files.ref_invoice3_file && req.files.ref_invoice3_file[0].filename
+        ? req.files.ref_invoice3_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice3_file };
+
+    let ref_invoice4_file =
+      req.files.ref_invoice4_file && req.files.ref_invoice4_file[0].filename
+        ? req.files.ref_invoice4_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice4_file };
 
     // console.log(req.files);
     // return;
@@ -211,6 +233,97 @@ const submitIncorrectDuct = async (req, res) => {
   }
 };
 
+const getBtnFile = async (req, res) => {
+  try {
+    const client = await poolClient();
+    await client.query("BEGIN");
+    try {
+      const btn_num = req.query.btn_num;
+      const tokenData = { ...req.tokenData };
+
+      if (!btn_num) {
+        return resSend(
+          res,
+          false,
+          200,
+          "BTN number is missing!",
+          "No BTN number",
+          null
+        );
+      }
+
+      const check_btn_q = `SELECT btn_type FROM ${BTN_LIST} WHERE btn_num = $1`;
+      const check_btn_in_list_table = await poolQuery({
+        client,
+        query: check_btn_q,
+        values: [btn_num],
+      });
+      console.log(check_btn_in_list_table.length);
+      if (!check_btn_in_list_table.length) {
+        return resSend(
+          res,
+          false,
+          200,
+          Message.NO_DATA_FOUND,
+          "No record found by this BTN number.",
+          null
+        );
+      }
+      const table_type = check_btn_in_list_table[0].btn_type;
+      console.log(table_type);
+      let table;
+      switch (table_type) {
+        case "claim-against-pbg":
+          {
+            table = BTN_PBG;
+          }
+          break;
+        case "hybrid-bill-material":
+          {
+            table = BTN_MATERIAL;
+          }
+          break;
+        case "service-contract-bills":
+          {
+            table = BTN_SERVICE_HYBRID;
+          }
+          break;
+        default:
+          return resSend(res, false, 200, "Invalid BTN type!", null, null);
+      }
+
+      const get_btn_file_q = `SELECT invoice_filename FROM ${table} WHERE btn_num = $1 AND btn_type = $2`;
+      console.log(get_btn_file_q);
+      const get_btn_file = await poolQuery({
+        client,
+        query: get_btn_file_q,
+        values: [btn_num, check_btn_in_list_table[0].btn_type],
+      });
+      console.log(get_btn_file);
+      return resSend(
+        res,
+        true,
+        200,
+        Message.DATA_FETCH_SUCCESSFULL,
+        get_btn_file,
+        null
+      );
+    } catch (error) {
+      return resSend(
+        res,
+        false,
+        500,
+        Message.SERVER_ERROR,
+        error.message,
+        null
+      );
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    return resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
+  }
+};
 const btnPbgSubmitByDO = async (req, res) => {
   try {
     const client = await poolClient();
@@ -583,4 +696,4 @@ const insertUpdateToBTNList = async (client, data, status, isInserted) => {
   }
 };
 
-module.exports = { submitIncorrectDuct, btnPbgSubmitByDO };
+module.exports = { submitIncorrectDuct, btnPbgSubmitByDO, getBtnFile };
