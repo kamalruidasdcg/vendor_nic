@@ -705,7 +705,7 @@ const updateServiceBtnListTable = async (client, data) => {
             console.log("btnListTablePaylod", btnListTablePaylod);
             await poolQuery({ client, query: q, values: val });
         } else {
-            console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+            // console.log("NO BTN FOUND IN LIST TO BE UPDATED");
         }
     } catch (error) {
         throw error;
