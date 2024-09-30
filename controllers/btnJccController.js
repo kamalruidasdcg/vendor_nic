@@ -8,7 +8,7 @@ const { generateQuery, generateInsertUpdateQuery, getEpochTime } = require("../l
 const { jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails } = require("../services/btnJcc.services");
 const { vendorDetails, filesData, addToBTNList, getLatestBTN, serviceBtnMailSend, updateServiceBtnListTable } = require("../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../services/po.services");
-const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
+const { jccBtnSubmitToSAPF01, jccBtnSubmitToSAPF02 } = require("../services/sap.btn.services");
 const Message = require("../utils/messages");
 const { checkTypeArr } = require("../utils/smallFun");
 const { btnCurrentDetailsCheck } = require("./btnControllers");
@@ -297,8 +297,8 @@ const jccBtnforwordToFinace = async (req, res) => {
             const latesBtnData = await getLatestBTN(client, payload);
             // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
             await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
-            const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-            // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
+            // const sendSap = true; //await jccBtnSubmitToSAPF01({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+            const sendSap = await jccBtnSubmitToSAPF01(payload, tokenData);
 
             if (sendSap == false) {
                 console.log(sendSap);
@@ -391,8 +391,8 @@ const jccBtnAssignToFiStaff = async (req, res) => {
 
             let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
-            const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-            // const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+            // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+            const sendSap = await jccBtnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
             if (sendSap == false) {
                 await client.query("ROLLBACK");
                 return resSend(res, false, 200, `SAP not connected.`, null, null);
@@ -420,8 +420,8 @@ async function btnReject(data, tokenData, client) {
 
         await updateServiceBtnListTable(client, data);
 
-        const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
-        // const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+        const sendSap = true; // await jccBtnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+        // const sendSap = await jccBtnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
 
         if (sendSap == false) {
             throw new Error("SAP not connected.");
