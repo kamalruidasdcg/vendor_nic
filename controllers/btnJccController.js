@@ -1,5 +1,7 @@
-const { poolClient } = require("../config/pgDbConfig");
+const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const { resSend } = require("../lib/resSend");
+const { APPROVED } = require("../lib/status");
+const { EKPO } = require("../lib/tableName");
 const { vendorDetails } = require("../services/btnServiceHybrid.services");
 const Message = require("../utils/messages");
 
