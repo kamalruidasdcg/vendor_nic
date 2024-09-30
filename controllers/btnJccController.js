@@ -1,14 +1,16 @@
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
 const { INSERT, UPDATE } = require("../lib/constant");
+const { BTN_REJECT } = require("../lib/event");
 const { resSend } = require("../lib/resSend");
 const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED, SUBMITTED, UPDATED } = require("../lib/status");
 const { EKPO, BTN_JCC, BTN_ASSIGN, BTN_JCC_CERTIFY_AUTHORITY } = require("../lib/tableName");
 const { generateQuery, generateInsertUpdateQuery, getEpochTime } = require("../lib/utils");
-const { jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload } = require("../services/btnJcc.services");
+const { jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails } = require("../services/btnJcc.services");
 const { vendorDetails, filesData, addToBTNList, getLatestBTN, serviceBtnMailSend } = require("../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../services/po.services");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
 const Message = require("../utils/messages");
+const { checkTypeArr } = require("../utils/smallFun");
 const { btnCurrentDetailsCheck } = require("./btnControllers");
 
 
@@ -117,51 +119,40 @@ const submitJccBtn = async (req, res) => {
 
 const getJccBtnData = async (req, res) => {
     try {
-        const client = await poolClient();
-        try {
-            const { type } = req.query;
-            if (!type) {
-                return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
-            }
-            let data;
-            let message;
-            let success = false;
-            let statusCode;
-            switch (type) {
-                case 'jcc': {
-                    const result = await getGrnIcgrnValue(client, req.query);
-                    ({ data, message, success, statusCode } = result);
-                }
-                    break;
-                case '': {
-                    const result = await getServiceEntryValue(client, req.query);
-                    console.log("result", result);
-                    ({ data, message, success, statusCode } = result);
-                }
-                    break;
-                case 'sbtn-details': {
-                    const result = await getServiceBTNDetails(client, req.query);
-                    console.log("result", result);
-                    ({ data, message, success, statusCode } = result);
-                }
-                    break;
-
-                default:
-                    message = "Please send a valid type!"
-                    return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
-            }
-            resSend(res, success, statusCode, message, data);
-
-        } catch (error) {
-            resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
-        } finally {
-            client.release();
+      const client = await poolClient();
+      try {
+        const { type } = req.query;
+        if (!type) {
+          return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
         }
+        let data;
+        let message;
+        let success = false;
+        let statusCode;
+        switch (type) {
+          case 'jccbtn-details': {
+            const result = await getJccBTNDetails(client, req.query);
+            console.log("result", result);
+            ({ data, message, success, statusCode } = result);
+          }
+            break;
+  
+          default:
+            message = "Please send a valid type!"
+            return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
+        }
+        resSend(res, success, statusCode, message, data);
+  
+      } catch (error) {
+        resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+      } finally {
+        client.release();
+      }
     } catch (error) {
-        resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
+      resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
     }
-
-}
+  
+  }
 
 
 const getJcc = async (req, res) => {
@@ -269,8 +260,7 @@ const jccBtnforwordToFinace = async (req, res) => {
             }
             const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num: payload.btn_num });
             if (btnCurrnetStatus.isInvalid) {
-                return resSend(res, false, 200, `BTN ${payload.btn_num} ${btnCurrnetStatus.message}`, payload.btn_num, null
-                );
+                return resSend(res, false, 200, `BTN ${payload.btn_num} ${btnCurrnetStatus.message}`, payload.btn_num, null);
             }
 
             if (payload.status === REJECTED) {
@@ -279,10 +269,10 @@ const jccBtnforwordToFinace = async (req, res) => {
                 return resSend(res, true, 200, "Rejected successfully !!", response1, null);
             }
 
-            if (!payload.recomend_payment || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
+            if (!payload.recomend_payment || !payload.assign_to || !payload.purchasing_doc_no) {
                 return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Entry_no or net_payable_amount assign_to_fi missing", null);
             }
-            const btnChkQuery = `SELECT COUNT(*) from btn_service_hybrid WHERE btn_num = $1 AND bill_certifing_authority = $2`;
+            const btnChkQuery = `SELECT COUNT(*) from btn_jcc WHERE btn_num = $1 AND bill_certifing_authority = $2`;
             const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
             if (!parseInt(validAuthrityCheck[0]?.count)) {
                 return resSend(res, false, 200, "You are not authorised!", Message.YOU_ARE_UN_AUTHORIZED, null);
@@ -307,8 +297,8 @@ const jccBtnforwordToFinace = async (req, res) => {
             const latesBtnData = await getLatestBTN(client, payload);
             // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
             await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
-            // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-            const sendSap = await btnSubmitToSAPF01(payload, tokenData);
+            const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+            // const sendSap = await btnSubmitToSAPF01(payload, tokenData);
 
             if (sendSap == false) {
                 console.log(sendSap);
@@ -401,8 +391,8 @@ const jccBtnAssignToFiStaff = async (req, res) => {
 
             let result = await addToBTNList(client, data, STATUS_RECEIVED);
 
-            // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
-            const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+            const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+            // const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
             if (sendSap == false) {
                 await client.query("ROLLBACK");
                 return resSend(res, false, 200, `SAP not connected.`, null, null);
@@ -430,8 +420,8 @@ async function btnReject(data, tokenData, client) {
 
         await updateServiceBtnListTable(client, data);
 
-        // const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
-        const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+        const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+        // const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
 
         if (sendSap == false) {
             throw new Error("SAP not connected.");

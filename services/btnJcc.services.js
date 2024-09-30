@@ -170,6 +170,58 @@ const jccPayloadObj = (payload) => {
 }
 
 
+async function getJccBTNDetails(client, data) {
+    try {
+
+        if (!data.btn_num) {
+            return { success: false, statusCode: 200, message: "Please send btn number", data: Message.MANDATORY_INPUTS_REQUIRED };
+        }
+        const val = [];
+        val.push(data.btn_num);
+
+        const getBtnQuery =
+            `SELECT
+                s_btn.*,
+                btn_assign.assign_by,
+                btn_assign.assign_to,
+                users_btn_assign_to.cname AS assign_to_name,
+                users_assign_to_fi.cname AS assign_by_fi_name,
+                btn_assign.assign_by_fi,
+                btn_assign.assign_to_fi,
+                btn_assign.last_assign,
+                btn_assign.last_assign_fi,
+                btn_authority.recomend_payment,
+                users.cname AS bill_certifing_authority_name
+            FROM 
+              btn_jcc AS s_btn 
+            LEFT JOIN btn_assign AS btn_assign
+                ON(s_btn.btn_num = btn_assign.btn_num)
+            LEFT JOIN pa0002 as users 
+                ON(users.pernr :: character varying = s_btn.bill_certifing_authority)
+            LEFT JOIN pa0002 as users_btn_assign_to
+                ON(users_btn_assign_to.pernr :: character varying = btn_assign.assign_to) 
+            LEFT JOIN pa0002 as users_assign_to_fi
+                ON(users_assign_to_fi.pernr :: character varying = btn_assign.assign_to_fi) 
+            LEFT JOIN btn_jcc_certify_authority as btn_authority 
+                ON(s_btn.btn_num = btn_authority.btn_num)
+            WHERE s_btn.btn_num = $1`;
+        // AND s_btn.bill_certifing_authority = '600700'
+        // btn_assign.*,
+        // LEFT JOIN btn_assign AS btn_assign
+        // ON(s_btn.btn_num = btn_assign.btn_num)
+        const result = await poolQuery({ client, query: getBtnQuery, values: val });
+        let response = result[0] || {};
+    
+        response = { ...response, ...supDocs };
+
+        return { success: true, statusCode: 200, message: "Value fetch success", data: response };
+    } catch (error) {
+        console.log("dddddd", error.message);
+
+        throw error;
+    }
+}
 
 
-module.exports = { vendorDetails, jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload }
+
+module.exports = { vendorDetails, jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails }

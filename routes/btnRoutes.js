@@ -178,14 +178,14 @@ router.get("/jcc", [], (req, res) => {
   jccBtnController.getJccBtnData(req, res);
 });
 
-router.get("/getJccInfo", [], (req, res) => {
+router.get("/jccInfo", [], (req, res) => {
   jccBtnController.getJcc(req, res);
 });
 
-router.post("/submitSBtnByCAuthorty", [veifyAccessToken], (req, res) => {
+router.post("/submitJccBtnByCAuthorty", [veifyAccessToken], (req, res) => {
   jccBtnController.jccBtnforwordToFinace(req, res);
 });
-router.post("/submitSBtnByFAuthorty", [veifyAccessToken], (req, res) => {
+router.post("/submitJccBtnByFAuthorty", [veifyAccessToken], (req, res) => {
   jccBtnController.jccBtnAssignToFiStaff(req, res);
 });
 
