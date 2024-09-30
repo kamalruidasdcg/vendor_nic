@@ -119,7 +119,31 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 };
 
 
+const jccBtnforwordToFinacePaylaod = (payload) => {
 
+    const obj = {
+        btn_num: payload.btn_num,
+        recomend_payment: payload.recomend_payment,
+        net_payable_amount: payload.net_payable_amount,
+        created_at: getEpochTime(),
+        created_by_id: payload.created_by_id
+    }
+    return obj;
+}
+
+const jccBtnbtnAssignPayload = (payload) => {
+
+    return {
+        btn_num: payload.btn_num,
+        purchasing_doc_no: payload.purchasing_doc_no,
+        assign_by: payload.assign_by,
+        assign_to: payload.assign_to,
+        last_assign: true,
+        assign_by_fi: "",
+        assign_to_fi: "",
+        last_assign_fi: false,
+    }
+}
 
 const jccPayloadObj = (payload) => {
 
@@ -148,4 +172,4 @@ const jccPayloadObj = (payload) => {
 
 
 
-module.exports = { vendorDetails, jccPayloadObj }
+module.exports = { vendorDetails, jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload }

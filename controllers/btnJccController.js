@@ -1,13 +1,15 @@
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
-const { INSERT } = require("../lib/constant");
+const { INSERT, UPDATE } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
-const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
-const { EKPO, BTN_JCC } = require("../lib/tableName");
-const { generateQuery } = require("../lib/utils");
-const { jccPayloadObj } = require("../services/btnJcc.services");
-const { vendorDetails, filesData, addToBTNList } = require("../services/btnServiceHybrid.services");
+const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED, REJECTED, SUBMITTED, UPDATED } = require("../lib/status");
+const { EKPO, BTN_JCC, BTN_ASSIGN, BTN_JCC_CERTIFY_AUTHORITY } = require("../lib/tableName");
+const { generateQuery, generateInsertUpdateQuery, getEpochTime } = require("../lib/utils");
+const { jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload } = require("../services/btnJcc.services");
+const { vendorDetails, filesData, addToBTNList, getLatestBTN, serviceBtnMailSend } = require("../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../services/po.services");
+const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
 const Message = require("../utils/messages");
+const { btnCurrentDetailsCheck } = require("./btnControllers");
 
 
 // api start //
@@ -43,10 +45,6 @@ const submitJccBtn = async (req, res) => {
             const tempPayload = req.body;
             const tokenData = req.tokenData;
 
-            // Check required fields
-            // if (!JSON.parse(tempPayload.hsn_gstn_icgrn)) {
-            //   return resSend(res, false, 200, "Please check HSN code, GSTIN, Tax rate is as per PO!", null, null);
-            // }
 
             // Check required fields
             if (!tempPayload.invoice_value && !tempPayload.net_claim_amount) {
@@ -72,18 +70,13 @@ const submitJccBtn = async (req, res) => {
             if (check_invoice && check_invoice[0].count > 0) {
                 return resSend(res, false, 200, "BTN is already created under the invoice number/wdc_number.", null, null);
             }
- 
+
 
             /**
              * FILE PAYLOADS AND FILE VALIDATION
              */
             const uploadedFiles = filesData(filesPaylaod);
             console.log("uploadedFiles", uploadedFiles);
-
-            // if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
-            //   return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
-            // }
-
 
             let payload = jccPayloadObj(tempPayload);
             // BTN NUMBER GENERATE
@@ -109,7 +102,7 @@ const submitJccBtn = async (req, res) => {
 
             await poolQuery({ client, query: q, values: val });
             await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
-            // serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
+            serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
             resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
         } catch (error) {
             resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
@@ -258,6 +251,200 @@ const getJcc = async (req, res) => {
 };
 
 
+const jccBtnforwordToFinace = async (req, res) => {
+
+    try {
+        const client = await poolClient();
+        try {
+            await client.query("BEGIN");
+            let payload = req.body;
+            const tokenData = req.tokenData;
+
+            console.log("payload", payload);
 
 
-module.exports = { submitJccBtn, initJccData, getJccBtnData, getJcc }
+            // BTN VALIDATION
+            if (!payload.btn_num) {
+                return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "btn num  missing", null);
+            }
+            const btnCurrnetStatus = await btnCurrentDetailsCheck(client, { btn_num: payload.btn_num });
+            if (btnCurrnetStatus.isInvalid) {
+                return resSend(res, false, 200, `BTN ${payload.btn_num} ${btnCurrnetStatus.message}`, payload.btn_num, null
+                );
+            }
+
+            if (payload.status === REJECTED) {
+                const response1 = await btnReject(payload, tokenData, client);
+                await client.query("COMMIT");
+                return resSend(res, true, 200, "Rejected successfully !!", response1, null);
+            }
+
+            if (!payload.recomend_payment || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
+                return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Entry_no or net_payable_amount assign_to_fi missing", null);
+            }
+            const btnChkQuery = `SELECT COUNT(*) from btn_service_hybrid WHERE btn_num = $1 AND bill_certifing_authority = $2`;
+            const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
+            if (!parseInt(validAuthrityCheck[0]?.count)) {
+                return resSend(res, false, 200, "You are not authorised!", Message.YOU_ARE_UN_AUTHORIZED, null);
+            }
+
+
+
+
+
+            //  BTN FINANCE AUTHORITY DATA INSERT
+            payload.created_by_id = tokenData.vendor_code;
+            const financePaylad = jccBtnforwordToFinacePaylaod (payload);
+            const { q, val } = generateQuery(INSERT, BTN_JCC_CERTIFY_AUTHORITY, financePaylad);
+            const response = await poolQuery({ client, query: q, values: val });
+
+            // BTN ASSIGN BY FINANCE AUTHORITY  
+            const btnAssignPaylaod = jccBtnbtnAssignPayload({ ...payload, assign_by: tokenData.vendor_code });
+            const assingPayload = await generateInsertUpdateQuery(btnAssignPaylaod, BTN_ASSIGN, ['btn_num', 'purchasing_doc_no']);
+            await poolQuery({ client, query: assingPayload.q, values: assingPayload.val });
+
+            // ADDING TO BTN LIST WITH CURRENT STATUS
+            const latesBtnData = await getLatestBTN(client, payload);
+            // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
+            await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
+            // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+            const sendSap = await btnSubmitToSAPF01(payload, tokenData);
+
+            if (sendSap == false) {
+                console.log(sendSap);
+                await client.query("ROLLBACK");
+                return resSend(res, false, 200, `SAP not connected.`, null, null);
+            } else if (sendSap == true) {
+                await client.query("COMMIT");
+                resSend(res, true, 200, Message.DATA_SEND_SUCCESSFULL, response, "")
+                serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED_BY_CAUTHORITY });
+
+            }
+
+        } catch (error) {
+            console.log("error", error.message);
+            await client.query("ROLLBACK");
+            resSend(res, false, 500, Message.SOMTHING_WENT_WRONG, error.message, null);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+    }
+
+}
+/**
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
+
+const jccBtnAssignToFiStaff = async (req, res) => {
+    try {
+        const client = await poolClient();
+        await client.query("BEGIN");
+        try {
+            const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+            const tokenData = { ...req.tokenData };
+
+            if (!btn_num || !purchasing_doc_no || !assign_to_fi) {
+                return resSend(res, false, 200, "Assign To is the mandatory!", Message.MANDATORY_PARAMETR_MISSING, null);
+            }
+
+            const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
+                btn_num,
+                status: STATUS_RECEIVED,
+            });
+            if (btnCurrnetStatus.isInvalid) {
+                return resSend(res, false, 200, `BTN ${btn_num} ${btnCurrnetStatus.message}`, btn_num, null
+                );
+            }
+
+            const assign_q = `SELECT * FROM ${BTN_ASSIGN} WHERE btn_num = $1 and last_assign = $2`;
+            let assign_fi_staff_v = await poolQuery({ client, query: assign_q, values: [btn_num, true] });
+            if (!checkTypeArr(assign_fi_staff_v)) {
+                return resSend(res, false, 200, "You're not authorized to perform the action!", null, null);
+            }
+
+            const whereCon = { btn_num: btn_num };
+            const payload = {
+                assign_by_fi: tokenData?.vendor_code,
+                assign_to_fi: assign_to_fi,
+                last_assign_fi: true,
+            };
+
+            let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
+            let resp = await poolQuery({ client, query: q, values: val });
+            console.log("resp", resp);
+
+            let btn_list_q = ` SELECT * FROM btn_list WHERE btn_num = $1 
+                            AND purchasing_doc_no = $2
+                            AND status = $3
+                          ORDER BY created_at DESC`;
+            let btn_list = await poolQuery({ client, query: btn_list_q, values: [btn_num, purchasing_doc_no, SUBMITTED_BY_VENDOR] });
+
+            console.log("btn_list", btn_list);
+
+            if (!btn_list.length) {
+                return resSend(res, false, 200, "Vendor have to submit BTN first.", btn_list, null);
+            }
+
+            let data = {
+                btn_num,
+                purchasing_doc_no,
+                net_claim_amount: btn_list[0]?.net_claim_amount,
+                net_payable_amount: btn_list[0]?.net_payable_amount,
+                vendor_code: tokenData.vendor_code,
+                created_at: getEpochTime(),
+                btn_type: btn_list[0]?.btn_type,
+            };
+
+            let result = await addToBTNList(client, data, STATUS_RECEIVED);
+
+            // const sendSap = true; //btnSaveToSap({ ...req.body, ...payload }, tokenData);
+            const sendSap = await btnSubmitToSAPF02({ ...req.body, ...payload }, tokenData);
+            if (sendSap == false) {
+                await client.query("ROLLBACK");
+                return resSend(res, false, 200, `SAP not connected.`, null, null);
+            } else if (sendSap == true) {
+                await client.query("COMMIT");
+                // TO DO EMAIL
+                serviceBtnMailSend(tokenData, { ...req.body, ...payload, status: STATUS_RECEIVED });
+                resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
+            }
+
+        } catch (error) {
+            console.log("data not inserted", error.message);
+            resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
+    }
+};
+
+async function btnReject(data, tokenData, client) {
+    try {
+        const obj = { btn_num: data.btn_num };
+
+        await updateServiceBtnListTable(client, data);
+
+        // const sendSap = true; // await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+        const sendSap = await btnSubmitToSAPF01({ ...data, assign_to: null }, tokenData);
+
+        if (sendSap == false) {
+            throw new Error("SAP not connected.");
+        } else if (sendSap == true) {
+            serviceBtnMailSend(tokenData, data, BTN_REJECT);
+            // resSend(res, true, 200, "Finance Staff has been assigned!", null, null);
+        }
+        return { btn_num: data.btn_num };
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+
+module.exports = { submitJccBtn, initJccData, getJccBtnData, getJcc, jccBtnAssignToFiStaff, jccBtnforwordToFinace }

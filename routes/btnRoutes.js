@@ -182,5 +182,12 @@ router.get("/getJccInfo", [], (req, res) => {
   jccBtnController.getJcc(req, res);
 });
 
+router.post("/submitSBtnByCAuthorty", [veifyAccessToken], (req, res) => {
+  jccBtnController.jccBtnforwordToFinace(req, res);
+});
+router.post("/submitSBtnByFAuthorty", [veifyAccessToken], (req, res) => {
+  jccBtnController.jccBtnAssignToFiStaff(req, res);
+});
+
 
 module.exports = router;
