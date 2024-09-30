@@ -6,7 +6,7 @@ const { APPROVED, SUBMITTED_BY_VENDOR, SUBMITTED_BY_CAUTHORITY, STATUS_RECEIVED,
 const { EKPO, BTN_JCC, BTN_ASSIGN, BTN_JCC_CERTIFY_AUTHORITY } = require("../lib/tableName");
 const { generateQuery, generateInsertUpdateQuery, getEpochTime } = require("../lib/utils");
 const { jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails } = require("../services/btnJcc.services");
-const { vendorDetails, filesData, addToBTNList, getLatestBTN, serviceBtnMailSend } = require("../services/btnServiceHybrid.services");
+const { vendorDetails, filesData, addToBTNList, getLatestBTN, serviceBtnMailSend, updateServiceBtnListTable } = require("../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../services/po.services");
 const { btnSubmitToSAPF01, btnSubmitToSAPF02 } = require("../services/sap.btn.services");
 const Message = require("../utils/messages");
