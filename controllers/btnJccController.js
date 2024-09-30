@@ -1,8 +1,12 @@
 const { poolClient, poolQuery } = require("../config/pgDbConfig");
+const { INSERT } = require("../lib/constant");
 const { resSend } = require("../lib/resSend");
-const { APPROVED } = require("../lib/status");
-const { EKPO } = require("../lib/tableName");
-const { vendorDetails } = require("../services/btnServiceHybrid.services");
+const { APPROVED, SUBMITTED_BY_VENDOR } = require("../lib/status");
+const { EKPO, BTN_JCC } = require("../lib/tableName");
+const { generateQuery } = require("../lib/utils");
+const { jccPayloadObj } = require("../services/btnJcc.services");
+const { vendorDetails, filesData, addToBTNList } = require("../services/btnServiceHybrid.services");
+const { create_btn_no } = require("../services/po.services");
 const Message = require("../utils/messages");
 
 
@@ -32,7 +36,90 @@ const initJccData = async (req, res) => {
 
 const submitJccBtn = async (req, res) => {
 
-}
+    try {
+        const client = await poolClient();
+        try {
+            const filesPaylaod = req.files;
+            const tempPayload = req.body;
+            const tokenData = req.tokenData;
+
+            // Check required fields
+            // if (!JSON.parse(tempPayload.hsn_gstn_icgrn)) {
+            //   return resSend(res, false, 200, "Please check HSN code, GSTIN, Tax rate is as per PO!", null, null);
+            // }
+
+            // Check required fields
+            if (!tempPayload.invoice_value && !tempPayload.net_claim_amount) {
+                return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Invoice Value is missing!", null);
+            }
+            if (!tempPayload.purchasing_doc_no || !tempPayload.invoice_no || !tempPayload.jcc_number) {
+                return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "JCC No/PO No/Invoice is missing!", null);
+            }
+
+            // check invoice number is already present in DB
+            let check_invoice_q = `SELECT 
+                                count(invoice_no) AS count 
+                              FROM 
+                                ${BTN_JCC} 
+                              WHERE 
+                                1 = 1 
+                                AND vendor_code = $1 
+                                AND ( invoice_no = $2  OR jcc_number = $3)`;
+
+            let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [tokenData.vendor_code, tempPayload.invoice_no, tempPayload.jcc_number] });
+
+
+            if (check_invoice && check_invoice[0].count > 0) {
+                return resSend(res, false, 200, "BTN is already created under the invoice number/wdc_number.", null, null);
+            }
+ 
+
+            /**
+             * FILE PAYLOADS AND FILE VALIDATION
+             */
+            const uploadedFiles = filesData(filesPaylaod);
+            console.log("uploadedFiles", uploadedFiles);
+
+            // if (!uploadedFiles.pf_compliance_filename || !uploadedFiles.esi_compliance_filename) {
+            //   return resSend(res, false, 200, Message.MANDATORY_INPUTS_REQUIRED, "Missing PF or ESI files", null);
+            // }
+
+
+            let payload = jccPayloadObj(tempPayload);
+            // BTN NUMBER GENERATE
+            const btn_num = await create_btn_no();
+
+            // MATH Calculation
+            const net_claim_amount = parseFloat(payload.net_claim_amount);
+
+
+            // FINAL PAYLOAD FOR SERVICE BTN //
+
+            payload = {
+                ...payload, btn_num,
+                ...uploadedFiles,
+                net_claim_amount,
+                created_by_id: tokenData.vendor_code,
+                vendor_code: tokenData.vendor_code,
+            }
+
+            const net_payable_amount = net_claim_amount;
+
+            const { q, val } = generateQuery(INSERT, BTN_JCC, payload);
+
+            await poolQuery({ client, query: q, values: val });
+            await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
+            // serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
+            resSend(res, true, 201, Message.BTN_CREATED, "BTN Created. No. " + btn_num, null);
+        } catch (error) {
+            resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
+    }
+};
 
 
 const getJccBtnData = async (req, res) => {

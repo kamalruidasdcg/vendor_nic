@@ -1,4 +1,5 @@
 const { APPROVED } = require("../lib/status");
+const { getEpochTime } = require("../lib/utils");
 
 /**
  * GET VENDOR DETAILS
@@ -117,4 +118,34 @@ const getWdcInfoServiceHybrid = async (req, res) => {
   }
 };
 
-module.exports = { vendorDetails }
+
+
+
+const jccPayloadObj = (payload) => {
+
+    const obj = {
+        btn_num: payload.btn_num,
+        purchasing_doc_no: payload.purchasing_doc_no,
+        vendor_code: payload.vendor_code,
+        invoice_no: payload.invoice_no,
+        invoice_value: payload.invoice_value,
+        yard: payload.yard,
+        invoice_filename: payload.invoice_filename || "",
+        invoice_type: payload.invoice_type,
+        invoice_date: payload.invoice_date || null,
+        bill_certifing_authority: payload.bill_certifing_authority,
+        net_claim_amount: payload.net_claim_amount || "0",
+        jcc_number: payload.jcc_number,
+        hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
+        created_by_id: payload.created_by_id,
+        created_at: getEpochTime (),
+        btn_type: "claim-against-jcc"
+    }
+
+    return obj;
+}
+
+
+
+
+module.exports = { vendorDetails, jccPayloadObj }

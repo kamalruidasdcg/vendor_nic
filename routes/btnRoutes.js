@@ -27,6 +27,7 @@ const {
   btnmw,
   btnAdvanceBillHybridUploadFile,
   serviceBtnFilesUpload,
+  btnJccUploadFile,
 } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const {
@@ -169,7 +170,7 @@ router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
 router.get("/initJcc",[], (req, res) => {
   jccBtnController.initJccData(req, res);
 } )
-router.post("/submitJcc", [], (req, res) => {
+router.post("/submitJcc", [veifyAccessToken, btnJccUploadFile()], (req, res) => {
   jccBtnController.submitJccBtn(req, res);
 });
 
