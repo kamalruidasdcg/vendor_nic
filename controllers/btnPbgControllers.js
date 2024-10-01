@@ -34,7 +34,12 @@ const {
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
 } = require("../lib/status");
-const { BTN_PBG, BTN_LIST, BTN_ASSIGN } = require("../lib/tableName");
+const {
+  BTN_PBG,
+  BTN_LIST,
+  BTN_ASSIGN,
+  BTN_ANY_OTHER_CLAIM,
+} = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
@@ -81,6 +86,7 @@ const submitPbg = async (req, res) => {
       btn_type: "claim-against-pbg",
       updated_by: "VENDOR",
     };
+    payload.invoice_date = 1234567890987;
 
     // Check required fields
     if (tokenData?.user_type != USER_TYPE_VENDOR) {
@@ -361,7 +367,7 @@ const btnPbgSubmitByDO = async (req, res) => {
       delete payload.p_estimate_amount;
       delete payload.created_by;
       delete payload.net_claim_amount;
-      delete payload.btn_type;
+      //delete payload.btn_type;
       delete payload.vendor_code;
       payload.created_at = convertToEpoch(new Date());
       payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
@@ -369,7 +375,7 @@ const btnPbgSubmitByDO = async (req, res) => {
       assign_to = assign_payload.assign_to;
       try {
         const sendSap = await btnSubmitByDo(
-          { btn_num, purchasing_doc_no, assign_to },
+          { btn_num, btn_type: payload.btn_type, purchasing_doc_no, assign_to },
           tokenData
         );
 
@@ -411,7 +417,10 @@ async function btnSubmitByDo(btnPayload, tokenData) {
   let status = false;
   console.log("send to sap payload -- >", btnPayload);
   try {
-    const vendorQuery = `WITH ranked_assignments AS (
+    let vendorQuery;
+
+    if (btnPayload.btn_type === "claim-against-pbg") {
+      vendorQuery = `WITH ranked_assignments AS (
             SELECT
                 btn_assign.*,
                 ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
@@ -419,7 +428,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
                 btn_assign
         )
         SELECT 
-          btn_pbg.*,
+          ${BTN_PBG}.*,
         	ged.invno, 
         	ged.inv_date as invoice_date,
         	vendor.stcd3,
@@ -433,18 +442,49 @@ async function btnSubmitByDo(btnPayload, tokenData) {
             ${BTN_PBG}
         LEFT JOIN 
             ranked_assignments
-            ON (btn_pbg.btn_num = ranked_assignments.btn_num
+            ON (${BTN_PBG}.btn_num = ranked_assignments.btn_num
             AND ranked_assignments.rn = 1)
         LEFT JOIN zmm_gate_entry_d as ged
-        		ON( btn_pbg.purchasing_doc_no = ged.ebeln AND btn_pbg.invoice_no = ged.invno)
+        		ON( ${BTN_PBG}.purchasing_doc_no = ged.ebeln AND ${BTN_PBG}.invoice_no = ged.invno)
         LEFT JOIN lfa1 as vendor
-        		ON(btn_pbg.vendor_code = vendor.lifnr)
+        		ON(${BTN_PBG}.vendor_code = vendor.lifnr)
         LEFT JOIN pa0002 as users
         		ON(users.pernr::character varying = $1)
         LEFT JOIN pa0002 as assign_users
         		ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
         WHERE 
-            btn_pbg.btn_num = $2`;
+            ${BTN_PBG}.btn_num = $2`;
+    } else {
+      vendorQuery = `WITH ranked_assignments AS (
+            SELECT
+                btn_assign.*,
+                ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+            FROM
+                btn_assign
+        )
+        SELECT 
+          ${BTN_ANY_OTHER_CLAIM}.*,
+        	vendor.stcd3,
+        	users.pernr as finance_auth_id,
+        	users.cname as finance_auth_name,
+        	vendor.name1 as vendor_name,
+        	assign_users.cname as assign_name,
+        	ranked_assignments.assign_by as assign_id
+        FROM 
+            ${BTN_ANY_OTHER_CLAIM}
+        LEFT JOIN 
+            ranked_assignments
+            ON (${BTN_ANY_OTHER_CLAIM}.btn_num = ranked_assignments.btn_num
+            AND ranked_assignments.rn = 1)
+        LEFT JOIN lfa1 as vendor
+        		ON(${BTN_ANY_OTHER_CLAIM}.vendor_code = vendor.lifnr)
+        LEFT JOIN pa0002 as users
+        		ON(users.pernr::character varying = $1)
+        LEFT JOIN pa0002 as assign_users
+        		ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
+        WHERE 
+            ${BTN_ANY_OTHER_CLAIM}.btn_num = $2`;
+    }
 
     let btnDetails = await getQuery({
       query: vendorQuery,
@@ -456,10 +496,14 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
       STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
-      ZVBNO: btnDetails[0]?.invno, // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: getYyyyMmDd(
-        new Date(btnDetails[0]?.invoice_date).getTime()
-      ), // GATE ENTRY INVOICE DATE
+      ZVBNO:
+        btnPayload.btn_type === "claim-against-pbg"
+          ? btnDetails[0]?.invno
+          : btnDetails[0]?.letter_reference_no, // GATE ENTRY INVOCE NUMBER
+      VEN_BILL_DATE:
+        btnPayload.btn_type === "claim-against-pbg"
+          ? getYyyyMmDd(new Date(btnDetails[0]?.invoice_date).getTime())
+          : btnDetails[0]?.letter_date, // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
       ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE
