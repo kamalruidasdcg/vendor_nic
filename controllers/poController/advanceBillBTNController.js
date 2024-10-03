@@ -17,6 +17,7 @@ const {
   actualSubmissionDate,
   advBillHybridbtnDOPayload,
   getAdvBillHybridBTNDetails,
+  getGrnIcgrnByInvoice,
 } = require("../../services/btn.services");
 const { getGrnIcgrnValue, btnAssignPayload, getLatestBTN, addToBTNList } = require("../../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../../services/po.services");
@@ -149,7 +150,7 @@ const getAdvBillHybridData = async (req, res) => {
       let statusCode;
       switch (type) {
         case 'icgrn': {
-          const result = await getGrnIcgrnValue(client, req.query);
+          const result = await getGrnIcgrnByInvoice(client, req.query);
           ({ data, message, success, statusCode } = result);
         }
           break;
