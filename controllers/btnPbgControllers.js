@@ -503,7 +503,7 @@ async function btnSubmitByDo(btnPayload, tokenData) {
       VEN_BILL_DATE:
         btnPayload.btn_type === "claim-against-pbg"
           ? getYyyyMmDd(new Date(btnDetails[0]?.invoice_date).getTime())
-          : btnDetails[0]?.letter_date, // GATE ENTRY INVOICE DATE
+          : getYyyyMmDd(btnDetails[0]?.letter_date), // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
       ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE

@@ -342,7 +342,11 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
               ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
           WHERE 
               ${BTN_PBG}.btn_num = $2`;
-    } else if (btnPayload.btn_type === "bill-incorrect-deductions") {
+    } else if (
+      btnPayload.btn_type === "bill-incorrect-deductions" ||
+      btnPayload.btn_type === "ld-penalty-refund" ||
+      btnPayload.btn_type === "other-retentions"
+    ) {
       vendorQuery = `WITH ranked_assignments AS (
               SELECT
                   btn_assign.*,

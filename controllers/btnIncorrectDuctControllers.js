@@ -345,9 +345,8 @@ const getGstnByPo = async (req, res) => {
         );
       }
 
-      const qry = `SELECT t2.stcd3 FROM ekko as t1
+      const qry = `SELECT t1.lifnr,t1.name1,t2.stcd3 FROM ekko as t1
                         LEFT JOIN lfa1  as t2 ON t1.lifnr = t2.lifnr
-                        
                     WHERE t1.ebeln = $1`;
 
       const get_gstn = await poolQuery({
