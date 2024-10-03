@@ -1,11 +1,12 @@
 const router = require("express").Router();
-const { generateInsertUpdateQuery } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQuery } = require("../../lib/utils");
 
-const { query, poolClient, poolQuery } = require("../../config/pgDbConfig");
+const { query, poolClient, poolQuery, getQuery } = require("../../config/pgDbConfig");
 const fs = require("fs");
 const csv = require('csv-parser');
 const path = require("path");
 const { resSend } = require("../../lib/resSend");
+const { INSERT, UPDATE } = require("../../lib/constant");
 
 
 ////////////// STRAT TESTING APIS //////////////
@@ -350,32 +351,47 @@ async function insertData(data, tableName, pk) {
   try {
     const client = await poolClient();
     let allq = "";
-    console.log("djjjjjjjjjjjjjj", tableName, pk, data);
+    console.log("djjjjjjjjjjjjjj", tableName, pk, data.length);
 
     const failedData = [];
+    let count = 0;
     try {
       let insertQuery = "";
 
       for (let row of data) {
         try {
-          const result = await getEmpdetails(client, [row.vendor_code]);
-          if (result) {
-            throw new Error('Already exist in auth table');
-          }
-          // insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
+          // const result = await getEmpdetails(client, [row.vendor_code]);
+          // if (result) {
+          //   throw new Error('Already exist in auth table');
+          // }          
 
-          let valuesArray = Object.values(row);
-          insertQuery = `INSERT INTO auth (user_type, vendor_code, username, name, department_id, internal_role_id, is_active, password)  
-          VALUES ( ${row.user_type}, '${row.vendor_code}',  '${row.username}', '${row.name}',  ${row.department_id}, ${row.internal_role_id}, ${row.is_active}, '${row.password}');`
+          count++;
+
+          let trimmedStr = row.MATNR.trim();
+          const isNotNumber = /\D/.test(trimmedStr);
+
+          if (!isNotNumber && trimmedStr.length != 18) {
+            const modifiedMatnr = String(trimmedStr).padStart(18, '0');
+            row = { ...row, MATNR: modifiedMatnr }
+            // console.log("marerial-->", row.MATNR, isNotNumber, modifiedMatnr);
+          }
+
+          // insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
+          insertQuery = generateQuery(INSERT, 'MARA', row)
+
+          // let valuesArray = Object.values(row);
+          // insertQuery = `INSERT INTO auth (user_type, vendor_code, username, name, department_id, internal_role_id, is_active, password)  
+          // VALUES ( ${row.user_type}, '${row.vendor_code}',  '${row.username}', '${row.name}',  ${row.department_id}, ${row.internal_role_id}, ${row.is_active}, '${row.password}');`
 
           // console.log("insertQuery", insertQuery);
-          allq += insertQuery;
-          await poolQuery({ client, query: insertQuery, values: [] });
+          // allq += insertQuery;
+          // await poolQuery({ client, query: insertQuery, values: [] });
 
-          // await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+          await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
           // await query({ query: insertQuery.q, values: insertQuery.val })
-          // console.log("success");
+          // console.log("success");Y
         } catch (error) {
+          console.log("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh", error.message)
           failedData.push({ ...row, error: error.message })
         }
       }
@@ -388,7 +404,7 @@ async function insertData(data, tableName, pk) {
       throw err;
     } finally {
       client.release();
-      console.log("let allq ", allq);
+      console.log("let allq ", allq, count);
 
       // console.log("failedData", JSON.stringify(failedData));
       return failedData;
@@ -411,6 +427,54 @@ const getEmpdetails = async (client, val) => {
     throw error
   }
 }
+
+router.post("/datamodify", async (req, res) => {
+
+  const client = await poolClient();
+  const err = [];
+  try {
+    // ORDER BY id ASC
+    const q = `SELECT matnr FROM makt`;
+    const result = await getQuery({
+      query: q, values: [
+
+      ]
+    });
+    for (let i = 0; i < result.length; i++) {
+
+      const intval = parseInt(result[i].matnr);
+      let trimmedStr = result[i].matnr.trim();
+      const isNotNumber = /\D/.test(trimmedStr);
+
+      if (!isNotNumber && trimmedStr.length != 18) {
+        console.log("marerial", result[i].matnr, isNotNumber);
+        const modifiedMatnr = String(trimmedStr).padStart(18, '0');
+        try {
+          result[i] = { ...result[i], changeMatnr: modifiedMatnr };
+          // const datacount = await poolQuery({ client, query: "SELECT COUNT(*) FROM mara WHERE matnr = $1", values: [modifiedMatnr, result[i].matnr] });
+          const mod1 = await poolQuery({ client, query: "UPDATE makt set matnr = $1 where matnr = $2;", values: [modifiedMatnr, result[i].matnr] });
+
+          // const mad2 = await poolQuery({ client, query: "UPDATE makt set matnr = $1 where matnr = $2;", values: [modifiedMatnr, result[i].matnr] });
+        } catch (error) {
+          console.log("dddd-dddd", error.message);
+
+          const del = await poolQuery({ client, query: "DELETE FROM makt where matnr = $1", values: [result[i].matnr] });
+          // const mod1 = await poolQuery({ client, query: "UPDATE mara set matnr = $1 where matnr = $2;", values: [modifiedMatnr, result[i].matnr] });
+
+          err.push({ matnr: result[i].matnr, error: error.message, mtart: result[i].mtart })
+        }
+      }
+    }
+
+    resSend(res, true, 200, "Data fetch successfully", err);
+  } catch (error) {
+    resSend(res, false, 500, "Data fetch failed", error.message);
+
+  } finally {
+    client.release();
+  }
+
+})
 
 
 ////////////// END OF TEST API //////////////
