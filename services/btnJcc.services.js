@@ -163,6 +163,7 @@ const jccPayloadObj = (payload) => {
         jcc_job_start_date: payload.jcc_job_start_date,
         jcc_job_end_date: payload.jcc_job_end_date,
         hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
+        remarks:payload.remarks || "",
         created_by_id: payload.created_by_id,
         created_at: getEpochTime (),
         btn_type: "claim-against-jcc"
