@@ -222,7 +222,7 @@ const getJcc = async (client, data) => {
         }
 
         // resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, null);
-        return { success: true, statusCode: 200, message: Message.DATA_FETCH_SUCCESSFULL, data: result };
+        return { success: true, statusCode: 200, message: Message.DATA_FETCH_SUCCESSFULL, data: result[0] };
 
     } catch (error) {
         throw error;
