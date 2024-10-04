@@ -15,26 +15,25 @@ const { btnCurrentDetailsCheck } = require("./btnControllers");
 
 
 // api start //
-const initJccData = async (req, res) => {
+const initJccData = async (client, payload) => {
+
 
     try {
-        const client = await poolClient();
-        try {
-            const { poNo } = req.query;
-            if (!poNo) {
-                return resSend(res, false, 200, "Please send PO No", Message.MANDATORY_INPUTS_REQUIRED, null);
-            }
-            const data = [poNo];
-            const result = await vendorDetails(client, data);
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result[0] || {}, "")
+        const { poNo } = payload;
+        if (!poNo) {
+            // return resSend(res, false, 200, "Please send PO No", Message.MANDATORY_INPUTS_REQUIRED, null);
+            return { success: false, statusCode: 200, message: "Please send PO No", data: null };
 
-        } catch (error) {
-            resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
-        } finally {
-            client.release();
         }
+        const data = [poNo];
+        const result = await vendorDetails(client, data);
+
+        return { success: true, statusCode: 200, message: Message.DATA_FETCH_SUCCESSFULL, data: result[0] || {}, };
+
+        // resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result[0] || {}, "")
+
     } catch (error) {
-        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+        throw error;
     }
 }
 
@@ -145,6 +144,12 @@ const getJccBtnData = async (req, res) => {
                     break;
                 case 'jcclist': {
                     const result = await getJcc(client, req.query);
+                    console.log("result", result);
+                    ({ data, message, success, statusCode } = result);
+                }
+                    break;
+                case 'init': {
+                    const result = await initJccData(client, req.query);
                     console.log("result", result);
                     ({ data, message, success, statusCode } = result);
                 }
