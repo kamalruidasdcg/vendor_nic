@@ -16,10 +16,13 @@ const {
   MID_SDBG,
   MID_DRAWING,
   MID_QAP,
+  ACTION_ADVANCE_BG_SUBMISSION,
 } = require("../lib/constant");
 const { APPROVED, BTN_STATUS_PROCESS } = require("../lib/status");
 const { getEpochTime, generateQuery } = require("../lib/utils");
 const { checkTypeArr } = require("../utils/smallFun");
+const { getContractutalSubminissionDate, getActualSubminissionDate, vendorDetails, getSDBGApprovedFiles, getPBGApprovedFiles } = require("./btnServiceHybrid.services");
+const Message = require("../utils/messages")
 
 const advBillHybridbtnPayload = (payload) => {
   if (!payload || !Object.keys(payload).length)
@@ -96,22 +99,22 @@ const checkMissingActualSubmissionDate = async () => {
   return { success: true, message: "ALL DATE PRESENT" };
 };
 
-const getSDBGApprovedFiles = async (po, client) => {
-  // GET Approved SDBG by PO Number
-  let q = `SELECT file_name, file_path FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
-  let [results] = await client.execute(q, [po, APPROVED, ACTION_SDBG]);
-  return results;
-};
+// const getSDBGApprovedFiles = async (po, client) => {
+//   // GET Approved SDBG by PO Number
+//   let q = `SELECT file_name, file_path FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
+//   let [results] = await client.execute(q, [po, APPROVED, ACTION_SDBG]);
+//   return results;
+// };
 
-const getPBGApprovedFiles = async (po) => {
-  // GET Approved PBG by PO Number
-  let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = ? and status = ? and action_type = ?`;
-  let result = await query({
-    query: q,
-    values: [po, APPROVED, ACTION_PBG],
-  });
-  return result;
-};
+// const getPBGApprovedFiles = async (po, client) => {
+//   // GET Approved PBG by PO Number
+//   let q = `SELECT file_name FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and action_type = $3`;
+//   let result = await poolQuery({client,
+//     query: q,
+//     values: [po, APPROVED, ACTION_PBG],
+//   });
+//   return result;
+// };
 
 // const getGateEntry = async (po) => {
 //     let q = `SELECT acc_no, gate_date, file_name, file_path FROM store_gate WHERE purchasing_doc_no = ?`;
@@ -472,7 +475,7 @@ const getGrnIcgrnByInvoice = async (client, data) => {
     return { success: true, statusCode: 200, message: "purchasing_doc_no || invoice_no missing", data: gate_entry_v };
 
   } catch (error) {
-   throw error;
+    throw error;
   }
 };
 
@@ -491,19 +494,86 @@ function calculateTotals(data) {
   };
 }
 
+async function getInitalData(client, data) {
+  try {
+
+    if (!data.poNo) {
+      return { success: false, statusCode: 200, message: "Please send btn number", data: Message.MANDATORY_INPUTS_REQUIRED };
+    }
+    const val = [];
+    val.push(data.poNo);
+    const response = await supportingDataForAdvancBtn(client, data.poNo);
+
+    return { success: true, statusCode: 200, message: "Value fetch success", data: response };
+  } catch (error) {
+    console.log("dddddd", error.message, error.stack);
+
+    throw error;
+  }
+}
 
 
+
+
+async function supportingDataForAdvancBtn(client, poNo) {
+  try {
+
+    console.log("poNo", poNo);
+
+
+    const response = await Promise.all(
+      [
+        getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]), // 0
+        getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION]), // 1
+        vendorDetails(client, [poNo]), // 2
+        getContractutalSubminissionDate (client, [poNo]), // 3
+        getActualSubminissionDate(client, [poNo]) // 4
+      ]);
+
+    let result = {}
+
+    console.log("0",response[0][0]);
+    console.log("1",response[1][0]);
+    console.log("2",response[2][0]);
+    console.log("3",response[3][0]);
+    console.log("4",response[4][0]);
+    
+    if (response[0][0]) {
+      result = { ...result, sdbgFiles: response[0] };
+    } 
+    if (response[1][0]) {
+      result = { ...result, advancBgFiles: response[1] };
+    } if (response[2][0]) {
+      result = { ...result, ...response[2][0] };
+    }
+  
+    if (response[3] && response[3][0]) {
+      // const con = response[3].find((el) => el.MID == MID_SDBG);
+      result.contractualDates = response[3];
+    }
+    if (response[4] && response[4][0]) {
+      // const act = response[4].find((el) => el.MID == parseInt(MID_DRAWING));
+      result.actualDates = response[4];
+    }
+
+    return result;
+  } catch (error) {
+    console.log("ddddddddddddddddd", error.message, error.stack);
+
+    throw error;
+  }
+}
 
 
 
 module.exports = {
   advBillHybridbtnPayload,
-  getSDBGApprovedFiles,
+  // getSDBGApprovedFiles,
   getGrnIcgrnByInvoice,
   // checkBTNRegistered,
   getICGRNs,
 
-  getPBGApprovedFiles,
+  // getPBGApprovedFiles,
   checkMissingActualSubmissionDate,
   filesData,
   contractualSubmissionDate,
@@ -511,5 +581,6 @@ module.exports = {
   dateToEpochTime,
   advBillHybridbtnDOPayload,
   updateBtnListTable,
-  getAdvBillHybridBTNDetails
+  getAdvBillHybridBTNDetails,
+  getInitalData
 };

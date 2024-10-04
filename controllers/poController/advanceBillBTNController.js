@@ -18,6 +18,7 @@ const {
   advBillHybridbtnDOPayload,
   getAdvBillHybridBTNDetails,
   getGrnIcgrnByInvoice,
+  getInitalData,
 } = require("../../services/btn.services");
 const { getGrnIcgrnValue, btnAssignPayload, getLatestBTN, addToBTNList } = require("../../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../../services/po.services");
@@ -158,6 +159,13 @@ const getAdvBillHybridData = async (req, res) => {
         case 'details': {
           const result = await getAdvBillHybridBTNDetails(client, req.query);
           console.log("result", result);
+          ({ data, message, success, statusCode } = result);
+        }
+          break;
+        case 'init': {
+        
+          console.log("result", req.query);
+          const result = await getInitalData(client, req.query);
           ({ data, message, success, statusCode } = result);
         }
           break;
@@ -420,6 +428,8 @@ const sbhAssignToFiStaff = async (req, res) => {
     resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 };
+
+
 
 
 
