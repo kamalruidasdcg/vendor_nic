@@ -170,15 +170,17 @@ exports.wdc = async (req, res) => {
         // }
         // console.log(obj);
         // console.log("4567876543");
-        payload = wdcPayload(obj, last_data.line_item_array);
+        if (obj.action_type === WDC) {
+          payload = wdcPayload(obj, last_data.line_item_array);
+        }
         // console.log("$%^&*(*&^%");
         // console.log(payload);
         //return;
         payload = {
-          //...obj,
           ...last_data,
           ...payload,
           // ...fileData,
+          ...obj,
           updated_by: "GRSE",
           created_by_id: tokenData.vendor_code,
           created_by_name: tokenData.iss,
