@@ -119,70 +119,85 @@ const submitJccBtn = async (req, res) => {
 
 const getJccBtnData = async (req, res) => {
     try {
-      const client = await poolClient();
-      try {
-        const { type } = req.query;
-        if (!type) {
-          return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
-        }
-        let data;
-        let message;
-        let success = false;
-        let statusCode;
-        switch (type) {
-          case 'jccbtn-details': {
-            const result = await getJccBTNDetails(client, req.query);
-            console.log("result", result);
-            ({ data, message, success, statusCode } = result);
-          }
-            break;
-  
-          default:
-            message = "Please send a valid type!"
-            return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
-        }
-        resSend(res, success, statusCode, message, data);
-  
-      } catch (error) {
-        resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
-    }
-  
-  }
-
-
-const getJcc = async (req, res) => {
-    try {
         const client = await poolClient();
         try {
-
-            const { purchasing_doc_no, reference_no, type } = req.query;
-            if (type === "list") {
-                let wdcListQuery = `SELECT DISTINCT(reference_no) FROM wdc`;
-                let condQuery = ' WHERE 1 = 1';
-                // TO GET ONLY WDC .. NO JCC OR THERS
-                const val = ['JCC'];
-                condQuery += " AND action_type = $1";
-                if (purchasing_doc_no) {
-                    val.push(purchasing_doc_no);
-                    condQuery += " AND purchasing_doc_no = $2";
+            const { type } = req.query;
+            if (!type) {
+                return resSend(res, true, 200, Message.MANDATORY_INPUTS_REQUIRED, "Please send a valid type!", null)
+            }
+            let data;
+            let message;
+            let success = false;
+            let statusCode;
+            switch (type) {
+                case 'details': {
+                    const result = await getJccBTNDetails(client, req.query);
+                    console.log("result", result);
+                    ({ data, message, success, statusCode } = result);
                 }
+                    break;
 
-                wdcListQuery += condQuery;
+                case 'jccinfo': {
+                    const result = await getJcc(client, req.query);
+                    console.log("result", result);
+                    ({ data, message, success, statusCode } = result);
+                }
+                    break;
+                case 'jcclist': {
+                    const result = await getJcc(client, req.query);
+                    console.log("result", result);
+                    ({ data, message, success, statusCode } = result);
+                }
+                    break;
+                default:
+                    message = "Please send a valid type!"
+                    return resSend(res, success, 200, "Please send a valid type!", Message.MANDATORY_INPUTS_REQUIRED, null);
+            }
+            resSend(res, success, statusCode, message, data);
 
-                const wdcList = await poolQuery({ client, query: wdcListQuery, values: val });
-                return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
+        } catch (error) {
+            resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        resSend(res, false, 501, Message.DB_CONN_ERROR, error.message, null);
+    }
+
+}
+
+
+const getJcc = async (client, data) => {
+
+    try {
+
+        const { purchasing_doc_no, reference_no, type } = data;
+        if (type === "jcclist") {
+            let wdcListQuery = `SELECT DISTINCT(reference_no) FROM wdc`;
+            let condQuery = ' WHERE 1 = 1';
+            // TO GET ONLY WDC .. NO JCC OR THERS
+            const val = ['JCC'];
+            condQuery += " AND action_type = $1";
+            if (purchasing_doc_no) {
+                val.push(purchasing_doc_no);
+                condQuery += " AND purchasing_doc_no = $2";
             }
 
-            if (!reference_no) {
-                return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Reference_no missing", null);
-            }
+            wdcListQuery += condQuery;
 
-            const q = `
+            const wdcList = await poolQuery({ client, query: wdcListQuery, values: val });
+            return { success: true, statusCode: 200, message: Message.DATA_FETCH_SUCCESSFULL, data: wdcList };
+
+            // return resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, wdcList, null);
+        }
+
+        if (!reference_no) {
+            // return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Reference_no missing", null);
+            return { success: false, statusCode: 400, message: "Reference_no missing", data: [] };
+
+        }
+
+        const q = `
                 SELECT jcc.*,
                     jcc.assigned_to AS certifying_by,
                     users.cname as certifying_by_name
@@ -192,52 +207,20 @@ const getJcc = async (req, res) => {
                     ON(users.pernr :: character varying = jcc.assigned_to)
                 WHERE (reference_no = $1 AND status = $2 AND action_type = $3) LIMIT 1`;
 
-            let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED, 'JCC'] });
-            console.log("wdcList", result);
+        let result = await poolQuery({ client, query: q, values: [reference_no, APPROVED, 'JCC'] });
+        console.log("wdcList", result);
 
-            if (!result.length) {
-                return resSend(res, false, 200, "WDC not approved yet.", [], null);
-            }
-            let wdcLineItem = [];
-            if (result[0]?.line_item_array) {
-                try {
-                    wdcLineItem = JSON.parse(result[0]?.line_item_array);
-                } catch (error) {
-                    wdcLineItem = [];
-                }
-            }
+        if (!result.length) {
+            // return resSend(res, false, 200, "JCC not approved yet.", [], null);
+            return { success: false, statusCode: 200, message: "JCC not approved yet.", data: [] };
 
-            const poNo = purchasing_doc_no || result[0]?.purchasing_doc_no;
-
-            const line_item_ekpo_q = `SELECT EBELP AS line_item_no, MATNR AS service_code, TXZ01 AS description, NETPR AS po_rate, MEINS AS unit from ${EKPO} WHERE EBELN = $1`;
-            let get_line_item_ekpo = await poolQuery({
-                client,
-                query: line_item_ekpo_q,
-                values: [poNo],
-            });
-
-            // wdcLineItem = wdcLineItem.filter((el) => el?.status === APPROVED);
-
-            const data = wdcLineItem.map((el2) => {
-                const DOObj = get_line_item_ekpo.find(
-                    (elms) => elms.line_item_no == el2.line_item_no
-                );
-                console.log("DOObj", DOObj);
-
-                return DOObj ? { ...DOObj, ...el2 } : el2;
-            });
-
-            let responseData = result[0];
-            responseData.line_item_array = data;
-
-            resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, responseData, null);
-        } catch (error) {
-            resSend(res, false, 500, Message.DATA_FETCH_ERROR, error.message, null);
-        } finally {
-            client.release();
         }
+
+        // resSend(res, true, 200, Message.DATA_FETCH_SUCCESSFULL, result, null);
+        return { success: true, statusCode: 200, message: Message.DATA_FETCH_SUCCESSFULL, data: result };
+
     } catch (error) {
-        resSend(res, false, 500, Message.DB_CONN_ERROR, error.message, null);
+        throw error;
     }
 };
 
@@ -284,7 +267,7 @@ const jccBtnforwordToFinace = async (req, res) => {
 
             //  BTN FINANCE AUTHORITY DATA INSERT
             payload.created_by_id = tokenData.vendor_code;
-            const financePaylad = jccBtnforwordToFinacePaylaod (payload);
+            const financePaylad = jccBtnforwordToFinacePaylaod(payload);
             const { q, val } = generateQuery(INSERT, BTN_JCC_CERTIFY_AUTHORITY, financePaylad);
             const response = await poolQuery({ client, query: q, values: val });
 

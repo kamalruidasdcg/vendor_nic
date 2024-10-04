@@ -178,9 +178,9 @@ router.get("/jcc", [], (req, res) => {
   jccBtnController.getJccBtnData(req, res);
 });
 
-router.get("/jccInfo", [], (req, res) => {
-  jccBtnController.getJcc(req, res);
-});
+// router.get("/jccInfo", [], (req, res) => {
+//   jccBtnController.getJcc(req, res);
+// });
 
 router.post("/submit-jcc-ca", [veifyAccessToken], (req, res) => {
   jccBtnController.jccBtnforwordToFinace(req, res);
