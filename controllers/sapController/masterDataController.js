@@ -32,10 +32,8 @@ const lfa1 = async (req, res) => {
 
         try {
             const payloadObj = await lfa1Payload(payload);
-            console.log("payloadObj", payloadObj);
             const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, VENDOR_MASTER_LFA1, ["LIFNR"]);
             const response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
-            console.log('response', response);
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
 
         } catch (error) {
@@ -103,7 +101,6 @@ const addUser = async (req, res) => {
 
         try {
             const payloadObj = await addUserPayload(payload);
-            console.log("payloadObj", payloadObj);
             const multipleUserInsertQ = await generateQueryForMultipleData(payloadObj, EMPLAYEE_MASTER_PA0002, ["PERNR"]);
             let response = await query({ query: multipleUserInsertQ.q, values: multipleUserInsertQ.val });
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
@@ -112,7 +109,6 @@ const addUser = async (req, res) => {
         }
 
     } catch (error) {
-        console.log("data not inserted", error);
         responseSend(res, "F", 500, Message.UNEXPECTED_ERROR, error, null);
     }
 };

@@ -15,7 +15,7 @@ const {
 } = require("../lib/utils");
 // const mailBody = require("../lib/mailBody");
 // const { EMAIL_TEMPLAE } = require("../templates/mail-template");
-const { query, getQuery } = require("../config/pgDbConfig");
+const { query, getQuery, poolQuery, poolClient } = require("../config/pgDbConfig");
 const mailjson = require("../lib/mailConfig.json");
 /**
  * Insert mail in to db with new status
@@ -68,31 +68,40 @@ const mailjson = require("../lib/mailConfig.json");
 // }
 
 const sendMail = async (eventName, data, userInfo, activity_name) => {
+
   try {
-    if (!data || !eventName) {
-      throw new Error("recipent, email_subject and event required");
+
+    const client = await poolClient();
+    try {
+      if (!data || !eventName) {
+        throw new Error("recipent, email_subject and event required");
+      }
+
+      const email_info = await getEmailInfo(client, eventName);
+      const mailjsonConfig = {};
+      mailjsonConfig.data = data;
+      const m_user = userInfo.users || [];
+      mailjsonConfig.users = replaceUserValues(email_info, m_user);
+      // const m_cc_user = userInfo.cc_users || [];
+      // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
+      // const m_bcc_user = userInfo.bcc_users || [];
+      // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
+
+      if (!mailjsonConfig.users.length) return;
+
+      await mailInsert(client, mailjsonConfig, eventName, eventName, activity_name);
+    } catch (error) {
+      console.log("sendMail", error.toString(), error.stack);
+      throw error;
+    } finally {
+      client.release();
     }
-
-    const email_info = await getEmailInfo(eventName);
-    const mailjsonConfig = {};
-    mailjsonConfig.data = data;
-    const m_user = userInfo.users || [];
-    mailjsonConfig.users = replaceUserValues(email_info, m_user);
-    // const m_cc_user = userInfo.cc_users || [];
-    // mailjsonConfig.cc_users = replaceUserValues([...mailjsonConfig.cc_users, ...m_cc_user] || [], mailjsonConfig.cc_users);
-    // const m_bcc_user = userInfo.bcc_users || [];
-    // mailjsonConfig.bcc_users = replaceUserValues([...mailjsonConfig.bcc_users, ...m_bcc_user] || [], mailjsonConfig.bcc_users);
-
-    if (!mailjsonConfig.users.length) return;
-
-    await mailInsert(mailjsonConfig, eventName, eventName, activity_name);
   } catch (error) {
-    console.log("sendMail", error.toString(), error.stack);
     throw error;
   }
 };
 
-const getEmailInfo = async (event_name) => {
+const getEmailInfo = async (client, event_name) => {
   const q = `SELECT e_info.event_name,
                 e_info.u_id,
                 e_info.u_name,
@@ -104,7 +113,7 @@ const getEmailInfo = async (event_name) => {
                 LEFT JOIN email_body AS e_body
                        ON( e_body.email_body_name = e_info.email_body_name )
          WHERE  e_info.event_name = $1`;
-  return await getQuery({ query: q, values: [event_name] });
+  return await poolQuery({ client, query: q, values: [event_name] });
 };
 function replaceUserValues(email_info, m_user) {
   let result = [];
@@ -153,7 +162,7 @@ function replaceUserValues(email_info, m_user) {
 //     });
 // }
 
-const mailInsert = async (data, event, activity_name, heading = "") => {
+const mailInsert = async (client, data, event, activity_name, heading = "") => {
   try {
     const dd = data.created_at ? new Date(data.created_at) : new Date();
     const now = getDateTime(dd);
@@ -187,25 +196,25 @@ const mailInsert = async (data, event, activity_name, heading = "") => {
       email_subject: el.email_subject || "",
       email_body: el.email_body
         ? el.email_body.replace(
-            /{{(.*?)}}/g,
-            (match, p1) => data.data[p1.trim()] || match
-          )
+          /{{(.*?)}}/g,
+          (match, p1) => data.data[p1.trim()] || match
+        )
         : "Mail from GRSE",
     }));
 
-    console.log("mailArr", mailArr);
+
 
     const { q, val } = await generateQueryForMultipleData(mailArr, EMAILS, [
       "id",
     ]);
-    await query({ query: q, values: val });
+    await poolQuery({ client, query: q, values: val });
   } catch (error) {
     console.error("ERROR", error.message);
     throw error;
   }
 };
 
-const archiveEmails = async (data) => {
+const archiveEmails = async (client, data) => {
   try {
     const archiveEmailPayload = { ...data };
     delete archiveEmailPayload.email_send_on;
@@ -217,7 +226,7 @@ const archiveEmails = async (data) => {
       ARCHIVE_EMAILS,
       archiveEmailPayload
     );
-    const response = await query({ query: q, values: val });
+    const response = await poolQuery({ client, query: q, values: val });
     return response;
   } catch (error) {
     throw error;

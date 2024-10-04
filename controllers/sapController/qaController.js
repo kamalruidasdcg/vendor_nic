@@ -1,6 +1,6 @@
 
-const { NEW_SDBG, MAKT, SDBG_PAYMENT_ADVICE, MSEG, MKPF, QALS, QAVE_TABLE } = require('../../lib/tableName');
-const { connection } = require("../../config/dbConfig");
+const { QALS, QAVE_TABLE } = require('../../lib/tableName');
+// const { connection } = require("../../config/dbConfig");
 const { INSERT } = require("../../lib/constant");
 const { responseSend, resSend } = require("../../lib/resSend");
 const { generateQueryArray, generateQuery, generateInsertUpdateQuery, generateQueryForMultipleData } = require("../../lib/utils");
@@ -10,9 +10,9 @@ const Message = require("../../utils/messages");
 const { ICGRN_DOC_FROM_SAP } = require('../../lib/event');
 const { sendMail } = require('../../services/mail.services');
 const { getUserDetailsQuery } = require('../../utils/mailFunc');
+const { isPresentInObps } = require('../../services/sap.services');
 
 const qals = async (req, res) => {
-    console.log("qalssss");
     try {
         const client = await poolClient();
         let tempPayload;
@@ -23,16 +23,19 @@ const qals = async (req, res) => {
         }
         try {
 
-            console.log("req.body", req.body);
             const { QAVE, ...payload } = tempPayload;
 
             if (!payload || !payload.PRUEFLOS) {
                 return responseSend(res, "F", 400, Message.INVALID_PAYLOAD, 'Invalid payload', null);
             }
-
-
-
             const payloadObj = await qalsPayload(payload);
+            
+            // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+            const isPresent = await isPresentInObps(client, `ebeln = '${payload.EBELN}'`).count();
+            if (!isPresent) {
+                return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+            }
+
             const qalsInsertQuery = await generateInsertUpdateQuery(payloadObj, QALS, ["PRUEFLOS"]);
             const response = await poolQuery({ client, query: qalsInsertQuery.q, values: qalsInsertQuery.val });
             let mailPayload = { ...payloadObj };
@@ -47,7 +50,6 @@ const qals = async (req, res) => {
 
             responseSend(res, "S", 200, Message.DATA_SEND_SUCCESSFULL, response, null);
         } catch (err) {
-            console.log("data not inserted", err);
             responseSend(res, "F", 500, Message.SERVER_ERROR, err.message, null);
         } finally {
             client.release();
@@ -66,7 +68,6 @@ async function handelMail(data) {
         let vendorAndDoDetails = getUserDetailsQuery('vendor_by_po', '$1');
         const mail_details = await getQuery({ query: vendorAndDoDetails, values: [data.EBELN] });
         const dataObj = { ...data, vendor_name: mail_details[0]?.u_name };
-        console.log("dataObj", dataObj, mail_details);
         await sendMail(ICGRN_DOC_FROM_SAP, dataObj, { users: mail_details }, ICGRN_DOC_FROM_SAP);
     } catch (error) {
         console.log(error.toString(), error.stack);
@@ -76,7 +77,6 @@ async function handelMail(data) {
 
 
 const qalsReport = async (req, res) => {
-    console.log("qalssss");
     // try {
     // const client = await poolClient();
     // let payload;
@@ -87,7 +87,6 @@ const qalsReport = async (req, res) => {
     // }
     try {
 
-        console.log("req.body", req.body);
 
         // if (!payload || !payload.PRUEFLOS) {
         //     responseSend(res, "0", 400, "Please send a valid payload.", null, null);
@@ -206,10 +205,8 @@ const qalsReport = async (req, res) => {
             icgrnGetQuery = icgrnGetQuery.concat(` AND qals.EBELN = $${++count}`)
             val.push(req.body.purchasing_doc_no)
         }
-        console.log("icgrnGetQuery", icgrnGetQuery);
         const response = await getQuery({ query: icgrnGetQuery, values: val });
 
-        console.log("response", response);
 
         if (response && response.length) {
 
@@ -240,7 +237,6 @@ const qalsReport = async (req, res) => {
         }
 
     } catch (err) {
-        console.log("data not inserted", err);
 
 
         responseSend(res, "F", 500, Message.SERVER_ERROR, err, null);

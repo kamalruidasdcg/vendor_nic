@@ -23,5 +23,9 @@ module.exports = {
     VALID_PARAMETER: "please send valid parameters",
     SEND_VALID_CONDITION_TEXT:"Please send whereCondition",
     MANDATORY_PARAMETR: "Plese send mandatory parameter.",
-    UNEXPECTED_ERROR: "Unexpected error : "
+    UNEXPECTED_ERROR: "Unexpected error : ",
+    NON_OBPS_DATA : "This PO/item is not part of OBPS Project",
+    BTN_CREATED: "BTN created successfully !",
+    MANDATORY_PARAMETR_MISSING: "Plese send mandatory parameter.",
+    SOMTHING_WENT_WRONG: "Something went wrong."
 }

@@ -14,10 +14,10 @@ app.use(cors("*"));
 // // /home/obps/archieve'
 // const poDirPath = path.resolve();
 // app.use("/sapuploads/po", express.static(poDirPath));
+// const errorHandler = require("./middleware/errorHandler");
 // import routes
 const allRoutes = require("./routes/allRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
-const errorHandler = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
 const dataInsert = require("./routes/sap/dataInsert");
 const sapRoutes = require("./routes/sap/sapRoutes");
@@ -50,7 +50,7 @@ app.use("/api/v1/sap", sapRoutes);
 app.use("/api/v1/sync", syncRoutes);
 app.use("/api/v1/stat", statRoutes);
 
-app.use(errorHandler);
+// app.use(errorHandler);
 
 app.use((req, res, next) => {
   res.status(200).json({
@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 });
 
 // Call Cron JOB for DATA Syncronization
-cron.schedule("05 00 * * *", async () => {
+cron.schedule("00 23 * * *", async () => {
   console.log("Cron job started at 00:05");
   try {
     await syncCron();
@@ -74,7 +74,7 @@ cron.schedule("05 00 * * *", async () => {
   }
 });
 // Call Cron JOB for FILE Syncronization
-
+syncFileCron();
 
 let isCompletedTask = false;
 
@@ -87,8 +87,8 @@ const task = cron.schedule(
     }
     isCompletedTask = true;
     try {
-      await mailSentCornJob();
       // console.log("running a task every two minutes");
+      await mailSentCornJob();
     } catch (error) {
       console.error("Job failed:", error.message);
     } finally {
@@ -100,7 +100,7 @@ const task = cron.schedule(
   }
 );
 
-// At 11 PM DAILY 
+// At 11 PM DAILY
 const task2 = cron.schedule(
   "0 23 * * *",
   () => {
@@ -112,9 +112,6 @@ const task2 = cron.schedule(
     scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
   }
 );
-
-
-syncFileCron();
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);

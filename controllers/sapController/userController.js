@@ -17,6 +17,7 @@ const {
 const { TRUE, FALSE } = require("../../lib/constant");
 const { poolClient, poolQuery } = require("../../config/pgDbConfig");
 const Message = require("../../utils/messages");
+const { isPresentInObps } = require("../../services/sap.services");
 
 // PAYLOAD //
 
@@ -48,6 +49,13 @@ const reservation = async (req, res) => {
 
       try {
         const rkpfPayload = await reservationHeaderPayload(obj);
+
+        // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+        const isPresent = await isPresentInObps(client, `ebeln = '${rkpfPayload.EBELN}'`).count();
+        if (!isPresent) {
+          return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+        }
+
         const rkpfTableInsert = await generateInsertUpdateQuery(
           rkpfPayload,
           RESERVATION_RKPF_TABLE,
@@ -128,6 +136,12 @@ const serviceEntry = async (req, res) => {
 
 
       const essrPayload = await serviceEntryPayload(payload);
+
+      // CHECKING THE PO/DATA IS NOT PART OF OBPS PROJECT
+      const isPresent = await isPresentInObps(client, `ebeln = '${essrPayload[0]?.ebeln}'`).count();
+      if (!isPresent) {
+        return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+      }
 
       const essrTableInsert = await generateQueryForMultipleData(essrPayload, SERVICE_ENTRY_TABLE_SAP, ["lblni"]);
       const response = await poolQuery({ client, query: essrTableInsert.q, values: essrTableInsert.val });

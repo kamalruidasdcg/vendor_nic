@@ -616,8 +616,18 @@ const setPassword = async (req, res) => {
     const client = await poolClient();
     try {
       const { ...obj } = req.body;
-      if (!obj.password || !obj.user_code || !obj.otp) {
+      if (!obj.password || !obj.user_code || !obj.otp || !obj.status) {
         return resSend(res, false, 200, Message.INVALID_PAYLOAD, null, null);
+      }
+      if (obj.status != "CREATE" && obj.status != "UPDATE") {
+        return resSend(
+          res,
+          false,
+          200,
+          "Please send valid status.",
+          null,
+          null
+        );
       }
 
       const vefifyQuery = `SELECT * FROM ${REGISTRATION_OTP} where user_code = '${obj.user_code}' AND status = 'VERIFIED' AND otp = '${obj.otp}'`;
@@ -681,7 +691,8 @@ const setPassword = async (req, res) => {
       let resMsg;
       if (
         otpVefifyQueryRes[0].user_type === "vendor" ||
-        otpVefifyQueryRes[0].role == 2
+        otpVefifyQueryRes[0].role == 2 ||
+        obj.status === "UPDATE"
       ) {
         regData.is_active = 1;
         resMsg = "You are authorised! Please login to get access.";
