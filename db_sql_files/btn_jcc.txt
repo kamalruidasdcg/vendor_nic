@@ -1,0 +1,34 @@
+-- Table: public.btn_jcc
+
+-- DROP TABLE IF EXISTS public.btn_jcc;
+
+CREATE TABLE IF NOT EXISTS public.btn_jcc
+(
+    id integer NOT NULL DEFAULT nextval('btn_jcc_id_seq'::regclass),
+    btn_num character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    purchasing_doc_no character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    invoice_no character varying(30) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    invoice_filename text COLLATE pg_catalog."default" NOT NULL,
+    invoice_value character varying(30) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    net_claim_amount character varying(15) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    jcc_ref_number character varying(30) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    vendor_code character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    btn_type character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    invoice_type character varying(100) COLLATE pg_catalog."default",
+    bill_certifing_authority character varying(15) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    yard character varying(20) COLLATE pg_catalog."default",
+    invoice_date character varying(30) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    hsn_gstn_icgrn integer,
+    created_at bigint NOT NULL,
+    created_by_id character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    jcc_job_start_date bigint,
+    jcc_job_end_date bigint,
+    remarks text COLLATE pg_catalog."default",
+    jcc_filename text COLLATE pg_catalog."default",
+    CONSTRAINT btn_jcc_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.btn_jcc
+    OWNER to postgres;
