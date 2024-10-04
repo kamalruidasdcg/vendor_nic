@@ -154,6 +154,7 @@ const jccPayloadObj = (payload) => {
         invoice_no: payload.invoice_no,
         invoice_value: payload.invoice_value,
         yard: payload.yard,
+        jcc_filename: payload.jcc_filename || "",
         invoice_filename: payload.invoice_filename || "",
         invoice_type: payload.invoice_type,
         invoice_date: payload.invoice_date || null,
