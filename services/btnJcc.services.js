@@ -160,6 +160,8 @@ const jccPayloadObj = (payload) => {
         bill_certifing_authority: payload.bill_certifing_authority,
         net_claim_amount: payload.net_claim_amount || "0",
         jcc_number: payload.jcc_number,
+        jcc_job_start_date: payload.jcc_job_start_date,
+        jcc_job_end_date: payload.jcc_job_end_date,
         hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
         created_by_id: payload.created_by_id,
         created_at: getEpochTime (),
