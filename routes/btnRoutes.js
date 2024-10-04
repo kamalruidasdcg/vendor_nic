@@ -167,10 +167,10 @@ router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
 
 // BTN JCC
 
-router.get("/initJcc",[], (req, res) => {
+router.get("/init-jcc",[], (req, res) => {
   jccBtnController.initJccData(req, res);
 } )
-router.post("/submitJcc", [veifyAccessToken, btnJccUploadFile()], (req, res) => {
+router.post("/submit-jcc", [veifyAccessToken, btnJccUploadFile()], (req, res) => {
   jccBtnController.submitJccBtn(req, res);
 });
 
@@ -182,10 +182,10 @@ router.get("/jccInfo", [], (req, res) => {
   jccBtnController.getJcc(req, res);
 });
 
-router.post("/submitJccBtnByCAuthorty", [veifyAccessToken], (req, res) => {
+router.post("/submit-jcc-ca", [veifyAccessToken], (req, res) => {
   jccBtnController.jccBtnforwordToFinace(req, res);
 });
-router.post("/submitJccBtnByFAuthorty", [veifyAccessToken], (req, res) => {
+router.post("/submit-jcc-fi", [veifyAccessToken], (req, res) => {
   jccBtnController.jccBtnAssignToFiStaff(req, res);
 });
 
