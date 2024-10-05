@@ -1,3 +1,4 @@
+const { poolQuery } = require("../config/pgDbConfig");
 const { APPROVED } = require("../lib/status");
 const { getEpochTime } = require("../lib/utils");
 
@@ -164,7 +165,7 @@ const jccPayloadObj = (payload) => {
         jcc_ref_number: payload.jcc_ref_number,
         jcc_job_start_date: payload.jcc_job_start_date,
         jcc_job_end_date: payload.jcc_job_end_date,
-        hsn_gstn_icgrn: payload.hsn_gstn_icgrn || 0,
+        hsn_gstn_icgrn: 1,
         remarks:payload.remarks || "",
         created_by_id: payload.created_by_id,
         created_at: getEpochTime (),
@@ -217,7 +218,7 @@ async function getJccBTNDetails(client, data) {
         const result = await poolQuery({ client, query: getBtnQuery, values: val });
         let response = result[0] || {};
     
-        response = { ...response, ...supDocs };
+        response = { ...response };
 
         return { success: true, statusCode: 200, message: "Value fetch success", data: response };
     } catch (error) {
