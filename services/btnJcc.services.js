@@ -1,36 +1,8 @@
 const { poolQuery } = require("../config/pgDbConfig");
 const { APPROVED } = require("../lib/status");
 const { getEpochTime } = require("../lib/utils");
+const { vendorDetails } = require("./btnServiceHybrid.services");
 
-/**
- * GET VENDOR DETAILS
- * @param {Object} client 
- * @param {Object} data 
- * @returns {Promise<Object>}
- * @throws {Error} If the query execution fails, an error is thrown.
- */
-const vendorDetails = async (client, data) => {
-    try {
-        let q = `
-              SELECT po.lifnr       AS vendor_code,
-                     vendor_t.name1 AS vendor_name,
-                     vendor_t.email AS vendor_email,
-                     vendor_t.stcd3 AS vendor_gstno
-              FROM   ekko AS po
-                     left join lfa1 AS vendor_t
-                            ON ( po.lifnr = vendor_t.lifnr )
-              WHERE  po.ebeln = $1`;
-        let result = await poolQuery({
-            client,
-            query: q,
-            values: data,
-        });
-        return result;
-    } catch (error) {
-        throw error;
-    }
-
-}
 
 
 const getWdcInfoServiceHybrid = async (req, res) => {
@@ -122,71 +94,71 @@ const getWdcInfoServiceHybrid = async (req, res) => {
 
 const jccBtnforwordToFinacePaylaod = (payload) => {
 
-    const obj = {
-        btn_num: payload.btn_num,
-        recomend_payment: payload.recomend_payment,
-        net_payable_amount: payload.net_payable_amount,
-        created_at: getEpochTime(),
-        created_by_id: payload.created_by_id
-    }
-    return obj;
+  const obj = {
+    btn_num: payload.btn_num,
+    recomend_payment: payload.recomend_payment,
+    net_payable_amount: payload.net_payable_amount,
+    created_at: getEpochTime(),
+    created_by_id: payload.created_by_id
+  }
+  return obj;
 }
 
 const jccBtnbtnAssignPayload = (payload) => {
 
-    return {
-        btn_num: payload.btn_num,
-        purchasing_doc_no: payload.purchasing_doc_no,
-        assign_by: payload.assign_by,
-        assign_to: payload.assign_to,
-        last_assign: true,
-        assign_by_fi: "",
-        assign_to_fi: "",
-        last_assign_fi: false,
-    }
+  return {
+    btn_num: payload.btn_num,
+    purchasing_doc_no: payload.purchasing_doc_no,
+    assign_by: payload.assign_by,
+    assign_to: payload.assign_to,
+    last_assign: true,
+    assign_by_fi: "",
+    assign_to_fi: "",
+    last_assign_fi: false,
+  }
 }
 
 const jccPayloadObj = (payload) => {
 
-    const obj = {
-        btn_num: payload.btn_num,
-        purchasing_doc_no: payload.purchasing_doc_no,
-        vendor_code: payload.vendor_code,
-        invoice_no: payload.invoice_no,
-        invoice_value: payload.invoice_value,
-        yard: payload.yard,
-        jcc_filename: payload.jcc_filename || "",
-        invoice_filename: payload.invoice_filename || "",
-        invoice_type: payload.invoice_type,
-        invoice_date: payload.invoice_date || null,
-        suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
-        bill_certifing_authority: payload.bill_certifing_authority,
-        net_claim_amount: payload.net_claim_amount || "0",
-        jcc_ref_number: payload.jcc_ref_number,
-        jcc_job_start_date: payload.jcc_job_start_date,
-        jcc_job_end_date: payload.jcc_job_end_date,
-        hsn_gstn_icgrn: 1,
-        remarks:payload.remarks || "",
-        created_by_id: payload.created_by_id,
-        created_at: getEpochTime (),
-        btn_type: "claim-against-jcc"
-    }
+  const obj = {
+    btn_num: payload.btn_num,
+    purchasing_doc_no: payload.purchasing_doc_no,
+    vendor_code: payload.vendor_code,
+    invoice_no: payload.invoice_no,
+    invoice_value: payload.invoice_value,
+    yard: payload.yard,
+    jcc_filename: payload.jcc_filename || "",
+    invoice_filename: payload.invoice_filename || "",
+    invoice_type: payload.invoice_type,
+    invoice_date: payload.invoice_date || null,
+    suppoting_invoice_filename: payload.suppoting_invoice_filename || "",
+    bill_certifing_authority: payload.bill_certifing_authority,
+    net_claim_amount: payload.net_claim_amount || "0",
+    jcc_ref_number: payload.jcc_ref_number,
+    jcc_job_start_date: payload.jcc_job_start_date,
+    jcc_job_end_date: payload.jcc_job_end_date,
+    hsn_gstn_icgrn: 1,
+    remarks: payload.remarks || "",
+    created_by_id: payload.created_by_id,
+    created_at: getEpochTime(),
+    btn_type: "claim-against-jcc"
+  }
 
-    return obj;
+  return obj;
 }
 
 
 async function getJccBTNDetails(client, data) {
-    try {
+  try {
 
-        if (!data.btn_num) {
-            return { success: false, statusCode: 200, message: "Please send btn number", data: Message.MANDATORY_INPUTS_REQUIRED };
-        }
-        const val = [];
-        val.push(data.btn_num);
+    if (!data.btn_num) {
+      return { success: false, statusCode: 200, message: "Please send btn number", data: Message.MANDATORY_INPUTS_REQUIRED };
+    }
+    const val = [];
+    val.push(data.btn_num);
 
-        const getBtnQuery =
-            `SELECT
+    const getBtnQuery =
+      `SELECT
                 s_btn.*,
                 btn_assign.assign_by,
                 btn_assign.assign_to,
@@ -211,23 +183,25 @@ async function getJccBTNDetails(client, data) {
             LEFT JOIN btn_jcc_certify_authority as btn_authority 
                 ON(s_btn.btn_num = btn_authority.btn_num)
             WHERE s_btn.btn_num = $1`;
-        // AND s_btn.bill_certifing_authority = '600700'
-        // btn_assign.*,
-        // LEFT JOIN btn_assign AS btn_assign
-        // ON(s_btn.btn_num = btn_assign.btn_num)
-        const result = await poolQuery({ client, query: getBtnQuery, values: val });
-        let response = result[0] || {};
-    
-        response = { ...response };
+    // AND s_btn.bill_certifing_authority = '600700'
+    // btn_assign.*,
+    // LEFT JOIN btn_assign AS btn_assign
+    // ON(s_btn.btn_num = btn_assign.btn_num)
+    const result = await poolQuery({ client, query: getBtnQuery, values: val });
+    const vendor = await vendorDetails(client, [data.poNo || ""])
+    let response = result[0] || {};
+    let response2 = vendor[0] || {};
 
-        return { success: true, statusCode: 200, message: "Value fetch success", data: response };
-    } catch (error) {
-        console.log("dddddd", error.message);
+    response = { ...response, ...response2 };
 
-        throw error;
-    }
+    return { success: true, statusCode: 200, message: "Value fetch success", data: response };
+  } catch (error) {
+    console.log("dddddd", error.message);
+
+    throw error;
+  }
 }
 
 
 
-module.exports = { vendorDetails, jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails }
+module.exports = {  jccPayloadObj, jccBtnforwordToFinacePaylaod, jccBtnbtnAssignPayload, getJccBTNDetails }
