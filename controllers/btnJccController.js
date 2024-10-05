@@ -322,7 +322,7 @@ const jccBtnAssignToFiStaff = async (req, res) => {
         const client = await poolClient();
         await client.query("BEGIN");
         try {
-            const { btn_num, purchasing_doc_no, assign_to_fi } = req.body;
+            const { btn_num, purchasing_doc_no, assign_to_fi, activity } = req.body;
             const tokenData = { ...req.tokenData };
 
             if (!btn_num || !purchasing_doc_no || !assign_to_fi) {
@@ -349,6 +349,7 @@ const jccBtnAssignToFiStaff = async (req, res) => {
                 assign_by_fi: tokenData?.vendor_code,
                 assign_to_fi: assign_to_fi,
                 last_assign_fi: true,
+                activity
             };
 
             let { q, val } = generateQuery(UPDATE, BTN_ASSIGN, payload, whereCon);
