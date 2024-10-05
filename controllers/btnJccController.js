@@ -51,7 +51,7 @@ const submitJccBtn = async (req, res) => {
             if (!tempPayload.invoice_value && !tempPayload.net_claim_amount) {
                 return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "Invoice Value is missing!", null);
             }
-            if (!tempPayload.purchasing_doc_no || !tempPayload.invoice_no || !tempPayload.jcc_number) {
+            if (!tempPayload.purchasing_doc_no || !tempPayload.invoice_no || !tempPayload.jcc_ref_number) {
                 return resSend(res, false, 200, Message.MANDATORY_PARAMETR_MISSING, "JCC No/PO No/Invoice is missing!", null);
             }
 
@@ -63,13 +63,13 @@ const submitJccBtn = async (req, res) => {
                               WHERE 
                                 1 = 1 
                                 AND vendor_code = $1 
-                                AND ( invoice_no = $2  OR jcc_number = $3)`;
+                                AND ( invoice_no = $2  OR jcc_ref_number = $3)`;
 
             let check_invoice = await poolQuery({ client, query: check_invoice_q, values: [tokenData.vendor_code, tempPayload.invoice_no, tempPayload.jcc_number] });
 
 
             if (check_invoice && check_invoice[0].count > 0) {
-                return resSend(res, false, 200, "BTN is already created under the invoice number/wdc_number.", null, null);
+                return resSend(res, false, 200, "BTN is already created under the invoice number/jcc.", null, null);
             }
 
 
@@ -96,6 +96,9 @@ const submitJccBtn = async (req, res) => {
                 created_by_id: tokenData.vendor_code,
                 vendor_code: tokenData.vendor_code,
             }
+
+            console.log("payloadpayload", payload);
+            
 
             const net_payable_amount = net_claim_amount;
 
