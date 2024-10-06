@@ -5,7 +5,13 @@ const {
   poolQuery,
 } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
-const { INSERT, USER_TYPE_VENDOR, UPDATE } = require("../lib/constant");
+const {
+  INSERT,
+  USER_TYPE_VENDOR,
+  UPDATE,
+  BILL_INCORRECT_DEDUCTIONS,
+  LD_PENALTY_REFUND,
+} = require("../lib/constant");
 const {
   BTN_RETURN_DO,
   BTN_FORWORD_FINANCE,
@@ -34,7 +40,14 @@ const {
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
 } = require("../lib/status");
-const { BTN_PBG, BTN_LIST, BTN_ASSIGN } = require("../lib/tableName");
+const {
+  BTN_ANY_OTHER_CLAIM,
+  BTN_LIST,
+  BTN_ASSIGN,
+  BTN_PBG,
+  BTN_MATERIAL,
+  BTN_SERVICE_HYBRID,
+} = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd, generateQuery } = require("../lib/utils");
 const { sendMail } = require("../services/mail.services");
 const { create_btn_no } = require("../services/po.services");
@@ -66,22 +79,28 @@ const submitIncorrectDuct = async (req, res) => {
   try {
     let {
       purchasing_doc_no,
-      ref_invoice_no1,
+      ref_invoice1_no,
       ref_invoice1_amount,
       ref_invoice1_remarks,
+      ref_invoice2_no,
+      ref_invoice2_amount,
+      ref_invoice2_remarks,
+      ref_invoice3_no,
+      ref_invoice3_amount,
+      ref_invoice3_remarks,
+      ref_invoice4_no,
+      ref_invoice4_amount,
+      ref_invoice4_remarks,
       balance_claim_invoice,
       total_claim_amount,
+      btn_type,
+      letter_reference_no,
+      letter_date,
     } = req.body;
-    let payloadFiles = req.files;
+
+    // let payloadFiles = req.files;
     const tokenData = { ...req.tokenData };
     console.log(tokenData);
-    let payload = {
-      ...req.body,
-      vendor_code: tokenData?.vendor_code,
-      created_by_id: tokenData?.vendor_code,
-      btn_type: "claim-against-pbg",
-      updated_by: "VENDOR",
-    };
 
     // Check required fields
     if (tokenData?.user_type != USER_TYPE_VENDOR) {
@@ -89,68 +108,89 @@ const submitIncorrectDuct = async (req, res) => {
     }
 
     // Check required fields
-    if (!claim_amount || !claim_amount.trim() === "") {
+    if (!total_claim_amount || !total_claim_amount.trim() === "") {
       return resSend(res, false, 200, "Claim Value is mandatory.", null, null);
     }
 
-    if (!purchasing_doc_no || !invoice_no) {
-      return resSend(res, false, 200, "Invoice Number is missing!", null, null);
-    }
-
-    // check invoice number is already present in DB
-    let check_invoice_q = `SELECT count(*) as count FROM ${BTN_PBG} WHERE invoice_no = $1 and vendor_code = $2`;
-    let check_invoice = await getQuery({
-      query: check_invoice_q,
-      values: [invoice_no, tokenData.vendor_code],
-    });
-
-    if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
+    if (!purchasing_doc_no) {
       return resSend(
         res,
         false,
         200,
-        "BTN is already created under the invoice number.",
+        "purchasing_doc_no is missing!",
         null,
         null
       );
     }
 
-    // Handle uploaded files
-    let invoice_filename;
-    if (payloadFiles["invoice_filename"]) {
-      invoice_filename = payloadFiles["invoice_filename"][0]?.filename;
-      payload = { ...payload, invoice_filename };
-    }
-    let balance_claim_invoice_filename;
-    if (payloadFiles["balance_claim_invoice_filename"]) {
-      balance_claim_invoice_filename =
-        payloadFiles["balance_claim_invoice_filename"][0]?.filename;
-      payload = { ...payload, balance_claim_invoice_filename };
-    }
+    // if (!btn_type && (btn_type != BILL_INCORRECT_DEDUCTIONS || btn_type != LD_PENALTY_REFUND)) {
+    //   return resSend(res, false, 200, "btn_type is missing!", null, null);
+    // }
 
-    // GET ICGRN Value by PO Number
-    let resICGRN = await getICGRNs({ purchasing_doc_no, invoice_no });
-    if (!resICGRN) {
-      return resSend(res, false, 200, null, null);
-    }
-
-    payload = {
-      ...payload,
-
-      icgrn_total: resICGRN.total_icgrn_value,
-      icgrn_nos: JSON.stringify(resICGRN.icgrn_nos),
+    let payload = {
+      ...req.body,
+      vendor_code: tokenData?.vendor_code,
+      created_by_id: tokenData?.vendor_code,
+      //btn_type: "claim-against-pbg",
+      updated_by: "VENDOR",
     };
 
+    // Handle uploaded files
+    let ref_invoice1_file =
+      req.files.ref_invoice1_file && req.files.ref_invoice1_file[0].filename
+        ? req.files.ref_invoice1_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice1_file };
+
+    let ref_invoice2_file =
+      req.files.ref_invoice2_file && req.files.ref_invoice2_file[0].filename
+        ? req.files.ref_invoice2_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice2_file };
+
+    let ref_invoice3_file =
+      req.files.ref_invoice3_file && req.files.ref_invoice3_file[0].filename
+        ? req.files.ref_invoice3_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice3_file };
+
+    let ref_invoice4_file =
+      req.files.ref_invoice4_file && req.files.ref_invoice4_file[0].filename
+        ? req.files.ref_invoice4_file[0].filename
+        : "";
+    payload = { ...payload, ref_invoice4_file };
+
+    // console.log(req.files);
+    // return;
+
+    // check invoice number is already present in DB
+    // let check_invoice_q = `SELECT count(*) as count FROM ${BTN_ANY_OTHER_CLAIM} WHERE invoice_no = $1 and vendor_code = $2`;
+    // let check_invoice = await getQuery({
+    //   query: check_invoice_q,
+    //   values: [invoice_no, tokenData.vendor_code],
+    // });
+
+    // if (checkTypeArr(check_invoice) && check_invoice[0].count > 0) {
+    //   return resSend(
+    //     res,
+    //     false,
+    //     200,
+    //     "BTN is already created under the invoice number.",
+    //     null,
+    //     null
+    //   );
+    // }
+
     // generate btn num
-    const btn_num = await create_btn_no("BTN");
+    const btn_num = await create_btn_no();
     payload = { ...payload, btn_num };
 
     // created at
     let created_at = getEpochTime();
     payload = { ...payload, created_at };
     console.log(payload);
-    payload.net_claim_amount = claim_amount;
-    payload.net_payable_amount = claim_amount;
+    payload.net_claim_amount = total_claim_amount;
+    payload.net_payable_amount = total_claim_amount;
     // INSERT Data into btn table
     let resBtnList = await addToBTNList(payload, SUBMITTED_BY_VENDOR);
     if (!resBtnList?.status) {
@@ -163,10 +203,10 @@ const submitIncorrectDuct = async (req, res) => {
         null
       );
     }
-    //return;
+    // return;
     delete payload.net_claim_amount;
     delete payload.net_payable_amount;
-    let { q, val } = generateQuery(INSERT, BTN_PBG, payload);
+    let { q, val } = generateQuery(INSERT, BTN_ANY_OTHER_CLAIM, payload);
     const result = await getQuery({ query: q, values: val });
     console.log(result);
     if (result.length > 0) {
@@ -194,18 +234,12 @@ const submitIncorrectDuct = async (req, res) => {
   }
 };
 
-const btnPbgSubmitByDO = async (req, res) => {
+const getBtnFile = async (req, res) => {
   try {
     const client = await poolClient();
     await client.query("BEGIN");
     try {
-      let {
-        btn_num,
-        purchasing_doc_no,
-        net_payable_amount,
-        assign_to,
-        status,
-      } = req.body;
+      const btn_num = req.query.btn_num;
       const tokenData = { ...req.tokenData };
 
       if (!btn_num) {
@@ -219,351 +253,131 @@ const btnPbgSubmitByDO = async (req, res) => {
         );
       }
 
-      // BTN VALIDATION
-
-      const btnCurrnetStatus = await btnCurrentDetailsCheck(client, {
-        btn_num,
+      const check_btn_q = `SELECT btn_type FROM ${BTN_LIST} WHERE btn_num = $1`;
+      const check_btn_in_list_table = await poolQuery({
+        client,
+        query: check_btn_q,
+        values: [btn_num],
       });
-      if (btnCurrnetStatus.isInvalid) {
+      console.log(check_btn_in_list_table.length);
+      if (!check_btn_in_list_table.length) {
         return resSend(
           res,
           false,
           200,
-          `BTN ${btn_num} ${btnCurrnetStatus.message}`,
-          btn_num,
+          Message.NO_DATA_FOUND,
+          "No record found by this BTN number.",
           null
         );
       }
-
-      if (status === REJECTED) {
-        if (!req.body.remarks) {
-          return resSend(
-            res,
-            false,
-            200,
-            `please send remarks when ${REJECTED} !!`,
-            null,
-            null
-          );
-        }
-        //console.log("Fghjkjb", req.body);
-        const response1 = await btnReject(req.body, tokenData, client);
-        if (response1 == false) {
-          console.log(response1);
-          // await client.query("COMMIT");
-          await client.query("ROLLBACK");
-          return resSend(res, false, 200, `SAP not connected2.`, null, null);
-        } else if (response1 == true) {
-          await client.query("COMMIT");
-        }
-        return resSend(res, true, 200, "Rejected successfully !!", null, null);
+      const table_type = check_btn_in_list_table[0].btn_type;
+      console.log(table_type);
+      let table;
+      switch (table_type) {
+        case "claim-against-pbg":
+          {
+            table = BTN_PBG;
+          }
+          break;
+        case "hybrid-bill-material":
+          {
+            table = BTN_MATERIAL;
+          }
+          break;
+        case "service-contract-bills":
+          {
+            table = BTN_SERVICE_HYBRID;
+          }
+          break;
+        default:
+          return resSend(res, false, 200, "Invalid BTN type!", null, null);
       }
 
-      console.log("tokenData", tokenData);
-      let payload = { ...req.body, created_by: tokenData?.vendor_code };
-
-      console.log(payload);
-
-      // Check required fields
-      if (!net_payable_amount) {
-        return resSend(res, false, 200, "Net payable is missing!", null, null);
-      }
-
-      // Check BTN by BTN Number
-      let checkBTNR = await checkBTNRegistered(btn_num, purchasing_doc_no);
-      let isInserted = false;
-      let whereCondition;
-      if (checkBTNR) {
-        //return resSend(res, false, 200, "BTN is already submitted!", null, null);
-        isInserted = true;
-      }
-
-      // created at
-      let created_at = getEpochTime(); //new Date().toLocaleDateString();
-      payload = { ...payload, created_at };
-
-      // INSERT data into BTN List Table
-      let d = await fetchBTNListByPOAndBTNNum(btn_num, purchasing_doc_no);
-      if (d?.status) {
-        let btn_list_payload = d?.data;
-        console.log("btn_list_payload: ", btn_list_payload);
-        btn_list_payload.net_payable_amount = net_payable_amount;
-        payload = {
-          ...payload,
-          net_claim_amount: btn_list_payload?.net_claim_amount,
-          btn_type: btn_list_payload?.btn_type,
-        };
-      } else {
-        return resSend(res, false, 200, d?.message, null, null);
-      }
-
-      // INSERT data into BTN ASSIGN Table
-      let assign_payload = {
-        btn_num,
-        purchasing_doc_no,
-        assign_by: payload.created_by,
-        assign_to: payload.assigned_to,
-        last_assign: true,
-        assign_by_fi: "",
-        assign_to_fi: "",
-        last_assign_fi: false,
-      };
-
-      console.log("assign_payload", assign_payload);
-      let assign_q;
-      if (isInserted == true) {
-        // update
-        whereCondition = {
-          btn_num: assign_payload.btn_num,
-          purchasing_doc_no: assign_payload.purchasing_doc_no,
-        };
-        assign_q = generateQuery(
-          UPDATE,
-          BTN_ASSIGN,
-          assign_payload,
-          whereCondition
-        );
-      } else {
-        //insert
-        assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
-      }
-
-      // let assign_q = generateQuery(INSERT, BTN_ASSIGN, assign_payload);
-      const res_assign = await poolQuery({
+      const get_btn_file_q = `SELECT invoice_filename FROM ${table} WHERE btn_num = $1 AND btn_type = $2`;
+      console.log(get_btn_file_q);
+      const get_btn_file = await poolQuery({
         client,
-        query: assign_q.q,
-        values: assign_q.val,
+        query: get_btn_file_q,
+        values: [btn_num, check_btn_in_list_table[0].btn_type],
       });
-
-      console.log("res_assign", res_assign);
-
-      console.log("BTN LIST PAYLOAD", payload);
-      payload.vendor_code = tokenData?.vendor_code;
-      let resBtnList = await insertUpdateToBTNList(
-        client,
-        payload,
-        SUBMITTED_BY_DO,
-        isInserted
+      console.log(get_btn_file);
+      return resSend(
+        res,
+        true,
+        200,
+        Message.DATA_FETCH_SUCCESSFULL,
+        get_btn_file,
+        null
       );
-      console.log("BTN LIST RESPONSE", resBtnList);
-      if (!resBtnList?.status) {
-        return resSend(
-          res,
-          false,
-          200,
-          `Something went wrong in BTN List!`,
-          null,
-          null
-        );
-      }
-
-      delete payload.assign_to;
-      delete payload.p_sdbg_amount;
-      delete payload.p_estimate_amount;
-      delete payload.created_by;
-      delete payload.net_claim_amount;
-      delete payload.btn_type;
-      delete payload.vendor_code;
-      payload.created_at = convertToEpoch(new Date());
-      payload.ld_ge_date = convertToEpoch(new Date(payload.ld_ge_date));
-
-      assign_to = assign_payload.assign_to;
-      try {
-        const sendSap = await btnSubmitByDo(
-          { btn_num, purchasing_doc_no, assign_to },
-          tokenData
-        );
-
-        if (sendSap == false) {
-          console.log(sendSap);
-          // await client.query("COMMIT");
-          await client.query("ROLLBACK");
-          return resSend(res, false, 200, `SAP not connected.`, null, null);
-        } else if (sendSap == true) {
-          await client.query("COMMIT");
-          handelMail(tokenData, {
-            ...payload,
-            assign_to,
-            status: SUBMIT_BY_DO,
-          });
-        }
-      } catch (error) {
-        console.log("error", error.message);
-      }
-      console.log("insert1..");
-      console.log(result);
-
-      if (!result.error) {
-        return resSend(res, true, 200, "BTN has been updated!", null, null);
-      } else {
-        // return resSend(res, false, 200, JSON.stringify(result), null, null);
-      }
     } catch (error) {
-      resSend(res, false, 500, Message.SERVER_ERROR, error.message, null);
+      return resSend(
+        res,
+        false,
+        500,
+        Message.SERVER_ERROR,
+        error.message,
+        null
+      );
     } finally {
       client.release();
     }
   } catch (error) {
-    resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
+    return resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 
-async function btnSubmitByDo(btnPayload, tokenData) {
-  let status = false;
-  console.log("send to sap payload -- >", btnPayload);
+const getGstnByPo = async (req, res) => {
   try {
-    const vendorQuery = `WITH ranked_assignments AS (
-            SELECT
-                btn_assign.*,
-                ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
-            FROM
-                btn_assign
-        )
-        SELECT 
-          btn_pbg.*,
-        	ged.invno, 
-        	ged.inv_date as invoice_date,
-        	vendor.stcd3,
-        	users.pernr as finance_auth_id,
-        	users.cname as finance_auth_name,
-        	vendor.name1 as vendor_name,
-        	assign_users.cname as assign_name,
-        	ranked_assignments.assign_by as assign_id
+    const client = await poolClient();
+    await client.query("BEGIN");
+    try {
+      const poNo = req.query.poNo;
+      const tokenData = { ...req.tokenData };
 
-        FROM 
-            ${BTN_PBG}
-        LEFT JOIN 
-            ranked_assignments
-            ON (btn_pbg.btn_num = ranked_assignments.btn_num
-            AND ranked_assignments.rn = 1)
-        LEFT JOIN zmm_gate_entry_d as ged
-        		ON( btn_pbg.purchasing_doc_no = ged.ebeln AND btn_pbg.invoice_no = ged.invno)
-        LEFT JOIN lfa1 as vendor
-        		ON(btn_pbg.vendor_code = vendor.lifnr)
-        LEFT JOIN pa0002 as users
-        		ON(users.pernr::character varying = $1)
-        LEFT JOIN pa0002 as assign_users
-        		ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
-        WHERE 
-            btn_pbg.btn_num = $2`;
+      if (!poNo) {
+        return resSend(
+          res,
+          false,
+          200,
+          "poNo number is missing!",
+          "No poNo",
+          null
+        );
+      }
 
-    let btnDetails = await getQuery({
-      query: vendorQuery,
-      values: [btnPayload.assign_to, btnPayload.btn_num],
-    });
+      const qry = `SELECT t2.lifnr,t2.name1,t2.stcd3 FROM ekko as t1
+                        LEFT JOIN lfa1  as t2 ON t1.lifnr = t2.lifnr
+                    WHERE t1.ebeln = $1`;
 
-    let btn_payload = {
-      EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
-      LIFNR: btnDetails[0]?.vendor_code, // VENDOR CODE
-      RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
-      STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
-      ZVBNO: btnDetails[0]?.invno, // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: getYyyyMmDd(
-        new Date(btnDetails[0]?.invoice_date).getTime()
-      ), // GATE ENTRY INVOICE DATE
-      PERNR: tokenData.vendor_code, // DO ID
-      ZBTNO: btnPayload.btn_num, //  BTN NUMBER
-      ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE
-      ERZET: timeInHHMMSS(), // VENDOR BILL SUBMIT TIME
-      RERDAT: getYyyyMmDd(getEpochTime()), //REGISTRATION NUMBER --- VENDOR BILL SUBMIT DATE
-      RERZET: timeInHHMMSS(), //REGISTRATION NUMBER --- VENDOR BILL SUBMIT TIME
-      DPERNR1: tokenData.vendor_code, // DO NUMBER
-      DRERDAT1: getYyyyMmDd(getEpochTime()), // DEPARTMETN RECECE DATE --> WHEN SUBMIT DO
-      DRERZET1: timeInHHMMSS(), // DEPARTMETN RECECE TIME --> WHEN SUBMIT DO
-      DRERNAM1: tokenData.name, // DEPARTMETN RECECE DO ID --> WHEN SUBMIT DO
-      DAERDAT: getYyyyMmDd(getEpochTime()), // DEPARTMENT APPROVAL DATE --> DO SUBMISSION DATE
-      DAERZET: timeInHHMMSS(), // DEPARTMENT APPROVAL DATE --> DO SUBMISSION TIME
-      DAERNAM: tokenData.name, // DEPARTMENT APPROVAL NAME --> DO NAME
-
-      // DEERDAT: "", // REJECTION DATE
-      // DEERZET: timeInHHMMSS(), // REJECTION TIME
-      // DEERNAM: "", // DO ( WHO REJECTED)
-      // ZRMK2: "", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
-
-      DFERDAT: getYyyyMmDd(getEpochTime()), // DO SUBMIT DATE
-      DEFRZET: timeInHHMMSS(), // DO SUBMIT TIEM
-      DEFRNAM: tokenData.name || "", // DO SUBMIT NAME ( DO NAME)
-      DSTATUS: "4", // "4"
-      DPERNR: tokenData.vendor_code, //  (DO)
-
-      FPRNR1: btnPayload.assign_to || "", // FINACE AUTHIRITY ID ( )
-      FPRNAM1: btnDetails[0]?.assign_name || "", // FINANCE
-      FSTATUS: "", // BLANK STATUS
-    };
-
-    /**
-     * IF BTN REJECTED BY DO
-     */
-    if (btnPayload.status === REJECTED) {
-      btn_payload = {
-        ...btn_payload,
-        DEERDAT: getYyyyMmDd(getEpochTime()), // REJECTION DATE
-        DEERZET: timeInHHMMSS(), // REJECTION TIME
-        DEERNAM: tokenData.name, // DO ( WHO REJECTED)
-        ZRMK2: btnPayload.rejectedMessage || "Rejeced by DO", // "REJECTION REASON REMARKS / DO SUBMIT REMARKS"
-        DSTATUS: "2", // rejected status
-      };
+      const get_gstn = await poolQuery({
+        client,
+        query: qry,
+        values: [poNo],
+      });
+      console.log(get_gstn);
+      return resSend(
+        res,
+        true,
+        200,
+        Message.DATA_FETCH_SUCCESSFULL,
+        get_gstn,
+        null
+      );
+    } catch (error) {
+      return resSend(
+        res,
+        false,
+        500,
+        Message.SERVER_ERROR,
+        error.message,
+        null
+      );
+    } finally {
+      client.release();
     }
-
-    const sapBaseUrl = process.env.SAP_HOST_URL || "http://10.181.1.31:8010";
-    const postUrl = `${sapBaseUrl}/sap/bc/zobps_do_out`;
-    console.log("btnPayload--", postUrl, btn_payload);
-    const postResponse = await makeHttpRequest(postUrl, "POST", btn_payload);
-    if (
-      postResponse.statusCode &&
-      postResponse.statusCode >= 200 &&
-      postResponse.statusCode <= 226
-    ) {
-      status = true;
-    }
-    console.log("POST Response from the server:", postResponse);
   } catch (error) {
-    console.error("Error making the request:", error.message);
-  } finally {
-    return status;
-  }
-}
-
-async function btnReject(data, tokenData, client) {
-  try {
-    const obj = {
-      btn_num: data.btn_num,
-      remarks: data.remarks,
-    };
-
-    //console.log(22);
-    await updateBtnListTable(client, obj);
-    //console.log(44);
-    const status = await btnSubmitByDo({ ...data, assign_to: null }, tokenData);
-
-    return status; //{ btn_num: data.btn_num };
-  } catch (error) {
-    throw error;
-  }
-}
-
-const insertUpdateToBTNList = async (client, data, status, isInserted) => {
-  console.log("data", data);
-  let payload = {
-    btn_num: data?.btn_num,
-    purchasing_doc_no: data?.purchasing_doc_no,
-    net_claim_amount: data?.net_claim_amount,
-    net_payable_amount: data?.net_payable_amount,
-    vendor_code: data?.vendor_code,
-    created_at: data?.created_at,
-    btn_type: data?.btn_type,
-    status: status,
-  };
-
-  let { q, val } = await generateQuery(INSERT, BTN_LIST, payload);
-  console.log("insert2..");
-  const res = await poolQuery({ client, query: q, values: val });
-
-  if (!res.error) {
-    return { status: true, data: res };
-  } else {
-    return { status: false, data: null };
+    return resSend(res, true, 500, Message.DB_CONN_ERROR, error.message, null);
   }
 };
 
-module.exports = { submitPbg, btnPbgSubmitByDO };
+module.exports = { submitIncorrectDuct, getBtnFile, getGstnByPo };
