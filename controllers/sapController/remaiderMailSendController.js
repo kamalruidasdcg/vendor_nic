@@ -8,7 +8,7 @@ const sendPOMilestoneEXPReminderMail = async () => {
 
     if (timeLineData && timeLineData.length) {
         for (const data of timeLineData) {
-            const obj = { users: [{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
+            const obj = { users: [{ u_email: data?.u_email, u_id: data?.u_id, u_type: data?.u_type }] }
             await sendMail(SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE,
                 data,
                 obj,
@@ -127,7 +127,7 @@ const sendBGReminderMail = async () => {
     if (bgTimelineData && bgTimelineData.length) {
         for (const data of bgTimelineData) {
             console.log("data", data);
-            const obj = { users: [{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
+            const obj = { users: [{ u_email: data?.u_email, u_id: data?.u_id, u_type: data?.u_type }] }
             await sendMail(BG_2MONTH_PRIOR,
                 data,
                 obj,
