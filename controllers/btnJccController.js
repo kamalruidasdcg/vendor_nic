@@ -261,13 +261,13 @@ const jccBtnforwordToFinace = async (req, res) => {
             }
 
             if (!payload.recomend_payment || !payload.assign_to || !payload.purchasing_doc_no) {
-                return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Entry_no or net_payable_amount assign_to_fi missing", null);
+                return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "Entry_no or net_payable_amount assign_to missing", null);
             }
-            const btnChkQuery = `SELECT COUNT(*) from btn_jcc WHERE btn_num = $1 AND bill_certifing_authority = $2`;
-            const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
-            if (!parseInt(validAuthrityCheck[0]?.count)) {
-                return resSend(res, false, 200, "You are not authorised!", Message.YOU_ARE_UN_AUTHORIZED, null);
-            }
+            // const btnChkQuery = `SELECT COUNT(*) from btn_jcc WHERE btn_num = $1 AND bill_certifing_authority = $2`;
+            // const validAuthrityCheck = await poolQuery({ client, query: btnChkQuery, values: [payload.btn_num, tokenData.vendor_code] });
+            // if (!parseInt(validAuthrityCheck[0]?.count)) {
+            //     return resSend(res, false, 200, "You are not authorised!", Message.YOU_ARE_UN_AUTHORIZED, null);
+            // }
 
 
 
