@@ -2,6 +2,7 @@ const { getQuery } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
 const { timeInHHMMSS } = require("../controllers/btnControllers");
 const { REJECTED, F_STATUS_FORWARDED_TO_FINANCE } = require("../lib/status");
+const { BTN_PBG, BTN_ANY_OTHER_CLAIM } = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
 
 /**
@@ -58,9 +59,7 @@ async function btnSubmitToSAPF01(btnPayload, tokenData) {
       values: [btnPayload.assign_to, btnPayload.btn_num],
     });
 
-
     console.log("btnDetails", btnDetails);
-
 
     let btn_payload = {
       EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
@@ -261,6 +260,7 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
     return status;
   }
 }
+
 
 
 
@@ -511,6 +511,173 @@ async function jccBtnSubmitToSAPF02(btnPayload, tokenData) {
 }
 
 
-module.exports = { btnSubmitToSAPF01, btnSubmitToSAPF02, jccBtnSubmitToSAPF01, jccBtnSubmitToSAPF02 }
+const getQueryForbtnSaveToSap = async (btnPayload) => {
+  try {
+    let vendorQuery;
+
+    if (btnPayload.btn_type === "hybrid-bill-material") {
+      vendorQuery = `WITH ranked_assignments AS (
+        SELECT
+            btn_assign.*,
+            ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+        FROM
+            btn_assign
+    )
+    SELECT 
+      btn.btn_num, 
+      btn.purchasing_doc_no,
+      btn.cgst, 
+      btn.sgst, 
+      btn.igst, 
+      btn.yard, 
+      btn.net_claim_amount, 
+      btn.net_with_gst, 
+      btn.invoice_no,
+      btn.vendor_code, 
+      ged.invno, 
+      ged.inv_date as invoice_date,
+      vendor.stcd3,
+      users.pernr as finance_auth_id,
+      users.cname as finance_auth_name,
+      vendor.name1 as vendor_name,
+      assign_users.cname as assign_name,
+      ranked_assignments.assign_to as assign_to
+
+    FROM 
+        public.btn AS btn
+    LEFT JOIN 
+        ranked_assignments
+        ON (btn.btn_num = ranked_assignments.btn_num
+        AND ranked_assignments.rn = 1)
+    LEFT JOIN  zmm_gate_entry_d as ged
+        ON( btn.purchasing_doc_no = ged.ebeln AND btn.invoice_no = ged.invno)
+    LEFT JOIN  lfa1 as vendor
+        ON(btn.vendor_code = vendor.lifnr)
+    LEFT JOIN  pa0002 as users
+        ON(users.pernr::character varying = $1)
+    LEFT JOIN  pa0002 as assign_users
+        ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+    WHERE 
+        btn.btn_num = $2`;
+    } else if (btnPayload.btn_type === "claim-against-pbg") {
+      vendorQuery = `WITH ranked_assignments AS (
+              SELECT
+                  btn_assign.*,
+                  ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+              FROM
+                  btn_assign
+          )
+          SELECT 
+            ${BTN_PBG}.*,
+            ged.invno, 
+            ged.inv_date as invoice_date,
+            vendor.stcd3,
+            users.pernr as finance_auth_id,
+            users.cname as finance_auth_name,
+            vendor.name1 as vendor_name,
+            assign_users.cname as assign_name,
+            ranked_assignments.assign_by as assign_id
+  
+          FROM 
+              ${BTN_PBG}
+          LEFT JOIN 
+              ranked_assignments
+              ON (${BTN_PBG}.btn_num = ranked_assignments.btn_num
+              AND ranked_assignments.rn = 1)
+          LEFT JOIN zmm_gate_entry_d as ged
+              ON( ${BTN_PBG}.purchasing_doc_no = ged.ebeln AND ${BTN_PBG}.invoice_no = ged.invno)
+          LEFT JOIN lfa1 as vendor
+              ON(${BTN_PBG}.vendor_code = vendor.lifnr)
+          LEFT JOIN pa0002 as users
+              ON(users.pernr::character varying = $1)
+          LEFT JOIN pa0002 as assign_users
+              ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
+          WHERE 
+              ${BTN_PBG}.btn_num = $2`;
+    } else if (
+      btnPayload.btn_type === "bill-incorrect-deductions" ||
+      btnPayload.btn_type === "ld-penalty-refund" ||
+      btnPayload.btn_type === "other-retentions"
+    ) {
+      vendorQuery = `WITH ranked_assignments AS (
+              SELECT
+                  btn_assign.*,
+                  ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+              FROM
+                  btn_assign
+          )
+          SELECT 
+            ${BTN_ANY_OTHER_CLAIM}.*,
+            vendor.stcd3,
+            users.pernr as finance_auth_id,
+            users.cname as finance_auth_name,
+            vendor.name1 as vendor_name,
+            assign_users.cname as assign_name,
+            ranked_assignments.assign_by as assign_id
+          FROM 
+              ${BTN_ANY_OTHER_CLAIM}
+          LEFT JOIN 
+              ranked_assignments
+              ON (${BTN_ANY_OTHER_CLAIM}.btn_num = ranked_assignments.btn_num
+              AND ranked_assignments.rn = 1)
+          LEFT JOIN lfa1 as vendor
+              ON(${BTN_ANY_OTHER_CLAIM}.vendor_code = vendor.lifnr)
+          LEFT JOIN pa0002 as users
+              ON(users.pernr::character varying = $1)
+          LEFT JOIN pa0002 as assign_users
+              ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
+          WHERE 
+              ${BTN_ANY_OTHER_CLAIM}.btn_num = $2`;
+    } else if (btnPayload.btn_type === "bill-incorrect-deductions") {
+      vendorQuery = `WITH ranked_assignments AS (
+        SELECT
+            btn_assign.*,
+            ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+        FROM
+            btn_assign
+    )
+    SELECT 
+      btn.btn_num, 
+      btn.purchasing_doc_no,
+      jcc.yard_no AS yard, 
+      btn.jcc_number, 
+      btn.net_claim_amount,  
+      btn.invoice_no,
+      btn.vendor_code,
+      vendor.stcd3,
+      users.pernr as finance_auth_id,
+      users.cname as finance_auth_name,
+      vendor.name1 as vendor_name,
+      assign_users.cname as assign_name,
+      ranked_assignments.assign_to as assign_to
+
+    FROM 
+        btn_jcc AS btn
+    LEFT JOIN 
+        ranked_assignments
+        ON (btn.btn_num = ranked_assignments.btn_num
+        AND ranked_assignments.rn = 1)
+    LEFT JOIN  lfa1 as vendor
+        ON(btn.vendor_code = vendor.lifnr)
+    LEFT JOIN  pa0002 as users
+        ON(users.pernr::character varying = $1)
+    LEFT JOIN  pa0002 as assign_users
+        ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+    LEFT JOIN  wdc as jcc
+        ON(jcc.reference_no = btn.jcc_number)
+    WHERE 
+        btn.btn_num = $2`;
+    } else {
+      vendorQuery = null;
+    }
+    return vendorQuery;
+  } catch (error) {
+    console.error("Error making db query:", error);
+  }
+};
+
+
+
+module.exports = { btnSubmitToSAPF01, btnSubmitToSAPF02, jccBtnSubmitToSAPF01, jccBtnSubmitToSAPF02, getQueryForbtnSaveToSap }
 
 

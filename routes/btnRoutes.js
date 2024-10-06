@@ -42,6 +42,10 @@ const {
   btnPbgSubmitByDO,
 } = require("../controllers/btnPbgControllers");
 
+const {
+  submitIncorrectDuct,
+  getGstnByPo,
+} = require("../controllers/btnIncorrectDuctControllers");
 
 // HYBRID MATERIAL BTN
 router.get("/", [], (req, res) => {
@@ -132,6 +136,17 @@ router.post("/btnPbgSubmitByDO", [veifyAccessToken, upload], (req, res) => {
   btnPbgSubmitByDO(req, res);
 });
 //// Btn pbg ////
+///////////////////////////
+
+//// Btn submitIncorrectDuct ////
+///////////////////////////
+router.post("/submitIncorrectDuct", [veifyAccessToken, upload], (req, res) => {
+  submitIncorrectDuct(req, res);
+});
+router.get("/getGstnByPo", [veifyAccessToken], (req, res) => {
+  getGstnByPo(req, res);
+});
+//// Btn submitIncorrectDuct ////
 ///////////////////////////
 
 router.post(

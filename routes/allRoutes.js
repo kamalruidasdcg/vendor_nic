@@ -6,7 +6,11 @@ const express = require("express");
 //   fetchBills,
 // } = require("../controllers/allControllers");
 
-const { getFilteredData, updatTableData, insertTableData } = require("../controllers/genralControlles");
+const {
+  getFilteredData,
+  updatTableData,
+  insertTableData,
+} = require("../controllers/genralControlles");
 // const { auth } = require("../controllers/authConroller/auth");
 // const paymentControllers = require("../controllers/paymentControllers");
 // const poController = require("../controllers/poController");
@@ -21,7 +25,10 @@ const icgrnController = require("../controllers/poController/icgrnController");
 const paymentAdviseController = require("../controllers/poController/paymentAdviseController");
 // const downloadController = require("../controllers/poController/poDownloadController");
 const { dynamicallyUpload } = require("../lib/fileUpload");
-const { veifyAccessToken, basicAuthVerification } = require("../services/jwt.services");
+const {
+  veifyAccessToken,
+  basicAuthVerification,
+} = require("../services/jwt.services");
 // const { unlockPrivilege } = require("../services/auth.services");
 const router = express.Router();
 const billRoutes = require("./billRoutes");
@@ -239,7 +246,7 @@ router.get(poPrefix + "/qapList", [veifyAccessToken], (req, res) => {
 // QAP SAVE getQapSave deleteQapSave
 router.post(
   poPrefix + "/insertQapSave",
-  [veifyAccessToken, dynamicallyUpload.single("file")],
+  [veifyAccessToken, upload],
   (req, res) => {
     qapController.insertQapSave(req, res);
   }

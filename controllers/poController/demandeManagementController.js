@@ -318,11 +318,11 @@ const getRestAmount = async (req, res) => {
 
       let rest_amount_wdc = parseFloat(0).toFixed(3);
 
-      const wdc_claim_amount_query = `SELECT line_item_array from ${WDC} WHERE purchasing_doc_no = $1 AND status = $2`;
+      const wdc_claim_amount_query = `SELECT line_item_array from ${WDC} WHERE purchasing_doc_no = $1 AND action_type = $2 AND status = $3`;
       let wdc_claim_amount_result = await poolQuery({
         client,
         query: wdc_claim_amount_query,
-        values: [req.query.po_no, APPROVED],
+        values: [req.query.po_no, "WDC", APPROVED],
       });
 
       if (
