@@ -583,13 +583,13 @@ async function supportingDataForAdvancBtn(client, poNo) {
       result = { ...result, ...response[2][0] };
     }
 
-    if (response[3] && response[3][0]) {
-      // const con = response[3].find((el) => el.MID == MID_SDBG);
-      result.contractualDates = response[3];
+    if (response[3] && response.length) {
+      const date = response[3].find((el) => el.MID == MID_DRAWING)?.PLAN_DATE;
+      result.contractDrawingDate = date;
     }
-    if (response[4] && response[4][0]) {
-      // const act = response[4].find((el) => el.MID == parseInt(MID_DRAWING));
-      result.actualDates = response[4];
+    if (response[4] && response.length) {
+      const date = parseInt(response[4].find((el) => el.MID == parseInt(MID_DRAWING))?.PLAN_DATE);
+      result.actualDrawingDate = date;
     }
 
     return result;
