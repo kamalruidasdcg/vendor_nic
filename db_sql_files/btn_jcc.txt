@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS public.btn_jcc
 (
-    id integer NOT NULL DEFAULT nextval('btn_jcc_id_seq'::regclass),
+    id SERIAL PRIMARY KEY,
     btn_num character varying(30) COLLATE pg_catalog."default" NOT NULL,
     purchasing_doc_no character varying(30) COLLATE pg_catalog."default" NOT NULL,
     invoice_no character varying(30) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
@@ -25,10 +25,5 @@ CREATE TABLE IF NOT EXISTS public.btn_jcc
     jcc_job_end_date bigint,
     remarks text COLLATE pg_catalog."default",
     jcc_filename text COLLATE pg_catalog."default",
-    CONSTRAINT btn_jcc_pkey PRIMARY KEY (id)
+    suppoting_invoice_filename text COLLATE pg_catalog."default"
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.btn_jcc
-    OWNER to postgres;
