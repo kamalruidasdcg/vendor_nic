@@ -151,11 +151,11 @@ const getAdvBillHybridData = async (req, res) => {
       let success = false;
       let statusCode;
       switch (type) {
-        case 'icgrn': {
-          const result = await getGrnIcgrnByInvoice(client, req.query);
-          ({ data, message, success, statusCode } = result);
-        }
-          break;
+        // case 'icgrn': {
+        //   const result = await getGrnIcgrnByInvoice(client, req.query);
+        //   ({ data, message, success, statusCode } = result);
+        // }
+        //   break;
 
         case 'details': {
           const result = await getAdvBillHybridBTNDetails(client, req.query);

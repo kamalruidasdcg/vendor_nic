@@ -379,8 +379,8 @@ async function getAdvBillHybridBTNDetails(client, data) {
     // ON(s_btn.btn_num = btn_assign.btn_num)
     const result = await poolQuery({ client, query: getBtnQuery, values: val });
     let response = result[0] || {};
-    // const supDocs = await supportingDataForServiceBtn(client, response.purchasing_doc_no);
-    response = { ...response };
+    const supDocs = await supportingDataForAdvancBtn(client, response.purchasing_doc_no || "");
+    response = { ...response, ...supDocs };
 
     return { success: true, statusCode: 200, message: "Value fetch success", data: response };
   } catch (error) {
@@ -507,7 +507,7 @@ async function getInitalData(client, data) {
     const response = await supportingDataForAdvancBtn(client, data.poNo);
 
     console.log("response", response);
-    
+
 
     return { success: true, statusCode: 200, message: "Value fetch success", data: response };
   } catch (error) {
@@ -527,27 +527,27 @@ async function getInitalData(client, data) {
  */
 const getBgApprovedFiles = async (client, data) => {
   try {
-      let q = `SELECT action_type, file_name, file_path  FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and (action_type = $3 or action_type = $4)`;
-      let result = await poolQuery({ client, query: q, values: data });
-      console.log("resultresultresultresultresult", result, q, data);
+    let q = `SELECT action_type, file_name, file_path  FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and (action_type = $3 or action_type = $4)`;
+    let result = await poolQuery({ client, query: q, values: data });
+    console.log("resultresultresultresultresult", result, q, data);
 
 
     const obj = {
-      ibFileName : null,
+      ibFileName: null,
       ibFilePath: null,
       abgFileName: null,
       abgFilePath: null,
     }
-    if(result.length) {
+    if (result.length) {
       obj.ibFileName = result.find((el) => el.action_type === ACTION_IB)?.file_name;
       obj.ibFilePath = result.find((el) => el.action_type === ACTION_IB)?.file_path;
       obj.abgFileName = result.find((el) => el.action_type === ACTION_ADVANCE_BG_SUBMISSION)?.file_name;
       obj.abgFilePath = result.find((el) => el.action_type === ACTION_ADVANCE_BG_SUBMISSION)?.file_path;
     }
 
-      return obj;
+    return obj;
   } catch (error) {
-      throw error;
+    throw error;
   }
 };
 
@@ -562,27 +562,27 @@ async function supportingDataForAdvancBtn(client, poNo) {
         getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]), // 0
         getBgApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB]), // 1
         vendorDetails(client, [poNo]), // 2
-        getContractutalSubminissionDate (client, [poNo]), // 3
+        getContractutalSubminissionDate(client, [poNo]), // 3
         getActualSubminissionDate(client, [poNo]) // 4
       ]);
 
     let result = {}
 
-    console.log("0",response[0][0]);
-    console.log("1",response[1]);
-    console.log("2",response[2][0]);
-    console.log("3",response[3][0]);
-    console.log("4",response[4][0]);
-    
+    console.log("0", response[0][0]);
+    console.log("1", response[1]);
+    console.log("2", response[2][0]);
+    console.log("3", response[3][0]);
+    console.log("4", response[4][0]);
+
     if (response[0][0]) {
       result = { ...result, sdbgFiles: response[0] };
-    } 
+    }
     if (response[1]) {
       result = { ...result, ...response[1] };
     } if (response[2][0]) {
       result = { ...result, ...response[2][0] };
     }
-  
+
     if (response[3] && response[3][0]) {
       // const con = response[3].find((el) => el.MID == MID_SDBG);
       result.contractualDates = response[3];
