@@ -160,34 +160,34 @@ router.get("/getGstnByPo", [veifyAccessToken], (req, res) => {
 //// Btn submitIncorrectDuct ////
 ///////////////////////////
 
-router.post(
-  "/submitAdvBillHybrid",
-  [veifyAccessToken, btnAdvanceBillHybridUploadFile()],
-  (req, res) => {
-    // submitAdvanceBillHybrid(req, res);
-    submitAdvanceBillHybrid(req, res);
-  }
-);
-router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridData(req, res);
-});
-router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridData(req, res);
-});
-router.post("/getAdvBillHybridForDO", [veifyAccessToken], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridDataForDO(req, res);
-});
-router.post("/submitAdvBillBTNByDO", [veifyAccessToken], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
-  submitAdvBillBTNByDO(req, res);
-});
-router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
-  // submitAdvanceBillHybrid(req, res);
-  getAdvBillHybridBTN(req, res);
-});
+// router.post(
+//   "/submitAdvBillHybrid",
+//   [veifyAccessToken, btnAdvanceBillHybridUploadFile()],
+//   (req, res) => {
+//     // submitAdvanceBillHybrid(req, res);
+//     submitAdvanceBillHybrid(req, res);
+//   }
+// );
+// router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
+//   // submitAdvanceBillHybrid(req, res);
+//   getAdvBillHybridData(req, res);
+// });
+// router.post("/getAdvBillHybrid", [veifyAccessToken], (req, res) => {
+//   // submitAdvanceBillHybrid(req, res);
+//   getAdvBillHybridData(req, res);
+// });
+// router.post("/getAdvBillHybridForDO", [veifyAccessToken], (req, res) => {
+//   // submitAdvanceBillHybrid(req, res);
+//   getAdvBillHybridDataForDO(req, res);
+// });
+// router.post("/submitAdvBillBTNByDO", [veifyAccessToken], (req, res) => {
+//   // submitAdvanceBillHybrid(req, res);
+//   submitAdvBillBTNByDO(req, res);
+// });
+// router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
+//   // submitAdvanceBillHybrid(req, res);
+//   getAdvBillHybridBTN(req, res);
+// });
 
 
 
