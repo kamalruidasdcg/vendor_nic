@@ -79,7 +79,7 @@ exports.isd = () => {
 exports.btnAdvanceBillHybridUploadFile = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
-    { name: "suppoting_invoice_filename", maxCount: 1 },
+    { name: "invoice_supporting_filename", maxCount: 1 },
   ]);
 };
 
