@@ -1,0 +1,18 @@
+-- Table: public.btn_jcc_certify_authority
+
+-- DROP TABLE IF EXISTS public.btn_jcc_certify_authority;
+
+CREATE TABLE IF NOT EXISTS public.btn_jcc_certify_authority
+(
+    id SERIAL PRIMARY KEY,
+    btn_num character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    recomend_payment character varying(3) COLLATE pg_catalog."default" NOT NULL,
+    net_payable_amount character varying(15) COLLATE pg_catalog."default" DEFAULT NULL::character varying,
+    created_at bigint NOT NULL,
+    created_by_id character varying(30) COLLATE pg_catalog."default" NOT NUL
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.btn_jcc_certify_authority
+    OWNER to postgres;

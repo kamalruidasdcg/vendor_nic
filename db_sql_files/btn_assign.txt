@@ -1,0 +1,1 @@
+alter table btn_assign add column activity varchar(100);

@@ -33,7 +33,7 @@ const uploadBTNs = multer({
   pdfFileFilter,
   limits: { fileSize: 1000 * 1000 },
 });
-
+//
 exports.btnmw = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
@@ -44,9 +44,13 @@ exports.btnmw = () => {
     { name: "demand_raise_filename", maxCount: 1 },
     { name: "invoice_filename", maxCount: 1 },
     { name: "balance_claim_invoice_filename", maxCount: 1 },
+
+    { name: "ref_invoice1_file", maxCount: 1 },
+    { name: "ref_invoice2_file", maxCount: 1 },
+    { name: "ref_invoice3_file", maxCount: 1 },
+    { name: "ref_invoice4_file", maxCount: 1 },
   ]);
 };
-
 
 exports.serviceBtnFilesUpload = () => {
   return uploadBTNs.fields([
@@ -58,7 +62,6 @@ exports.serviceBtnFilesUpload = () => {
     // { name: "pf_compliance_filename", maxCount: 1 },
   ]);
 };
-
 
 const uploadInvoiceSupportingDoc = multer({
   storage: storageInvoiceSupportingDoc,
@@ -77,5 +80,13 @@ exports.btnAdvanceBillHybridUploadFile = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
     { name: "suppoting_invoice_filename", maxCount: 1 },
+  ]);
+};
+
+exports.btnJccUploadFile = () => {
+  return uploadBTNs.fields([
+    { name: "invoice_filename", maxCount: 1 },
+    { name: "suppoting_invoice_filename", maxCount: 1 },
+    { name: "jcc_filename", maxCount: 1 }
   ]);
 };
