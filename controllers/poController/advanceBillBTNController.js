@@ -120,7 +120,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
       const net_payable_amount = net_claim_amount;
 
-      await addToBTNList(client, { ...payload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
+      await addToBTNList(client, { ...btnPayload, net_payable_amount, certifying_authority: payload.bill_certifing_authority }, SUBMITTED_BY_VENDOR);
       await client.query("COMMIT");
       // TO DO EMAIL
       // serviceBtnMailSend(tokenData, { ...payload, status: SUBMITTED });
