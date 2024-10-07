@@ -288,8 +288,8 @@ const jccBtnforwordToFinace = async (req, res) => {
             const latesBtnData = await getLatestBTN(client, payload);
             // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
             await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_CAUTHORITY);
-            const sendSap = true; //await jccBtnSubmitToSAPF01({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-            // const sendSap = await jccBtnSubmitToSAPF01(payload, tokenData);
+            // const sendSap = true; //await jccBtnSubmitToSAPF01({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+            const sendSap = await jccBtnSubmitToSAPF01(payload, tokenData);
 
             if (sendSap == false) {
                 console.log(sendSap);
@@ -303,7 +303,7 @@ const jccBtnforwordToFinace = async (req, res) => {
             }
 
         } catch (error) {
-            console.log("error", error.message);
+            console.log("error", error.message, error.stack);
             await client.query("ROLLBACK");
             resSend(res, false, 500, Message.SOMTHING_WENT_WRONG, error.message, null);
         } finally {

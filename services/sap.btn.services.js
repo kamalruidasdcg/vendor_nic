@@ -1,6 +1,6 @@
 const { getQuery } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
-const { timeInHHMMSS } = require("../controllers/btnControllers");
+// const { timeInHHMMSS } = require("../controllers/btnControllers");
 const { REJECTED, F_STATUS_FORWARDED_TO_FINANCE } = require("../lib/status");
 const { BTN_PBG, BTN_ANY_OTHER_CLAIM } = require("../lib/tableName");
 const { getEpochTime, getYyyyMmDd } = require("../lib/utils");
@@ -323,7 +323,7 @@ async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
       STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
       ZVBNO: btnDetails[0]?.invoice_no, // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: getYyyyMmDd(new Date(btnDetails[0]?.invoice_date).getTime()), // GATE ENTRY INVOICE DATE
+      VEN_BILL_DATE: getYyyyMmDd(new Date( parseInt(btnDetails[0]?.invoice_date)).getTime()), // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
       ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE
@@ -676,6 +676,15 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
   }
 };
 
+
+const timeInHHMMSS = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return hours + minutes + seconds;
+};
 
 
 module.exports = { btnSubmitToSAPF01, btnSubmitToSAPF02, jccBtnSubmitToSAPF01, jccBtnSubmitToSAPF02, getQueryForbtnSaveToSap }
