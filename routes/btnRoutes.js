@@ -21,10 +21,13 @@ const {
   serviceBtnAssignToFiStaff,
 } = require("../controllers/btnServiceHybridControllers");
 
+const jccBtnController = require("../controllers/btnJccController");
+
 const {
   btnmw,
   btnAdvanceBillHybridUploadFile,
   serviceBtnFilesUpload,
+  btnJccUploadFile,
 } = require("../services/btnmw");
 const { veifyAccessToken } = require("../services/jwt.services");
 const {
@@ -174,5 +177,28 @@ router.post("/getAdvBillHybridBTN", [veifyAccessToken], (req, res) => {
   // submitAdvanceBillHybrid(req, res);
   getAdvBillHybridBTN(req, res);
 });
+
+
+
+// BTN JCC
+
+router.get("/init-jcc",[], (req, res) => {
+  jccBtnController.initJccData(req, res);
+} )
+router.post("/submit-jcc", [veifyAccessToken, btnJccUploadFile()], (req, res) => {
+  jccBtnController.submitJccBtn(req, res);
+});
+
+router.get("/jcc", [], (req, res) => {
+  jccBtnController.getJccBtnData(req, res);
+});
+
+router.post("/submit-jcc-ca", [veifyAccessToken], (req, res) => {
+  jccBtnController.jccBtnforwordToFinace(req, res);
+});
+router.post("/submit-jcc-fi", [veifyAccessToken], (req, res) => {
+  jccBtnController.jccBtnAssignToFiStaff(req, res);
+});
+
 
 module.exports = router;

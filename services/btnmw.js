@@ -89,3 +89,11 @@ exports.btnAdvanceBillHybridUploadFile = () => {
     { name: "debit_credit_filename", maxCount: 1 },
   ]);
 };
+
+exports.btnJccUploadFile = () => {
+  return uploadBTNs.fields([
+    { name: "invoice_filename", maxCount: 1 },
+    { name: "suppoting_invoice_filename", maxCount: 1 },
+    { name: "jcc_filename", maxCount: 1 }
+  ]);
+};
