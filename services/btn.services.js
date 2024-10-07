@@ -55,7 +55,7 @@ const advBillHybridbtnPayload = (payload) => {
     // a_qap_date: payload.a_qap_date || "",
     vendor_code: payload.vendor_code || "",
     btn_type: "advance-bill-hybrid",
-    hsn_gstn_taxrate: payload.is_hsn_code || "Y",
+    hsn_gstn_icgrn: true,
     // updated_by: payload.updated_by || "",
     created_at: payload.created_at || "",
     created_by_id: payload.created_by_id || "",
