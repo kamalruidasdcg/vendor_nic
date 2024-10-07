@@ -165,8 +165,8 @@ const getAdvBillHybridData = async (req, res) => {
           break;
         case 'init': {
         
-          console.log("result", req.query);
           const result = await getInitalData(client, req.query);
+          console.log("result", result);
           ({ data, message, success, statusCode } = result);
         }
           break;

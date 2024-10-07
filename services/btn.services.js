@@ -17,6 +17,7 @@ const {
   MID_DRAWING,
   MID_QAP,
   ACTION_ADVANCE_BG_SUBMISSION,
+  ACTION_IB,
 } = require("../lib/constant");
 const { APPROVED, BTN_STATUS_PROCESS } = require("../lib/status");
 const { getEpochTime, generateQuery } = require("../lib/utils");
@@ -505,6 +506,9 @@ async function getInitalData(client, data) {
     val.push(data.poNo);
     const response = await supportingDataForAdvancBtn(client, data.poNo);
 
+    console.log("response", response);
+    
+
     return { success: true, statusCode: 200, message: "Value fetch success", data: response };
   } catch (error) {
     console.log("dddddd", error.message, error.stack);
@@ -514,18 +518,49 @@ async function getInitalData(client, data) {
 }
 
 
+/**
+ * 
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const getBgApprovedFiles = async (client, data) => {
+  try {
+      let q = `SELECT action_type, file_name, file_path  FROM sdbg WHERE purchasing_doc_no = $1 and status = $2 and (action_type = $3 or action_type = $4)`;
+      let result = await poolQuery({ client, query: q, values: data });
+      console.log("resultresultresultresultresult", result, q, data);
 
+
+    const obj = {
+      ibFileName : null,
+      ibFilePath: null,
+      abgFileName: null,
+      abgFilePath: null,
+    }
+    if(result.length) {
+      obj.ibFileName = result.find((el) => el.action_type === ACTION_IB)?.file_name;
+      obj.ibFilePath = result.find((el) => el.action_type === ACTION_IB)?.file_path;
+      obj.abgFileName = result.find((el) => el.action_type === ACTION_ADVANCE_BG_SUBMISSION)?.file_name;
+      obj.abgFilePath = result.find((el) => el.action_type === ACTION_ADVANCE_BG_SUBMISSION)?.file_path;
+    }
+
+      return obj;
+  } catch (error) {
+      throw error;
+  }
+};
 
 async function supportingDataForAdvancBtn(client, poNo) {
   try {
 
-    console.log("poNo", poNo);
+    console.log("dddddddddddddddd", poNo);
 
 
     const response = await Promise.all(
       [
         getSDBGApprovedFiles(client, [poNo, APPROVED, ACTION_SDBG]), // 0
-        getPBGApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION]), // 1
+        getBgApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB]), // 1
         vendorDetails(client, [poNo]), // 2
         getContractutalSubminissionDate (client, [poNo]), // 3
         getActualSubminissionDate(client, [poNo]) // 4
@@ -534,7 +569,7 @@ async function supportingDataForAdvancBtn(client, poNo) {
     let result = {}
 
     console.log("0",response[0][0]);
-    console.log("1",response[1][0]);
+    console.log("1",response[1]);
     console.log("2",response[2][0]);
     console.log("3",response[3][0]);
     console.log("4",response[4][0]);
@@ -542,8 +577,8 @@ async function supportingDataForAdvancBtn(client, poNo) {
     if (response[0][0]) {
       result = { ...result, sdbgFiles: response[0] };
     } 
-    if (response[1][0]) {
-      result = { ...result, advancBgFiles: response[1] };
+    if (response[1]) {
+      result = { ...result, ...response[1] };
     } if (response[2][0]) {
       result = { ...result, ...response[2][0] };
     }
