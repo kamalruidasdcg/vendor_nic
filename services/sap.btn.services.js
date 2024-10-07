@@ -584,7 +584,7 @@ async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
       STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
       ZVBNO: btnDetails[0]?.invoice_no, // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: getYyyyMmDd(new Date( parseInt(btnDetails[0]?.invoice_date)).getTime()), // GATE ENTRY INVOICE DATE
+      VEN_BILL_DATE: getYyyyMmDd(new Date(parseInt(btnDetails[0]?.invoice_date)).getTime()), // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
       ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE
@@ -928,7 +928,49 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
         ON(jcc.reference_no = btn.jcc_number)
     WHERE 
         btn.btn_num = $2`;
-    } else {
+    }
+    else if (btnPayload.btn_type === "claim-against-jcc") {
+      vendorQuery = `WITH ranked_assignments AS (
+        SELECT
+            btn_assign.*,
+            ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+        FROM
+            btn_assign
+    )
+    SELECT 
+      btn.btn_num, 
+      btn.purchasing_doc_no,
+      jcc.yard_no AS yard, 
+      btn.jcc_ref_number, 
+      btn.net_claim_amount,  
+      btn.invoice_no,
+      btn.vendor_code,
+      vendor.stcd3,
+      users.pernr as finance_auth_id,
+      users.cname as finance_auth_name,
+      vendor.name1 as vendor_name,
+      assign_users.cname as assign_name,
+      ranked_assignments.assign_to as assign_to
+
+    FROM 
+        btn_jcc AS btn
+    LEFT JOIN 
+        ranked_assignments
+        ON (btn.btn_num = ranked_assignments.btn_num
+        AND ranked_assignments.rn = 1)
+    LEFT JOIN  lfa1 as vendor
+        ON(btn.vendor_code = vendor.lifnr)
+    LEFT JOIN  pa0002 as users
+        ON(users.pernr::character varying = $1)
+    LEFT JOIN  pa0002 as assign_users
+        ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+    LEFT JOIN  wdc as jcc
+        ON(jcc.reference_no = btn.jcc_ref_number)
+    WHERE 
+        btn.btn_num = $2`;
+    }
+
+    else {
       vendorQuery = null;
     }
     return vendorQuery;
