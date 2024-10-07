@@ -54,7 +54,7 @@ const advBillHybridbtnPayload = (payload) => {
     // c_qap_date: payload.c_qap_date || "",
     // a_qap_date: payload.a_qap_date || "",
     vendor_code: payload.vendor_code || "",
-    btn_type: "advance-bill-hybrid",
+    btn_type: "advance-bill",
     hsn_gstn_icgrn: true,
     // updated_by: payload.updated_by || "",
     created_at: payload.created_at || "",
@@ -585,11 +585,11 @@ async function supportingDataForAdvancBtn(client, poNo) {
 
     if (response[3] && response.length) {
       const date = response[3].find((el) => el.MID == MID_DRAWING)?.PLAN_DATE;
-      result.contractDrawingDate = date;
+      result.c_drawing_date = date;
     }
     if (response[4] && response.length) {
       const date = parseInt(response[4].find((el) => el.MID == parseInt(MID_DRAWING))?.PLAN_DATE);
-      result.actualDrawingDate = date;
+      result.a_drawing_date = date;
     }
 
     return result;
