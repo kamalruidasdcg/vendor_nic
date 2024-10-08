@@ -264,11 +264,11 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
 
 
 
-  /**
- * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
- * @param {Object} btnPayload
- * @param {Object} tokenData
- */
+/**
+* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
+* @param {Object} btnPayload
+* @param {Object} tokenData
+*/
 async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
   let status = false;
   console.log("send to sap payload -- >", btnPayload);
@@ -320,7 +320,7 @@ async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
 
 
     console.log("btnDetails", btnDetails);
-    
+
 
     let btn_payload = {
       EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
@@ -966,6 +966,49 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
         ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
     LEFT JOIN  wdc as jcc
         ON(jcc.reference_no = btn.jcc_ref_number)
+    WHERE 
+        btn.btn_num = $2`;
+    } else if (btnPayload.btn_type === "advance-bill") {
+      vendorQuery = `WITH ranked_assignments AS (
+        SELECT
+            btn_assign.*,
+            ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
+        FROM
+            btn_assign
+    )
+    SELECT 
+      btn.btn_num, 
+      btn.purchasing_doc_no,
+      btn.cgst, 
+      btn.sgst, 
+      btn.igst, 
+      btn.yard, 
+      btn.wdc_number, 
+      btn.net_claim_amount, 
+      btn.net_claim_amt_gst, 
+      btn.invoice_no,
+      btn.vendor_code,
+      btn.net_with_gst,
+      vendor.stcd3,
+      users.pernr as finance_auth_id,
+      users.cname as finance_auth_name,
+      vendor.name1 as vendor_name,
+      assign_users.cname as assign_name,
+      ranked_assignments.assign_to as assign_to
+
+    FROM 
+        btn_service_hybrid AS btn
+    LEFT JOIN 
+        ranked_assignments
+        ON (btn.btn_num = ranked_assignments.btn_num
+        AND ranked_assignments.rn = 1)
+    LEFT JOIN  lfa1 as vendor
+        ON(btn.vendor_code = vendor.lifnr)
+    LEFT JOIN  pa0002 as users
+        ON(users.pernr::character varying = $1)
+    LEFT JOIN  pa0002 as assign_users
+        ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
+
     WHERE 
         btn.btn_num = $2`;
     }
