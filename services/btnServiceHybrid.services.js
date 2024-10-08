@@ -135,7 +135,6 @@ const addToBTNList = async (client, data, status) => {
             status: status,
             remarks: data.remarks || ""
         };
-        console.log("payload", payload);
 
         let { q, val } = generateQuery(INSERT, BTN_LIST, payload);
         let res = await poolQuery({ client, query: q, values: val });

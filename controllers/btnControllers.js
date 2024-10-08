@@ -54,6 +54,7 @@ const {
   BTN_STATUS_PROCESS,
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
+  SUBMITTED_BY_CAUTHORITY,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -312,7 +313,6 @@ const getBTNData = async (req, res) => {
 };
 
 const addToBTNList = async (data, status) => {
-  console.log("data", data);
   let payload = {
     btn_num: data?.btn_num,
     purchasing_doc_no: data?.purchasing_doc_no,
@@ -1590,12 +1590,12 @@ const assignToFiStaffHandler = async (req, res) => {
 
       let btn_list_q = ` SELECT * FROM btn_list WHERE btn_num = $1 
 	                      AND purchasing_doc_no = $2
-	                      AND status = $3
+	                      AND (status = $3 or status = $4)
                         ORDER BY created_at DESC`;
       let btn_list = await poolQuery({
         client,
         query: btn_list_q,
-        values: [btn_num, purchasing_doc_no, SUBMITTED_BY_DO],
+        values: [btn_num, purchasing_doc_no, SUBMITTED_BY_DO, SUBMITTED_BY_CAUTHORITY],
       });
 
       if (btn_list.length < 0) {
@@ -1628,7 +1628,7 @@ const assignToFiStaffHandler = async (req, res) => {
           status: STATUS_RECEIVED,
         });
         try {
-          const sendSap = btnSaveToSap({ ...req.body, ...payload }, tokenData);
+          const sendSap = true; // btnSaveToSap({ ...req.body, ...payload }, tokenData);
           if (sendSap == false) {
             await client.query("ROLLBACK");
 
