@@ -11,7 +11,7 @@ const {
   generateInsertUpdateQuery,
   generateQueryForMultipleData,
 } = require("../../lib/utils");
-const Measage = require("../../utils/messages");
+const Message = require("../../utils/messages");
 const {
   poolClient,
   poolQuery,
@@ -21,6 +21,7 @@ const {
 const { sendMail } = require("../../services/mail.services");
 const { GATE_ENTRY_DOC_CREATE } = require("../../lib/event");
 const { getUserDetailsQuery } = require("../../utils/mailFunc");
+const { isPresentInObps } = require("../../services/sap.services");
 
 const insertGateEntryData = async (req, res) => {
   let insertPayload = {};
@@ -57,7 +58,7 @@ const insertGateEntryData = async (req, res) => {
         !obj.W_YEAR
       ) {
         // return responseSend(res, "F", 400, "INVALID PAYLOAD", null, null);
-        throw new Error(Measage.INVALID_PAYLOAD);
+        throw new Error(Message.INVALID_PAYLOAD);
       }
 
       // await client.beginTransaction();
@@ -75,16 +76,29 @@ const insertGateEntryData = async (req, res) => {
           values: gate_entry_h_Insert.val,
         });
       } catch (error) {
-        throw new Error(`${Measage.DATA_INSERT_FAILED} ${error.toString()}`);
+        throw new Error(`${Message.DATA_INSERT_FAILED} ${error.toString()}`);
         // return responseSend(res, "F", 502, "Data insert failed !!", error, null);
       }
 
       if (ITEM_TAB && ITEM_TAB?.length) {
         try {
-          const zmilestonePayload = await gateEntryDataPayload(ITEM_TAB);
+          const payloadObj = await gateEntryDataPayload(ITEM_TAB);
+
+          /**
+           * CHECK THE PO IS PRESENT IN OBPS OR NOT
+           */
+
+          const isPresent = await isPresentInObps(client, `ebeln = '${payloadObj[0]?.EBELN}'`).count();
+          if (!isPresent) {
+
+            await client.query("ROLLBACK");
+            return;
+            // return responseSend(res, "S", 200, Message.NON_OBPS_DATA, 'NON OBPS PO/data.', null);
+          } 
+
           // const insert_ekpo_table = `INSERT INTO ekpo (EBELN, EBELP, LOEKZ, STATU, AEDAT, TXZ01, MATNR, BUKRS, WERKS, LGORT, MATKL, KTMNG, MENGE, MEINS, NETPR, NETWR, MWSKZ) VALUES ?`;
           const zmm_ge_line_item_q = await generateQueryForMultipleData(
-            zmilestonePayload,
+            payloadObj,
             GATE_ENTRY_DATA,
             ["ENTRY_NO", "EBELN", "EBELP", "W_YEAR"]
           );
@@ -95,8 +109,8 @@ const insertGateEntryData = async (req, res) => {
           });
         } catch (error) {
           // console.log("error, zpo milestone", error);
-          // throw new Error(Measage.DATA_INSERT_FAILED + JSON.stringify(error.toString()));
-          throw new Error(`${Measage.DATA_INSERT_FAILED} ${error.toString()}`);
+          // throw new Error(Message.DATA_INSERT_FAILED + JSON.stringify(error.toString()));
+          throw new Error(`${Message.DATA_INSERT_FAILED} ${error.toString()}`);
         }
       }
 
@@ -122,7 +136,7 @@ const insertGateEntryData = async (req, res) => {
       // console.log("Connection End" + "--->" + "");
     }
   } catch (error) {
-    responseSend(res, "F", 500, Measage.SERVER_ERROR, error, null);
+    responseSend(res, "F", 500, Message.SERVER_ERROR, error, null);
   }
 };
 
