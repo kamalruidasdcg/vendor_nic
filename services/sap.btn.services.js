@@ -289,8 +289,8 @@ async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
             btn.igst, 
             btn.net_claim_amount, 
             btn.invoice_no,
+            btn.invoice_date,
             btn.vendor_code,
-            ged.inv_date,
             vendor.stcd3,
             users.pernr as finance_auth_id,
             users.cname as finance_auth_name,
@@ -330,7 +330,7 @@ async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
       STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
       ZVBNO: btnDetails[0]?.invoice_no, // GATE ENTRY INVOCE NUMBER
       VEN_BILL_DATE: getYyyyMmDd(
-        new Date(btnDetails[0]?.invoice_date).getTime()
+        new Date(parseInt(btnDetails[0]?.invoice_date)).getTime()
       ), // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
@@ -985,10 +985,8 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
       btn.cgst, 
       btn.sgst, 
       btn.igst, 
-      btn.yard, 
-      btn.wdc_number, 
+      btn.yard,  
       btn.net_claim_amount, 
-      btn.net_claim_amt_gst, 
       btn.invoice_no,
       btn.vendor_code,
       btn.net_with_gst,
@@ -1000,7 +998,7 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
       ranked_assignments.assign_to as assign_to
 
     FROM 
-        btn_service_hybrid AS btn
+        btn_adv_bill_hybrid AS btn
     LEFT JOIN 
         ranked_assignments
         ON (btn.btn_num = ranked_assignments.btn_num

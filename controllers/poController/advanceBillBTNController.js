@@ -165,7 +165,7 @@ const getAdvBillHybridData = async (req, res) => {
         }
           break;
         case 'init': {
-        
+
           const result = await getInitalData(client, req.query);
           console.log("result", result);
           ({ data, message, success, statusCode } = result);
@@ -218,8 +218,8 @@ const sbhSubmitBTNByDO = async (req, res) => {
         return resSend(res, true, 200, "Rejected successfully !!", response1, null);
       }
 
-      console.log(!payload.recomend_payment , !payload.net_payable_amount , !payload.assign_to , !payload.purchasing_doc_no);
-      
+      console.log(!payload.recomend_payment, !payload.net_payable_amount, !payload.assign_to, !payload.purchasing_doc_no);
+
 
       if (!payload.recomend_payment || !payload.net_payable_amount || !payload.assign_to || !payload.purchasing_doc_no) {
         return resSend(res, false, 400, Message.MANDATORY_PARAMETR_MISSING, "PO No OR net_payable_amount OR assign_to OR recomend_payment missing", null);
@@ -240,7 +240,8 @@ const sbhSubmitBTNByDO = async (req, res) => {
       //  BTN FINANCE AUTHORITY DATA INSERT
       payload.created_by_id = tokenData.vendor_code;
       const financePaylad = advBillHybridbtnDOPayload(payload);
-      const { q, val } = generateQuery(INSERT, BTN_ADV_BILL_HYBRID_DO, financePaylad);
+      // const { q, val } = generateQuery(INSERT, BTN_ADV_BILL_HYBRID_DO, financePaylad);
+      const { q, val } = await generateInsertUpdateQuery(financePaylad, BTN_ADV_BILL_HYBRID_DO, ["btn_num"]);
       const response = await poolQuery({ client, query: q, values: val });
 
       // BTN ASSIGN BY FINANCE AUTHORITY  
@@ -252,8 +253,8 @@ const sbhSubmitBTNByDO = async (req, res) => {
       const latesBtnData = await getLatestBTN(client, payload);
       // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
       await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_DO);
-      const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-      // const sendSap = await abhBtnSubmitToSAPF01 (payload, tokenData);
+      // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
+      const sendSap = await abhBtnSubmitToSAPF01 (payload, tokenData);
 
       if (sendSap == false) {
         console.log(sendSap);
