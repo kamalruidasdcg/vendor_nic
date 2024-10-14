@@ -18,6 +18,7 @@ const {
   MID_QAP,
   ACTION_ADVANCE_BG_SUBMISSION,
   ACTION_IB,
+  BTN_ADVANCE_BILL,
 } = require("../lib/constant");
 const { APPROVED, BTN_STATUS_PROCESS } = require("../lib/status");
 const { getEpochTime, generateQuery } = require("../lib/utils");
@@ -37,6 +38,7 @@ const advBillHybridbtnPayload = (payload) => {
     invoice_no: payload.invoice_no || "",
     invoice_filename: payload.invoice_filename || "",
     invoice_value: payload.invoice_value || "",
+    invoice_date: payload.invoice_date || "",
     invoice_type: payload.invoice_type,
     // grn_nos: payload.grn_nos || "",
     // icgrn_nos: payload.icgrn_nos || "",
@@ -46,7 +48,7 @@ const advBillHybridbtnPayload = (payload) => {
     cgst: payload.cgst || "0",
     sgst: payload.sgst || "0",
     igst: payload.igst || "0",
-    net_with_gst: payload.net_with_gst || "",
+    net_with_gst: payload.net_with_gst || "0",
     // c_sdbg_date: payload.c_sdbg_date || "",
     // a_sdbg_date: payload.a_sdbg_date || "",
     c_drawing_date: payload.c_drawing_date || "",
@@ -54,7 +56,7 @@ const advBillHybridbtnPayload = (payload) => {
     // c_qap_date: payload.c_qap_date || "",
     // a_qap_date: payload.a_qap_date || "",
     vendor_code: payload.vendor_code || "",
-    btn_type: "advance-bill",
+    btn_type: BTN_ADVANCE_BILL,
     hsn_gstn_icgrn: true,
     // updated_by: payload.updated_by || "",
     created_at: payload.created_at || "",
