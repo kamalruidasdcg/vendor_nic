@@ -87,6 +87,7 @@ const submitAdvanceBillHybrid = async (req, res) => {
         ...actualDateSetup.data,
         vendor_code: tokenData.vendor_code,
         net_claim_amount,
+        net_with_gst: net_claim_amount, // this payload added becaus of all btn payload same
         created_at: getEpochTime(),
       };
 
