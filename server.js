@@ -25,12 +25,9 @@ const syncRoutes = require("./routes/syncRoutes");
 const { mailSentCornJob } = require("./controllers/mailSentCron");
 const { YES, TRUE, LAN_SERVER_PO_PATH } = require("./lib/constant");
 const { apiLog } = require("./services/api.services");
-const { syncCron, syncFileCron } = require("./controllers/syncControllers");
+const { syncDataCorn, syncFileCron } = require("./controllers/syncControllers");
 const statRoutes = require("./routes/statRoutes");
-const {
-  sendBGReminderMail,
-  sendPOMilestoneEXPReminderMail,
-} = require("./controllers/sapController/remaiderMailSendController");
+const { vendorReminderMail } = require("./controllers/sapController/remaiderMailSendController");
 
 // API LOGS
 app.use(apiLog);
@@ -60,19 +57,22 @@ app.use((req, res, next) => {
 });
 
 // Call Cron JOB for DATA Syncronization
-cron.schedule("00 23 * * *", async () => {
-  console.log("Cron job started at 00:05");
-  try {
-    await syncCron();
-    console.log("Cron job completed successfully");
-  } catch (error) {
-    console.error("Error during cron job:", error);
-    fs.appendFileSync(
-      "error.log",
-      `${new Date().toISOString()} - Error: ${error.message}\n`
-    );
-  }
-});
+// cron.schedule("00 23 * * *", async () => {
+//   console.log("Cron job started at 00:05");
+//   try {
+//     await syncCron();
+//     console.log("Cron job completed successfully");
+//   } catch (error) {
+//     console.error("Error during cron job:", error);
+//     fs.appendFileSync(
+//       "error.log",
+//       `${new Date().toISOString()} - Error: ${error.message}\n`
+//     );
+//   }
+// });
+
+// Call Cron JOB for DATA Syncronization
+syncDataCorn();
 // Call Cron JOB for FILE Syncronization
 syncFileCron();
 
@@ -100,18 +100,10 @@ const task = cron.schedule(
   }
 );
 
+// vendor reminder emails
 // At 11 PM DAILY
-const task2 = cron.schedule(
-  "0 23 * * *",
-  () => {
-    console.log("Run at night 11 PM");
-    sendBGReminderMail();
-    sendPOMilestoneEXPReminderMail();
-  },
-  {
-    scheduled: process.env.MAIL_TURN_ON === YES ? true : false,
-  }
-);
+vendorReminderMail();
+
 
 app.listen(PORT, () => {
   console.log("Server is running on port" + ":" + PORT);

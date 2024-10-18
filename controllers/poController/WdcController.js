@@ -170,14 +170,21 @@ exports.wdc = async (req, res) => {
         // }
         // console.log(obj);
         // console.log("4567876543");
-        payload = wdcPayload(obj, last_data.line_item_array);
+        //         let text = "WDC-1728041110595-7545";
+        // let result = text.startsWith("WDC");
+        if (obj.reference_no.startsWith("WDC")) {
+          console.log("1122");
+          payload = wdcPayload(obj, last_data.line_item_array);
+        }
+        // payload = wdcPayload(obj, last_data.line_item_array);
         // console.log("$%^&*(*&^%");
         // console.log(payload);
-        //return;
+        // return;
         payload = {
           //...obj,
           ...last_data,
           ...payload,
+          status: obj.status,
           // ...fileData,
           updated_by: "GRSE",
           created_by_id: tokenData.vendor_code,
@@ -225,30 +232,31 @@ exports.wdc = async (req, res) => {
         : null;
 
       // obj.line_item_array = '[{"claim_qty":"4","line_item_no":"15","actual_start_date":"2024-05-07T18:30:00.000Z","actual_completion_date":"2024-05-09T18:30:00.000Z","delay_in_work_execution":"1"},{"claim_qty":"6","line_item_no":"40","actual_start_date":"2024-05-20T18:30:00.000Z","actual_completion_date":"2024-05-22T18:30:00.000Z","delay_in_work_execution":"2"}]';
-      let line_item_array = JSON.parse(obj.line_item_array);
-      obj.total_amount = 0;
-      //obj.action_type == 'JCC' &&  /// CONDITION REMOVED no total issue
-      if (obj.line_item_array != "") {
-        const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1`;
-        let get_data_result = await getQuery({
-          query: line_item_array_q,
-          values: [obj.purchasing_doc_no],
-        });
+      if (obj.line_item_array) {
+        let line_item_array = JSON.parse(obj.line_item_array);
+        obj.total_amount = 0;
+        //obj.action_type == 'JCC' &&  /// CONDITION REMOVED no total issue
+        if (obj.line_item_array != "") {
+          const line_item_array_q = `SELECT EBELP AS line_item_no, NETPR AS po_rate from ${EKPO} WHERE EBELN = $1`;
+          let get_data_result = await getQuery({
+            query: line_item_array_q,
+            values: [obj.purchasing_doc_no],
+          });
 
-        obj.line_item_array = line_item_array.map((el2) => {
-          const DOObj = get_data_result.find(
-            (elms) => elms.line_item_no == el2.line_item_no
-          );
-          let total = parseFloat(DOObj.po_rate) * parseFloat(el2.claim_qty);
+          obj.line_item_array = line_item_array.map((el2) => {
+            const DOObj = get_data_result.find(
+              (elms) => elms.line_item_no == el2.line_item_no
+            );
+            let total = parseFloat(DOObj.po_rate) * parseFloat(el2.claim_qty);
 
-          total = total.toFixed(2);
-          obj.total_amount += parseFloat(total);
-          return DOObj ? { ...el2, total: total } : el2;
-        });
+            total = total.toFixed(2);
+            obj.total_amount += parseFloat(total);
+            return DOObj ? { ...el2, total: total } : el2;
+          });
 
-        obj.line_item_array = JSON.stringify(obj.line_item_array);
+          obj.line_item_array = JSON.stringify(obj.line_item_array);
+        }
       }
-
       payload = {
         ...fileData,
         ...obj,

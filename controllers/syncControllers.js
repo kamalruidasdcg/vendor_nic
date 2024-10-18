@@ -29,9 +29,18 @@ const {
   OTHER_SERVER_FILE_PATH,
   FOLDER_NAME_PO,
   FOLDER_NAME_PYMT_ADVICE,
+  INSERT,
 } = require("../lib/constant");
-const { getColumnDataType } = require("../utils/syncUtils");
+const {
+  getColumnDataType,
+  getColumnPrimaryKey,
+  adjustSequences,
+} = require("../utils/syncUtils");
 const { resSend } = require("../lib/resSend");
+const { generateQuery } = require("../lib/utils");
+const { SYNC_UPDATE } = require("../lib/tableName");
+const { query } = require("../config/pgDbConfig");
+const { BACKUP_START, BACKUP_SUCCESSFULL, BACKUP_ERROR, RESTORE_ERROR, RESTORE_SUCCESSFULL, RESTORE_START } = require("../lib/status");
 const todayDate = formatDateSync(new Date());
 
 // SYNCRONISATION OF DATA
@@ -183,20 +192,247 @@ exports.syncCompress = async (req, res) => {
 
 exports.syncUnzip = async (req, res) => {
   try {
+
+
     const { from_date } = req.body;
     if (!from_date || from_date === "") {
       return resSend(res, false, 200, null, "Date field is required.", null);
     }
     const startDate = new Date(from_date);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    console.log("startdate: ", startDate);
+    // const yesterday = new Date();
+    // yesterday.setDate(yesterday.getDate() - 1);
+
+    let hasError = false;
+    let errorMsg = "";
+
+    // for (
+    //   let date = new Date(startDate);
+    //   date <= yesterday;
+    //   date.setDate(date.getDate() + 1)
+    // ) {
+    let currentDate = formatDateSync(startDate);
+
+    // Ensure the "unzipcsvfiles" directory exists
+    const parentDir = path.resolve(__dirname, "..");
+    const outputDir = path.join(parentDir, UNZIP_DATA_PATH, currentDate);
+
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Define the path for today's ZIP file
+    const zipDataPath = path.join(
+      parentDir,
+      OTHER_SERVER_DATA_PATH,
+      currentDate
+    );
+
+    // Check if today's date folder exists
+    if (!fs.existsSync(zipDataPath)) {
+      return resSend(
+        res,
+        false,
+        200,
+        `No zip file found on ${currentDate}`,
+        zipDataPath,
+        null
+      );
+    }
+    await syncLog('data', new Date(), RESTORE_START, "Data restore started", null, null);
+
+    // Check if the zip file exists inside the today's date folder
+    const filePath = path.join(zipDataPath, "sync_data.zip");
+    try {
+      await fs.promises.access(filePath, fs.constants.F_OK);
+      // console.log(`sync_data.zip exists in ${filePath}.`);
+    } catch (err) {
+      console.log(`sync_data.zip does not exist in ${filePath}.`);
+
+      // return resSend(
+      //   res,
+      //   200,
+      //   false,
+      //   zipDataPath,
+      //   `sync_data.zip does not exist in  ${filePath}.`,
+      //   null
+      // );
+    }
+
+    // Unzip the file using adm-zip
+    try {
+      const zip = new AdmZip(filePath);
+      zip.extractAllTo(outputDir, true);
+      // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
+      // UPLOAD DATA
+      try {
+        let d = await syncDataUpload(currentDate);
+        console.log("syncDataUpload", d);
+        if (!d?.sta) {
+          hasError = true;
+          errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
+        }
+      } catch (error) {
+        hasError = true;
+        errorMsg += `Error during data upload for ${currentDate}: ${error.message}\n`;
+      }
+    } catch (err) {
+      hasError = true;
+      errorMsg += `Error during unzipping process for ${currentDate}: ${err.message}\n`;
+    }
+    // }
+
+    if (hasError) {
+      syncLog('data', new Date(), RESTORE_ERROR, errorMsg, "", null);
+      return resSend(
+        res,
+        false,
+        200,
+        errorMsg,
+        "One or more errors occurred during the process.",
+        null
+      );
+    } else {
+
+      syncLog('data', new Date(), RESTORE_SUCCESSFULL, "Data restore successfull", null, null);
+      return resSend(res, true, 200, null, "Data synced successfully!", null);
+    }
+  } catch (err) {
+    syncLog('data', new Date(), RESTORE_ERROR, err.message, err.stack, null);
+    console.error("Unexpected error:", err.message);
+    return resSend(res, false, 500, err.message, "An unexpected error occurred while processing your request", null);
+  }
+};
+// exports.syncUnzip = async (req, res) => {
+//   try {
+//     const { from_date } = req.body;
+//     if (!from_date || from_date === "") {
+//       return resSend(res, false, 200, null, "Date field is required.", null);
+//     }
+//     const startDate = new Date(from_date);
+//     console.log("startdate: ", startDate);
+//     const yesterday = new Date();
+//     yesterday.setDate(yesterday.getDate() - 1);
+
+//     let hasError = false;
+//     let errorMsg = "";
+
+//     for (
+//       let date = new Date(startDate);
+//       date <= yesterday;
+//       date.setDate(date.getDate() + 1)
+//     ) {
+//       let currentDate = formatDateSync(date);
+
+//       // Ensure the "unzipcsvfiles" directory exists
+//       const parentDir = path.resolve(__dirname, "..");
+//       const outputDir = path.join(parentDir, UNZIP_DATA_PATH, currentDate);
+
+//       if (!fs.existsSync(outputDir)) {
+//         fs.mkdirSync(outputDir, { recursive: true });
+//       }
+
+//       // Define the path for today's ZIP file
+//       const zipDataPath = path.join(
+//         parentDir,
+//         OTHER_SERVER_DATA_PATH,
+//         currentDate
+//       );
+
+//       // Check if today's date folder exists
+//       if (!fs.existsSync(zipDataPath)) {
+//         return resSend(
+//           res,
+//           false,
+//           200,
+//           zipDataPath,
+//           `No zip file found on ${currentDate}`,
+//           null
+//         );
+//       }
+
+//       // Check if the zip file exists inside the today's date folder
+//       const filePath = path.join(zipDataPath, "sync_data.zip");
+//       try {
+//         await fs.promises.access(filePath, fs.constants.F_OK);
+//         // console.log(`sync_data.zip exists in ${filePath}.`);
+//       } catch (err) {
+//         console.log(`sync_data.zip does not exist in ${filePath}.`);
+
+//         // return resSend(
+//         //   res,
+//         //   200,
+//         //   false,
+//         //   zipDataPath,
+//         //   `sync_data.zip does not exist in  ${filePath}.`,
+//         //   null
+//         // );
+//       }
+
+//       // Unzip the file using adm-zip
+//       try {
+//         const zip = new AdmZip(filePath);
+//         zip.extractAllTo(outputDir, true);
+//         // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
+//         // UPLOAD DATA
+//         try {
+//           let d = await syncDataUpload(currentDate);
+//           console.log("syncDataUpload", d);
+//           if (!d?.sta) {
+//             hasError = true;
+//             errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
+//           }
+//         } catch (error) {
+//           hasError = true;
+//           errorMsg += `Error during data upload for ${currentDate}: ${error.message}\n`;
+//         }
+//       } catch (err) {
+//         hasError = true;
+//         errorMsg += `Error during unzipping process for ${currentDate}: ${err.message}\n`;
+//       }
+//     }
+
+//     if (hasError) {
+//       return resSend(
+//         res,
+//         false,
+//         200,
+//         errorMsg,
+//         "One or more errors occurred during the process.",
+//         null
+//       );
+//     } else {
+//       return resSend(res, true, 200, null, "Data synced successfully!", null);
+//     }
+//   } catch (err) {
+//     console.error("Unexpected error:", err.message);
+//     return resSend(
+//       res,
+//       false,
+//       500,
+//       err.message,
+//       "An unexpected error occurred while processing your request",
+//       null
+//     );
+//   }
+// };
+
+exports.syncUnzipNowAPI = async (req, res) => {
+  try {
+    const { from_date } = req.body;
+    if (!from_date || from_date === "") {
+      return resSend(res, false, 200, null, "Date field is required.", null);
+    }
+    const startDate = new Date(from_date);
+    console.log("startdate: ", startDate);
+    const today = new Date();
 
     let hasError = false;
     let errorMsg = "";
 
     for (
       let date = new Date(startDate);
-      date <= yesterday;
+      date <= today;
       date.setDate(date.getDate() + 1)
     ) {
       let currentDate = formatDateSync(date);
@@ -252,8 +488,10 @@ exports.syncUnzip = async (req, res) => {
         zip.extractAllTo(outputDir, true);
         // resSend(res, 200, true, zipDataPath, "Compressed file unzipped!", null);
         // UPLOAD DATA
+        console.log("heelo");
         try {
           let d = await syncDataUpload(currentDate);
+          console.log("syncDataUpload", d);
           if (!d?.sta) {
             hasError = true;
             errorMsg += `Error uploading data for ${currentDate}: ${d?.msg}\n`;
@@ -317,6 +555,15 @@ const syncDataUpload = async (currentDate) => {
       const tableName = folder;
       const csvDataPath = path.join(folderPath, folder, "data.csv");
 
+      try {
+        await pool.query(
+          `ALTER TABLE ${tableName} DISABLE TRIGGER before_update_trigger;`
+        );
+        await adjustSequences(tableName);
+      } catch (error) {
+        return { sta: false, msg: `${error.message} in ${tableName}` };
+      }
+
       // Check if the CSV file exists
       if (!fs.existsSync(csvDataPath)) {
         console.error(`CSV file not found for table ${tableName}`);
@@ -346,14 +593,18 @@ const syncDataUpload = async (currentDate) => {
           // Check sync_id is present in DB (UPDATE Query) or Not (INSERT Query)
           const check_q = `SELECT sync_id FROM ${tableName} WHERE sync_id = '${item.sync_id}'`;
           const { rowCount } = await pool.query(check_q, []);
-          // console.log("res_check", rowCount);
           const keys = Object.keys(item);
-          // console.log("item", item);
-          // console.log("keys:", keys);
+          const primaryKeys = await getColumnPrimaryKey("public", tableName);
+          const nonPrimaryKeys = keys.filter(
+            (key) => !primaryKeys.includes(key)
+          );
+          // console.log("keys", keys);
+          // console.log("primaryKeys", primaryKeys);
+          // console.log("nonPrimaryKeys", nonPrimaryKeys);
           let values = [];
 
-          for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
+          for (let i = 0; i < nonPrimaryKeys.length; i++) {
+            const key = nonPrimaryKeys[i];
             const d_type = await getColumnDataType("public", tableName, key);
             if (key === "sync") {
               item[key] = true;
@@ -383,19 +634,26 @@ const syncDataUpload = async (currentDate) => {
           }
 
           if (rowCount > 0) {
-            const updateColumns = keys
+            const updateColumns = nonPrimaryKeys
               .map((key, i) => `${key} = $${i + 1}`)
               .join(", ");
-            // console.log("q", tableName, updateColumns, values);
-            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${keys.length + 1
+            const query = `UPDATE ${tableName} SET ${updateColumns} WHERE sync_id = $${nonPrimaryKeys.length + 1
               }`;
-            console.log("q1", tableName, item.sync_id);
+            // console.log("query", query);
+            // console.log("values", values, item.sync_id);
             await pool.query(query, [...values, item.sync_id]);
+            // if (tableName == "auth") {
+            //   console.log("updateColumns", updateColumns);
+            //   console.log("values", values, item.sync_id);
+            // }
           } else {
-            const columns = keys.join(", ");
-            const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
-            console.log("q2", tableName, columns, placeholders, item?.sync_id);
+            const columns = nonPrimaryKeys.join(", ");
+            const placeholders = nonPrimaryKeys
+              .map((_, i) => `$${i + 1}`)
+              .join(", ");
             const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`;
+            // console.log("query", query);
+            // console.log("q2", values);
             await pool.query(query, values);
           }
         } catch (queryError) {
@@ -411,11 +669,15 @@ const syncDataUpload = async (currentDate) => {
             queryError.message,
             queryError.stack
           );
-          return { sta: false, msg: queryError.message };
+          return { sta: false, msg: `${queryError.message} in ${tableName}` };
         }
       }
-      return { sta: true, msg: "Correctly worked" };
+      // Re-enable the trigger after insert/update operations
+      await pool.query(
+        `ALTER TABLE ${tableName} ENABLE TRIGGER before_update_trigger;`
+      );
     }
+    return { sta: true, msg: "Correctly worked" };
   } catch (err) {
     console.error("Error unzipping file:", err);
     return { sta: false, msg: err.message };
@@ -728,18 +990,54 @@ exports.unsyncFileCompressed = async (req, res, next) => {
 // CRONJOB FOR LAST 24 HOURS UNSYNCED FILES ZIP
 exports.syncFileCron = async () => {
   cron.schedule("30 23 * * *", async () => {
-    console.log("Running the scheduled task 00:20");
-
+    console.log("Running the scheduled task 23:30");
+    const todayDateTime = new Date().setHours(0, 0, 0, 0);
     try {
       // to day first epoch time 00:00:00 , 12 am
-      const todayDateTime = new Date().setHours(0, 0, 0, 0);
+      await syncLog('file', new Date(), BACKUP_START, "backup started at 11:30 pm", null, null);
       await getAndZipFileHandler(todayDateTime);
-      console.log("File Dump Completed successfully.");
+      syncLog('file', new Date(), BACKUP_SUCCESSFULL, "backup completed", null, null);
     } catch (error) {
-      console.error("Error during file dump:", error);
+      console.error("Error during file dump:", error.message, error.stack);
+      syncLog('file', new Date(), BACKUP_ERROR, error.message, error.stack, null);
     }
   });
 };
+
+
+const dataSync = async () => {
+  try {
+    let downloadRes = await syncDownloadMain();
+    let compresedRes;
+    if (downloadRes) {
+      compresedRes = await syncCompressMain();
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+exports.syncDataCorn = async () => {
+
+  cron.schedule("00 23 * * *", async () => {
+    console.log("Cron job started at 00:05");
+    try {
+      await syncLog('data', new Date(), BACKUP_START, "backup started at 11:30 pm", null, null);
+      await dataSync();
+      syncLog('data', new Date(), BACKUP_SUCCESSFULL, "backup completed", null, null);
+      console.log("Cron job completed successfully");
+    } catch (error) {
+      console.error("Error during cron job:", error.message);
+      syncLog('data', new Date(), BACKUP_ERROR, error.message, error.stack, null);
+      fs.appendFileSync(
+        "error.log",
+        `${new Date().toISOString()} - Error: ${error.message}\n`
+      );
+    }
+  });
+
+
+}
 
 const unzipAndMove = async (zipFilePath, uploadsFolderPath, file) => {
   try {
@@ -822,7 +1120,7 @@ exports.uploadRecentFilesController = async (req, res, next) => {
       .readdirSync(zipFilePath)
       .filter((item, i) => isZipFile(item));
 
-    console.log("files", files);
+    // console.log("files", files);
 
     // let stats = fs.statSync(zipFilePath);
     // if (!stats.isFile()) {
@@ -842,11 +1140,11 @@ exports.uploadRecentFilesController = async (req, res, next) => {
         todayDate,
         file
       );
-      console.log(zipFilePath);
+      // console.log(zipFilePath);
       await unzipAndMove(zipFilePath, uploadsFolderPath, file);
     });
 
-    resSend(res, true, 200, null, "File transferred successfully.", null);
+    resSend(res, true, 200, "File transferred successfully.", null, null);
   } catch (error) {
     console.log("An error occurred in uploadRecentFilesController:", error);
   }
@@ -868,7 +1166,7 @@ exports.syncDownloadTEST = async (req, res) => {
     };
 
     resData = { ...resData, ekpo: resRow };
-    resSend(res, true, 200, rows, "File transferred successfully.", null);
+    resSend(res, true, 200, "File transferred successfully.", rows, null);
   } catch (error) {
     console.error(`Error in ekpo data sync csv download`);
     console.error(error.message);
@@ -895,85 +1193,93 @@ const insertToErrLog = async (tableName, sync_id, msg, stack) => {
 
 exports.uploadRecentFilesControllerByDate = async (req, res, next) => {
   try {
+    await syncLog('file', new Date(), RESTORE_START, "File restore started", null, null);
+
     const { from_date } = req.body;
     if (!from_date || from_date === "") {
       return resSend(res, false, 200, null, "Date field is required.", null);
     }
-    const startDate = new Date(from_date);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    const syncDate = formatDateSync(new Date(from_date));
+    // const yesterday = new Date();
+    // yesterday.setDate(yesterday.getDate() - 1);
 
-    const dateArr = getDates(startDate, yesterday);
-    for (const syncDate of dateArr) {
-      const parentDir = path.resolve(__dirname, "..");
+    // const dateArr = getDates(startDate, yesterday);
+    // for (const syncDate of dateArr) {
+    const parentDir = path.resolve(__dirname, "..");
 
-      // GET THE ZIP FILE
-      const zipFilePath = path.join(
-        parentDir,
-        OTHER_SERVER_FILE_PATH,
-        syncDate
-      );
+    console.log("parentDir", parentDir, from_date, syncDate);
 
-      console.log("zipFilePath", zipFilePath, syncDate);
 
-      // Check if the today's date folder exists
-      // if (!fs.existsSync(zipFilePath)) {
-      //   return resSend(res, 200, false, zipFilePath, `No zip file found for ${syncDate} date`, null);
-      // }
+    // GET THE ZIP FILE
+    const zipFilePath = path.join(
+      parentDir,
+      OTHER_SERVER_FILE_PATH,
+      syncDate
+    );
 
-      // UPLOAD FILE PATH
-      const uploadsFolderPath = path.join(parentDir, "uploads");
+    console.log("zipFilePath", zipFilePath, syncDate);
 
-      // Ensure the uploads folder exists
-      if (!fs.existsSync(uploadsFolderPath)) {
-        fs.mkdirSync(uploadsFolderPath, { recursive: true });
-      }
-
-      // GET ALL FILES FROM A FOLDER
-      let files = fs
-        .readdirSync(zipFilePath)
-        .filter((item, i) => isZipFile(item));
-
-      console.log("files", files);
-
-      // let stats = fs.statSync(zipFilePath);
-      // if (!stats.isFile()) {
-      //   return resSend(
-      //     res,
-      //     200,
-      //     false,
-      //     zipFilePath,
-      //     `Provided path is not a file: ${zipFilePath}`,
-      //     null
-      //   );
-      // }
-      // files.forEach(async (file) => {
-      //   let zipFilePath = path.join(
-      //     parentDir,
-      //     OTHER_SERVER_FILE_PATH,
-      //     todayDate,
-      //     file
-      //   );
-      //   console.log(zipFilePath);
-      //   await unzipAndMove(zipFilePath, uploadsFolderPath, file);
-
-      for (const file of files) {
-        let zipFilePath = path.join(
-          parentDir,
-          OTHER_SERVER_FILE_PATH,
-          syncDate,
-          file
-        );
-        console.log(zipFilePath);
-        await unzipAndMove(zipFilePath, uploadsFolderPath, file);
-      }
+    // Check if the today's date folder exists
+    if (!fs.existsSync(zipFilePath)) {
+      return resSend(res, false, 200, `No backup on this date ${syncDate}`, zipFilePath, null);
     }
 
-    resSend(res, true, 201, [], "File transferred successfully.", null);
+    // if (!fs.existsSync(zipFilePath)) {
+    //   return resSend(res, false, 200,  `No zip file found for ${syncDate} date`, zipFilePath, null);
+    // }
+
+    // UPLOAD FILE PATH
+    const uploadsFolderPath = path.join(parentDir, "uploads");
+
+    // Ensure the uploads folder exists
+    if (!fs.existsSync(uploadsFolderPath)) {
+      fs.mkdirSync(uploadsFolderPath, { recursive: true });
+    }
+
+    // GET ALL FILES FROM A FOLDER
+    let files = fs
+      .readdirSync(zipFilePath)
+      .filter((item, i) => isZipFile(item));
+
+    console.log("files", files);
+
+    for (const file of files) {
+      let zipFilePath = path.join(
+        parentDir,
+        OTHER_SERVER_FILE_PATH,
+        syncDate,
+        file
+      );
+      console.log(zipFilePath);
+      await unzipAndMove(zipFilePath, uploadsFolderPath, file);
+    }
+    // }
+
+
+    syncLog('file', new Date(), RESTORE_SUCCESSFULL, "File restore successfully", null, null);
+
+    resSend(res, true, 201, "File transferred successfully.", result, null);
   } catch (error) {
+
     console.log(
       "An error occurred in uploadRecentFilesController:",
-      error.message
+      error.message, error.stack
     );
+    syncLog('file', new Date(), RESTORE_ERROR, error.message, error.stack, null);
+    resSend(res, false, 200, "An error occurred in uploadRecentFilesController", error.message, null);
+
   }
 };
+
+
+const syncLog = async (sync_type, syncDateTime, sync_status, remarks, error = null, created_by = null) => {
+
+  try {
+    const paylod = { sync_type, sync_datetime: new Date(syncDateTime), sync_status, created_by, remarks, error };
+    const { q, val } = generateQuery(INSERT, SYNC_UPDATE, paylod);
+    await query({ query: q, values: val });
+  } catch (error) {
+    console.log("sync log error", error.message);
+
+  }
+}

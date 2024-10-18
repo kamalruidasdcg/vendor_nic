@@ -54,6 +54,7 @@ const {
   BTN_STATUS_PROCESS,
   BTN_STATUS_NOT_SUBMITTED,
   BTN_STATUS_DRETURN,
+  SUBMITTED_BY_CAUTHORITY,
 } = require("../lib/status");
 const {
   BTN_MATERIAL,
@@ -80,6 +81,7 @@ const { convertToEpoch } = require("../utils/dateTime");
 const { getUserDetailsQuery } = require("../utils/mailFunc");
 const { checkTypeArr } = require("../utils/smallFun");
 const Message = require("../utils/messages");
+const { getQueryForbtnSaveToSap } = require("../services/sap.btn.services");
 
 const fetchAllBTNs = async (req, res) => {
   const { id } = req.query;
@@ -311,7 +313,6 @@ const getBTNData = async (req, res) => {
 };
 
 const addToBTNList = async (data, status) => {
-  console.log("data", data);
   let payload = {
     btn_num: data?.btn_num,
     purchasing_doc_no: data?.purchasing_doc_no,
@@ -489,10 +490,10 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["debit_credit_filename"]
     ? (payload = {
-      ...payload,
-      debit_credit_filename:
-        payloadFiles["debit_credit_filename"][0]?.filename,
-    })
+        ...payload,
+        debit_credit_filename:
+          payloadFiles["debit_credit_filename"][0]?.filename,
+      })
     : null;
 
   // GET SD by PO Number
@@ -520,17 +521,17 @@ const submitBTN = async (req, res) => {
 
   payloadFiles["get_entry_filename"]
     ? (payload = {
-      ...payload,
-      get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
-    })
+        ...payload,
+        get_entry_filename: payloadFiles["get_entry_filename"][0]?.filename,
+      })
     : null;
 
   payloadFiles["demand_raise_filename"]
     ? (payload = {
-      ...payload,
-      demand_raise_filename:
-        payloadFiles["demand_raise_filename"][0]?.filename,
-    })
+        ...payload,
+        demand_raise_filename:
+          payloadFiles["demand_raise_filename"][0]?.filename,
+      })
     : null;
 
   // generate btn num
@@ -1031,49 +1032,7 @@ const submitBTNByDO = async (req, res) => {
 async function btnSaveToSap(btnPayload, tokenData) {
   let status = false;
   try {
-    const vendorQuery = `WITH ranked_assignments AS (
-          SELECT
-              btn_assign.*,
-              ROW_NUMBER() OVER (PARTITION BY btn_assign.btn_num ORDER BY btn_assign.ctid DESC) AS rn
-          FROM
-              btn_assign
-      )
-      SELECT 
-        btn.btn_num, 
-        btn.purchasing_doc_no,
-        btn.cgst, 
-        btn.sgst, 
-        btn.igst, 
-        btn.yard, 
-        btn.net_claim_amount, 
-        btn.net_with_gst, 
-        btn.invoice_no,
-        btn.vendor_code, 
-        ged.invno, 
-        ged.inv_date as invoice_date,
-        vendor.stcd3,
-        users.pernr as finance_auth_id,
-        users.cname as finance_auth_name,
-        vendor.name1 as vendor_name,
-        assign_users.cname as assign_name,
-        ranked_assignments.assign_to as assign_to
-
-      FROM 
-          public.btn AS btn
-      LEFT JOIN 
-          ranked_assignments
-          ON (btn.btn_num = ranked_assignments.btn_num
-          AND ranked_assignments.rn = 1)
-      LEFT JOIN  zmm_gate_entry_d as ged
-          ON( btn.purchasing_doc_no = ged.ebeln AND btn.invoice_no = ged.invno)
-      LEFT JOIN  lfa1 as vendor
-          ON(btn.vendor_code = vendor.lifnr)
-      LEFT JOIN  pa0002 as users
-          ON(users.pernr::character varying = $1)
-      LEFT JOIN  pa0002 as assign_users
-          ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
-      WHERE 
-          btn.btn_num = $2`;
+    let vendorQuery = await getQueryForbtnSaveToSap(btnPayload);
 
     let btnDetails = await getQuery({
       query: vendorQuery,
@@ -1631,12 +1590,12 @@ const assignToFiStaffHandler = async (req, res) => {
 
       let btn_list_q = ` SELECT * FROM btn_list WHERE btn_num = $1 
 	                      AND purchasing_doc_no = $2
-	                      AND status = $3
+	                      AND (status = $3 or status = $4)
                         ORDER BY created_at DESC`;
       let btn_list = await poolQuery({
         client,
         query: btn_list_q,
-        values: [btn_num, purchasing_doc_no, SUBMITTED_BY_DO],
+        values: [btn_num, purchasing_doc_no, SUBMITTED_BY_DO, SUBMITTED_BY_CAUTHORITY],
       });
 
       if (btn_list.length < 0) {
@@ -1669,7 +1628,7 @@ const assignToFiStaffHandler = async (req, res) => {
           status: STATUS_RECEIVED,
         });
         try {
-          const sendSap = btnSaveToSap({ ...req.body, ...payload }, tokenData);
+          const sendSap = true; // btnSaveToSap({ ...req.body, ...payload }, tokenData);
           if (sendSap == false) {
             await client.query("ROLLBACK");
 
@@ -1809,7 +1768,7 @@ const updateBtnListTable = async (client, data) => {
       //     await handelMail(btnListTablePaylod, client);
       // }
     } else {
-      console.log("NO BTN FOUND IN LIST TO BE UPDATED");
+      // console.log("NO BTN FOUND IN LIST TO BE UPDATED");
     }
   } catch (error) {
     throw error;

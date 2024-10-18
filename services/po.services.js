@@ -357,8 +357,6 @@ async function poDataModify(data) {
 
 function poDataModify2(data) {
 
-  console.log("allPoallPoallPo", data);
-  
   if (!data || !Array.isArray(data) || !data.length) return [];
   let obj = {};
   data.forEach((element) => {
@@ -374,6 +372,9 @@ function poDataModify2(data) {
         vendor_code: element.vendor_code,
         vendor_name: element.vendor_name,
         createdAt: element.createdAt,
+        po_creator: element.po_creator,
+        po_creator_name: element.po_creator_name
+
         // wbs_id: element.wbs_id,
         // project_code: element.project_code,
       };
@@ -389,6 +390,8 @@ function poDataModify2(data) {
           vendor_code: element.vendor_code,
           vendor_name: element.vendor_name,
           createdAt: element.createdAt,
+          po_creator: element.po_creator,
+          po_creator_name: element.po_creator_name
           // wbs_id: element.wbs_id,
           // project_code: element.project_code,
         },
@@ -557,7 +560,7 @@ const getActualAndCurrentDetails = async (client, values) => {
   try {
     const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
     const getActualAndCurrentQuery =
-`SELECT * FROM ((SELECT DISTINCT ON (t_contractula_sub.ebeln)
+      `SELECT * FROM ((SELECT DISTINCT ON (t_contractula_sub.ebeln)
 		      t_contractula_sub.ebeln as purchasing_doc_no,
           t_activity.reference_no,
           t_activity.status,
@@ -666,10 +669,6 @@ const getActualAndCurrentDetails = async (client, values) => {
 
     const result = await poolQuery({ client, query: getActualAndCurrentQuery, values });
 
-    console.log("result", result);
-    console.log("getActualAndCurrentQuery", getActualAndCurrentQuery);
-    
-
     return result;
 
   } catch (error) {
@@ -677,7 +676,7 @@ const getActualAndCurrentDetails = async (client, values) => {
   }
 
 }
-const getPoWithLineItems = async (client, values, limit, offSet) => {
+const getPoWithLineItems = async (client, values, limit, offSet, whereCondQuery) => {
   try {
 
     const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
@@ -700,12 +699,12 @@ const getPoWithLineItems = async (client, values, limit, offSet) => {
     WHERE 
       	ekko.ebeln IN(${placeholders}) ORDER BY ekko.aedat, ekko.ebeln LIMIT ${limit} OFFSET ${offSet}`;
 
-getPoQuey = `
+    getPoQuey = `
     WITH ekko_limited_result AS (
     SELECT * 
     FROM ekko 
     WHERE 
-      	ekko.ebeln IN(${placeholders}) 
+      	${whereCondQuery} AND ekko.ebeln IN(${placeholders}) 
     ORDER BY ekko.aedat, ekko.ebeln 
     LIMIT ${limit} OFFSET ${offSet}
 )
@@ -729,27 +728,49 @@ LEFT JOIN pa0002 AS users ON users.pernr::CHARACTER VARYING = ekko_limited_resul
 ORDER BY 
     ekko_limited_result.aedat, ekko_limited_result.ebeln`;
 
-console.log("getPoQuey", getPoQuey);
 
-    const result = poolQuery({ client, query: getPoQuey, values });
+    const result = poolQuery({ client, query: getPoQuey, values: values });
 
     return result;
   } catch (error) {
     throw error;
   }
 }
+const getCount = async (client, values, whereCondQuery) => {
+  try {
+
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+    let getPoQuey = `
+    SELECT count(*) 
+      FROM ekko 
+    WHERE 
+      	${whereCondQuery} AND ekko.ebeln IN(${placeholders})`;
+
+
+    const result = await poolQuery({ client, query: getPoQuey, values: values });
+
+    return parseInt(result[0]?.count);
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
+
 function setMileStoneActivity(purchasing_doc_no, contractualDates) {
   const flags = ["sdbg", "drawing", "qap", "ilms"];
   const finalResult = {};
   flags.forEach(flag => {
-      const entry = contractualDates.find(
-          el => el.purchasing_doc_no == purchasing_doc_no && el.flag === flag
-      );
-      finalResult[flag] = {
-          ["contractualSubmissionDate"]: entry?.plan_date || null,
-          ["actualSubmissionDate"]: entry?.actualsubmissiondate || null,
-          ["lastStatus"]: entry?.status || null
-      };
+    const entry = contractualDates.find(
+      el => el.purchasing_doc_no == purchasing_doc_no && el.flag === flag
+    );
+    finalResult[flag] = {
+      ["contractualSubmissionDate"]: entry?.plan_date || null,
+      ["actualSubmissionDate"]: entry?.actualsubmissiondate || null,
+      ["lastStatus"]: entry?.status || null
+    };
   });
 
   return finalResult;
@@ -775,5 +796,6 @@ module.exports = {
   getActualAndCurrentDetails,
   getPoWithLineItems,
   poDataModify2,
-  setMileStoneActivity
+  setMileStoneActivity,
+  getCount
 };

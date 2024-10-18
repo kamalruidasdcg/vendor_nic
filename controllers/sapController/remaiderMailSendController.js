@@ -1,17 +1,14 @@
-const { query, getQuery } = require("../../config/pgDbConfig");
-const { VENDOR_REMINDER_EMAIL, SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE, BG_2MONTH_PRIOR } = require("../../lib/event");
-const { resSend } = require("../../lib/resSend");
+const { getQuery } = require("../../config/pgDbConfig");
+const { SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE, BG_2MONTH_PRIOR } = require("../../lib/event");
 const { sendMail } = require("../../services/mail.services");
-const { mailTrigger } = require("../sendMailController");
+const cron = require("node-cron");
 
-const sendPOMilestoneEXPReminderMail = async (req, res) => {
+const sendPOMilestoneEXPReminderMail = async () => {
     const timeLineData = await getTimeLineData();
-    console.log("sendPOMilestoneEXPReminderMail", timeLineData);
 
     if (timeLineData && timeLineData.length) {
         for (const data of timeLineData) {
-            console.log("data", data);
-            const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
+            const obj = { users: [{ u_email: data?.u_email, u_id: data?.u_id, u_type: data?.u_type }] }
             await sendMail(SEVEN_DAYS_PRIOR_CON_MILESTONE_DATE,
                 data,
                 obj,
@@ -130,7 +127,7 @@ const sendBGReminderMail = async () => {
     if (bgTimelineData && bgTimelineData.length) {
         for (const data of bgTimelineData) {
             console.log("data", data);
-            const obj = { users:[{ u_email: data.u_email, u_id: data.u_id, u_type: data.u_type }] }
+            const obj = { users: [{ u_email: data?.u_email, u_id: data?.u_id, u_type: data?.u_type }] }
             await sendMail(BG_2MONTH_PRIOR,
                 data,
                 obj,
@@ -147,7 +144,7 @@ async function getBGExpireData() {
     const sevenDaysBefore = new Date(currentDate.getTime() + REMINDE_BEFORE_DAYS);
     const dueDate = sevenDaysBefore.toISOString().split("T")[0];
 
-    let  q = `SELECT    file_no,
+    let q = `SELECT    file_no,
         ref_no,
         po_number AS purchasing_doc_no,
         validity_date,
@@ -191,24 +188,40 @@ WHERE     (
 
 function getMaxExpireDate(data) {
     data.forEach(item => {
-      const dates = [
-        item.validity_date,
-        item.extention_date1,
-        item.extention_date2,
-        item.extention_date3,
-        item.extention_date4,
-        item.extention_date5
-      ].filter(date => date !== null);
-  
-      const maxDate = new Date(Math.max(...dates.map(date => date.getTime())));
-  
-      item.expire_date = maxDate;
+        const dates = [
+            item.validity_date,
+            item.extention_date1,
+            item.extention_date2,
+            item.extention_date3,
+            item.extention_date4,
+            item.extention_date5
+        ].filter(date => date !== null);
+
+        const maxDate = new Date(Math.max(...dates.map(date => date.getTime())));
+
+        item.expire_date = maxDate;
     });
     return data;
-  }
+}
 
 
 
 
+const vendorReminderMail = async () => {
+    const task2 = cron.schedule(
+        "10 22 * * *",
+        () => {
+            console.log("Run at night 10: 10 PM");
+            sendBGReminderMail();
+            sendPOMilestoneEXPReminderMail();
+        },
+        {
+            scheduled: true,
+        }
+    );
 
-module.exports = { sendPOMilestoneEXPReminderMail, sendBGReminderMail };
+}
+
+
+// module.exports = { sendPOMilestoneEXPReminderMail, sendBGReminderMail };
+module.exports = { vendorReminderMail };

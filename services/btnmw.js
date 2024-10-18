@@ -33,7 +33,7 @@ const uploadBTNs = multer({
   pdfFileFilter,
   limits: { fileSize: 1000 * 1000 },
 });
-
+//
 exports.btnmw = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
@@ -44,9 +44,13 @@ exports.btnmw = () => {
     { name: "demand_raise_filename", maxCount: 1 },
     { name: "invoice_filename", maxCount: 1 },
     { name: "balance_claim_invoice_filename", maxCount: 1 },
+
+    { name: "ref_invoice1_file", maxCount: 1 },
+    { name: "ref_invoice2_file", maxCount: 1 },
+    { name: "ref_invoice3_file", maxCount: 1 },
+    { name: "ref_invoice4_file", maxCount: 1 },
   ]);
 };
-
 
 exports.serviceBtnFilesUpload = () => {
   return uploadBTNs.fields([
@@ -58,7 +62,6 @@ exports.serviceBtnFilesUpload = () => {
     // { name: "pf_compliance_filename", maxCount: 1 },
   ]);
 };
-
 
 const uploadInvoiceSupportingDoc = multer({
   storage: storageInvoiceSupportingDoc,
@@ -76,13 +79,14 @@ exports.isd = () => {
 exports.btnAdvanceBillHybridUploadFile = () => {
   return uploadBTNs.fields([
     { name: "invoice_filename", maxCount: 1 },
-    { name: "e_invoice_filename", maxCount: 1 },
-    { name: "c_level1_doc_name", maxCount: 1 },
-    { name: "c_level2_doc_name", maxCount: 1 },
-    { name: "c_level3_doc_name", maxCount: 1 },
-    { name: "a_level1_doc_name", maxCount: 1 },
-    { name: "a_level2_doc_name", maxCount: 1 },
-    { name: "a_level3_doc_name", maxCount: 1 },
-    { name: "debit_credit_filename", maxCount: 1 },
+    { name: "invoice_supporting_filename", maxCount: 1 },
+  ]);
+};
+
+exports.btnJccUploadFile = () => {
+  return uploadBTNs.fields([
+    { name: "invoice_filename", maxCount: 1 },
+    { name: "suppoting_invoice_filename", maxCount: 1 },
+    { name: "jcc_filename", maxCount: 1 }
   ]);
 };
