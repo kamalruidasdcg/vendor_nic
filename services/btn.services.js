@@ -656,5 +656,6 @@ module.exports = {
   updateBtnListTable,
   getAdvBillHybridBTNDetails,
   getInitalData,
-  checkMilestonDates
+  checkMilestonDates,
+  getBgApprovedFiles
 };
