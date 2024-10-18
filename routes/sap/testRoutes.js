@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { generateInsertUpdateQuery, generateQuery } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQuery, formatDate } = require("../../lib/utils");
 
 const { query, poolClient, poolQuery, getQuery } = require("../../config/pgDbConfig");
 const fs = require("fs");
@@ -370,14 +370,14 @@ async function insertData(data, tableName, pk) {
           let trimmedStr = row.MATNR.trim();
           const isNotNumber = /\D/.test(trimmedStr);
 
-          if (!isNotNumber && trimmedStr.length != 18) {
-            const modifiedMatnr = String(trimmedStr).padStart(18, '0');
-            row = { ...row, MATNR: modifiedMatnr }
-            // console.log("marerial-->", row.MATNR, isNotNumber, modifiedMatnr);
-          }
+          // if (!isNotNumber && trimmedStr.length != 18) {
+          //   const modifiedMatnr = String(trimmedStr).padStart(18, '0');
+          //   row = { ...row, MATNR: modifiedMatnr }
+          //   // console.log("marerial-->", row.MATNR, isNotNumber, modifiedMatnr);
+          // }
 
           // insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
-          insertQuery = generateQuery(INSERT, 'MARA', row)
+          insertQuery = generateQuery(INSERT, tableName, row)
 
           // let valuesArray = Object.values(row);
           // insertQuery = `INSERT INTO auth (user_type, vendor_code, username, name, department_id, internal_role_id, is_active, password)  
@@ -415,6 +415,67 @@ async function insertData(data, tableName, pk) {
     throw error;
   }
 }
+async function insertTableData(data, tableName, pk) {
+  // console.log("dataBuffer", JSON.stringify(data));
+  try {
+    const client = await poolClient();
+    let allq = "";
+    console.log("djjjjjjjjjjjjjj", tableName, pk, data.length);
+
+    const failedData = [];
+    try {
+      let insertQuery = "";
+
+      for (let row of data) {
+        try {
+         
+
+          const  insertPayload = {
+            EBELN: row.EBELN,
+            BUKRS: row.BUKRS ? row.BUKRS : null,
+            BSTYP: row.BSTYP ? row.BSTYP : null,
+            BSART: row.BSART ? row.BSART : null,
+            LOEKZ: row.LOEKZ ? row.LOEKZ : null,
+            AEDAT: formatDate(row.AEDAT),
+            ERNAM: row.ERNAM ? row.ERNAM : null,
+            LIFNR: row.LIFNR ? row.LIFNR : null,
+            EKORG: row.EKORG ? row.EKORG : null,
+            EKGRP: row.EKGRP ? row.EKGRP : null,
+          };
+
+          insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
+          // insertQuery = generateQuery(INSERT, tableName, row)
+          await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+ 
+        } catch (error) {
+          console.log("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh", error.message)
+          failedData.push({ ...row, error: error.message })
+        }
+      }
+
+
+
+    } catch (err) {
+
+      console.log("errerrerrerrerrerrerr", err.message);
+      throw err;
+    } finally {
+      client.release();
+      console.log("let allq ", allq);
+      return failedData;
+    }
+
+  } catch (error) {
+    console.log("error.mess", error.message);
+    throw error;
+  }
+}
+
+
+
+
+
+
 
 
 const getEmpdetails = async (client, val) => {
