@@ -443,7 +443,7 @@ async function insertTableData(data, tableName, pk) {
             EKGRP: row.EKGRP ? row.EKGRP : null,
           };
 
-          insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
+          insertQuery = await generateInsertUpdateQuery(insertPayload, tableName, pk);
           // insertQuery = generateQuery(INSERT, tableName, row)
           await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
  
