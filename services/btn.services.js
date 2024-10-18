@@ -227,7 +227,7 @@ const contractualSubmissionDate = async (purchasing_doc_no, client) => {
       }
     });
 
-    return { status: true, data: contractualDateObj, msg: "success" };
+    return { status: true, data: contractualDateObj, results, msg: "success" };
   } catch (error) {
     throw error;
   }
@@ -268,6 +268,7 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     return {
       status: true,
       data: actualSubmissionObj,
+      results,
       msg: "All milestone passed..",
     };
 
@@ -604,6 +605,40 @@ async function supportingDataForAdvancBtn(client, poNo) {
 
 
 
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkMilestonDates(c_dates, a_dates) {
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  // const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const arr = new Set([parseInt(MID_DRAWING)]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    [MID_DRAWING]: "Drawing",
+  };
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex(
+      (el) => parseInt(el.MID) == parseInt(item.MID)
+    );
+    if (i < 0) {
+      return {
+        success: false,
+        msg: `Please submit ${mtextObj[item.MID]} to process BTN !`,
+      };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" };
+}
+
+
 module.exports = {
   advBillHybridbtnPayload,
   // getSDBGApprovedFiles,
@@ -620,5 +655,6 @@ module.exports = {
   advBillHybridbtnDOPayload,
   updateBtnListTable,
   getAdvBillHybridBTNDetails,
-  getInitalData
+  getInitalData,
+  checkMilestonDates
 };
