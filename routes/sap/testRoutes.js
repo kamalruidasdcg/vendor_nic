@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { generateInsertUpdateQuery, generateQuery, formatDate } = require("../../lib/utils");
+const { generateInsertUpdateQuery, generateQuery, formatDate, generateInsertUpdateQueryTable } = require("../../lib/utils");
 
 const { query, poolClient, poolQuery, getQuery } = require("../../config/pgDbConfig");
 const fs = require("fs");
@@ -7,6 +7,9 @@ const csv = require('csv-parser');
 const path = require("path");
 const { resSend } = require("../../lib/resSend");
 const { INSERT, UPDATE } = require("../../lib/constant");
+const { ekpoTablePayload } = require("../../services/sap.po.services");
+const { gateEntryHeaderPayload, gateEntryDataPayload } = require("../../services/sap.store.services");
+const { msegPayload, makfPayload } = require("../../services/sap.material.services");
 
 
 ////////////// STRAT TESTING APIS //////////////
@@ -327,7 +330,7 @@ router.post("/datainsert", async (req, res) => {
       if (dataBuffer.length > 0) {
         try {
 
-          const res2 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
+          const res2 = await insertTableData(dataBuffer, paylaod.tableName, paylaod.pk);
           result = [...result, ...res2];
           resSend(res, true, 201, "Data inserted successfull", result);
         } catch (error) {
@@ -428,27 +431,40 @@ async function insertTableData(data, tableName, pk) {
 
       for (let row of data) {
         try {
-         
 
-          const  insertPayload = {
-            EBELN: row.EBELN,
-            BUKRS: row.BUKRS ? row.BUKRS : null,
-            BSTYP: row.BSTYP ? row.BSTYP : null,
-            BSART: row.BSART ? row.BSART : null,
-            LOEKZ: row.LOEKZ ? row.LOEKZ : null,
-            AEDAT: formatDate(row.AEDAT),
-            ERNAM: row.ERNAM ? row.ERNAM : null,
-            LIFNR: row.LIFNR ? row.LIFNR : null,
-            EKORG: row.EKORG ? row.EKORG : null,
-            EKGRP: row.EKGRP ? row.EKGRP : null,
-          };
 
-          insertQuery = await generateInsertUpdateQuery(insertPayload, tableName, pk);
-          // insertQuery = generateQuery(INSERT, tableName, row)
-          await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
- 
+          // const insertPayload = {
+          //   EBELN: row.EBELN,
+          //   BUKRS: row.BUKRS ? row.BUKRS : null,
+          //   BSTYP: row.BSTYP ? row.BSTYP : null,
+          //   BSART: row.BSART ? row.BSART : null,
+          //   LOEKZ: row.LOEKZ ? row.LOEKZ : null,
+          //   AEDAT: formatDate(row.AEDAT),
+          //   ERNAM: row.ERNAM ? row.ERNAM : null,
+          //   LIFNR: row.LIFNR ? row.LIFNR : null,
+          //   EKORG: row.EKORG ? row.EKORG : null,
+          //   EKGRP: row.EKGRP ? row.EKGRP : null,
+          // };
+
+          // const  insertPayload = 
+
+          // console.log("insertPayload", insertPayload);
+
+          // let insertPayload = await gateEntryDataPayload([row]);
+          // let insertPayload = await ekpoTablePayload([row], row.EBELN);
+          let insertPayload = await makfPayload([row]);
+          // let insertPayload = await msegPayload([row]);
+          insertQuery = await generateInsertUpdateQueryTable(insertPayload[0], tableName, pk);
+
+          console.log("insertPayload", insertPayload);
+
+
+          allq += insertQuery;
+
+          await poolQuery({ client, query: insertQuery, values: [] });
+
         } catch (error) {
-          console.log("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh", error.message)
+          console.log("error ------> ", error.message)
           failedData.push({ ...row, error: error.message })
         }
       }
@@ -457,12 +473,12 @@ async function insertTableData(data, tableName, pk) {
 
     } catch (err) {
 
-      console.log("errerrerrerrerrerrerr", err.message);
+      console.log("errerrerrerrerrerrerr ======> ", err.message);
       throw err;
     } finally {
       client.release();
       console.log("let allq ", allq);
-      return failedData;
+      return  failedData;
     }
 
   } catch (error) {
