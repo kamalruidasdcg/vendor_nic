@@ -554,6 +554,33 @@ const getBgApprovedFiles = async (client, data) => {
   }
 };
 
+
+/**
+ * PO TOTAL AMMOUNT
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const totalPoAmmount = async (client, data) => {
+  try {
+
+    let total_amt_query =
+      `SELECT SUM(CAST(NULLIF(netwr, '') AS NUMERIC)) AS total_po_netwr FROM ekpo
+          WHERE ebeln = $1
+          AND netwr IS NOT NULL;`
+    let totalAmmount = await poolQuery({
+      client,
+      query: total_amt_query,
+      values: data,
+    });
+    return totalAmmount[0] || { total_po_netwr: 0 };
+  } catch (error) {
+    throw error;
+  }
+}
+
+
 async function supportingDataForAdvancBtn(client, poNo) {
   try {
 
@@ -566,16 +593,20 @@ async function supportingDataForAdvancBtn(client, poNo) {
         getBgApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB]), // 1
         vendorDetails(client, [poNo]), // 2
         getContractutalSubminissionDate(client, [poNo]), // 3
-        getActualSubminissionDate(client, [poNo]) // 4
+        getActualSubminissionDate(client, [poNo]), // 4
+        totalPoAmmount(client, [poNo]) //5
       ]);
 
-    let result = {}
+    let result = {
+      total_po_netwr: 0
+    }
 
     console.log("0", response[0][0]);
     console.log("1", response[1]);
     console.log("2", response[2][0]);
     console.log("3", response[3][0]);
     console.log("4", response[4][0]);
+    console.log("5", response[5]);
 
     if (response[0][0]) {
       result = { ...result, sdbgFiles: response[0] };
@@ -593,6 +624,10 @@ async function supportingDataForAdvancBtn(client, poNo) {
     if (response[4] && response.length) {
       const date = parseInt(response[4].find((el) => el.MID == parseInt(MID_DRAWING))?.PLAN_DATE);
       result.a_drawing_date = date;
+    }
+    if (response[5] && response[5]?.total_po_netwr) {
+
+      result.total_po_netwr = response[5].total_po_netwr
     }
 
     return result;
