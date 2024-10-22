@@ -830,7 +830,7 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
             users.cname as finance_auth_name,
             vendor.name1 as vendor_name,
             assign_users.cname as assign_name,
-            ranked_assignments.assign_by as assign_id
+            ranked_assignments.assign_by as assign_id,
             ranked_assignments.assign_to
   
           FROM 
