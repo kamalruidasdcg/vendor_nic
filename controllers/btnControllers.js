@@ -1044,8 +1044,8 @@ async function btnSaveToSap(btnPayload, tokenData) {
     let basic_ammount = parseFloat(btnDetails[0]?.net_claim_amount) || 0;
     if (btnPayload.btn_type === BTN_CLAIM_AGAINST_PBG) {
       basic_ammount = parseFloat(btnDetails[0]?.claim_amount) || 0;
-      btnDetails[0].net_with_gst = parseFloat(btnDetails[0]?.claim_amount) || 0;
-    } // //
+      btnDetails[0].net_with_gst = basic_ammount.toFixed(3) || 0;
+    }
     const cgst = parseFloat(btnDetails[0]?.cgst) || 0;
     const igst = parseFloat(btnDetails[0]?.igst) || 0;
     const sgst = parseFloat(btnDetails[0]?.sgst) || 0;
