@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { generateInsertUpdateQuery, generateQuery, formatDate, generateInsertUpdateQueryTable } = require("../../lib/utils");
+const { generateQuery, formatDate, generateInsertUpdateQueryTable } = require("../../lib/utils");
 
 const { query, poolClient, poolQuery, getQuery } = require("../../config/pgDbConfig");
 const fs = require("fs");
@@ -329,9 +329,13 @@ router.post("/datainsert", async (req, res) => {
     }).on('end', async () => {
       if (dataBuffer.length > 0) {
         try {
+          console.warn("INSERT DATA SIZE", dataBuffer.length);
 
-          const res2 = await insertTableData(dataBuffer, paylaod.tableName, paylaod.pk);
-          result = [...result, ...res2];
+          // const res2 = await insertTableData(dataBuffer, paylaod.tableName, paylaod.pk);
+          const res2 = await insertData(dataBuffer, paylaod.tableName, paylaod.pk);
+
+          // const res2 = await insertDataInChunks(dataBuffer, paylaod.tableName, paylaod.pk);
+          result = res2;
           resSend(res, true, 201, "Data inserted successfull", result);
         } catch (error) {
           console.log("error", error.message);
@@ -354,10 +358,12 @@ async function insertData(data, tableName, pk) {
   try {
     const client = await poolClient();
     let allq = "";
-    console.log("djjjjjjjjjjjjjj", tableName, pk, data.length);
+    console.log("insert data <-\/->", tableName, pk, data.length);
 
     const failedData = [];
+    const responseArr = [];
     let count = 0;
+    let duplicate = 0;
     try {
       let insertQuery = "";
 
@@ -367,21 +373,21 @@ async function insertData(data, tableName, pk) {
           // if (result) {
           //   throw new Error('Already exist in auth table');
           // }          
-
-          count++;
-
           let trimmedStr = row.MATNR.trim();
           const isNotNumber = /\D/.test(trimmedStr);
-
-          // if (!isNotNumber && trimmedStr.length != 18) {
-          //   const modifiedMatnr = String(trimmedStr).padStart(18, '0');
-          //   row = { ...row, MATNR: modifiedMatnr }
-          //   // console.log("marerial-->", row.MATNR, isNotNumber, modifiedMatnr);
-          // }
-
-          // insertQuery = await generateInsertUpdateQuery(row, tableName, pk);
-          insertQuery = generateQuery(INSERT, tableName, row)
-
+          let materailObj = { ...row, MATNR: trimmedStr }
+          
+          
+          if (!isNotNumber && trimmedStr.length != 18) {
+            const modifiedMatnr = String(trimmedStr).padStart(18, '0');
+            materailObj = { ...row, MATNR: modifiedMatnr }
+            // console.log("marerial-->", row.MATNR, isNotNumber, modifiedMatnr);
+          }
+          insertQuery = await generateInsertUpdateQuery(materailObj, tableName, pk);
+          // insertQuery = generateQuery(INSERT, tableName, row)
+          
+          // console.log("MATNR: trimmedStr", materailObj);
+          // console.log("MATNR: insertQuery", insertQuery);
           // let valuesArray = Object.values(row);
           // insertQuery = `INSERT INTO auth (user_type, vendor_code, username, name, department_id, internal_role_id, is_active, password)  
           // VALUES ( ${row.user_type}, '${row.vendor_code}',  '${row.username}', '${row.name}',  ${row.department_id}, ${row.internal_role_id}, ${row.is_active}, '${row.password}');`
@@ -390,31 +396,33 @@ async function insertData(data, tableName, pk) {
           // allq += insertQuery;
           // await poolQuery({ client, query: insertQuery, values: [] });
 
-          await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+          const response = await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+          // const response = await query({ query: insertQuery.q, values: insertQuery.val });
           // await query({ query: insertQuery.q, values: insertQuery.val })
-          // console.log("success");Y
+          count++;
+          console.log(" inseted success ->", response[0], count);
+          if (response[0].operation == 'updated') {
+            duplicate++;
+            responseArr.push(response[0]);
+          }
         } catch (error) {
-          console.log("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh", error.message)
+          console.log("error : 1", error.message)
           failedData.push({ ...row, error: error.message })
         }
       }
-
-
-
     } catch (err) {
 
-      console.log("errerrerrerrerrerrerr", err.message);
+      console.log("error : 2", err.message);
       throw err;
     } finally {
       client.release();
       console.log("let allq ", allq, count);
-
       // console.log("failedData", JSON.stringify(failedData));
-      return failedData;
+      return { failedData, count, duplicate, responseArr };
     }
 
   } catch (error) {
-    console.log("error.mess", error.message);
+    console.log("error : 3", error.message);
     throw error;
   }
 }
@@ -478,7 +486,7 @@ async function insertTableData(data, tableName, pk) {
     } finally {
       client.release();
       console.log("let allq ", allq);
-      return  failedData;
+      return failedData;
     }
 
   } catch (error) {
@@ -488,8 +496,160 @@ async function insertTableData(data, tableName, pk) {
 }
 
 
+async function generateInsertUpdateQuery(obj, tableName, multiplePKs) {
+  if (!obj || typeof obj !== "object" || !Object.keys(obj)?.length) {
+    throw new Error("Invalid payload or parameter, please check the function");
+  }
+
+  const columnArr = Object.keys(obj);
+  let valuesArray = Object.values(obj);
+  allValues = valuesArray;
+  const column = valuesArray.map((key, i) => `$${i + 1}`).join(", ");
+  let queryText = `INSERT INTO ${tableName} (${columnArr.join(", ")})
+  VALUES ( ${column} )`;
+
+  queryText += ` ON CONFLICT `;
+  const conflictKeys = multiplePKs.join(", ");
+  queryText += `( ${conflictKeys} )`;
+  const columnArrWithOutPK = columnArr.filter(
+    (col) => !multiplePKs.includes(col)
+  );
+  const columnArrWithOutPKLen = columnArrWithOutPK.length - 1;
+  queryText += " DO UPDATE SET ";
+  let updateKeys = "";
+  columnArrWithOutPK.forEach((u_key, j) => {
+    updateKeys += ` ${u_key} = EXCLUDED.${u_key}`;
+    if (j != columnArrWithOutPKLen) {
+      updateKeys += ",";
+    }
+  });
+  queryText += updateKeys;
+
+  queryText +=
+    ` RETURNING
+                matnr,
+                CASE
+                  WHEN xmax = 0 THEN 'inserted'
+                  ELSE 'updated'
+                END AS operation`
+
+  return { q: queryText, val: allValues };
+}
 
 
+
+
+
+
+
+async function insertDataInChunks(data, tableName, pk, chunkSize = 100) {
+  try {
+    const client = await poolClient();
+    let allq = "";
+    const failedData = [];
+    const responseArr = [];
+    let count = 0;
+
+    try {
+      let insertQuery = "";
+
+      // Process the data in chunks
+      for (let i = 0; i < data.length; i += chunkSize) {
+        const chunk = data.slice(i, i + chunkSize); // Create a chunk of the data
+        const chunkFailedData = [];
+        const chunkResponseArr = [];
+        const modChank = [];
+
+        // Process each row in the chunk
+        for (let row of chunk) {
+          let trimmedStr = row.MATNR.trim();
+          const isNotNumber = /\D/.test(trimmedStr);
+          let chunkData = row;
+          if (!isNotNumber && trimmedStr.length != 18) {
+            const modifiedMatnr = String(trimmedStr).padStart(18, '0');
+            chunkData = { ...chunkData, MATNR: modifiedMatnr };
+          }
+          modChank.push(chunkData);
+        }
+        console.log("modChank data length", modChank.length);
+        if (modChank.length) {
+          insertQuery = await generateQueryForMultipleData(modChank, tableName, pk);
+          // console.log("insertQuery", insertQuery);
+
+          const response = await poolQuery({ client, query: insertQuery.q, values: insertQuery.val });
+          const response2 = await poolQuery({ client, query: 'select count(*) as count from mara', values: [] });
+
+          console.log("Success:", response, "count", response2);
+          responseArr.push({ response, response2 });
+
+          // chunkFailedData.push({ ...row, error: error.message });
+          // count++;
+
+
+          // Add the chunk's results to the overall results
+          // failedData.push(...chunkFailedData);
+          // responseArr.push(...chunkResponseArr);
+
+          console.log(`Chunk ${i / chunkSize + 1} processed`);
+        }
+      }
+    } catch (err) {
+      console.log("Error during chunk processing:", err.message);
+      throw err;
+    } finally {
+      client.release();
+      console.log("Final query batch", allq, count);
+      return responseArr;
+    }
+  } catch (error) {
+    console.log("Error outside of chunk processing:", error.message);
+    throw error;
+  }
+}
+
+
+
+
+
+
+async function generateQueryForMultipleData(array, tableName, multiplePKs) {
+  if (!array || !Array.isArray(array) || !array.length || !multiplePKs) {
+    throw new Error("Invalid payload or parameter, please check the function");
+  }
+
+  const columnArr = Object.keys(array[0]);
+  let valuesArray = array.map((item) => Object.values(item));
+  const allValues = valuesArray.flat();
+
+  const column = valuesArray
+    .map(
+      (row, i) =>
+        `(${row.map((_, j) => `$${i * row.length + j + 1}`).join(", ")})`
+    )
+    .join(", ");
+
+  let queryText = `INSERT INTO ${tableName} (${columnArr.join(", ")})
+    VALUES ${column}`;
+
+  queryText += ` ON CONFLICT `;
+  const conflictKeys = multiplePKs.join(", ");
+  queryText += `( ${conflictKeys} )`;
+  const columnArrWithOutPK = columnArr.filter(
+    (col) => !multiplePKs.includes(col)
+  );
+  const columnArrWithOutPKLen = columnArrWithOutPK.length - 1;
+  queryText += ` DO UPDATE SET `;
+  let updateKeys = "";
+  columnArrWithOutPK.forEach((u_key, j) => {
+    updateKeys += ` ${u_key} = EXCLUDED.${u_key}`;
+    if (j != columnArrWithOutPKLen) {
+      updateKeys += ",";
+    }
+  });
+  queryText += updateKeys;
+
+  return { q: queryText, val: allValues };
+}
 
 
 
@@ -552,6 +712,14 @@ router.post("/datamodify", async (req, res) => {
   }
 
 })
+
+
+
+
+
+
+
+
 
 
 ////////////// END OF TEST API //////////////
