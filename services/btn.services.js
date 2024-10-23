@@ -227,7 +227,7 @@ const contractualSubmissionDate = async (purchasing_doc_no, client) => {
       }
     });
 
-    return { status: true, data: contractualDateObj, msg: "success" };
+    return { status: true, data: contractualDateObj, results, msg: "success" };
   } catch (error) {
     throw error;
   }
@@ -268,6 +268,7 @@ const actualSubmissionDate = async (purchasing_doc_no, client) => {
     return {
       status: true,
       data: actualSubmissionObj,
+      results,
       msg: "All milestone passed..",
     };
 
@@ -553,6 +554,33 @@ const getBgApprovedFiles = async (client, data) => {
   }
 };
 
+
+/**
+ * PO TOTAL AMMOUNT
+ * @param {Object} client 
+ * @param {Object} data 
+ * @returns {Promise<Object>}
+ * @throws {Error} If the query execution fails, an error is thrown.
+ */
+const totalPoAmmount = async (client, data) => {
+  try {
+
+    let total_amt_query =
+      `SELECT SUM(CAST(NULLIF(netwr, '') AS NUMERIC)) AS total_po_netwr FROM ekpo
+          WHERE ebeln = $1
+          AND netwr IS NOT NULL;`
+    let totalAmmount = await poolQuery({
+      client,
+      query: total_amt_query,
+      values: data,
+    });
+    return totalAmmount[0] || { total_po_netwr: 0 };
+  } catch (error) {
+    throw error;
+  }
+}
+
+
 async function supportingDataForAdvancBtn(client, poNo) {
   try {
 
@@ -565,16 +593,20 @@ async function supportingDataForAdvancBtn(client, poNo) {
         getBgApprovedFiles(client, [poNo, APPROVED, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB]), // 1
         vendorDetails(client, [poNo]), // 2
         getContractutalSubminissionDate(client, [poNo]), // 3
-        getActualSubminissionDate(client, [poNo]) // 4
+        getActualSubminissionDate(client, [poNo]), // 4
+        totalPoAmmount(client, [poNo]) //5
       ]);
 
-    let result = {}
+    let result = {
+      total_po_netwr: 0
+    }
 
     console.log("0", response[0][0]);
     console.log("1", response[1]);
     console.log("2", response[2][0]);
     console.log("3", response[3][0]);
     console.log("4", response[4][0]);
+    console.log("5", response[5]);
 
     if (response[0][0]) {
       result = { ...result, sdbgFiles: response[0] };
@@ -593,6 +625,10 @@ async function supportingDataForAdvancBtn(client, poNo) {
       const date = parseInt(response[4].find((el) => el.MID == parseInt(MID_DRAWING))?.PLAN_DATE);
       result.a_drawing_date = date;
     }
+    if (response[5] && response[5]?.total_po_netwr) {
+
+      result.total_po_netwr = response[5].total_po_netwr
+    }
 
     return result;
   } catch (error) {
@@ -602,6 +638,40 @@ async function supportingDataForAdvancBtn(client, poNo) {
   }
 }
 
+
+
+/**
+ * CHECK IF CONTRACTUAL SUBMISSION HAD
+ * BUT ACTUCAL SUBMISSION DATE MISSING OR NOT SUBMIT
+ * @param c_dates Array
+ * @param a_dates Array
+ * @returns Object
+ */
+
+function checkMilestonDates(c_dates, a_dates) {
+  console.log("lllllllllllllll", c_dates, a_dates);
+
+  // const arr = new Set([parseInt(MID_SDBG), parseInt(MID_DRAWING), parseInt(MID_QAP), parseInt(MID_ILMS)]);
+  const arr = new Set([parseInt(MID_DRAWING)]);
+  const c_dates_filter = c_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const a_dates_filter = a_dates.filter((el) => arr.has(parseInt(el.MID)));
+  const mtextObj = {
+    [MID_DRAWING]: "Drawing",
+  };
+  for (const item of c_dates_filter) {
+    const i = a_dates_filter.findIndex(
+      (el) => parseInt(el.MID) == parseInt(item.MID)
+    );
+    if (i < 0) {
+      return {
+        success: false,
+        msg: `Please submit ${mtextObj[item.MID]} to process BTN !`,
+      };
+    }
+  }
+
+  return { success: true, msg: "No milestone missing" };
+}
 
 
 module.exports = {
@@ -620,5 +690,7 @@ module.exports = {
   advBillHybridbtnDOPayload,
   updateBtnListTable,
   getAdvBillHybridBTNDetails,
-  getInitalData
+  getInitalData,
+  checkMilestonDates,
+  getBgApprovedFiles
 };

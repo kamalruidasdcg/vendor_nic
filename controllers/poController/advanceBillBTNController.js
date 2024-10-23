@@ -1,6 +1,6 @@
 // const { query, connection } = require("../../config/dbConfig");
 const { poolQuery, poolClient } = require("../../config/pgDbConfig");
-const { INSERT, UPDATE } = require("../../lib/constant");
+const { INSERT, UPDATE, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB } = require("../../lib/constant");
 const { resSend } = require("../../lib/resSend");
 const { APPROVED, REJECTED, SUBMITTED_BY_DO, SUBMITTED_BY_VENDOR, STATUS_RECEIVED } = require("../../lib/status");
 const { BTN_ADV_BILL_HYBRID, BTN_ADV_BILL_HYBRID_DO, BTN_ASSIGN } = require("../../lib/tableName");
@@ -19,6 +19,8 @@ const {
   getAdvBillHybridBTNDetails,
   getGrnIcgrnByInvoice,
   getInitalData,
+  checkMilestonDates,
+  getBgApprovedFiles,
 } = require("../../services/btn.services");
 const { getGrnIcgrnValue, btnAssignPayload, getLatestBTN, addToBTNList } = require("../../services/btnServiceHybrid.services");
 const { create_btn_no } = require("../../services/po.services");
@@ -70,13 +72,30 @@ const submitAdvanceBillHybrid = async (req, res) => {
 
       // CONTRACTUAL SUBMISSION DATA
       const contDateSetup = await contractualSubmissionDate(payload.purchasing_doc_no, client);
-      console.log("contDateSetup", contDateSetup);
-
+      // console.log("contDateSetup", contDateSetup);
 
       // ACTUAL SUMBISSION DATA
       const actualDateSetup = await actualSubmissionDate(payload.purchasing_doc_no, client);
-      console.log("actualDateSetup", actualDateSetup);
+      // console.log("actualDateSetup", actualDateSetup.data, actualDateSetup.data);
 
+      const missingMilestone = checkMilestonDates(contDateSetup.results, actualDateSetup.results);
+
+      // console.log('missingMilestone', contDateSetup.results, actualDateSetup.results, missingMilestone);
+
+      // if (!missingMilestone.success) {
+      //   return resSend(res, false, 200, missingMilestone.msg, "Missing data", null);
+      // }
+
+
+      // BG File missing check
+      const bgData = await getBgApprovedFiles(client, [payload.purchasing_doc_no, APPROVED, ACTION_ADVANCE_BG_SUBMISSION, ACTION_IB]);
+
+      console.log("bgData", bgData);
+
+
+      if (!(!bgData.abgFileName || !bgData.ibFileName)) {
+        return resSend(res, false, 200, "BG File missing", "Missing data", null);
+      }
 
       // ADDING EXTRA DATA IN PAYLOAD
       payload = {
@@ -254,7 +273,7 @@ const sbhSubmitBTNByDO = async (req, res) => {
       // await addToBTNList(client, { ...latesBtnData, ...payload, }, STATUS_RECEIVED);
       await addToBTNList(client, { ...latesBtnData, ...payload, }, SUBMITTED_BY_DO);
       // const sendSap = true; //await btnSubmitByDo({ btn_num, purchasing_doc_no, assign_to }, tokenData);
-      const sendSap = await abhBtnSubmitToSAPF01 (payload, tokenData);
+      const sendSap = await abhBtnSubmitToSAPF01(payload, tokenData);
 
       if (sendSap == false) {
         console.log(sendSap);
