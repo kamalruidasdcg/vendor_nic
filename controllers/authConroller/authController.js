@@ -37,6 +37,7 @@ const rolePermission = require("../../lib/role/deptWiseRolePermission");
 const { getEpochTime, generateQuery } = require("../../lib/utils");
 
 const Message = require("../../utils/messages");
+const localData = require("../../utils/localData.json");
 const {
   query,
   getQuery,
@@ -630,12 +631,19 @@ const setPassword = async (req, res) => {
         );
       }
 
-      const vefifyQuery = `SELECT * FROM ${REGISTRATION_OTP} where user_code = '${obj.user_code}' AND status = 'VERIFIED' AND otp = '${obj.otp}'`;
+      // const vefifyQuery = `SELECT * FROM ${REGISTRATION_OTP} where user_code = '${obj.user_code}' AND status = 'VERIFIED' AND otp = '${obj.otp}'`;
+
+      const vefifyQuery = `SELECT t1.*, t2.name as deptname FROM ${REGISTRATION_OTP} AS t1
+                LEFT JOIN
+                depertment_master AS t2
+                ON
+                    t1.functional_area = t2.id where t1.user_code = '${obj.user_code}' AND t1.status = 'VERIFIED' AND t1.otp = '${obj.otp}'`;
+
       const otpVefifyQueryRes = await getQuery({
         query: vefifyQuery,
         values: [],
       });
-
+      console.log("#########", otpVefifyQueryRes[0]);
       if (otpVefifyQueryRes && otpVefifyQueryRes.length == 0) {
         return resSend(res, false, 200, `OTP is incorrect!`, null, null);
       }
@@ -717,37 +725,41 @@ const setPassword = async (req, res) => {
         otpVefifyQueryRes[0].role === 1
       ) {
         // SEND MAIL TO NODAL OFFICERS //
-        let getNodalOfficersQ = `SELECT t1.vendor_code, t2.email FROM auth AS t1
-                LEFT JOIN 
-                    pa0002 AS t2 
-                ON 
-                    t1.vendor_code = t2.pernr  :: character varying WHERE
-                t1.department_id = $1 AND t1.internal_role_id = $2`;
 
-        const getNodalOfficersR = await getQuery({
-          query: getNodalOfficersQ,
-          values: [otpVefifyQueryRes[0].functional_area, ASSIGNER],
-        });
-        let emails = "";
-        if (getNodalOfficersR.length > 0) {
-          getNodalOfficersR.forEach((item) => {
-            if (item.email && item.email != "") {
-              if (emails === "") {
-                emails += item.email;
-              } else {
-                emails += "," + item.email;
-              }
-            }
-          });
-        }
+        // let getNodalOfficersQ = `SELECT t1.vendor_code, t2.email FROM auth AS t1
+        //         LEFT JOIN
+        //             pa0002 AS t2
+        //         ON
+        //             t1.vendor_code = t2.pernr  :: character varying WHERE
+        //         t1.department_id = $1 AND t1.internal_role_id = $2`;
+
+        // const getNodalOfficersR = await getQuery({
+        //   query: getNodalOfficersQ,
+        //   values: [otpVefifyQueryRes[0].functional_area, ASSIGNER],
+        // });
+        // let emails = "";
+        // if (getNodalOfficersR.length > 0) {
+        //   getNodalOfficersR.forEach((item) => {
+        //     if (item.email && item.email != "") {
+        //       if (emails === "") {
+        //         emails += item.email;
+        //       } else {
+        //         emails += "," + item.email;
+        //       }
+        //     }
+        //   });
+        // }
+        let emails = localData.registrationApprovedAuthority
+          .map((user) => user.email)
+          .join(",");
 
         if (emails != "") {
           let mailOptions = {
-            to: "mainak.dutta16@gmail.com,kbcdefgh33@gmail.co",
+            to: emails,
             from: process.env.MAIL_SEND_MAIL_ID,
             subject: `OBPS Registration Request.`,
             html: EMAIL_TEMPLAE(
-              `A user is trying to register as a nodal officier in your depertment in OBPS system. \n  Please login to your OBPS portal to take the necessary action.`
+              `${name} (${username}) trying to register as a nodal officier in ${otpVefifyQueryRes[0].deptname} depertment as nodal officer in OBPS system. \n  Please login to your OBPS portal to take the necessary action.`
             ),
           };
           await SENDMAIL(mailOptions);

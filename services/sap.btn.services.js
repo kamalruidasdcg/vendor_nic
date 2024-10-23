@@ -1,6 +1,14 @@
 const { getQuery } = require("../config/pgDbConfig");
 const { makeHttpRequest } = require("../config/sapServerConfig");
-const { BTN_HYBRID_BILL_MATERIAL, BTN_CLAIM_AGAINST_PBG, BTN_LD_PENALTY_REFUND, BTN_OTHER_RETENTIONS, BTN_CLAIM_AGAINST_JCC, BTN_BILL_INCORRECT_DEDUCTIONS, BTN_ADVANCE_BILL } = require("../lib/constant");
+const {
+  BTN_HYBRID_BILL_MATERIAL,
+  BTN_CLAIM_AGAINST_PBG,
+  BTN_LD_PENALTY_REFUND,
+  BTN_OTHER_RETENTIONS,
+  BTN_CLAIM_AGAINST_JCC,
+  BTN_BILL_INCORRECT_DEDUCTIONS,
+  BTN_ADVANCE_BILL,
+} = require("../lib/constant");
 // const { timeInHHMMSS } = require("../controllers/btnControllers");
 const { REJECTED, F_STATUS_FORWARDED_TO_FINANCE } = require("../lib/status");
 const { BTN_PBG, BTN_ANY_OTHER_CLAIM } = require("../lib/tableName");
@@ -135,13 +143,11 @@ async function btnSubmitToSAPF01(btnPayload, tokenData) {
   }
 }
 
-
-
 /**
-* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
-* @param {Object} btnPayload
-* @param {Object} tokenData
-*/
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
 
 async function btnSubmitToSAPF02(btnPayload, tokenData) {
   let status = false;
@@ -262,14 +268,11 @@ async function btnSubmitToSAPF02(btnPayload, tokenData) {
   }
 }
 
-
-
-
 /**
-* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
-* @param {Object} btnPayload
-* @param {Object} tokenData
-*/
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
 async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
   let status = false;
   console.log("send to sap payload -- >", btnPayload);
@@ -319,9 +322,7 @@ async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
       values: [btnPayload.assign_to, btnPayload.btn_num],
     });
 
-
     console.log("btnDetails", btnDetails);
-
 
     let btn_payload = {
       EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
@@ -396,13 +397,11 @@ async function abhBtnSubmitToSAPF01(btnPayload, tokenData) {
   }
 }
 
-
-
 /**
-* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
-* @param {Object} btnPayload
-* @param {Object} tokenData
-*/
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
 
 async function abhBtnSubmitToSAPF02(btnPayload, tokenData) {
   let status = false;
@@ -522,15 +521,11 @@ async function abhBtnSubmitToSAPF02(btnPayload, tokenData) {
   }
 }
 
-
-
-
-
 /**
-* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
-* @param {Object} btnPayload
-* @param {Object} tokenData
-*/
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE STAFF
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
 async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
   let status = false;
   console.log("send to sap payload -- >", btnPayload);
@@ -575,9 +570,7 @@ async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
       values: [btnPayload.assign_to, btnPayload.btn_num],
     });
 
-
     console.log("btnDetails", btnDetails);
-
 
     let btn_payload = {
       EBELN: btnPayload.purchasing_doc_no || btnDetails[0]?.purchasing_doc_no, // PO NUMBER
@@ -585,7 +578,9 @@ async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
       RERNAM: btnDetails[0]?.vendor_name, // REG CREATOR NAME --> VENDOR NUMBER
       STCD3: btnDetails[0]?.stcd3, // VENDOR GSTIN NUMBER
       ZVBNO: btnDetails[0]?.invoice_no, // GATE ENTRY INVOCE NUMBER
-      VEN_BILL_DATE: getYyyyMmDd(new Date(parseInt(btnDetails[0]?.invoice_date)).getTime()), // GATE ENTRY INVOICE DATE
+      VEN_BILL_DATE: getYyyyMmDd(
+        new Date(parseInt(btnDetails[0]?.invoice_date)).getTime()
+      ), // GATE ENTRY INVOICE DATE
       PERNR: tokenData.vendor_code, // DO ID
       ZBTNO: btnPayload.btn_num, //  BTN NUMBER
       ERDAT: getYyyyMmDd(getEpochTime()), // VENDOR BILL SUBMIT DATE
@@ -650,13 +645,11 @@ async function jccBtnSubmitToSAPF01(btnPayload, tokenData) {
   }
 }
 
-
-
 /**
-* BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
-* @param {Object} btnPayload
-* @param {Object} tokenData
-*/
+ * BTN DATA SEND TO SAP SERVER WHEN BTN SUBMIT BY FINNANCE AUTHRITY
+ * @param {Object} btnPayload
+ * @param {Object} tokenData
+ */
 
 async function jccBtnSubmitToSAPF02(btnPayload, tokenData) {
   let status = false;
@@ -772,7 +765,6 @@ async function jccBtnSubmitToSAPF02(btnPayload, tokenData) {
   }
 }
 
-
 const getQueryForbtnSaveToSap = async (btnPayload) => {
   try {
     let vendorQuery;
@@ -838,7 +830,8 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
             users.cname as finance_auth_name,
             vendor.name1 as vendor_name,
             assign_users.cname as assign_name,
-            ranked_assignments.assign_by as assign_id
+            ranked_assignments.assign_by as assign_id,
+            ranked_assignments.assign_to
   
           FROM 
               ${BTN_PBG}
@@ -858,10 +851,9 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
               ${BTN_PBG}.btn_num = $2`;
     } else if (
       btnPayload.btn_type === BTN_BILL_INCORRECT_DEDUCTIONS ||
-      btnPayload.btn_type === BTN_LD_PENALTY_REFUND||
+      btnPayload.btn_type === BTN_LD_PENALTY_REFUND ||
       btnPayload.btn_type === BTN_OTHER_RETENTIONS
-    ) 
-    {
+    ) {
       vendorQuery = `WITH ranked_assignments AS (
               SELECT
                   btn_assign.*,
@@ -891,7 +883,7 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
               ON(assign_users.pernr::character varying = ranked_assignments.assign_by)
           WHERE 
               ${BTN_ANY_OTHER_CLAIM}.btn_num = $2`;
-    } 
+    }
     // else if (btnPayload.btn_type === "bill-incorrect-deductions") {
     //   vendorQuery = `WITH ranked_assignments AS (
     //     SELECT
@@ -900,12 +892,12 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
     //     FROM
     //         btn_assign
     // )
-    // SELECT 
-    //   btn.btn_num, 
+    // SELECT
+    //   btn.btn_num,
     //   btn.purchasing_doc_no,
-    //   jcc.yard_no AS yard, 
-    //   btn.jcc_number, 
-    //   btn.net_claim_amount,  
+    //   jcc.yard_no AS yard,
+    //   btn.jcc_number,
+    //   btn.net_claim_amount,
     //   btn.invoice_no,
     //   btn.vendor_code,
     //   vendor.stcd3,
@@ -915,9 +907,9 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
     //   assign_users.cname as assign_name,
     //   ranked_assignments.assign_to as assign_to
 
-    // FROM 
+    // FROM
     //     btn_jcc AS btn
-    // LEFT JOIN 
+    // LEFT JOIN
     //     ranked_assignments
     //     ON (btn.btn_num = ranked_assignments.btn_num
     //     AND ranked_assignments.rn = 1)
@@ -929,7 +921,7 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
     //     ON(assign_users.pernr::character varying = ranked_assignments.assign_to)
     // LEFT JOIN  wdc as jcc
     //     ON(jcc.reference_no = btn.jcc_number)
-    // WHERE 
+    // WHERE
     //     btn.btn_num = $2`;
     // }
     else if (btnPayload.btn_type === BTN_CLAIM_AGAINST_JCC) {
@@ -1012,9 +1004,7 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
 
     WHERE 
         btn.btn_num = $2`;
-    }
-
-    else {
+    } else {
       vendorQuery = null;
     }
     return vendorQuery;
@@ -1022,7 +1012,6 @@ const getQueryForbtnSaveToSap = async (btnPayload) => {
     console.error("Error making db query:", error);
   }
 };
-
 
 const timeInHHMMSS = () => {
   const now = new Date();
@@ -1033,8 +1022,13 @@ const timeInHHMMSS = () => {
   return hours + minutes + seconds;
 };
 
-
 // module.exports = { btnSubmitToSAPF01, btnSubmitToSAPF02, abhBtnSubmitToSAPF01, abhBtnSubmitToSAPF02}
-module.exports = { btnSubmitToSAPF01, btnSubmitToSAPF02, jccBtnSubmitToSAPF01, jccBtnSubmitToSAPF02, getQueryForbtnSaveToSap, abhBtnSubmitToSAPF01, abhBtnSubmitToSAPF02 }
-
-
+module.exports = {
+  btnSubmitToSAPF01,
+  btnSubmitToSAPF02,
+  jccBtnSubmitToSAPF01,
+  jccBtnSubmitToSAPF02,
+  getQueryForbtnSaveToSap,
+  abhBtnSubmitToSAPF01,
+  abhBtnSubmitToSAPF02,
+};

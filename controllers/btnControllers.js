@@ -26,6 +26,7 @@ const {
   ACTION_DD,
   ACTION_IB,
   ACTION_PBG,
+  BTN_CLAIM_AGAINST_PBG,
 } = require("../lib/constant");
 const {
   BTN_RETURN_DO,
@@ -1041,6 +1042,10 @@ async function btnSaveToSap(btnPayload, tokenData) {
 
     // CALCULATION
     let basic_ammount = parseFloat(btnDetails[0]?.net_claim_amount) || 0;
+    if (btnPayload.btn_type === BTN_CLAIM_AGAINST_PBG) {
+      basic_ammount = parseFloat(btnDetails[0]?.claim_amount) || 0;
+      btnDetails[0].net_with_gst = basic_ammount.toFixed(3) || 0;
+    }
     const cgst = parseFloat(btnDetails[0]?.cgst) || 0;
     const igst = parseFloat(btnDetails[0]?.igst) || 0;
     const sgst = parseFloat(btnDetails[0]?.sgst) || 0;
@@ -1595,7 +1600,12 @@ const assignToFiStaffHandler = async (req, res) => {
       let btn_list = await poolQuery({
         client,
         query: btn_list_q,
-        values: [btn_num, purchasing_doc_no, SUBMITTED_BY_DO, SUBMITTED_BY_CAUTHORITY],
+        values: [
+          btn_num,
+          purchasing_doc_no,
+          SUBMITTED_BY_DO,
+          SUBMITTED_BY_CAUTHORITY,
+        ],
       });
 
       if (btn_list.length < 0) {
@@ -1628,7 +1638,7 @@ const assignToFiStaffHandler = async (req, res) => {
           status: STATUS_RECEIVED,
         });
         try {
-          const sendSap = true; // btnSaveToSap({ ...req.body, ...payload }, tokenData);
+          const sendSap = btnSaveToSap({ ...req.body, ...payload }, tokenData);
           if (sendSap == false) {
             await client.query("ROLLBACK");
 
