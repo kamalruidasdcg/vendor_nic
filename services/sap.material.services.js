@@ -251,7 +251,7 @@ const makfPayload = async (payload) => {
     // TCODE2: obj.TCODE2 || null,
     // BFWMS: obj.BFWMS || null,
     // EXNUM: obj.EXNUM || null,
-    SPE_BUDAT_UHR: obj.SPE_BUDAT_UHR || null,
+    SPE_BUDAT_UHR: formatTime(obj.SPE_BUDAT_UHR) || null,
     SPE_BUDAT_ZONE: obj.SPE_BUDAT_ZONE || null,
     // LE_VBELN: obj.LE_VBELN || null,
     // SPE_LOGSYS: obj.SPE_LOGSYS || null,
