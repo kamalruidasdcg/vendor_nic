@@ -37,24 +37,34 @@ const {
   adjustSequences,
 } = require("../utils/syncUtils");
 const { resSend } = require("../lib/resSend");
-const { generateQuery } = require("../lib/utils");
+const { generateQuery, getYyyyMmDd, formatDate } = require("../lib/utils");
 const { SYNC_UPDATE } = require("../lib/tableName");
 const { query } = require("../config/pgDbConfig");
 const { BACKUP_START, BACKUP_SUCCESSFULL, BACKUP_ERROR, RESTORE_ERROR, RESTORE_SUCCESSFULL, RESTORE_START } = require("../lib/status");
 const todayDate = formatDateSync(new Date());
 
 // SYNCRONISATION OF DATA
-const syncDownloadMain = async () => {
+const syncDownloadMain = async (syncDate) => {
   let resData = {};
 
   for (const item of synced_tables) {
     try {
       console.log("item", item);
+      console.log("date", new Date(syncDate));
+      let syncQuery = `SELECT * FROM ${item}`;
+      let conditions = " where sync = false";
+      if (syncDate) {
+        const formattedDate = formatDate(getYyyyMmDd(syncDate));
+        conditions += ` AND (sync_updated_at between '${formattedDate} 00:00:00.000+05:30' AND '${formattedDate} 23:59:59.999+05:30')`;
+      }
+
+      syncQuery += conditions;
+
+      console.log("syncQuery", syncQuery);
+      
 
       // Check and select all columns of unsynced data from the table
-      const { rows } = await pool.query(
-        `SELECT * FROM ${item} WHERE sync = false`
-      );
+      const { rows } = await pool.query(syncQuery);
 
       // Store in CSV file for each table
       if (rows && rows.length > 0) {
@@ -167,7 +177,8 @@ const syncCompressMain = async (res) => {
 
 exports.syncDownload = async (req, res) => {
   try {
-    let resData = await syncDownloadMain();
+    const { datasync_date } = req.body;
+    let resData = await syncDownloadMain(datasync_date);
     setTimeout(() => {
       resSend(res, true, 200, null, "Unsynced data downloaded!", null);
     }, [10000]);

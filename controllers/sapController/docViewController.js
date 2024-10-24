@@ -1,6 +1,7 @@
 // const { query } = require("../../config/dbConfig");
 const { getQuery } = require("../../config/pgDbConfig");
 const { resSend } = require("../../lib/resSend");
+const { removeZeroFn } = require("../../lib/utils");
 const Message = require("../../utils/messages");
 
 const serviceEntryReport = async (req, res) => {
@@ -138,7 +139,7 @@ const grnReport = async (req, res) => {
         purchasing_doc_no: result[0].purchasing_doc_no,
         headerText: result[0].headerText,
         chalanNo: result[0].chalanNo,
-        lineItem: result,
+        lineItem: result.map((el) => ({ ...el, materialNumber: removeZeroFn(el.materialNumber) })),
       };
 
       resSend(res, true, 200, "Data fetched successfully", responseObj, null);
